@@ -15,6 +15,7 @@ from .graphite import get_data, get_matching_metrics
 from .alert import telephone_alert_twiml_callback
 from django.contrib.auth.models import User
 from django.utils.timezone import utc
+from django.core.urlresolvers import reverse
 
 import requests
 import json
@@ -219,7 +220,6 @@ class ServiceForm(forms.ModelForm):
 
 
 class CheckCreateView(LoginRequiredMixin, CreateView):
-  success_url = reverse_lazy('services')
   template_name = 'cabotapp/statuscheck_form.html'
 
   def form_valid(self, form):
@@ -243,10 +243,15 @@ class CheckCreateView(LoginRequiredMixin, CreateView):
         pass
     return initial
 
+  def get_success_url(self):
+    return reverse('check', kwargs={'pk': self.object.id})
+
 
 class CheckUpdateView(LoginRequiredMixin, UpdateView):
-  success_url = reverse_lazy('services')
   template_name = 'cabotapp/statuscheck_form.html'
+
+  def get_success_url(self):
+    return reverse('check', kwargs={'pk': self.object.id})
 
 
 class GraphiteCheckCreateView(CheckCreateView):
@@ -337,13 +342,17 @@ class ServiceDetailView(LoginRequiredMixin, DetailView):
 class ServiceCreateView(LoginRequiredMixin, CreateView):
   model = Service
   form_class = ServiceForm
-  success_url = reverse_lazy('services')
+
+  def get_success_url(self):
+    return reverse('service', kwargs={'pk': self.object.id})
 
 
 class ServiceUpdateView(LoginRequiredMixin, UpdateView):
   model = Service
   form_class = ServiceForm
-  success_url = reverse_lazy('services')
+
+  def get_success_url(self):
+    return reverse('service', kwargs={'pk': self.object.id})
 
 
 class ServiceDeleteView(LoginRequiredMixin, DeleteView):
