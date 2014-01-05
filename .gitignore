@@ -1,0 +1,14 @@
+.dotcloud/*
+dev.db
+venv/*
+backups/*
+static/CACHE/*
+node_modules/*
+.python-eggs/*
+.DS_Store
+celerybeat-schedule.db
+*.pyc
+*.swp
+*.orig
+.vagrant
+conf/*.env

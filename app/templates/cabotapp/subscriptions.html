@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+  <div class="col-xs-12">
+    <div class="col-xs-1"><h2><i class="fa fa-table"></i></h2></div>
+    <div class="col-xs-10"><h2>Subscriptions</h2></div>
+    <div class="col-xs-1 text-right"><h2><a href="/admin/auth/user/add/"><i class="glyphicon glyphicon-plus" title="Add new user (in Django admin interface)"></i><i class="glyphicon glyphicon-user"></i></a></h2></div>
+  </div>
+  <div class="col-xs-12">
+    {% if not services %}
+      No services configured
+    {% else %}
+    <table class="table table-bordered bootstrap-datatable datatable">
+      <thead>
+        <tr>
+          <th></th>
+          {% for user in users %}
+          <th>
+            {% if user.email %}{{ user.email }}{% else %}{{ user.username }}{% endif %}
+            {% if user in duty_officers %}
+            <span class="label label-success">
+              On duty
+            </span>
+            {% else %}
+            {% if user.profile.fallback_alert_user %}
+            <span class="label label-warning">
+              Fallback duty officer
+            </span>
+            {% endif %}
+            {% endif %}
+            <a href="{% url user-profile pk=user.id %}" class="btn btn-xs">
+              <i class="glyphicon glyphicon-edit"></i>
+            </a>
+          </th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+      {% for service in services %}
+        <tr class="{% if service.alerts_enabled %}enabled{% else %}warning{% endif %}" >
+          <td title="{{ check.description }}">
+            <a href="{% url update-service pk=service.id %}">{{service.name}}</a>
+            {% if service.email_alert %}<span class="label label-{% if service.alerts_enabled %}success{% else %}warning{% endif %}">email</span>{% endif %}
+            {% if service.hipchat_alert %}<span class="label label-{% if service.alerts_enabled %}success{% else %}warning{% endif %}">hipchat</span>{% endif %}
+            {% if service.sms_alert %}<span class="label label-{% if service.alerts_enabled %}success{% else %}warning{% endif %}">sms</span>{% endif %}
+            {% if service.telephone_alert %}<span class="label label-{% if service.alerts_enabled %}success{% else %}warning{% endif %}">phone</span>{% endif %}
+          </td>
+          {% for user in users %}
+          <td>
+          {% if user in service.users_to_notify.all %}
+          <i class="glyphicon glyphicon-ok"></i>
+          {% else %}
+          <i class="glyphicon glyphicon-remove"></i>
+          {% endif %}
+          </td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

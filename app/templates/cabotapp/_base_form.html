@@ -1,0 +1,33 @@
+<div class="form-group">
+  <div class="col-xs-10 col-xs-offset-2">
+    {{ form.non_field_errors }}
+  </div>
+</div>
+{% csrf_token %}
+{% for field in form %}
+<div class="form-group{% if field.errors %} has-error{% endif %}">
+  <div class="col-xs-12">
+    <label class="col-xs-2 control-label">{{ field.label_tag }}</label>
+    {% if field.errors %}
+    <div class="col-xs-7">{{ field }}</div>
+    <div class="col-xs-3 alert alert-danger">{{ field.errors }}</div>
+    {% else %}
+    <div class="col-xs-10">{{ field }}</div>
+    {% endif %}
+  </div>
+  {% if field.name == 'metric' %}
+  <div class="col-xs-12">
+    <div class="col-xs-10 col-xs-offset-2" id="graph" style="height:200px;"></div>
+    <div class="col-xs-10 col-xs-offset-2">
+      <pre id="graphite_data_container"></pre>
+    </div>
+  </div>
+  {% else %}
+  {% endif %}
+  {% if field.help_text %}
+  <div class="col-xs-12">
+    <div class="col-xs-7 col-xs-offset-2"><p class="help-block">{{ field.help_text }}</p></div>
+  </div>
+  {% endif %}
+</div>
+{% endfor %}

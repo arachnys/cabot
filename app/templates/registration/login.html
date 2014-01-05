@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+  <div class="col-xs-12">
+    <div class="col-xs-10 col-xs-offset-2">
+      <h2>Log in</h2>
+    </div>
+  </div>
+</div>
+<form class="form-horizontal" action="" method="post" role="form">
+  {% include "cabotapp/_base_form.html" %}
+  <div class="col-xs-12">
+    <div class="form-group">
+      <div class="col-xs-6 col-xs-offset-2">
+        <button type="submit" class="btn btn-primary">Log in</button>
+        <a href="{% url password-reset %}" class="btn">Reset password</a>
+      </div>
+      </div>
+    </div>
+  </form>
+</form>
+{% endblock %}

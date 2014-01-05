@@ -1,0 +1,152 @@
+
+{
+  "actions" : [
+
+  ],
+  "description" : "",
+  "displayName" : "cron-run-engine-pingchecks",
+  "displayNameOrNull" : null,
+  "name" : "cron-run-engine-pingchecks",
+  "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/",
+  "buildable" : true,
+  "builds" : [
+    {
+      "number" : 176,
+      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/176/"
+    },
+    {
+      "number" : 175,
+      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/175/"
+    },
+    {
+      "number" : 174,
+      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/174/"
+    },
+    {
+      "number" : 173,
+      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/173/"
+    },
+    {
+      "number" : 172,
+      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/172/"
+    },
+    {
+      "number" : 171,
+      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/171/"
+    },
+    {
+      "number" : 170,
+      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/170/"
+    },
+    {
+      "number" : 169,
+      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/169/"
+    },
+    {
+      "number" : 168,
+      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/168/"
+    },
+    {
+      "number" : 167,
+      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/167/"
+    },
+    {
+      "number" : 166,
+      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/166/"
+    },
+    {
+      "number" : 165,
+      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/165/"
+    },
+    {
+      "number" : 164,
+      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/164/"
+    },
+    {
+      "number" : 163,
+      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/163/"
+    },
+    {
+      "number" : 162,
+      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/162/"
+    },
+    {
+      "number" : 161,
+      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/161/"
+    },
+    {
+      "number" : 160,
+      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/160/"
+    },
+    {
+      "number" : 159,
+      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/159/"
+    },
+    {
+      "number" : 158,
+      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/158/"
+    },
+    {
+      "number" : 157,
+      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/157/"
+    },
+    {
+      "number" : 156,
+      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/156/"
+    }
+  ],
+  "color" : "aborted_anime",
+  "firstBuild" : {
+    "number" : 156,
+    "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/156/"
+  },
+  "healthReport" : [
+    {
+      "description" : "Build stability: 4 out of the last 5 builds failed.",
+      "iconUrl" : "health-00to19.png",
+      "score" : 20
+    }
+  ],
+  "inQueue" : false,
+  "keepDependencies" : false,
+  "lastBuild" : {
+    "number" : 176,
+    "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/176/"
+  },
+  "lastCompletedBuild" : {
+    "number" : 175,
+    "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/175/"
+  },
+  "lastFailedBuild" : {
+    "number" : 172,
+    "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/172/"
+  },
+  "lastStableBuild" : {
+    "number" : 171,
+    "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/171/"
+  },
+  "lastSuccessfulBuild" : {
+    "number" : 171,
+    "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/171/"
+  },
+  "lastUnstableBuild" : null,
+  "lastUnsuccessfulBuild" : {
+    "number" : 175,
+    "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/175/"
+  },
+  "nextBuildNumber" : 177,
+  "property" : [
+
+  ],
+  "queueItem" : null,
+  "concurrentBuild" : false,
+  "downstreamProjects" : [
+
+  ],
+  "scm" : {
+
+  },
+  "upstreamProjects" : [
+
+  ]
+}

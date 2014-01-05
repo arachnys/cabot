@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+  <meta charset="utf-8">
+  <title>{% block title %}Cabot by Arachnys{% endblock title %}</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% load compress %}
+  {% compress css %}
+  <link href="{{ STATIC_URL }}bootstrap/css/bootstrap.css" rel="stylesheet">
+  <link id="chosen-css" href="{{ STATIC_URL }}theme/css/chosen.css" rel="stylesheet">
+  <link href="{{ STATIC_URL }}theme/css/jquery-ui-1.8.21.custom.css" type="text/css" rel="stylesheet">
+  <link href="{{ STATIC_URL }}arachnys/css/base.less" type="text/less" rel="stylesheet">
+  <link rel="stylesheet" href="{{ STATIC_URL }}arachnys/css/morris.css" type="text/css">
+  {% endcompress %}
+  <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+
+  <link rel="icon" href="{{ STATIC_URL }}arachnys/img/icon_48x48.png" type="image/png">
+  {% compress js %}
+  <script type="text/coffeescript">
+  if window.location.host.indexOf('localhost') != -1
+    window.ENVIRONMENT = 'DEVELOPMENT'
+  else
+    window.ENVIRONMENT = 'PRODUCTION'
+  </script>
+  {% endcompress %}
+</head>
+
+<body>
+  <div class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <a href="{% url services %}" class="navbar-brand"><img src="{{ STATIC_URL }}arachnys/img/icon_48x48.png" width='20' height='20' /> Cabot by Arachnys</a>
+        <button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#navbar-main">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+      </div>
+      <div class="navbar-collapse collapse" id="navbar-main">
+        <ul class="nav navbar-nav">
+          <li><a href="{% url services %}"><i class="fa fa-gears"></i> Services</a></li>
+          <li>
+            <a href="{% url checks %}"><i class="fa fa-cog"></i> Checks</a>
+          </li>
+          <ul class="nav navbar-nav navbar-left">
+            <li class="dropdown">
+              <a class="dropdown-toggle" data-toggle="dropdown" href="#" id="download">New <span class="caret"></span></a>
+              <ul class="dropdown-menu" aria-labelledby="New">
+                <li>
+                  <a href="{% url create-service %}"><i class="fa fa-gears"></i> Service</a>
+                </li>
+                <li class="divider"></li>
+                <li>
+                  <a href="{% url create-check %}?service={{ service.id }}" class=""><i class="glyphicon glyphicon-signal" title="Add new metric check"></i> Graphite check</a>
+                </li>
+                <li>
+                  <a href="{% url create-http-check %}?service={{ service.id }}" class="" title="Add new Http check"><i class="glyphicon glyphicon-arrow-up"></i> Http check</a>
+                </li>
+                <li>
+                  <a href="{% url create-jenkins-check %}?service={{ service.id }}" class="" title="Add new Jenkins check"><i class="glyphicon glyphicon-ok"></i> Jenkins check</a>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+          <li class="dropdown">
+            <a class="dropdown-toggle" data-toggle="dropdown" href="#" id="download">Admin <span class="caret"></span></a>
+            <ul class="dropdown-menu" aria-labelledby="admin">
+              <li>
+                <a href="{% url subscriptions %}"><i class="fa fa-table"></i> Alert subscriptions</a>
+              </li>
+              <li>
+                <a href="{% url shifts %}"><i class="glyphicon glyphicon-time"></i> Duty rota</a>
+              </li>
+              <li class="divider"></li>
+              <li>
+                <a href="/admin/"><i class="glyphicon glyphicon-lock"></i> Django admin</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <!-- start: Header -->
+  <div class="container">
+    <noscript>
+      <div class="alert alert-block span10">
+        <h4 class="alert-heading">Warning!</h4>
+        <p>You need to have <a href="http://en.wikipedia.org/wiki/JavaScript" target="_blank">JavaScript</a> enabled to use this site.</p>
+      </div>
+    </noscript>
+    <div class="row">
+    {% block content %}
+    {% endblock content %}
+    </div>
+    <div class="clearfix"></div>
+
+  </div>
+
+  {% load compress %}
+  {% block js %}
+
+  {% compress js %}
+    <script src="{{ STATIC_URL }}bootstrap/js/jquery-1.10.2.js"></script>
+    <script src="{{ STATIC_URL }}theme/js/jquery-ui.js"></script>
+    <script src="{{ STATIC_URL }}theme/js/jquery.ui.core.js"></script>
+    <script src="{{ STATIC_URL }}theme/js/jquery.ui.position.js"></script>
+    <script src="{{ STATIC_URL }}theme/js/jquery.ui.autocomplete.js"></script>
+
+    <script src="{{ STATIC_URL }}bootstrap/js/bootstrap.js"></script>
+
+    <script src='{{ STATIC_URL }}theme/js/jquery.dataTables.min.js'></script>
+
+    <script src="{{ STATIC_URL }}theme/js/chosen.jquery.js"></script>
+
+    <script src="{{ STATIC_URL }}theme/js/jquery.sparkline.min.js"></script>
+
+    <script src="{{ STATIC_URL }}theme/js/custom.js"></script>
+    <script type="text/coffeescript" src="{{ STATIC_URL }}arachnys/js/base.coffee"></script>
+    <script src="{{ STATIC_URL }}arachnys/js/raphael.js"></script>
+    <script src="{{ STATIC_URL }}arachnys/js/morris.js"></script>
+    <!-- end: JavaScript-->
+    <script type="text/coffeescript">
+    $ () ->
+      $('.sparktristate').sparkline('html', {type: 'tristate'})
+
+      $('ul.nav li a').each () ->
+        if $($(this))[0].href == String(window.location)
+          $(this).parent().addClass('active')
+
+      $('[data-rel="chosen"],[rel="chosen"]').chosen()
+
+      #$('.datatable').dataTable
+      #  sDom: "<'row-fluid'<'span6'l><'span6'f>r>t<'row-fluid'<'span12'i><'span12 center'p>>",
+      #  sPaginationType: "bootstrap",
+      #  iDisplayLength: 100,
+      #  oLanguage:
+      #    sLengthMenu: "_MENU_ records per page"
+    </script>
+  {% endcompress %}
+  {% endblock js %}
+</body>
+</html>

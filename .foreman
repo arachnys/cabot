@@ -1,0 +1,4 @@
+# vi: set ft=yaml :
+
+procfile: Procfile.dev
+env: conf/development.env

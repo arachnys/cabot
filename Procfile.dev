@@ -1,0 +1,2 @@
+web:       python manage.py runserver 0.0.0.0:$PORT
+celery:    celeryd --loglevel=DEBUG -B -c 2
