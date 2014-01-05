@@ -4,101 +4,101 @@
 
   ],
   "description" : "",
-  "displayName" : "cron-run-engine-pingchecks",
+  "displayName" : "some-job",
   "displayNameOrNull" : null,
-  "name" : "cron-run-engine-pingchecks",
-  "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/",
+  "name" : "some-job",
+  "url" : "https://jenkins.example.com/job/some-job/",
   "buildable" : true,
   "builds" : [
     {
       "number" : 176,
-      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/176/"
+      "url" : "https://jenkins.example.com/job/some-job/176/"
     },
     {
       "number" : 175,
-      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/175/"
+      "url" : "https://jenkins.example.com/job/some-job/175/"
     },
     {
       "number" : 174,
-      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/174/"
+      "url" : "https://jenkins.example.com/job/some-job/174/"
     },
     {
       "number" : 173,
-      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/173/"
+      "url" : "https://jenkins.example.com/job/some-job/173/"
     },
     {
       "number" : 172,
-      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/172/"
+      "url" : "https://jenkins.example.com/job/some-job/172/"
     },
     {
       "number" : 171,
-      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/171/"
+      "url" : "https://jenkins.example.com/job/some-job/171/"
     },
     {
       "number" : 170,
-      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/170/"
+      "url" : "https://jenkins.example.com/job/some-job/170/"
     },
     {
       "number" : 169,
-      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/169/"
+      "url" : "https://jenkins.example.com/job/some-job/169/"
     },
     {
       "number" : 168,
-      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/168/"
+      "url" : "https://jenkins.example.com/job/some-job/168/"
     },
     {
       "number" : 167,
-      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/167/"
+      "url" : "https://jenkins.example.com/job/some-job/167/"
     },
     {
       "number" : 166,
-      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/166/"
+      "url" : "https://jenkins.example.com/job/some-job/166/"
     },
     {
       "number" : 165,
-      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/165/"
+      "url" : "https://jenkins.example.com/job/some-job/165/"
     },
     {
       "number" : 164,
-      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/164/"
+      "url" : "https://jenkins.example.com/job/some-job/164/"
     },
     {
       "number" : 163,
-      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/163/"
+      "url" : "https://jenkins.example.com/job/some-job/163/"
     },
     {
       "number" : 162,
-      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/162/"
+      "url" : "https://jenkins.example.com/job/some-job/162/"
     },
     {
       "number" : 161,
-      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/161/"
+      "url" : "https://jenkins.example.com/job/some-job/161/"
     },
     {
       "number" : 160,
-      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/160/"
+      "url" : "https://jenkins.example.com/job/some-job/160/"
     },
     {
       "number" : 159,
-      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/159/"
+      "url" : "https://jenkins.example.com/job/some-job/159/"
     },
     {
       "number" : 158,
-      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/158/"
+      "url" : "https://jenkins.example.com/job/some-job/158/"
     },
     {
       "number" : 157,
-      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/157/"
+      "url" : "https://jenkins.example.com/job/some-job/157/"
     },
     {
       "number" : 156,
-      "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/156/"
+      "url" : "https://jenkins.example.com/job/some-job/156/"
     }
   ],
   "color" : "aborted_anime",
   "firstBuild" : {
     "number" : 156,
-    "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/156/"
+    "url" : "https://jenkins.example.com/job/some-job/156/"
   },
   "healthReport" : [
     {
@@ -111,28 +111,28 @@
   "keepDependencies" : false,
   "lastBuild" : {
     "number" : 176,
-    "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/176/"
+    "url" : "https://jenkins.example.com/job/some-job/176/"
   },
   "lastCompletedBuild" : {
     "number" : 175,
-    "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/175/"
+    "url" : "https://jenkins.example.com/job/some-job/175/"
   },
   "lastFailedBuild" : {
     "number" : 172,
-    "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/172/"
+    "url" : "https://jenkins.example.com/job/some-job/172/"
   },
   "lastStableBuild" : {
     "number" : 171,
-    "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/171/"
+    "url" : "https://jenkins.example.com/job/some-job/171/"
   },
   "lastSuccessfulBuild" : {
     "number" : 171,
-    "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/171/"
+    "url" : "https://jenkins.example.com/job/some-job/171/"
   },
   "lastUnstableBuild" : null,
   "lastUnsuccessfulBuild" : {
     "number" : 175,
-    "url" : "https://jenkinson.arachnys.com/job/cron-run-engine-pingchecks/175/"
+    "url" : "https://jenkins.example.com/job/some-job/175/"
   },
   "nextBuildNumber" : 177,
   "property" : [

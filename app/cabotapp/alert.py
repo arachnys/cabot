@@ -60,7 +60,7 @@ def send_email_alert(service, users, duty_officers):
   send_mail(
     subject=subject,
     message=t.render(c),
-    from_email='Arachnys Cabot <techteam@arachnys.com>',
+    from_email='Cabot <%s>' % settings.CABOT_FROM_EMAIL,
     recipient_list=emails,
   )
 

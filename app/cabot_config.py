@@ -1,6 +1,7 @@
 
 import os
 
+WWW_HTTP_HOST = os.environ.get('CABOT_FROM_EMAIL')
 GRAPHITE_API = os.environ.get('GRAPHITE_API')
 GRAPHITE_USER = os.environ.get('GRAPHITE_USER')
 GRAPHITE_PASS = os.environ.get('GRAPHITE_PASS')
