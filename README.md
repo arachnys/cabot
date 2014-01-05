@@ -205,6 +205,14 @@ It's just a lucky coincidence that his name sounds like he could be an automatio
 
 Please write an adaptor, add some tests and send us a pull request. We don't yet have a proper plug-in architecture but it wouldn't be hard to implement one.
 
+Some functionality will still work although note that:
+
+*   **Twilio** is required for telephone alerts
+*   **Hipchat** is required for Hipchat alerts (obviously)
+*   We use [**SES**](http://aws.amazon.com/ses/) as our email provider. It should be easy to sub a different SMTP provider (such as Mandrill, Mailgun or even just localhost) in but it's not tested.
+*   **Graphite** is required if you want to alert on metrics, but if you don't configure any Graphite checks other types should still work.
+*   **Jenkins** is required for alerts on jobs, but if you don't add any Jenkins checks other types will still work.
+
 ### Who monitors the monitor?
 
 Cabot provides an unauthenticated endpoint `/status/` which returns response body `Checks running` if any checks have successfully run in the last five minutes, and `Checks not running` if they have not.
