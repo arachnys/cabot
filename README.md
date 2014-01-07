@@ -31,7 +31,7 @@ Cabot is written in Python and uses [Django](https://www.djangoproject.com/), [B
 2.  Add your keys for external services to `conf/production.env`.
 3.  Spin up a new VPS instance (on e.g. AWS or DigitalOcean) - you can even do this from the command line via [`tugboat`](https://github.com/pearkes/tugboat)
     *   `tugboat create cabot --size=63 --image=1505447 --region=1` - create a new droplet called `cabot` with 1GB of memory running Ubuntu 12.04 in New York region
-4.  Deploy using [Fabric](http://docs.fabfile.org/) Run `fab provision -H root@your.server.hostname` from your local clone. This will install dependencies on the new server and create a new `ubuntu` user that will be able to connect over SSH (we do this for compatibility with Amazon's Ubuntu AMIs).
+4.  Deploy using [Fabric](http://docs.fabfile.org/): run `fab provision -H root@your.server.hostname` from your local clone. This will install dependencies on the new server and create a new `ubuntu` user that will be able to connect over SSH (we do this for compatibility with Amazon's Ubuntu AMIs).
 5.  Run `fab deploy -H ubuntu@your.server.hostname` locally.
     *   The deploy script will prompt you to create a Django superuser which you'll use to log in and create additional users.
 6.  Go to `your.server.hostname`, log in as superuser, and create your first `Service`s and `Check`s using the web interface.
