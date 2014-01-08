@@ -36,9 +36,9 @@ if [ ! -d /home/vagrant/venv ]; then
   virtualenv --no-site-packages /home/vagrant/venv/
 fi
 
-npm install --no-color -g coffee-script less@1.3 # eco browserify
+npm install --no-color -g coffee-script less@1.3 --registry http://registry.npmjs.org/ # eco browserify
 
-/home/vagrant/venv/bin/pip install --timeout=30 --exists-action=w -r /vagrant/requirements.txt
+/home/vagrant/venv/bin/pip install --timeout=30 --exists-action=w -r /vagrant/requirements.txt --no-use-wheel
 
 # Start redis
 sudo service redis-server restart
