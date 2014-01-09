@@ -1,0 +1,49 @@
+# Site title and subtitle. This is used in _includes/header.html
+title: 'Cabot - open-source infrastructure monitoring and alerting'
+subtitle: 'Phone and Hipchat alerts when services go down or metrics go crazy'
+
+# Enable/show navigation. There are there options:
+#   0 - always hide
+#   1 - always show
+#   2 - show only if posts are present
+navigation: 1
+
+# URL to source code, used in _includes/footer.html
+codeurl: 'https://github.com/bruth/jekyll-docs-template'
+
+# Default categories (in order) to appear in the navigation
+sections: [
+    ['qs', 'Quickstart'],
+    ['use', 'Usage'],
+    ['dev', 'Development'],
+]
+
+# Keep as an empty string if served up at the root. If served up at a specific
+# path (e.g. on GitHub pages) leave off the trailing slash, e.g. /my-project
+baseurl: ''
+
+# Dates are not included in permalinks
+permalink: none
+
+# Syntax highlighting
+pygments: true
+
+# Since these are pages, it doesn't really matter
+future: true
+
+# Exclude non-site files
+exclude: ['bin', 'README.md']
+
+# Use the redcarpet Markdown renderer
+markdown: redcarpet
+redcarpet:
+    extensions: [
+        'no_intra_emphasis',
+        'fenced_code_blocks',
+        'autolink',
+        'strikethrough',
+        'superscript',
+        'with_toc_data',
+        'tables',
+        'hardwrap'
+    ]
