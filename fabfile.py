@@ -90,7 +90,7 @@ def provision():
   with open(os.path.expanduser('~/.ssh/id_rsa.pub')) as f:
     local_ssh_key = f.read().strip('\n')
   put('bin/setup_dependencies.sh', '/tmp/setup_dependencies.sh')
-  run('LOCAL_SSH_KEY="%s" bash /tmp/setup_dependencies.sh' % local_ssh_key)
+  sudo('LOCAL_SSH_KEY="%s" bash /tmp/setup_dependencies.sh' % local_ssh_key)
   # Clean up
   run('rm /tmp/setup_dependencies.sh')
 
