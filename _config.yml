@@ -1,6 +1,6 @@
 # Site title and subtitle. This is used in _includes/header.html
-title: 'Cabot - open-source infrastructure monitoring and alerting'
-subtitle: 'Phone and Hipchat alerts when services go down or metrics go crazy'
+title: 'Cabot - monitor and alert'
+subtitle: 'Get alerted when services go down or metrics go crazy'
 
 # Enable/show navigation. There are there options:
 #   0 - always hide
@@ -9,7 +9,7 @@ subtitle: 'Phone and Hipchat alerts when services go down or metrics go crazy'
 navigation: 1
 
 # URL to source code, used in _includes/footer.html
-codeurl: 'https://github.com/bruth/jekyll-docs-template'
+codeurl: 'https://github.com/arachnys/cabot'
 
 # Default categories (in order) to appear in the navigation
 sections: [

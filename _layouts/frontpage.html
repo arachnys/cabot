@@ -5,7 +5,7 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
         <meta name="viewport" content="width=device-width">
 
-        <title>{{ site.title }}{% if page.title %} : {{ page.title }}{% endif %}</title>
+        <title>{{ site.title }}</title>
         <meta name="description" content="{{ site.subtitle }}">
 
         <!-- Latest compiled and minified CSS -->
@@ -17,39 +17,68 @@
         <!-- Latest compiled and minified JavaScript -->
         <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
 
+        <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+
         <link rel="stylesheet" href="{{ site.baseurl }}/css/syntax.css">
         <link rel="stylesheet" href="{{ site.baseurl }}/css/main.css">
     </head>
     <body>
 
         <a href="https://github.com/arachnys/cabot"><img style="position: fixed; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png" alt="Fork me on GitHub"></a>
-
-        <div class="container">
-            <div class="row">
-                <div id="header" class="col-md-12">
-                    {% include header.html %}
+        <div class="jumbotron dark">
+            <div class="container">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <h1 class="">{{ site.title }}</h1>
+                        <div class="">{{ site.subtitle }}</div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-9">
+                        <a href="/qs/quickstart.html">5 minute deploy</a>
+                        | <a href="/use/services.html">Monitor infrastructure</a>
+                        | <a href="https://github.com/arachnys/cabot">GitHub project</a>
+                    </div>
+                    <div class="col-xs-3 text-right">
+                        <a href="https://www.arachnys.com/">About Arachnys</a>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-12">
+                        <div class="screenshot">
+                            <img class="img-responsive" src="/images/frontpage-screenshot.png"/>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <div class="row">
-                {% assign post_count = site.posts|size %}
-                {% if site.navigation != 0 and site.navigation == 1 or post_count > 0 %}
-                    <div id="navigation" class="col-md-2 bs-sidebar">
-                        {% include navigation.html %}
+        </div>
+        <hr>
+        <div class="container">
+            <div class="row features">
+                <div class="col-md-4 text-center">
+                    <h4><i class="fa fa-eye"></i> Monitor</h4>
+                    <div class="">
+                        Watch <a href="graphite-checks.html">Graphite metrics</a>, <a href="/use/jenkins-checks.html">Jenkins</a> jobs and <a href="/use/http-checks.html">web endpoints</a> for issues
                     </div>
-
-                    <div id="content" class="col-md-10">
-                        {{ content }}
+                </div>
+                <div class="col-md-4 text-center">
+                    <h4><i class="fa fa-dashboard"></i> Aggregate</h4>
+                    <div class="">
+                        Group related triggers into <a href="/use/services.html">service dashboards</a> that represent your infrastructure
                     </div>
-                {% else %}
-                    <div id="content" class="col-md-12">
-                        {{ content }}
+                </div>
+                <div class="col-md-4 text-center">
+                    <h4><i class="fa fa-mobile"></i> Alert</h4>
+                    <div class="">
+                        <a href="/use/alerting.html">Alert</a> support staff to issues by phone, SMS, Hipchat or email
                     </div>
-                {% endif %}
+                </div>
             </div>
-
+        </div>
+        <hr>
+        <div class="footer">
             <div class="row">
-                <div id="footer" class="col-md-12">
+                <div id="footer" class="col-xs-12">
                     {% include footer.html %}
                 </div>
             </div>

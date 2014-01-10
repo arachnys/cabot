@@ -1,17 +1,20 @@
 ---
 layout: page
-title: "Quickstart"
+title: "Get started"
 category: qs
 date: 2014-01-08 22:49:24
 ---
 
-Getting started is easy via a VPS on AWS or DigitalOcean (although Cabot can be hosted anywhere). Cabot is designed for deployment on Ubuntu 12.04 LTS.
+Getting started is easy via a VPS on [AWS](https://aws.amazon.com) or [DigitalOcean](https://www.digitalocean.com) (although Cabot can be hosted anywhere). Cabot is designed for deployment on Ubuntu 12.04 LTS.
+
+###Step by step
 
 1.  Clone:
 
         $ git clone git@github.com:arachnys/cabot.git
-        $ cd cabot
         # Clone the repo
+
+        $ cd cabot
 
 2.  Add your keys for external services to `conf/production.env`:
 
@@ -37,6 +40,6 @@ Getting started is easy via a VPS on AWS or DigitalOcean (although Cabot can be 
 
 6.  Navigate in web browser to `your.server.hostname`, log in as superuser, and create your first `Service`s and `Check`s using the web interface.
 
-7.  *(Optional)* get woken up at 3 a.m. by an automated phone call telling you the server you're monitoring has crashed.
+7.  *(Optional) get woken up at 3 a.m. by an automated phone call telling you the server you're monitoring has crashed.*
 
 Currently provisioning is done by the `bin/setup_dependencies.sh` script.

@@ -10,9 +10,9 @@ order: 2
 
 Our experience has been that Cabot is reasonably reliable. However, hardware fails, networks have issues and things go generally go wrong. So you should plan for the worst.
 
-For that reason we strongly recommend that you deploy Cabot somewhere that its failure - should it occur - will be mostly or entirely uncorrelated with other infrastructure issues that you may experience.
+For that reason we strongly recommend that you deploy Cabot somewhere that its failure - should it occur - should be uncorrelated with other infrastructure issues that you may experience.
 
-For example, if you host the majority of your infrastructure on AWS it might be reasonable to deploy Cabot to a VPS on Linode, or SoftLayer, or DigitalOcean.
+For example, if you host the majority of your infrastructure on AWS it might be reasonable to deploy Cabot to a VPS on Linode, or SoftLayer, or DigitalOcean. If your infrastructure is on OVH, put it on AWS. (Don't use a micro instance though, they are not very reliable.)
 
 A guide to getting started on DigitalOcean using the `tugboat` CLI is included in this documentation.
 
@@ -20,7 +20,7 @@ A guide to getting started on DigitalOcean using the `tugboat` CLI is included i
 
 Currently Cabot only supports a single telephone provider for alerts, making Cabot dependent on connecting to Twilio's servers and on those servers working correctly whenever Cabot tries to send an SMS or phone alert.
 
-Adding a backup provider, such as Plivo, might give further confidence that urgent messages will get through.
+Adding a backup provider, such as Plivo, might give further confidence that urgent messages will get through. If you would like to implement this please send a pull request.
 
 If high availability and reliability of paramount importance it may be worth looking at a commercial solution like [Pagerduty](http://pagerduty.com). However even [commercial providers have infrequent outages](http://blog.pagerduty.com/2013/12/outage-post-mortem-dec-11-2013/) under extreme conditions. What do you do, eh?
 

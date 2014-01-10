@@ -1,3 +1,4 @@
-[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/bruth/jekyll-docs-template/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+Cabot documentation
+===================
 
-Read the docs: http://bruth.github.io/jekyll-docs-template
+This is the user manual and documentation for [Cabot](https://github.com/arachnys/cabot). It is designed to be built to HTML using Jekyll.

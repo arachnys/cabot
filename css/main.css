@@ -28,10 +28,14 @@ code {
 }
 
 #footer {
-    margin: 20px 0;
+    margin: 50px 0;
     font-size: 0.85em;
     color: #999;
     text-align: center;
+}
+
+.footer {
+    background-color: #D5EDFD;
 }
 
 #content > .page-header:first-child {
@@ -53,6 +57,33 @@ code {
 }
 
 #navigation .nav-header {
-    padding-left: 0;
-    padding-right: 0;
+    padding: 15px 0 0 5px;
+    font-weight: bold;
 }
+
+#navigation .nav>li>a {
+    padding: 5px 15px;
+}
+
+table.table th {
+    text-align: center;
+}
+
+.jumbotron {
+    padding-bottom: 0;
+    background-color: #D5EDFD;
+}
+
+.jumbotron .container, .container {
+    max-width: 960px;
+}
+
+.jumbotron .screenshot {
+    border-radius: 10px 10px 0 0;
+    overflow: hidden;
+}
+
+.row.features {
+    padding: 30px 0;
+}
+
