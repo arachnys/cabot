@@ -1,6 +1,8 @@
 import os
 import os.path
 import sys
+import random
+import logging
 from itertools import chain
 
 from celery import Celery
@@ -26,6 +28,7 @@ celery.config_from_object(settings)
 # 'celery.canvas' api. To get around this, we use the internal 'celery._state'
 # api to force our app to be the default.
 set_default_app(celery)
+logger = logging.getLogger(__name__)
 
 
 @task(ignore_result=True)
@@ -44,11 +47,14 @@ def run_all_checks():
   from .models import StatusCheck
   from datetime import timedelta, datetime
   checks = StatusCheck.objects.all()
+  seconds = range(60)
   for check in checks:
     if check.last_run:
       next_schedule = check.last_run + timedelta(minutes=check.frequency)
     if (not check.last_run) or timezone.now() > next_schedule:
-      run_status_check.delay(check.id)
+      delay = random.choice(seconds)
+      logger.debug('Scheduling task for %s seconds from now' % delay)
+      run_status_check.apply_async((check.id,), countdown=delay)
 
 
 @task(ignore_result=True)
