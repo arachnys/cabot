@@ -83,7 +83,18 @@ table.table th {
     overflow: hidden;
 }
 
-.row.features {
-    padding: 30px 0;
+.row.features>div {
+    padding: 20px inherit;
+}
+
+.row.features>div>div {
+    padding: 10px 30px;
+}
+
+.container .col-md-10 img {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid #ddd;
+    padding: 5px;
 }
 

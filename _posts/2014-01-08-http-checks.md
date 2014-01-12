@@ -10,9 +10,9 @@ order: 6
 
 To add a new check:
 
-Click **New ∨** and then select **Http check**. Then fill in the form.
+Click **New ▾** and then **Http check**.
 
-Most values are self-explanatory.
+Most form fields are self-explanatory.
 
 *   `Text match` - this will be parsed as a regular expression and run against the raw HTML - not the rendered DOM - of the page retrieved from `Endpoint`. Of course, a simple word is a perfectly acceptable regular expression.
 *   `Status code` - currently you must specify a single status code, not a range.

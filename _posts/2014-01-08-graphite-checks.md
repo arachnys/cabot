@@ -9,9 +9,9 @@ order: 4
 
 To add a new check:
 
-Click **New ∨** and then select **Graphite check**. Then fill in the form.
+Click **New ▾** and then **Graphite check**.
 
-*   The only complex field is the `Metric` field.
+*   The only complex form field is the `Metric` field.
     *   This autocompletes based on your Graphite server's key namespace, but because that namespace gets very messy it can be hard to find the right key.
         *   ![Autocomplete in action](/images/graphite-form-autocomplete.png)
     *   You can also use more complex expressions, such as `avg(series.*.value)` or `sum(host1.value,host2.value)`

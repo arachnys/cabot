@@ -19,9 +19,9 @@ Cabot is key to that process. Jenkins can send email alerts on test failures but
 
 To add a new check:
 
-Click **New ∨** and then select **Jenkins check**. Then fill in the form.
+Click **New ▾** and then **Jenkins check**.
 
-The only required field is `Name`. Unlike for other checks (where the name can be anything), this must match exactly the title of the Jenkins job that you are monitoring.
+The only required form field is `Name`. Unlike for other checks (where the name can be anything), this must match exactly the title of the Jenkins job that you are monitoring.
 
 ![Jenkins dashboard](/images/jenkins-dashboard-status.png)
 
