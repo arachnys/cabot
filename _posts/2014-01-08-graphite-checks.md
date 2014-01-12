@@ -8,7 +8,7 @@ order: 4
 
 Graphite checks are a lightweight way of monitoring data that is already being fed into your [Graphite](https://graphite.readthedocs.org/en/latest/index.html) system for analysis, debugging and optimisation. Cabot makes it possible to alert on that data.
 
-### Quickstart
+### Getting started
 
 To add a new check:
 
@@ -19,7 +19,7 @@ Click **New ▾** and then **Graphite check**.
         *   ![Autocomplete in action](/images/graphite-form-autocomplete.png)
     *   You can also use more complex expressions, such as `avg(series.*.value)` or `sum(host1.value,host2.value)`
     *   As you type, Cabot will attempt to validate your expression against the server and will show a preview of the raw data feed:
-        *   ![Graphite metric preview](/images/graphite-metric-preview.png)
+        *  ![Graphite metric preview](/images/graphite-metric-preview.png)
 *   `Check type` is the operator that you want to use to test the Graphite data series. Currently Cabot supports the obvious ones (`Equals`, `Greater than`, `Greater than or equal`, `Less than`, `Less than or equal`)
 *   `Value` is the threshold that you want to compare the metric to. You can imagine this as a horizontal line on the preview graph.
 
@@ -30,6 +30,8 @@ For example, if you want to alert when your series `hosts.production.*.disk.sda.
     Metric: hosts.production.disk.sda.disk_ops.read
     Check type: Greater than
     Value: 1.0
+
+#### Other options
 
 *   `Importance` - if this check fails, the service it relates to will have this status.
 *   `Expected num hosts` - sometimes you want to be sure that a metric is in fact being collected properly (`collectd` often seems to crash, etc). Setting this will cause the check to fail if Cabot detects that fewer than this number of hosts are sending metrics to Graphite for this key expression.

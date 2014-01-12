@@ -6,7 +6,7 @@ date: 2014-01-08 22:53:32
 order: 6
 ---
 
-### Quickstart
+### Getting started
 
 To add a new check:
 

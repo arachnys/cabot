@@ -15,7 +15,7 @@ We regularly run API and Selenium tests against key parts of our infrastructure 
 
 Cabot is key to that process. Jenkins can send email alerts on test failures but Cabot allows us to escalate those emails to Hipchat alerts, SMSs and even telephone alerts.
 
-###Quickstart
+###Getting started
 
 To add a new check:
 
