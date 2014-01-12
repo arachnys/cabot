@@ -40,7 +40,9 @@
       </div>
       <div class="navbar-collapse collapse" id="navbar-main">
         <ul class="nav navbar-nav">
-          <li><a href="{% url services %}"><i class="fa fa-gears"></i> Services</a></li>
+          <li>
+            <a href="{% url services %}"><i class="fa fa-gears"></i> Services</a>
+          </li>
           <li>
             <a href="{% url checks %}"><i class="fa fa-cog"></i> Checks</a>
           </li>
@@ -66,14 +68,18 @@
           </ul>
         </ul>
         <ul class="nav navbar-nav navbar-right">
+          <li>
+            <a href="{% url subscriptions %}"><i class="fa fa-table"></i> Alert subscriptions</a>
+          </li>
+          <li>
+            <a href="{% url shifts %}"><i class="glyphicon glyphicon-time"></i> Duty rota</a>
+          </li>
+          {% if user.is_authenticated %}
           <li class="dropdown">
-            <a class="dropdown-toggle" data-toggle="dropdown" href="#" id="download">Admin <span class="caret"></span></a>
+            <a class="dropdown-toggle" data-toggle="dropdown" href="#" id="download">{{ user.username }} <span class="caret"></span></a>
             <ul class="dropdown-menu" aria-labelledby="admin">
               <li>
-                <a href="{% url subscriptions %}"><i class="fa fa-table"></i> Alert subscriptions</a>
-              </li>
-              <li>
-                <a href="{% url shifts %}"><i class="glyphicon glyphicon-time"></i> Duty rota</a>
+                <a href="/admin/auth/user/add/"><i class="glyphicon glyphicon-user"></i> Add user</a>
               </li>
               <li class="divider"></li>
               <li>
@@ -81,6 +87,7 @@
               </li>
             </ul>
           </li>
+          {% endif %}
         </ul>
       </div>
     </div>
