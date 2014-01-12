@@ -17,7 +17,7 @@ Click **New ▾** and then **Graphite check**.
     *   You can also use more complex expressions, such as `avg(series.*.value)` or `sum(host1.value,host2.value)`
     *   As you type, Cabot will attempt to validate your expression against the server and will show a preview of the raw data feed:
         *   ![Graphite metric preview](/images/graphite-metric-preview.png)
-*   `Check type` is the operator that you want to use to test the Graphite data series. Currently Cabot supports the obvious ones (`==`, '>', '<', '>=', '<=')
+*   `Check type` is the operator that you want to use to test the Graphite data series. Currently Cabot supports the obvious ones (`Equals`, `Greater than`, `Greater than or equal`, `Less than`, `Less than or equal`)
 *   `Value` is the threshold that you want to compare the metric to. You can imagine this as a horizontal line on the preview graph.
 
 A Graphite check will **fail** if any datapoint in the `Metric` would cause the expression `[Metric] [Check type] [Value]` to be **true**.
@@ -56,5 +56,5 @@ If you don't already use Graphite, it's not difficult to install and provision. 
 
 You get the idea.
 
-There is also at least one provider of SaaS Graphite/statsd hosting: [https://www.hostedgraphite.com/](https://www.hostedgraphite.com/).
+There is also at least one provider of SaaS Graphite/statsd hosting: [https://www.hostedgraphite.com/](https://www.hostedgraphite.com/). We can't vouch for them but it looks like an easy way of having a dabble.
 
