@@ -536,7 +536,7 @@ class JenkinsStatusCheck(StatusCheck):
       return
     if not active:
       # We will fail if the job has been disabled
-      result.error = 'Job disabled on Jenkins' % self.name
+      result.error = 'Job "%s" disabled on Jenkins' % self.name
       result.succeeded = False
     else:
       if self.max_queued_build_time and status['blocked_build_time']:
