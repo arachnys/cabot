@@ -69,7 +69,7 @@ table.table th {
     text-align: center;
 }
 
-.jumbotron {
+.jumbotron.blue {
     padding-bottom: 0;
     background-color: #D5EDFD;
 }
@@ -81,6 +81,10 @@ table.table th {
 .jumbotron .screenshot {
     border-radius: 10px 10px 0 0;
     overflow: hidden;
+}
+
+.jumbotron .btn-lg {
+    font-size: 1em;
 }
 
 .row.features>div {
