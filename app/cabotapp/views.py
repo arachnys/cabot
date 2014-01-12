@@ -42,13 +42,13 @@ def subscriptions(request):
 def run_status_check(request, pk):
   """Runs a specific check"""
   _run_status_check(check_or_id=pk)
-  return HttpResponseRedirect(reverse_lazy('checks'))
+  return HttpResponseRedirect(reverse('check', kwargs={'pk': pk}))
 
 @login_required
 def update_service(request, pk):
   """Updates an individual service"""
   _update_service(service_or_id=pk)
-  return HttpResponseRedirect(reverse_lazy('services'))
+  return HttpResponseRedirect(reverse('service', kwargs={'pk': pk}))
 
 
 class StatusCheckResultDetailView(LoginRequiredMixin, DetailView):

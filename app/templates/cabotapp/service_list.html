@@ -38,7 +38,7 @@
           <td>
             <span class="label label-{% if service.inactive_status_checks.all.count > 0 %}warning{% else %}default{% endif %}">{{ service.inactive_status_checks.all.count }}</span>
           </td>
-          <td>
+          <td class="text-right">
             <a class="btn btn-xs" href="{% url update-service pk=service.id %}" role="button">
               <i class="glyphicon glyphicon-edit"></i>
             </a>
