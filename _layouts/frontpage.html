@@ -15,6 +15,7 @@
         <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap-theme.min.css">
 
         <!-- Latest compiled and minified JavaScript -->
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
         <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
 
         <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
@@ -96,6 +97,12 @@
                 </div>
             </div>
         </div>
+        <script>
+        if (window.location.href.indexOf('http://arachnys.github.io') != -1) {
+            // Poor man's redirect
+            window.location.href = 'http://cabotapp.com'
+        }
+        </script>
 
         <script>
             function orderNav() {
