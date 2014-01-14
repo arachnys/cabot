@@ -1,3 +1,5 @@
+{% load extra %}
+
 <div class="row">
   <div class="col-xs-12">
     <div class="col-xs-1"><h3><i class="{% if checks_type == "All" %}fa fa-cog{% else %}glyphicon glyphicon-{% if checks_type == "Http" %}arrow-up{% elif checks_type == "Jenkins" %}ok{% else %}signal{% endif %}{% endif %}"></i></h3></div>
@@ -91,6 +93,11 @@
             <a class="btn btn-xs" href="{% url run-check pk=check.id %}">
               <i class="glyphicon glyphicon-refresh"></i><span class="break"></span>
             </a>
+            {% if checks_type == "Jenkins" %}
+            <a class="btn btn-xs" href="{% jenkins_human_url check.name %}">
+              <i class="glyphicon glyphicon-link"></i><span class="break"></span>
+            </a>
+            {% endif %}
           </td>
         </tr>
       {% endfor %}
