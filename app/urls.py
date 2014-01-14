@@ -1,18 +1,20 @@
 from django.conf.urls.defaults import patterns, include, url
-from cabotapp.views import (run_status_check, update_service,
+from django.contrib import admin
+from django.contrib.auth.views import login, logout, password_reset, password_reset_done, password_reset_confirm
+from django.views.generic.base import RedirectView
+admin.autodiscover()
+
+from app.cabotapp.views import (run_status_check, update_service,
     graphite_api_data, twiml_callback, checks_run_recently,
     GraphiteCheckCreateView, GraphiteCheckUpdateView,
     HttpCheckCreateView, HttpCheckUpdateView,
     JenkinsCheckCreateView, JenkinsCheckUpdateView,
     StatusCheckDeleteView, StatusCheckListView, StatusCheckDetailView,
-    StatusCheckResultDetailView)
-from cabotapp.views import (ServiceListView, ServiceDetailView,
+    StatusCheckResultDetailView,
+    ServiceListView, ServiceDetailView,
     ServiceUpdateView, ServiceCreateView, ServiceDeleteView,
     UserProfileUpdateView, ShiftListView, subscriptions)
-from django.contrib import admin
-from django.views.generic.base import RedirectView
-from django.contrib.auth.views import login, logout, password_reset, password_reset_done, password_reset_confirm
-admin.autodiscover()
+
 
 urlpatterns = patterns('',
     url(r'^$', view=RedirectView.as_view(url='services/', permanent=False), name='dashboard'),
