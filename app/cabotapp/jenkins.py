@@ -1,19 +1,14 @@
-from datetime import datetime
 from os import environ as env
 
-from celery.utils.log import get_task_logger
 from django.conf import settings
-from django.utils import timezone
 import requests
+from datetime import datetime
+from django.utils import timezone
+from celery.utils.log import get_task_logger
 
 logger = get_task_logger(__name__)
 
 auth = (settings.JENKINS_USER, settings.JENKINS_PASS)
-
-
-def get_jenkins_url(jobname):
-  return settings.JENKINS_API + 'job/%s/api/json' % jobname
-
 
 def get_job_status(jobname):
   ret = {
@@ -21,7 +16,7 @@ def get_job_status(jobname):
     'succeeded': False,
     'blocked_build_time': None
   }
-  endpoint = get_jenkins_url(jobname)
+  endpoint = settings.JENKINS_API + 'job/%s/api/json' % jobname
   resp = requests.get(endpoint, auth=auth, verify=True)
   resp.raise_for_status()
   status = resp.json

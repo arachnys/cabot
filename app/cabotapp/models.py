@@ -497,7 +497,7 @@ class JenkinsStatusCheck(StatusCheck):
 
   @property
   def check_category(self):
-    return 'Jenkins check'
+    return "Jenkins check"
 
   @property
   def failing_short_status(self):

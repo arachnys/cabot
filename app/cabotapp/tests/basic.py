@@ -1,24 +1,21 @@
-from datetime import timedelta
+import requests
+from cabotapp.alert import _send_hipchat_alert
+from django.utils import timezone
+from django.test import TestCase
+from django.contrib.auth.models import User
+from cabotapp.models import (StatusCheck, GraphiteStatusCheck, JenkinsStatusCheck,
+    HttpStatusCheck, Service, StatusCheckResult)
 from mock import Mock, patch
+from twilio import rest
+from django.core import mail
+from datetime import timedelta
 import json
 import os
-
-from django.contrib.auth.models import User
-from django.core import mail
-from django.test import TestCase
-from django.utils import timezone
-from twilio import rest
-import requests
-
-from app.cabotapp.alert import _send_hipchat_alert
-from app.cabotapp.models import (StatusCheck, GraphiteStatusCheck, JenkinsStatusCheck,
-                                 HttpStatusCheck, Service, StatusCheckResult)
 
 def get_content(fname):
   path = os.path.join(os.path.dirname(__file__), 'fixtures/%s' % fname)
   with open(path) as f:
     return f.read()
-
 
 class LocalTestCase(TestCase):
   def setUp(self):
@@ -51,7 +48,6 @@ def fake_http_404_response(*args, **kwargs):
   resp.content = get_content('http_response.html')
   resp.status_code = 404
   return resp
-
 
 class TestCheckRun(LocalTestCase):
   def setUp(self):
@@ -132,7 +128,7 @@ class TestCheckRun(LocalTestCase):
     self.service.update_status()
     self.assertEqual(self.service.overall_status, Service.PASSING_STATUS)
 
-  @patch('app.cabotapp.graphite.requests.get', fake_graphite_response)
+  @patch('cabotapp.graphite.requests.get', fake_graphite_response)
   def test_graphite_run(self):
     checkresults = self.graphite_check.statuscheckresult_set.all()
     self.assertEqual(len(checkresults), 2)
@@ -152,7 +148,7 @@ class TestCheckRun(LocalTestCase):
     self.assertEqual(len(checkresults), 4)
     self.assertEqual(self.graphite_check.calculated_status, Service.CALCULATED_PASSING_STATUS)
 
-  @patch('app.cabotapp.jenkins.requests.get', fake_jenkins_response)
+  @patch('cabotapp.jenkins.requests.get', fake_jenkins_response)
   def test_jenkins_run(self):
     checkresults = self.jenkins_check.statuscheckresult_set.all()
     self.assertEqual(len(checkresults), 0)
@@ -161,7 +157,7 @@ class TestCheckRun(LocalTestCase):
     self.assertEqual(len(checkresults), 1)
     self.assertFalse(self.jenkins_check.last_result().succeeded)
 
-  @patch('app.cabotapp.models.requests.get', fake_http_200_response)
+  @patch('cabotapp.models.requests.get', fake_http_200_response)
   def test_http_run(self):
     checkresults = self.http_check.statuscheckresult_set.all()
     self.assertEqual(len(checkresults), 0)
@@ -176,7 +172,7 @@ class TestCheckRun(LocalTestCase):
     self.assertFalse(self.http_check.last_result().succeeded)
     self.assertEqual(self.http_check.calculated_status, Service.CALCULATED_FAILING_STATUS)
 
-  @patch('app.cabotapp.models.requests.get', fake_http_404_response)
+  @patch('cabotapp.models.requests.get', fake_http_404_response)
   def test_http_run_bad_resp(self):
     checkresults = self.http_check.statuscheckresult_set.all()
     self.assertEqual(len(checkresults), 0)
@@ -185,3 +181,8 @@ class TestCheckRun(LocalTestCase):
     self.assertEqual(len(checkresults), 1)
     self.assertFalse(self.http_check.last_result().succeeded)
     self.assertEqual(self.http_check.calculated_status, Service.CALCULATED_FAILING_STATUS)
+
+
+
+
+
