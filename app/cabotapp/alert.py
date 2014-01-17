@@ -9,6 +9,7 @@ from twilio.rest import TwilioRestClient
 from twilio import twiml
 import requests
 import logging
+import urllib
 
 logger = logging.getLogger(__name__)
 
@@ -106,7 +107,6 @@ def _send_hipchat_alert(message, color='green', sender='Cabotapp'):
 
 
 def send_sms_alert(service, users, duty_officers):
-  client = TwilioRestClient(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
   mobiles = [u.profile.prefixed_mobile_number for u in users if hasattr(u, 'profile') and u.profile.mobile_number]
   if service.is_critical:
     mobiles += [u.profile.prefixed_mobile_number for u in duty_officers if hasattr(u, 'profile') and u.profile.mobile_number]
@@ -115,15 +115,42 @@ def send_sms_alert(service, users, duty_officers):
     'host': settings.WWW_HTTP_HOST,
   })
   message = Template(sms_template).render(c)
-  for mobile in mobiles:
-    try:
-      message = client.sms.messages.create(
-        to=mobile,
-        from_=settings.TWILIO_OUTGOING_NUMBER,
-        body=message,
-      )
-    except Exception, e:
-      logger.exception('Error sending twilio sms: %s' % e)
+  if settings.SMS_PROVIDER == 'TWILIO':
+      client = TwilioRestClient(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+      for mobile in mobiles:
+        try:
+          message = client.sms.messages.create(
+            to=mobile,
+            from_=settings.TWILIO_OUTGOING_NUMBER,
+            body=message,
+          )
+        except Exception, e:
+          logger.exception('Error sending Twilio sms: %s' % e)
+  if settings.SMS_PROVIDER == 'CLICKATELL':
+        url = "http://api.clickatell.com/http/sendmsg"
+        for mobile in mobiles:
+            try:
+                config = {}
+                config['user'] = settings.CLICKATELL_USERNAME
+                config['password'] = settings.CLICKATELL_PASSWORD
+                config['api_id'] = settings.CLICKATELL_API_ID
+                config['from'] = settings.CLICKATELL_OUTGOING_NUMBER
+                config['to'] = mobile
+                config['text'] = message
+
+                query = urllib.urlencode(config)
+                logger.exception('%s : %s', url, query)
+                file = urllib.urlopen(url, query)
+
+                output = file.read()
+
+                file.close()
+                if output[:2] != "ID":
+                    logger.exception('Error sending Clickatell sms: %s' % output)
+            except Exception, e:
+                logger.exception('Error sending Clickatell sms: %s' % e)
+
+
 
 
 def send_telephone_alert(service, users, duty_officers):
