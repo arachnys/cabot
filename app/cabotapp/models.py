@@ -515,22 +515,24 @@ class JenkinsStatusCheck(StatusCheck):
     try:
       status = get_job_status(self.name)
       active = status['active']
-    except requests.HTTPError:
-      # Fail if there's a 404 - the job is misconfigured probably
-      result.error = 'Job %s not found on Jenkins' % self.name
-      result.succeeded = False
-      finish = timezone.now()
-      result.time_complete = finish
-      result.save()
-      self.last_run = finish
-      super(JenkinsStatusCheck, self).save()
-      return
-    except:
+      if status['status_code'] == 404:
+        result.error = 'Job %s not found on Jenkins' % self.name
+        result.succeeded = False
+        finish = timezone.now()
+        result.time_complete = finish
+        result.save()
+        self.last_run = finish
+        super(JenkinsStatusCheck, self).save()
+        return
+      elif status['status_code'] > 400:
+        # Will fall through to next block
+        raise Exception('returned %s' % status['status_code'])
+    except Exception, e:
       # If something else goes wrong, we will *not* fail - otherwise
       # a lot of services seem to fail all at once.
       # Ugly to do it here but...
       finish = timezone.now()
-      result.error = 'Error fetching from Jenkins'
+      result.error = 'Error fetching from Jenkins - %s' % e
       result.succeeded = True
       result.time_complete = finish
       result.save()
