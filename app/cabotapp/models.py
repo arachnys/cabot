@@ -659,7 +659,7 @@ def get_duty_officers(at_time=None):
   else:
     try:
       u = UserProfile.objects.get(fallback_alert_user=True)
-      return [u]
+      return [u.user]
     except UserProfile.DoesNotExist:
       return []
 
