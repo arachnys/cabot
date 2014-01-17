@@ -376,7 +376,7 @@ class GraphiteStatusCheck(StatusCheck):
     if self.expected_num_hosts > 0:
       hosts_string = ' | %s/%s hosts' % (actual_hosts, self.expected_num_hosts)
       if self.expected_num_hosts > actual_hosts:
-        return 'Hosts missing%s'
+        return 'Hosts missing%s' % hosts_string
     if failure_value is None:
       return "Failed to get metric from Graphite"
     return "%0.1f %s %0.1f%s" % (
