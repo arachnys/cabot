@@ -43,7 +43,7 @@
       <tbody>
       {% for check in checks %}
         <tr class="{% if check.active %}enabled{% else %}warning{% endif %}">
-          <td title="{{ check.description }} - alerts {% if check.active %}enabled{% else %}disabled{% endif %}">
+          <td title="{{ check.name }} - alerts {% if check.active %}enabled{% else %}disabled{% endif %}">
             <a href="{% url check pk=check.id %}">{{check.name}}</a>
           </td>
           <td title="{{ check.calculated_status }}">
