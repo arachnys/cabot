@@ -1,6 +1,5 @@
 from django.conf.urls.defaults import patterns, include, url
-from cabotapp.views import (run_status_check, update_service,
-    graphite_api_data, twiml_callback, checks_run_recently,
+from cabotapp.views import (run_status_check, graphite_api_data, twiml_callback, checks_run_recently,
     GraphiteCheckCreateView, GraphiteCheckUpdateView,
     HttpCheckCreateView, HttpCheckUpdateView,
     JenkinsCheckCreateView, JenkinsCheckUpdateView,
@@ -29,7 +28,6 @@ urlpatterns = patterns('',
     url(r'^service/update/(?P<pk>\d+)/', view=ServiceUpdateView.as_view(), name='update-service'),
     url(r'^service/delete/(?P<pk>\d+)/', view=ServiceDeleteView.as_view(), name='delete-service'),
     url(r'^service/(?P<pk>\d+)/', view=ServiceDetailView.as_view(), name='service'),
-    url(r'^service/run_service_update/(?P<pk>\d+)/', view=update_service, name='run-service-update'),
 
     url(r'^checks/', view=StatusCheckListView.as_view(), name='checks'),
     url(r'^check/run/(?P<pk>\d+)/', view=run_status_check, name='run-check'),

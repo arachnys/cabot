@@ -9,7 +9,7 @@
     <div class="col-xs-1"><h2><i class="fa fa-gears"></i></h2></div>
     <div class="col-xs-5"><h2><span class="break"></span>{{ service.name }}</h2></div>
     <div class="col-xs-4 text-right"><h2><span class="label label-{% if service.overall_status == service.PASSING_STATUS %}success{% else %}danger{% endif %}">{{ service.overall_status|lower|capfirst }}</span> <span class="label label-{% if service.alerts_enabled %}success{% else %}warning{% endif %}">{% if service.alerts_enabled %}Alerts enabled{%else %}Alerts disabled{% endif %}</span></h2></div>
-    <div class="col-xs-2 text-right"><h2><a href="{% url update-service service.id %}"><i class="glyphicon glyphicon-edit"></i></a> <a href="{% url run-service-update pk=service.id %}"><i class="glyphicon glyphicon-refresh"></i></a></h2></div>
+    <div class="col-xs-2 text-right"><h2><a href="{% url update-service service.id %}"><i class="glyphicon glyphicon-edit"></i></a></h2></div>
   </div>
 </div>
 <hr>

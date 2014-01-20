@@ -44,12 +44,6 @@ def run_status_check(request, pk):
   _run_status_check(check_or_id=pk)
   return HttpResponseRedirect(reverse('check', kwargs={'pk': pk}))
 
-@login_required
-def update_service(request, pk):
-  """Updates an individual service"""
-  _update_service(service_or_id=pk)
-  return HttpResponseRedirect(reverse('service', kwargs={'pk': pk}))
-
 
 class StatusCheckResultDetailView(LoginRequiredMixin, DetailView):
   model = StatusCheckResult

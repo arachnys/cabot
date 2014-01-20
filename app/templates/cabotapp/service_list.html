@@ -13,7 +13,7 @@
     {% if not services %}
       No services
     {% else %}
-    <table class="table table-bordered bootstrap-datatable datatable">
+    <table class="table bootstrap-datatable datatable">
       <thead>
         <tr>
           <th>Name</th>
@@ -41,9 +41,6 @@
           <td class="text-right">
             <a class="btn btn-xs" href="{% url update-service pk=service.id %}" role="button">
               <i class="glyphicon glyphicon-edit"></i>
-            </a>
-            <a class="btn btn-xs" href="{% url run-service-update pk=service.id %}" role="button">
-              <i class="glyphicon glyphicon-refresh"></i>
             </a>
           </td>
         </tr>

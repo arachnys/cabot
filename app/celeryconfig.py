@@ -12,10 +12,6 @@ CELERYBEAT_SCHEDULE = {
         'task': 'app.cabotapp.tasks.run_all_checks',
         'schedule': timedelta(seconds=60),
     },
-    'update-services': {
-        'task': 'app.cabotapp.tasks.update_services',
-        'schedule': timedelta(seconds=60),
-    },
     'update-shifts': {
         'task': 'app.cabotapp.tasks.update_shifts',
         'schedule': timedelta(seconds=1800),

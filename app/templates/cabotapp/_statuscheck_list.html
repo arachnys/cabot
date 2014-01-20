@@ -25,16 +25,16 @@
     {% if not checks %}
       <div class="col-xs-11 col-xs-offset-1">No checks configured</div>
     {% else %}
-    <table class="table table-bordered bootstrap-datatable datatable">
+    <table class="table bootstrap-datatable datatable">
       <thead>
         <tr>
           <th>Name</th>
           <th>Status</th>
+          <th></th>
           {% if checks_type == "All" %}
-          <th>Type</th>
+          <th class="text-center">Type</th>
           {% endif %}
           <th>Test description</th>
-          <th>Health</th>
           <th>Importance</th>
           <th>Service(s)</th>
           <th></th>
@@ -55,15 +55,7 @@
             <span class="label label-warning">Disabled</span>
             {% endif %}
           </td>
-          {% if checks_type == "All" %}
-          <td>
-          <i class="glyphicon glyphicon-{% if check.polymorphic_ctype.model == 'graphitestatuscheck' %}signal{% elif check.polymorphic_ctype.model == 'httpstatuscheck' %}arrow-up{% elif check.polymorphic_ctype.model == 'jenkinsstatuscheck' %}ok{% endif %}"></i>
-          </td>
-          {% endif %}
-          <td title="">
-            {% if check.polymorphic_ctype.model == 'graphitestatuscheck' %}{{ check.metric|truncatechars:70 }} {{ check.check_type }} {{ check.value }}{% if check.expected_num_hosts %} (from {{ check.expected_num_hosts }} hosts){% endif %}{% elif check.polymorphic_ctype.model == 'httpstatuscheck' %}Status code {{ check.status_code }} from {{ check.endpoint }}{% if check.text_match %}; match text /{{ check.text_match }}/{% endif %}{% elif check.polymorphic_ctype.model == 'jenkinsstatuscheck' %}Monitor job {{ check.name }}{% if check.max_queued_build_time %}; check no build waiting for >{{ check.max_queued_build_time }} minutes{% endif %}{% endif %}
-          </td>
-          <td title="Last result from {{ check.last_run|timesince }} ago (rightmost is newest)" class="text-right">
+          <td title="Last result from {{ check.last_run|timesince }} ago (rightmost is newest)">
             {% if not check.recent_results %}
             No results available
             {% endif %}
@@ -72,6 +64,14 @@
                 {{ check.cached_health }}
               </span>
             </a>
+          </td>
+          {% if checks_type == "All" %}
+          <td class="text-center">
+          <i class="glyphicon glyphicon-{% if check.polymorphic_ctype.model == 'graphitestatuscheck' %}signal{% elif check.polymorphic_ctype.model == 'httpstatuscheck' %}arrow-up{% elif check.polymorphic_ctype.model == 'jenkinsstatuscheck' %}ok{% endif %}"></i>
+          </td>
+          {% endif %}
+          <td title="">
+            {% if check.polymorphic_ctype.model == 'graphitestatuscheck' %}{{ check.metric|truncatechars:70 }} {{ check.check_type }} {{ check.value }}{% if check.expected_num_hosts %} (from {{ check.expected_num_hosts }} hosts){% endif %}{% elif check.polymorphic_ctype.model == 'httpstatuscheck' %}Status code {{ check.status_code }} from {{ check.endpoint }}{% if check.text_match %}; match text /{{ check.text_match }}/{% endif %}{% elif check.polymorphic_ctype.model == 'jenkinsstatuscheck' %}Monitor job {{ check.name }}{% if check.max_queued_build_time %}; check no build waiting for >{{ check.max_queued_build_time }} minutes{% endif %}{% endif %}
           </td>
           <td>{{ check.get_importance_display }}</td>
           <td>
