@@ -9,6 +9,7 @@ from .alert import send_alert
 from .calendar import get_events
 from .graphite import parse_metric
 from .alert import send_alert
+from .tasks import update_service
 from datetime import datetime, timedelta
 from django.utils import timezone
 
@@ -354,7 +355,15 @@ class StatusCheck(PolymorphicModel):
     else:
       self.calculated_status = Service.CALCULATED_FAILING_STATUS
     self.cached_health = serialize_recent_results(recent_results)
-    super(StatusCheck, self).save(*args, **kwargs)
+    ret = super(StatusCheck, self).save(*args, **kwargs)
+    # Update linked services
+    self.update_related_services()
+    return ret
+
+  def update_related_services(self):
+    services = self.service_set.all()
+    for service in services:
+      update_service.delay(service.id)
 
 
 class GraphiteStatusCheck(StatusCheck):

@@ -59,9 +59,8 @@ def run_all_checks():
 
 @task(ignore_result=True)
 def update_services(ignore_result=True):
-  from .models import Service
-  for service in Service.objects.all():
-    update_service.delay(service.id)
+  # Avoid importerrors and the like from legacy scheduling
+  return
 
 
 @task(ignore_result=True)
