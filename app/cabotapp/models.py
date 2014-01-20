@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 from polymorphic import PolymorphicModel
 from django.db.models import F
 from django.contrib.admin.models import User
@@ -165,12 +166,12 @@ class Service(models.Model):
     if not self.alerts_enabled:
       return
     if self.overall_status != self.PASSING_STATUS:
-      # Don't alert every time - only every 10 mins for errors and critical, and 120 mins for warnings
+      # Don't alert every time
       if self.overall_status == self.WARNING_STATUS:
-        if self.last_alert_sent and (timezone.now() - timedelta(minutes=120)) < self.last_alert_sent:
+        if self.last_alert_sent and (timezone.now() - timedelta(minutes=settings.NOTIFICATION_INTERVAL)) < self.last_alert_sent:
           return
       elif self.overall_status in (self.CRITICAL_STATUS, self.ERROR_STATUS):
-        if self.last_alert_sent and (timezone.now() - timedelta(minutes=10)) < self.last_alert_sent:
+        if self.last_alert_sent and (timezone.now() - timedelta(minutes=settings.ALERT_INTERVAL)) < self.last_alert_sent:
           return
       self.last_alert_sent = timezone.now()
     else:
