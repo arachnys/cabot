@@ -12,9 +12,9 @@ All configuration takes place through environment variables managed by Foreman.
 
 #### Production
 
-Production configuration lives in `conf/production.env`. You should copy and customise the template file included as `conf/production.env.example`. 
+Production configuration lives in `conf/production.env`. You should copy and customise the template file included as `conf/production.env.example`.
 
-To change env variables on running instance, modify `conf/production.env` and deploy your changes with `fab deploy -H ubuntu@your.server.hostname` command (as is [5th step of quickstart](quickstart.html)).
+To change env variables on a running instance, modify `conf/production.env` locally and deploy your changes with `fab deploy -H ubuntu@your.server.hostname` (as in the [5th step of the quickstart guide](quickstart.html)).
 
 #### Development
 

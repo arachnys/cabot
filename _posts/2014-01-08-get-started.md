@@ -13,7 +13,7 @@ order: 1
     $ cd cabot
     $ cp conf/development.env.example conf/development.env
     # Create settings template copy
-    $ vim conf/development.env 
+    $ vim conf/development.env
     # Edit settings - add Twilio, Hipchat etc
 
     $ vagrant up
