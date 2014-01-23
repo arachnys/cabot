@@ -17,6 +17,8 @@
     iDisplayLength: 100
     oLanguage:
       sLengthMenu: "_MENU_ records per page"
+    fnDrawCallback: () ->
+      $('.sparktristate').sparkline('html', {type: 'tristate'})
 </script>
 {% endcompress %}
 {% endblock js %}
