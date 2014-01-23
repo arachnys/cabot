@@ -55,15 +55,10 @@
             <span class="label label-warning">Disabled</span>
             {% endif %}
           </td>
-          <td title="Last result from {{ check.last_run|timesince }} ago (rightmost is newest)">
+          <td title="Last result from {{ check.last_run|timesince }} ago (rightmost is newest)" class="sparktristate" values="{{ check.cached_health }}">
             {% if not check.recent_results %}
             No results available
             {% endif %}
-            <a href="{% url check pk=check.id %}">
-              <span class="sparktristate">
-                {{ check.cached_health }}
-              </span>
-            </a>
           </td>
           {% if checks_type == "All" %}
           <td class="text-center">
