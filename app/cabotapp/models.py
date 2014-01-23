@@ -477,8 +477,11 @@ class HttpStatusCheck(StatusCheck):
         verify=True,
         auth=auth
       )
-    except requests.RequestException, exc:
-      result.error = 'Request error occurred: %s' % (exc,)
+    except requests.RequestException, e:
+      result.error = 'Request error occurred: %s' % (e,)
+      result.succeeded = False
+    except Exception, e:
+      result.error = 'Error in performing check: %s' % (e,)
       result.succeeded = False
     else:
       if self.status_code and resp.status_code != int(self.status_code):
