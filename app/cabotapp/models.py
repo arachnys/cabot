@@ -193,7 +193,7 @@ class Service(models.Model):
     @property
     def recent_snapshots(self):
         snapshots = self.snapshots.filter(
-            time__gt=(timezone.now() - timedelta(minutes=60 * 4)))
+            time__gt=(timezone.now() - timedelta(minutes=60 * 24)))
         snapshots = list(snapshots.values())
         for s in snapshots:
             s['time'] = time.mktime(s['time'].timetuple())
