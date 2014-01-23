@@ -99,7 +99,7 @@ def _send_hipchat_alert(message, color='green', sender='Cabotapp'):
     'room_id': room,
     'from': sender[:15],
     'message': message,
-    'notify': True,
+    'notify': 1,
     'color': color,
     'message_format': 'text',
   })
