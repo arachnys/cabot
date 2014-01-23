@@ -132,7 +132,7 @@
     <!-- end: JavaScript-->
     <script type="text/coffeescript">
     $ () ->
-      $('.sparktristate').sparkline('html', {type: 'tristate'})
+      $('.sparktristate').sparkline('html', {type: 'tristate', disabledHiddenCheck: true})
 
       $('ul.nav li a').each () ->
         if $($(this))[0].href == String(window.location)
