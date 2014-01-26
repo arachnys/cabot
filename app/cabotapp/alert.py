@@ -148,6 +148,6 @@ def telephone_alert_twiml_callback(service):
   c = Context({'service': service})
   t = Template(telephone_template).render(c)
   r = twiml.Response()
-  r.say(t, voice='en-gb')
+  r.say(t, voice='woman')
   r.hangup()
   return r
