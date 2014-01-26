@@ -350,6 +350,7 @@ class StatusCheck(PolymorphicModel):
     try:
       result = self._run()
     except Exception as e:
+      result = StatusCheckResult(check=self)
       result.error = u'Error in performing check: %s' % (e,)
       result.succeeded = False
     finish = timezone.now()
@@ -365,14 +366,14 @@ class StatusCheck(PolymorphicModel):
     """
     raise NotImplementedError('Subclasses should implement')
 
-  def save(self):
+  def save(self, *args, **kwargs):
     recent_results = self.recent_results()
     if calculate_debounced_passing(recent_results, self.debounce):
       self.calculated_status = Service.CALCULATED_PASSING_STATUS
     else:
       self.calculated_status = Service.CALCULATED_FAILING_STATUS
     self.cached_health = serialize_recent_results(recent_results)
-    ret = super(StatusCheck, self).save()
+    ret = super(StatusCheck, self).save(*args, **kwargs)
     # Update linked services
     self.update_related_services()
     return ret
@@ -398,14 +399,14 @@ class GraphiteStatusCheck(StatusCheck):
     Returns something like:
     "5.0 > 4 | 1/2 hosts"
     """
-    hosts_string = ''
+    hosts_string = u''
     if self.expected_num_hosts > 0:
-      hosts_string = ' | %s/%s hosts' % (actual_hosts, self.expected_num_hosts)
+      hosts_string = u' | %s/%s hosts' % (actual_hosts, self.expected_num_hosts)
       if self.expected_num_hosts > actual_hosts:
-        return 'Hosts missing%s' % hosts_string
+        return u'Hosts missing%s' % hosts_string
     if failure_value is None:
       return "Failed to get metric from Graphite"
-    return "%0.1f %s %0.1f%s" % (
+    return u"%0.1f %s %0.1f%s" % (
       failure_value,
       self.check_type,
       float(self.value),
@@ -446,7 +447,7 @@ class GraphiteStatusCheck(StatusCheck):
         if failed:
           failure_value = float(self.value)
       else:
-        raise Exception('Check type %s not supported' % self.check_type)
+        raise Exception(u'Check type %s not supported' % self.check_type)
 
     if series['num_series_with_data'] < self.expected_num_hosts:
       failed = True
@@ -525,29 +526,29 @@ class JenkinsStatusCheck(StatusCheck):
       status = get_job_status(self.name)
       active = status['active']
       if status['status_code'] == 404:
-        result.error = 'Job %s not found on Jenkins' % self.name
+        result.error = u'Job %s not found on Jenkins' % self.name
         result.succeeded = False
         return result
       elif status['status_code'] > 400:
         # Will fall through to next block
-        raise Exception('returned %s' % status['status_code'])
+        raise Exception(u'returned %s' % status['status_code'])
     except Exception as e:
       # If something else goes wrong, we will *not* fail - otherwise
       # a lot of services seem to fail all at once.
       # Ugly to do it here but...
-      result.error = 'Error fetching from Jenkins - %s' % e
+      result.error = u'Error fetching from Jenkins - %s' % e
       result.succeeded = True
       return result
 
     if not active:
       # We will fail if the job has been disabled
-      result.error = 'Job "%s" disabled on Jenkins' % self.name
+      result.error = u'Job "%s" disabled on Jenkins' % self.name
       result.succeeded = False
     else:
       if self.max_queued_build_time and status['blocked_build_time']:
         if status['blocked_build_time'] > self.max_queued_build_time*60:
           result.succeeded = False
-          result.error = 'Job "%s" has blocked build waiting for %ss (> %sm)' % (
+          result.error = u'Job "%s" has blocked build waiting for %ss (> %sm)' % (
             self.name,
             int(status['blocked_build_time']),
             self.max_queued_build_time,
@@ -558,9 +559,9 @@ class JenkinsStatusCheck(StatusCheck):
         result.succeeded = status['succeeded']
       if not status['succeeded']:
         if result.error:
-          result.error +='; Job "%s" failing on Jenkins' % self.name
+          result.error += u'; Job "%s" failing on Jenkins' % self.name
         else:
-          result.error = 'Job "%s" failing on Jenkins' % self.name
+          result.error = u'Job "%s" failing on Jenkins' % self.name
         result.raw_data = status
     return result
 

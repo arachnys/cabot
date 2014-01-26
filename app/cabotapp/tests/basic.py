@@ -51,6 +51,9 @@ def fake_http_404_response(*args, **kwargs):
   resp.status_code = 404
   return resp
 
+def throws_timeout(*args, **kwargs):
+  raise requests.RequestException(u'фиктивная ошибка innit')
+
 class TestCheckRun(LocalTestCase):
   def setUp(self):
     super(TestCheckRun, self).setUp()
@@ -159,6 +162,16 @@ class TestCheckRun(LocalTestCase):
     self.assertEqual(len(checkresults), 1)
     self.assertFalse(self.jenkins_check.last_result().succeeded)
 
+  @patch('cabotapp.models.requests.get', throws_timeout)
+  def test_timeout_handling_in_jenkins(self):
+    checkresults = self.jenkins_check.statuscheckresult_set.all()
+    self.assertEqual(len(checkresults), 0)
+    self.jenkins_check.run()
+    checkresults = self.jenkins_check.statuscheckresult_set.all()
+    self.assertEqual(len(checkresults), 1)
+    self.assertTrue(self.jenkins_check.last_result().succeeded)
+    self.assertIn(u'Error fetching from Jenkins - фиктивная ошибка', self.jenkins_check.last_result().error)
+
   @patch('cabotapp.models.requests.get', fake_http_200_response)
   def test_http_run(self):
     checkresults = self.http_check.statuscheckresult_set.all()
@@ -179,6 +192,17 @@ class TestCheckRun(LocalTestCase):
     self.http_check.run()
     self.assertFalse(self.http_check.last_result().succeeded)
     self.assertEqual(self.http_check.calculated_status, Service.CALCULATED_FAILING_STATUS)
+
+  @patch('cabotapp.models.requests.get', throws_timeout)
+  def test_timeout_handling_in_http(self):
+    checkresults = self.http_check.statuscheckresult_set.all()
+    self.assertEqual(len(checkresults), 0)
+    self.http_check.run()
+    checkresults = self.http_check.statuscheckresult_set.all()
+    self.assertEqual(len(checkresults), 1)
+    self.assertFalse(self.http_check.last_result().succeeded)
+    self.assertIn(u'Request error occurred: фиктивная ошибка innit', self.http_check.last_result().error)
+
 
   @patch('cabotapp.models.requests.get', fake_http_404_response)
   def test_http_run_bad_resp(self):
