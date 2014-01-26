@@ -25,6 +25,10 @@ order: 1
     $ foreman start
     # run webserver and celery tasks using Django dev server
 
+#### Running OSX?
+
+If you're on OSX there's a [guide to how to set up your development environment on OSX](https://gist.github.com/jirutka/8636572)contributed by [Jakub Jirutka](https://gist.github.com/jirutka).
+
 ### Running tests
 
     $ foreman run python manage.py test cabotapp
