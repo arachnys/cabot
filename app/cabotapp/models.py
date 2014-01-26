@@ -497,7 +497,7 @@ class HttpStatusCheck(StatusCheck):
         result.raw_data = resp.content
       elif self.text_match:
         if not re.search(self.text_match, resp.content):
-          result.error = u'Failed to find match regex [%s] in response body' % self.text_match
+          result.error = u'Failed to find match regex /%s/ in response body' % self.text_match
           result.raw_data = resp.content
           result.succeeded = False
         else:

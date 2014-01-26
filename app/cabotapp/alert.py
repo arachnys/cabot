@@ -88,10 +88,10 @@ def send_hipchat_alert(service, users, duty_officers):
     'alert': alert,
   })
   message = Template(hipchat_template).render(c)
-  _send_hipchat_alert(message, color=color, sender='Cabotapp/%s' % service.name)
+  _send_hipchat_alert(message, color=color, sender='Cabot/%s' % service.name)
 
 
-def _send_hipchat_alert(message, color='green', sender='Cabotapp'):
+def _send_hipchat_alert(message, color='green', sender='Cabot'):
   room = settings.HIPCHAT_ALERT_ROOM
   api_key = settings.HIPCHAT_API_KEY
   url = settings.HIPCHAT_URL
