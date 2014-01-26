@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import requests
 from cabotapp.alert import _send_hipchat_alert
 from django.utils import timezone
@@ -166,7 +168,13 @@ class TestCheckRun(LocalTestCase):
     self.assertEqual(len(checkresults), 1)
     self.assertTrue(self.http_check.last_result().succeeded)
     self.assertEqual(self.http_check.calculated_status, Service.CALCULATED_PASSING_STATUS)
-    self.http_check.text_match = 'blah blah'
+    self.http_check.text_match = u'blah blah'
+    self.http_check.save()
+    self.http_check.run()
+    self.assertFalse(self.http_check.last_result().succeeded)
+    self.assertEqual(self.http_check.calculated_status, Service.CALCULATED_FAILING_STATUS)
+    # Unicode
+    self.http_check.text_match = u'как закалялась сталь'
     self.http_check.save()
     self.http_check.run()
     self.assertFalse(self.http_check.last_result().succeeded)

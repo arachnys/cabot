@@ -478,19 +478,19 @@ class HttpStatusCheck(StatusCheck):
         auth=auth
       )
     except requests.RequestException, e:
-      result.error = 'Request error occurred: %s' % (e,)
+      result.error = u'Request error occurred: %s' % (e,)
       result.succeeded = False
     except Exception, e:
-      result.error = 'Error in performing check: %s' % (e,)
+      result.error = u'Error in performing check: %s' % (e,)
       result.succeeded = False
     else:
       if self.status_code and resp.status_code != int(self.status_code):
-        result.error = 'Wrong code: got %s (expected %s)' % (resp.status_code, int(self.status_code))
+        result.error = u'Wrong code: got %s (expected %s)' % (resp.status_code, int(self.status_code))
         result.succeeded = False
         result.raw_data = resp.content
       elif self.text_match:
         if not re.search(self.text_match, resp.content):
-          result.error = 'Failed to find match regex [%s] in response body' % self.text_match
+          result.error = u'Failed to find match regex [%s] in response body' % self.text_match
           result.raw_data = resp.content
           result.succeeded = False
         else:
