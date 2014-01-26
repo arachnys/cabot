@@ -346,16 +346,33 @@ class StatusCheck(PolymorphicModel):
       return None
 
   def run(self):
+    start = timezone.now()
+    try:
+      result = self._run()
+    except Exception as e:
+      result.error = u'Error in performing check: %s' % (e,)
+      result.succeeded = False
+    finish = timezone.now()
+    result.time = start
+    result.time_complete = finish
+    result.save()
+    self.last_run = finish
+    self.save()
+
+  def _run(self):
+    """
+    Implement on subclasses. Should return a `CheckResult` instance.
+    """
     raise NotImplementedError('Subclasses should implement')
 
-  def save(self, *args, **kwargs):
+  def save(self):
     recent_results = self.recent_results()
     if calculate_debounced_passing(recent_results, self.debounce):
       self.calculated_status = Service.CALCULATED_PASSING_STATUS
     else:
       self.calculated_status = Service.CALCULATED_FAILING_STATUS
     self.cached_health = serialize_recent_results(recent_results)
-    ret = super(StatusCheck, self).save(*args, **kwargs)
+    ret = super(StatusCheck, self).save()
     # Update linked services
     self.update_related_services()
     return ret
@@ -395,8 +412,7 @@ class GraphiteStatusCheck(StatusCheck):
       hosts_string
     )
 
-  def run(self):
-    start = timezone.now()
+  def _run(self):
     series = parse_metric(self.metric, mins_to_check=self.frequency)
     failure_value = None
     if series['error']:
@@ -404,11 +420,8 @@ class GraphiteStatusCheck(StatusCheck):
     else:
       failed = None
 
-    finish = timezone.now()
     result = StatusCheckResult(
       check=self,
-      time=start,
-      time_complete=finish,
     )
     if series['num_series_with_data'] > 0:
       result.average_value = series['average_value']
@@ -451,10 +464,7 @@ class GraphiteStatusCheck(StatusCheck):
 
     result.actual_hosts = series['num_series_with_data']
     result.failure_value = failure_value
-    result.save()
-
-    self.last_run = finish
-    super(GraphiteStatusCheck, self).save()
+    return result
 
 
 class HttpStatusCheck(StatusCheck):
@@ -466,9 +476,8 @@ class HttpStatusCheck(StatusCheck):
   def check_category(self):
     return "HTTP check"
 
-  def run(self):
-    start = timezone.now()
-    result = StatusCheckResult(check=self, time=start)
+  def _run(self):
+    result = StatusCheckResult(check=self)
     auth = (self.username, self.password)
     try:
       resp = requests.get(
@@ -477,11 +486,8 @@ class HttpStatusCheck(StatusCheck):
         verify=True,
         auth=auth
       )
-    except requests.RequestException, e:
+    except requests.RequestException as e:
       result.error = u'Request error occurred: %s' % (e,)
-      result.succeeded = False
-    except Exception, e:
-      result.error = u'Error in performing check: %s' % (e,)
       result.succeeded = False
     else:
       if self.status_code and resp.status_code != int(self.status_code):
@@ -497,12 +503,7 @@ class HttpStatusCheck(StatusCheck):
           result.succeeded = True
       else:
         result.succeeded = True
-
-    finish = timezone.now()
-    result.time_complete = finish
-    result.save()
-    self.last_run = finish
-    super(HttpStatusCheck, self).save()
+    return result
 
 
 class JenkinsStatusCheck(StatusCheck):
@@ -518,39 +519,26 @@ class JenkinsStatusCheck(StatusCheck):
   def failing_short_status(self):
     return 'Job failing on Jenkins'
 
-  def run(self):
-    start = timezone.now()
-    result = StatusCheckResult(
-      check=self,
-      time=start,
-    )
+  def _run(self):
+    result = StatusCheckResult(check=self)
     try:
       status = get_job_status(self.name)
       active = status['active']
       if status['status_code'] == 404:
         result.error = 'Job %s not found on Jenkins' % self.name
         result.succeeded = False
-        finish = timezone.now()
-        result.time_complete = finish
-        result.save()
-        self.last_run = finish
-        super(JenkinsStatusCheck, self).save()
-        return
+        return result
       elif status['status_code'] > 400:
         # Will fall through to next block
         raise Exception('returned %s' % status['status_code'])
-    except Exception, e:
+    except Exception as e:
       # If something else goes wrong, we will *not* fail - otherwise
       # a lot of services seem to fail all at once.
       # Ugly to do it here but...
-      finish = timezone.now()
       result.error = 'Error fetching from Jenkins - %s' % e
       result.succeeded = True
-      result.time_complete = finish
-      result.save()
-      self.last_run = finish
-      super(JenkinsStatusCheck, self).save()
-      return
+      return result
+
     if not active:
       # We will fail if the job has been disabled
       result.error = 'Job "%s" disabled on Jenkins' % self.name
@@ -562,7 +550,7 @@ class JenkinsStatusCheck(StatusCheck):
           result.error = 'Job "%s" has blocked build waiting for %ss (> %sm)' % (
             self.name,
             int(status['blocked_build_time']),
-            self.max_queued_build_time
+            self.max_queued_build_time,
           )
         else:
           result.succeeded = status['succeeded']
@@ -574,12 +562,7 @@ class JenkinsStatusCheck(StatusCheck):
         else:
           result.error = 'Job "%s" failing on Jenkins' % self.name
         result.raw_data = status
-
-    finish = timezone.now()
-    result.time_complete = finish
-    result.save()
-    self.last_run = finish
-    super(JenkinsStatusCheck, self).save()
+    return result
 
 
 class StatusCheckResult(models.Model):
