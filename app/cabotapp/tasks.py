@@ -33,49 +33,47 @@ logger = logging.getLogger(__name__)
 
 @task(ignore_result=True)
 def run_status_check(check_or_id):
-  from .models import StatusCheck
-  if not isinstance(check_or_id, StatusCheck):
-    check = StatusCheck.objects.get(id=check_or_id)
-  else:
-    check = check_or_id
-  # This will call the subclass method
-  check.run()
+    from .models import StatusCheck
+    if not isinstance(check_or_id, StatusCheck):
+        check = StatusCheck.objects.get(id=check_or_id)
+    else:
+        check = check_or_id
+    # This will call the subclass method
+    check.run()
 
 
 @task(ignore_result=True)
 def run_all_checks():
-  from .models import StatusCheck
-  from datetime import timedelta, datetime
-  checks = StatusCheck.objects.all()
-  seconds = range(60)
-  for check in checks:
-    if check.last_run:
-      next_schedule = check.last_run + timedelta(minutes=check.frequency)
-    if (not check.last_run) or timezone.now() > next_schedule:
-      delay = random.choice(seconds)
-      logger.debug('Scheduling task for %s seconds from now' % delay)
-      run_status_check.apply_async((check.id,), countdown=delay)
+    from .models import StatusCheck
+    from datetime import timedelta, datetime
+    checks = StatusCheck.objects.all()
+    seconds = range(60)
+    for check in checks:
+        if check.last_run:
+            next_schedule = check.last_run + timedelta(minutes=check.frequency)
+        if (not check.last_run) or timezone.now() > next_schedule:
+            delay = random.choice(seconds)
+            logger.debug('Scheduling task for %s seconds from now' % delay)
+            run_status_check.apply_async((check.id,), countdown=delay)
 
 
 @task(ignore_result=True)
 def update_services(ignore_result=True):
-  # Avoid importerrors and the like from legacy scheduling
-  return
+    # Avoid importerrors and the like from legacy scheduling
+    return
 
 
 @task(ignore_result=True)
 def update_service(service_or_id):
-  from .models import Service
-  if not isinstance(service_or_id, Service):
-    service = Service.objects.get(id=service_or_id)
-  else:
-    service = service_or_id
-  service.update_status()
+    from .models import Service
+    if not isinstance(service_or_id, Service):
+        service = Service.objects.get(id=service_or_id)
+    else:
+        service = service_or_id
+    service.update_status()
 
 
 @task(ignore_result=True)
 def update_shifts(ignore_result=True):
-  from .models import update_shifts as _update_shifts
-  _update_shifts()
-
-
+    from .models import update_shifts as _update_shifts
+    _update_shifts()

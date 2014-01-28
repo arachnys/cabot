@@ -10,110 +10,167 @@ class Migration(SchemaMigration):
     def forwards(self, orm):
         # Adding model 'Service'
         db.create_table('cabotapp_service', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('id', self.gf('django.db.models.fields.AutoField')
+             (primary_key=True)),
             ('name', self.gf('django.db.models.fields.TextField')()),
             ('url', self.gf('django.db.models.fields.TextField')(blank=True)),
-            ('last_alert_sent', self.gf('django.db.models.fields.DateTimeField')(null=True, blank=True)),
-            ('email_alert', self.gf('django.db.models.fields.BooleanField')(default=False)),
-            ('hipchat_alert', self.gf('django.db.models.fields.BooleanField')(default=True)),
-            ('sms_alert', self.gf('django.db.models.fields.BooleanField')(default=False)),
-            ('telephone_alert', self.gf('django.db.models.fields.BooleanField')(default=False)),
-            ('alerts_enabled', self.gf('django.db.models.fields.BooleanField')(default=True)),
-            ('overall_status', self.gf('django.db.models.fields.TextField')(default='PASSING')),
-            ('old_overall_status', self.gf('django.db.models.fields.TextField')(default='PASSING')),
-            ('hackpad_id', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
+            ('last_alert_sent', self.gf('django.db.models.fields.DateTimeField')
+             (null=True, blank=True)),
+            ('email_alert', self.gf('django.db.models.fields.BooleanField')
+             (default=False)),
+            ('hipchat_alert',
+             self.gf('django.db.models.fields.BooleanField')(default=True)),
+            ('sms_alert', self.gf('django.db.models.fields.BooleanField')
+             (default=False)),
+            ('telephone_alert',
+             self.gf('django.db.models.fields.BooleanField')(default=False)),
+            ('alerts_enabled',
+             self.gf('django.db.models.fields.BooleanField')(default=True)),
+            ('overall_status', self.gf('django.db.models.fields.TextField')
+             (default='PASSING')),
+            ('old_overall_status',
+             self.gf('django.db.models.fields.TextField')(default='PASSING')),
+            ('hackpad_id', self.gf('django.db.models.fields.TextField')
+             (null=True, blank=True)),
         ))
         db.send_create_signal('cabotapp', ['Service'])
 
         # Adding M2M table for field users_to_notify on 'Service'
         db.create_table('cabotapp_service_users_to_notify', (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('service', models.ForeignKey(orm['cabotapp.service'], null=False)),
+            ('id', models.AutoField(verbose_name='ID',
+             primary_key=True, auto_created=True)),
+            ('service',
+             models.ForeignKey(orm['cabotapp.service'], null=False)),
             ('user', models.ForeignKey(orm['auth.user'], null=False))
         ))
-        db.create_unique('cabotapp_service_users_to_notify', ['service_id', 'user_id'])
+        db.create_unique('cabotapp_service_users_to_notify',
+                         ['service_id', 'user_id'])
 
         # Adding M2M table for field status_checks on 'Service'
         db.create_table('cabotapp_service_status_checks', (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('service', models.ForeignKey(orm['cabotapp.service'], null=False)),
-            ('statuscheck', models.ForeignKey(orm['cabotapp.statuscheck'], null=False))
+            ('id', models.AutoField(verbose_name='ID',
+             primary_key=True, auto_created=True)),
+            ('service',
+             models.ForeignKey(orm['cabotapp.service'], null=False)),
+            ('statuscheck',
+             models.ForeignKey(orm['cabotapp.statuscheck'], null=False))
         ))
-        db.create_unique('cabotapp_service_status_checks', ['service_id', 'statuscheck_id'])
+        db.create_unique('cabotapp_service_status_checks',
+                         ['service_id', 'statuscheck_id'])
 
         # Adding model 'ServiceStatusSnapshot'
         db.create_table('cabotapp_servicestatussnapshot', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('service', self.gf('django.db.models.fields.related.ForeignKey')(related_name='snapshots', to=orm['cabotapp.Service'])),
+            ('id', self.gf('django.db.models.fields.AutoField')
+             (primary_key=True)),
+            ('service', self.gf('django.db.models.fields.related.ForeignKey')
+             (related_name='snapshots', to=orm['cabotapp.Service'])),
             ('time', self.gf('django.db.models.fields.DateTimeField')()),
-            ('num_checks_active', self.gf('django.db.models.fields.IntegerField')(default=0)),
-            ('num_checks_passing', self.gf('django.db.models.fields.IntegerField')(default=0)),
-            ('num_checks_failing', self.gf('django.db.models.fields.IntegerField')(default=0)),
-            ('overall_status', self.gf('django.db.models.fields.TextField')(default='PASSING')),
-            ('did_send_alert', self.gf('django.db.models.fields.IntegerField')(default=False)),
+            ('num_checks_active',
+             self.gf('django.db.models.fields.IntegerField')(default=0)),
+            ('num_checks_passing',
+             self.gf('django.db.models.fields.IntegerField')(default=0)),
+            ('num_checks_failing',
+             self.gf('django.db.models.fields.IntegerField')(default=0)),
+            ('overall_status', self.gf('django.db.models.fields.TextField')
+             (default='PASSING')),
+            ('did_send_alert',
+             self.gf('django.db.models.fields.IntegerField')(default=False)),
         ))
         db.send_create_signal('cabotapp', ['ServiceStatusSnapshot'])
 
         # Adding model 'StatusCheck'
         db.create_table('cabotapp_statuscheck', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('polymorphic_ctype', self.gf('django.db.models.fields.related.ForeignKey')(related_name='polymorphic_cabotapp.statuscheck_set', null=True, to=orm['contenttypes.ContentType'])),
+            ('id', self.gf('django.db.models.fields.AutoField')
+             (primary_key=True)),
+            ('polymorphic_ctype', self.gf('django.db.models.fields.related.ForeignKey')
+             (related_name='polymorphic_cabotapp.statuscheck_set', null=True, to=orm['contenttypes.ContentType'])),
             ('name', self.gf('django.db.models.fields.TextField')()),
-            ('active', self.gf('django.db.models.fields.BooleanField')(default=True)),
-            ('importance', self.gf('django.db.models.fields.CharField')(default='ERROR', max_length=30)),
-            ('frequency', self.gf('django.db.models.fields.IntegerField')(default=5)),
-            ('debounce', self.gf('django.db.models.fields.IntegerField')(default=0, null=True)),
-            ('created_by', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'])),
-            ('calculated_status', self.gf('django.db.models.fields.CharField')(default='passing', max_length=50, blank=True)),
-            ('last_run', self.gf('django.db.models.fields.DateTimeField')(null=True)),
-            ('cached_health', self.gf('django.db.models.fields.TextField')(null=True)),
-            ('metric', self.gf('django.db.models.fields.TextField')(null=True)),
-            ('check_type', self.gf('django.db.models.fields.CharField')(max_length=100, null=True)),
+            ('active', self.gf('django.db.models.fields.BooleanField')
+             (default=True)),
+            ('importance', self.gf('django.db.models.fields.CharField')
+             (default='ERROR', max_length=30)),
+            ('frequency', self.gf('django.db.models.fields.IntegerField')
+             (default=5)),
+            ('debounce', self.gf('django.db.models.fields.IntegerField')
+             (default=0, null=True)),
+            ('created_by', self.gf('django.db.models.fields.related.ForeignKey')
+             (to=orm['auth.User'])),
+            ('calculated_status', self.gf('django.db.models.fields.CharField')
+             (default='passing', max_length=50, blank=True)),
+            ('last_run', self.gf('django.db.models.fields.DateTimeField')
+             (null=True)),
+            ('cached_health',
+             self.gf('django.db.models.fields.TextField')(null=True)),
+            ('metric', self.gf('django.db.models.fields.TextField')
+             (null=True)),
+            ('check_type', self.gf('django.db.models.fields.CharField')
+             (max_length=100, null=True)),
             ('value', self.gf('django.db.models.fields.TextField')(null=True)),
-            ('expected_num_hosts', self.gf('django.db.models.fields.IntegerField')(default=0, null=True)),
-            ('endpoint', self.gf('django.db.models.fields.TextField')(null=True)),
-            ('username', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
-            ('password', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
-            ('text_match', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
-            ('status_code', self.gf('django.db.models.fields.TextField')(default=200, null=True)),
-            ('timeout', self.gf('django.db.models.fields.IntegerField')(default=30, null=True)),
-            ('max_queued_build_time', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True)),
+            ('expected_num_hosts', self.gf('django.db.models.fields.IntegerField')
+             (default=0, null=True)),
+            ('endpoint', self.gf('django.db.models.fields.TextField')
+             (null=True)),
+            ('username', self.gf('django.db.models.fields.TextField')
+             (null=True, blank=True)),
+            ('password', self.gf('django.db.models.fields.TextField')
+             (null=True, blank=True)),
+            ('text_match', self.gf('django.db.models.fields.TextField')
+             (null=True, blank=True)),
+            ('status_code', self.gf('django.db.models.fields.TextField')
+             (default=200, null=True)),
+            ('timeout', self.gf('django.db.models.fields.IntegerField')
+             (default=30, null=True)),
+            ('max_queued_build_time',
+             self.gf(
+                 'django.db.models.fields.IntegerField')(null=True, blank=True)),
         ))
         db.send_create_signal('cabotapp', ['StatusCheck'])
 
         # Adding model 'StatusCheckResult'
         db.create_table('cabotapp_statuscheckresult', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('check', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['cabotapp.StatusCheck'])),
+            ('id', self.gf('django.db.models.fields.AutoField')
+             (primary_key=True)),
+            ('check', self.gf('django.db.models.fields.related.ForeignKey')
+             (to=orm['cabotapp.StatusCheck'])),
             ('time', self.gf('django.db.models.fields.DateTimeField')()),
-            ('time_complete', self.gf('django.db.models.fields.DateTimeField')(null=True)),
-            ('raw_data', self.gf('django.db.models.fields.TextField')(null=True)),
-            ('succeeded', self.gf('django.db.models.fields.BooleanField')(default=False)),
+            ('time_complete',
+             self.gf('django.db.models.fields.DateTimeField')(null=True)),
+            ('raw_data', self.gf('django.db.models.fields.TextField')
+             (null=True)),
+            ('succeeded', self.gf('django.db.models.fields.BooleanField')
+             (default=False)),
             ('error', self.gf('django.db.models.fields.TextField')(null=True)),
         ))
         db.send_create_signal('cabotapp', ['StatusCheckResult'])
 
         # Adding model 'UserProfile'
         db.create_table('cabotapp_userprofile', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('user', self.gf('django.db.models.fields.related.OneToOneField')(related_name='profile', unique=True, to=orm['auth.User'])),
-            ('mobile_number', self.gf('django.db.models.fields.CharField')(default='', max_length=20, blank=True)),
-            ('hipchat_alias', self.gf('django.db.models.fields.CharField')(default='', max_length=50, blank=True)),
-            ('fallback_alert_user', self.gf('django.db.models.fields.BooleanField')(default=False)),
+            ('id', self.gf('django.db.models.fields.AutoField')
+             (primary_key=True)),
+            ('user', self.gf('django.db.models.fields.related.OneToOneField')
+             (related_name='profile', unique=True, to=orm['auth.User'])),
+            ('mobile_number', self.gf('django.db.models.fields.CharField')
+             (default='', max_length=20, blank=True)),
+            ('hipchat_alias', self.gf('django.db.models.fields.CharField')
+             (default='', max_length=50, blank=True)),
+            ('fallback_alert_user',
+             self.gf('django.db.models.fields.BooleanField')(default=False)),
         ))
         db.send_create_signal('cabotapp', ['UserProfile'])
 
         # Adding model 'Shift'
         db.create_table('cabotapp_shift', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('id', self.gf('django.db.models.fields.AutoField')
+             (primary_key=True)),
             ('start', self.gf('django.db.models.fields.DateTimeField')()),
             ('end', self.gf('django.db.models.fields.DateTimeField')()),
-            ('user', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'])),
+            ('user', self.gf('django.db.models.fields.related.ForeignKey')
+             (to=orm['auth.User'])),
             ('uid', self.gf('django.db.models.fields.TextField')()),
-            ('deleted', self.gf('django.db.models.fields.BooleanField')(default=False)),
+            ('deleted', self.gf('django.db.models.fields.BooleanField')
+             (default=False)),
         ))
         db.send_create_signal('cabotapp', ['Shift'])
-
 
     def backwards(self, orm):
         # Deleting model 'Service'
@@ -139,7 +196,6 @@ class Migration(SchemaMigration):
 
         # Deleting model 'Shift'
         db.delete_table('cabotapp_shift')
-
 
     models = {
         'auth.group': {

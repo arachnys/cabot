@@ -7,7 +7,7 @@ PROJECT_ROOT = os.path.abspath(os.path.dirname(settings_dir))
 TEMPLATE_DEBUG = DEBUG = os.environ.get("DEBUG", False)
 
 ADMINS = (
-  ('Admin', os.environ.get('ADMIN_EMAIL', 'name@example.com')),
+    ('Admin', os.environ.get('ADMIN_EMAIL', 'name@example.com')),
 )
 
 MANAGERS = ADMINS
@@ -15,7 +15,7 @@ MANAGERS = ADMINS
 DATABASES = {'default': dj_database_url.parse(os.environ["DATABASE_URL"])}
 
 if not DEBUG:
-  DATABASES['default']['OPTIONS'] = {'autocommit': True}
+    DATABASES['default']['OPTIONS'] = {'autocommit': True}
 
 USE_TZ = True
 
@@ -76,7 +76,8 @@ STATICFILES_FINDERS = (
 )
 
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', '2FL6ORhHwr5eX34pP9mMugnIOd3jzVuT45f7w430Mt5PnEwbcJgma0q8zUXNZ68A')
+SECRET_KEY = os.environ.get(
+    'DJANGO_SECRET_KEY', '2FL6ORhHwr5eX34pP9mMugnIOd3jzVuT45f7w430Mt5PnEwbcJgma0q8zUXNZ68A')
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
@@ -120,9 +121,10 @@ INSTALLED_APPS = (
 
 
 COMPRESS_PRECOMPILERS = (
-  ('text/coffeescript', 'coffee --compile --stdio'),
-  ('text/eco', 'eco -i TEMPLATES {infile} && cat "$(echo "{infile}" | sed -e "s/\.eco$/.js/g")"'),
-  ('text/less', 'lessc {infile} > {outfile}'),
+    ('text/coffeescript', 'coffee --compile --stdio'),
+    ('text/eco',
+     'eco -i TEMPLATES {infile} && cat "$(echo "{infile}" | sed -e "s/\.eco$/.js/g")"'),
+    ('text/less', 'lessc {infile} > {outfile}'),
 )
 
 EMAIL_HOST = os.environ.get('SES_HOST', 'localhost')
