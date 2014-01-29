@@ -24,6 +24,15 @@ See `conf/development.env.example`.
 
 In order to use all functionality the following settings must be configured in `conf/production.env`. If you use `fab deploy` it will automatically generate an upstart service config including these:
 
+#### SMTP settings
+
+Secure TLS/SSL email backend is used.
+
+* `SES_HOST`
+* `SES_USER`
+* `SES_PASS`
+* `SES_PORT`
+
 #### Calendar sync and [team rota](rota.html)
 
 *   `CALENDAR_ICAL_URL`
