@@ -1,0 +1,480 @@
+
+{
+  "actions" : [
+
+  ],
+  "description" : "Run functional tests against app (production)",
+  "displayName" : "app-production-api-test",
+  "displayNameOrNull" : null,
+  "name" : "app-production-api-test",
+  "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/",
+  "buildable" : true,
+  "builds" : [
+    {
+      "number" : 1999,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1999/"
+    },
+    {
+      "number" : 1998,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1998/"
+    },
+    {
+      "number" : 1997,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1997/"
+    },
+    {
+      "number" : 1996,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1996/"
+    },
+    {
+      "number" : 1995,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1995/"
+    },
+    {
+      "number" : 1994,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1994/"
+    },
+    {
+      "number" : 1993,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1993/"
+    },
+    {
+      "number" : 1992,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1992/"
+    },
+    {
+      "number" : 1991,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1991/"
+    },
+    {
+      "number" : 1990,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1990/"
+    },
+    {
+      "number" : 1989,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1989/"
+    },
+    {
+      "number" : 1988,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1988/"
+    },
+    {
+      "number" : 1987,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1987/"
+    },
+    {
+      "number" : 1986,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1986/"
+    },
+    {
+      "number" : 1985,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1985/"
+    },
+    {
+      "number" : 1984,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1984/"
+    },
+    {
+      "number" : 1983,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1983/"
+    },
+    {
+      "number" : 1982,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1982/"
+    },
+    {
+      "number" : 1981,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1981/"
+    },
+    {
+      "number" : 1980,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1980/"
+    },
+    {
+      "number" : 1979,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1979/"
+    },
+    {
+      "number" : 1978,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1978/"
+    },
+    {
+      "number" : 1977,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1977/"
+    },
+    {
+      "number" : 1976,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1976/"
+    },
+    {
+      "number" : 1975,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1975/"
+    },
+    {
+      "number" : 1974,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1974/"
+    },
+    {
+      "number" : 1973,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1973/"
+    },
+    {
+      "number" : 1972,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1972/"
+    },
+    {
+      "number" : 1971,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1971/"
+    },
+    {
+      "number" : 1970,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1970/"
+    },
+    {
+      "number" : 1969,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1969/"
+    },
+    {
+      "number" : 1968,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1968/"
+    },
+    {
+      "number" : 1967,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1967/"
+    },
+    {
+      "number" : 1966,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1966/"
+    },
+    {
+      "number" : 1965,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1965/"
+    },
+    {
+      "number" : 1964,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1964/"
+    },
+    {
+      "number" : 1963,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1963/"
+    },
+    {
+      "number" : 1962,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1962/"
+    },
+    {
+      "number" : 1961,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1961/"
+    },
+    {
+      "number" : 1960,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1960/"
+    },
+    {
+      "number" : 1959,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1959/"
+    },
+    {
+      "number" : 1958,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1958/"
+    },
+    {
+      "number" : 1957,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1957/"
+    },
+    {
+      "number" : 1956,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1956/"
+    },
+    {
+      "number" : 1955,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1955/"
+    },
+    {
+      "number" : 1954,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1954/"
+    },
+    {
+      "number" : 1953,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1953/"
+    },
+    {
+      "number" : 1952,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1952/"
+    },
+    {
+      "number" : 1951,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1951/"
+    },
+    {
+      "number" : 1950,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1950/"
+    },
+    {
+      "number" : 1949,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1949/"
+    },
+    {
+      "number" : 1948,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1948/"
+    },
+    {
+      "number" : 1947,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1947/"
+    },
+    {
+      "number" : 1946,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1946/"
+    },
+    {
+      "number" : 1945,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1945/"
+    },
+    {
+      "number" : 1944,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1944/"
+    },
+    {
+      "number" : 1943,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1943/"
+    },
+    {
+      "number" : 1942,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1942/"
+    },
+    {
+      "number" : 1941,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1941/"
+    },
+    {
+      "number" : 1940,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1940/"
+    },
+    {
+      "number" : 1939,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1939/"
+    },
+    {
+      "number" : 1938,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1938/"
+    },
+    {
+      "number" : 1937,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1937/"
+    },
+    {
+      "number" : 1936,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1936/"
+    },
+    {
+      "number" : 1935,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1935/"
+    },
+    {
+      "number" : 1934,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1934/"
+    },
+    {
+      "number" : 1933,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1933/"
+    },
+    {
+      "number" : 1932,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1932/"
+    },
+    {
+      "number" : 1931,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1931/"
+    },
+    {
+      "number" : 1930,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1930/"
+    },
+    {
+      "number" : 1929,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1929/"
+    },
+    {
+      "number" : 1928,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1928/"
+    },
+    {
+      "number" : 1927,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1927/"
+    },
+    {
+      "number" : 1926,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1926/"
+    },
+    {
+      "number" : 1925,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1925/"
+    },
+    {
+      "number" : 1924,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1924/"
+    },
+    {
+      "number" : 1923,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1923/"
+    },
+    {
+      "number" : 1922,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1922/"
+    },
+    {
+      "number" : 1921,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1921/"
+    },
+    {
+      "number" : 1920,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1920/"
+    },
+    {
+      "number" : 1919,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1919/"
+    },
+    {
+      "number" : 1918,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1918/"
+    },
+    {
+      "number" : 1917,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1917/"
+    },
+    {
+      "number" : 1916,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1916/"
+    },
+    {
+      "number" : 1915,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1915/"
+    },
+    {
+      "number" : 1914,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1914/"
+    },
+    {
+      "number" : 1913,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1913/"
+    },
+    {
+      "number" : 1912,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1912/"
+    },
+    {
+      "number" : 1911,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1911/"
+    },
+    {
+      "number" : 1910,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1910/"
+    },
+    {
+      "number" : 1909,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1909/"
+    },
+    {
+      "number" : 1908,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1908/"
+    },
+    {
+      "number" : 1907,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1907/"
+    },
+    {
+      "number" : 1906,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1906/"
+    },
+    {
+      "number" : 1905,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1905/"
+    },
+    {
+      "number" : 1904,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1904/"
+    },
+    {
+      "number" : 1903,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1903/"
+    },
+    {
+      "number" : 1902,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1902/"
+    },
+    {
+      "number" : 1901,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1901/"
+    },
+    {
+      "number" : 1900,
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1900/"
+    }
+  ],
+  "color" : "blue_anime",
+  "firstBuild" : {
+    "number" : 1855,
+    "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1855/"
+  },
+  "healthReport" : [
+    {
+      "description" : "Build stability: No recent builds failed.",
+      "iconUrl" : "health-80plus.png",
+      "score" : 100
+    }
+  ],
+  "inQueue" : true,
+  "keepDependencies" : false,
+  "lastBuild" : {
+    "number" : 1999,
+    "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1999/"
+  },
+  "lastCompletedBuild" : {
+    "number" : 1998,
+    "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1998/"
+  },
+  "lastFailedBuild" : null,
+  "lastStableBuild" : {
+    "number" : 1998,
+    "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1998/"
+  },
+  "lastSuccessfulBuild" : {
+    "number" : 1998,
+    "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/1998/"
+  },
+  "lastUnstableBuild" : null,
+  "lastUnsuccessfulBuild" : null,
+  "nextBuildNumber" : 2000,
+  "property" : [
+
+  ],
+  "queueItem" : {
+    "blocked" : true,
+    "buildable" : false,
+    "id" : 37396,
+    "inQueueSince" : 1391099715289,
+    "params" : "",
+    "stuck" : false,
+    "task" : {
+      "name" : "app-production-api-test",
+      "url" : "https://your-jenkins-server/view/Kvasir/job/app-production-api-test/"
+    },
+    "url" : "queue/item/37396/",
+    "why" : "Build #1,999 is already in progress (ETA:N/A)",
+    "buildableStartMilliseconds" : 1391099715290
+  },
+  "concurrentBuild" : false,
+  "downstreamProjects" : [
+
+  ],
+  "scm" : {
+
+  },
+  "upstreamProjects" : [
+    {
+      "name" : "app-production",
+      "url" : "https://your-jenkins-server/job/app-production/",
+      "color" : "blue"
+    }
+  ]
+}

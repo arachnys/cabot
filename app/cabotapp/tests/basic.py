@@ -46,6 +46,13 @@ def fake_jenkins_response(*args, **kwargs):
     return resp
 
 
+def jenkins_blocked_response(*args, **kwargs):
+    resp = Mock()
+    resp.json = json.loads(get_content('jenkins_blocked_response.json'))
+    resp.status_code = 200
+    return resp
+
+
 def fake_http_200_response(*args, **kwargs):
     resp = Mock()
     resp.content = get_content('http_response.html')
@@ -175,6 +182,15 @@ class TestCheckRun(LocalTestCase):
 
     @patch('cabotapp.jenkins.requests.get', fake_jenkins_response)
     def test_jenkins_run(self):
+        checkresults = self.jenkins_check.statuscheckresult_set.all()
+        self.assertEqual(len(checkresults), 0)
+        self.jenkins_check.run()
+        checkresults = self.jenkins_check.statuscheckresult_set.all()
+        self.assertEqual(len(checkresults), 1)
+        self.assertFalse(self.jenkins_check.last_result().succeeded)
+
+    @patch('cabotapp.jenkins.requests.get', jenkins_blocked_response)
+    def test_jenkins_blocked_build(self):
         checkresults = self.jenkins_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 0)
         self.jenkins_check.run()

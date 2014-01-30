@@ -31,5 +31,5 @@ def get_job_status(jobname):
     if status['queueItem'] and status['queueItem']['blocked']:
         time_blocked_since = datetime.utcfromtimestamp(
             float(status['queueItem']['inQueueSince']) / 1000).replace(tzinfo=timezone.utc)
-        ret['time_blocked'] = timezone.now() - time_blocked_since
+        ret['blocked_build_time'] = timezone.now() - time_blocked_since
     return ret
