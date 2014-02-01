@@ -3,8 +3,11 @@
 import requests
 from cabotapp.alert import _send_hipchat_alert
 from django.utils import timezone
+from django.core.urlresolvers import reverse
 from django.test import TestCase
+from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
+from django.test.client import Client
 from cabotapp.models import (
     StatusCheck, GraphiteStatusCheck, JenkinsStatusCheck,
     HttpStatusCheck, Service, StatusCheckResult)
@@ -29,53 +32,15 @@ class LocalTestCase(TestCase):
         requests.post = Mock()
         rest.TwilioRestClient = Mock()
         mail.send_mail = Mock()
+        self.create_dummy_data()
         super(LocalTestCase, self).setUp()
 
-
-def fake_graphite_response(*args, **kwargs):
-    resp = Mock()
-    resp.json = json.loads(get_content('graphite_response.json'))
-    resp.status_code = 200
-    return resp
-
-
-def fake_jenkins_response(*args, **kwargs):
-    resp = Mock()
-    resp.json = json.loads(get_content('jenkins_response.json'))
-    resp.status_code = 200
-    return resp
-
-
-def jenkins_blocked_response(*args, **kwargs):
-    resp = Mock()
-    resp.json = json.loads(get_content('jenkins_blocked_response.json'))
-    resp.status_code = 200
-    return resp
-
-
-def fake_http_200_response(*args, **kwargs):
-    resp = Mock()
-    resp.content = get_content('http_response.html')
-    resp.status_code = 200
-    return resp
-
-
-def fake_http_404_response(*args, **kwargs):
-    resp = Mock()
-    resp.content = get_content('http_response.html')
-    resp.status_code = 404
-    return resp
-
-
-def throws_timeout(*args, **kwargs):
-    raise requests.RequestException(u'фиктивная ошибка innit')
-
-
-class TestCheckRun(LocalTestCase):
-
-    def setUp(self):
-        super(TestCheckRun, self).setUp()
-        self.user = User.objects.create(username='testuser')
+    def create_dummy_data(self):
+        self.username = 'testuser'
+        self.password = 'testuserpassword'
+        self.user = User.objects.create(username=self.username)
+        self.user.set_password(self.password)
+        self.user.save()
         self.graphite_check = GraphiteStatusCheck.objects.create(
             name='Graphite Check',
             metric='stats.fake.value',
@@ -121,6 +86,49 @@ class TestCheckRun(LocalTestCase):
         )
         self.older_result.save()
         self.graphite_check.save()  # Will recalculate status
+
+
+def fake_graphite_response(*args, **kwargs):
+    resp = Mock()
+    resp.json = json.loads(get_content('graphite_response.json'))
+    resp.status_code = 200
+    return resp
+
+
+def fake_jenkins_response(*args, **kwargs):
+    resp = Mock()
+    resp.json = json.loads(get_content('jenkins_response.json'))
+    resp.status_code = 200
+    return resp
+
+
+def jenkins_blocked_response(*args, **kwargs):
+    resp = Mock()
+    resp.json = json.loads(get_content('jenkins_blocked_response.json'))
+    resp.status_code = 200
+    return resp
+
+
+def fake_http_200_response(*args, **kwargs):
+    resp = Mock()
+    resp.content = get_content('http_response.html')
+    resp.status_code = 200
+    return resp
+
+
+def fake_http_404_response(*args, **kwargs):
+    resp = Mock()
+    resp.content = get_content('http_response.html')
+    resp.status_code = 404
+    return resp
+
+
+def throws_timeout(*args, **kwargs):
+    raise requests.RequestException(u'фиктивная ошибка innit')
+
+
+class TestCheckRun(LocalTestCase):
+
 
     def test_calculate_service_status(self):
         self.assertEqual(self.graphite_check.calculated_status,
@@ -254,3 +262,51 @@ class TestCheckRun(LocalTestCase):
         self.assertFalse(self.http_check.last_result().succeeded)
         self.assertEqual(self.http_check.calculated_status,
                          Service.CALCULATED_FAILING_STATUS)
+
+
+class TestWebInterface(LocalTestCase):
+
+    def setUp(self):
+        super(TestWebInterface, self).setUp()
+        self.client = Client()
+
+    def test_set_recovery_instructions(self):
+        # Get service page - will get 200 from login page
+        resp = self.client.get(reverse('update-service', kwargs={'pk':self.service.id}), follow=True)
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn('username', resp.content)
+
+        # Log in
+        self.client.login(username=self.username, password=self.password)
+        resp = self.client.get(reverse('update-service', kwargs={'pk':self.service.id}))
+        self.assertEqual(resp.status_code, 200)
+        self.assertNotIn('username', resp.content)
+
+        snippet_link = 'https://sub.hackpad.com/wiki-7YaNlsC11bB.js'
+        self.assertEqual(self.service.hackpad_id, None)
+        resp = self.client.post(
+            reverse('update-service', kwargs={'pk': self.service.id}),
+            data={
+                'name': self.service.name,
+                'hackpad_id': snippet_link,
+            },
+            follow=True,
+        )
+        self.assertEqual(resp.status_code, 200)
+        reloaded = Service.objects.get(id=self.service.id)
+        self.assertEqual(reloaded.hackpad_id, snippet_link)
+        # Now one on the blacklist
+        blacklist_link = 'https://unapproved_link.domain.com/wiki-7YaNlsC11bB.js'
+        resp = self.client.post(
+            reverse('update-service', kwargs={'pk': self.service.id}),
+            data={
+                'name': self.service.name,
+                'hackpad_id': blacklist_link,
+            },
+            follow=True,
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn('valid JS snippet link', resp.content)
+        reloaded = Service.objects.get(id=self.service.id)
+        # Still the same
+        self.assertEqual(reloaded.hackpad_id, snippet_link)

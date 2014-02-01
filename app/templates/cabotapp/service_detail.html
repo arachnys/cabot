@@ -74,7 +74,7 @@
       <h3>Recovery instructions</h3>
     </div>
     {% if service.hackpad_id %}
-      <script src="https://arachnys.hackpad.com/{{ service.hackpad_id }}.js"></script>
+      <script src="{{ service.hackpad_id }}"></script>
     {% else %}
     <div class="col-xs-11 col-xs-offset-1">No hackpad configured</div>
     {% endif %}

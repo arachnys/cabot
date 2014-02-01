@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from polymorphic import PolymorphicModel
 from django.db.models import F
 from django.contrib.admin.models import User
@@ -119,7 +120,8 @@ class Service(models.Model):
     hackpad_id = models.TextField(
         null=True,
         blank=True,
-        help_text='Alphanumeric id of Hackpad containing recovery information.'
+        verbose_name='Recovery instructions',
+        help_text='Gist, Hackpad or Refheap js embed with recovery instructions e.g. https://you.hackpad.com/some_document.js'
     )
 
     class Meta:

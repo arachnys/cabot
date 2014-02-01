@@ -133,11 +133,15 @@ EMAIL_HOST_USER = os.environ.get('SES_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('SES_PASS', '')
 EMAIL_BACKEND = 'django_smtp_ssl.SSLEmailBackend'
 
-
-COMPRESS_OFFLINE = True
+COMPRESS_OFFLINE = not DEBUG
 
 COMPRESS_URL = '/static/'
 
+RECOVERY_SNIPPETS_WHITELIST = (
+    r'https?://[^.]+\.hackpad\.com/[^./]+\.js',
+    r'https?://gist\.github\.com/[^.]+\.js',
+    r'https?://www\.refheap\.com/[^.]+\.js',
+)
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to

@@ -2,6 +2,7 @@ from django.template import RequestContext, loader
 from datetime import datetime, timedelta
 from django.http import HttpResponse, HttpResponseRedirect
 from django.core.urlresolvers import reverse_lazy
+from django.conf import settings
 from models import (
     StatusCheck, GraphiteStatusCheck, JenkinsStatusCheck, HttpStatusCheck,
     StatusCheckResult, UserProfile, Service, Shift, get_duty_officers)
@@ -17,9 +18,11 @@ from .alert import telephone_alert_twiml_callback
 from django.contrib.auth.models import User
 from django.utils.timezone import utc
 from django.core.urlresolvers import reverse
+from django.core.exceptions import ValidationError
 
 import requests
 import json
+import re
 
 
 class LoginRequiredMixin(object):
@@ -223,6 +226,13 @@ class ServiceForm(forms.ModelForm):
         self.fields['users_to_notify'].queryset = User.objects.filter(
             is_active=True)
         return ret
+
+    def clean_hackpad_id(self):
+        value = self.cleaned_data['hackpad_id']
+        for pattern in settings.RECOVERY_SNIPPETS_WHITELIST:
+            if re.match(pattern, value):
+                return value
+        raise ValidationError('Please specify a valid JS snippet link')
 
 
 class CheckCreateView(LoginRequiredMixin, CreateView):
