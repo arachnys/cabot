@@ -229,6 +229,8 @@ class ServiceForm(forms.ModelForm):
 
     def clean_hackpad_id(self):
         value = self.cleaned_data['hackpad_id']
+        if not value:
+            raturn ''
         for pattern in settings.RECOVERY_SNIPPETS_WHITELIST:
             if re.match(pattern, value):
                 return value
