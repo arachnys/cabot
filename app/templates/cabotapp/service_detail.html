@@ -94,9 +94,8 @@
 <script type="text/javascript">
   window.SERVICE_HISTORY = {{ service.recent_snapshots|jsonify }}
 </script>
-{% compress js %}
-<script type="text/javascript" src="{{ STATIC_URL }}arachnys/js/raphael.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}arachnys/js/d3.js"></script>
+{% compress js %}
 <script type="text/javascript" src="{{ STATIC_URL }}arachnys/js/rickshaw.js"></script>
 <script type="text/coffeescript">
 
@@ -106,26 +105,8 @@ $(document).ready ->
     num_checks_active: 'blue'
     num_checks_failing: '#f00'
   }
-  # processedData = formatDataForMorris data, labels
-  # drawMorris processedData.series, labels, processedData.events
   processedData = formatDataForRickshaw data, labels
   drawRickshaw processedData.series, labels, processedData.events
-
-formatDataForMorris = (data, labels) ->
-  series = []
-  events = []
-  for slice in data
-    if slice.did_send_alert
-      events.push slice.time*1000
-    tmp = {}
-    tmp.time = slice.time*1000
-    for label in labels
-      tmp[label] = slice[label]
-    series.push tmp
-  return {
-    series: series
-    events: events
-  }
 
 formatDataForRickshaw = (data, labels) ->
   series = {}
@@ -151,20 +132,6 @@ formatDataForRickshaw = (data, labels) ->
     series: ret
     events: events
   }
-
-
-drawMorris = (data, labels, events) ->
-  window.morrisLine = Morris.Line
-    element: 'graph'
-    data: data
-    xkey: 'time'
-    ykeys: labels
-    labels: labels
-    hideHover: 'auto'
-    pointSize: '3px'
-    events: events
-    eventLineColors: ['#ff0000']
-    eventStrokeWidth: '2px'
 
 drawRickshaw = (data, labels, events = []) ->
   rickshawLine = new Rickshaw.Graph
