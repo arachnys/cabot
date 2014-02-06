@@ -82,3 +82,7 @@ These credentials are required for SMS and phone alerts.
 
 *   `WWW_HTTP_HOST`
     *   FQDN of Cabot server, e.g. `cabot.yourcompany.com`
+
+#### Using MySQL?
+
+Cabot uses Postgresql by default but it's easy enough to set it up with another database backend such as MySQL: https://github.com/arachnys/cabot/issues/29#issuecomment-34172620
