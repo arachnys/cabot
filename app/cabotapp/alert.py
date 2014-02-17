@@ -121,9 +121,10 @@ def send_sms_alert(service, users, duty_officers):
         'host': settings.WWW_HTTP_HOST,
     })
     message = Template(sms_template).render(c)
+    mobiles = list(set(mobiles))
     for mobile in mobiles:
         try:
-            message = client.sms.messages.create(
+            client.sms.messages.create(
                 to=mobile,
                 from_=settings.TWILIO_OUTGOING_NUMBER,
                 body=message,
