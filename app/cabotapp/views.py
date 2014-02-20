@@ -145,6 +145,7 @@ class HttpStatusCheckForm(StatusCheckForm):
             'text_match',
             'status_code',
             'timeout',
+            'verify_ssl_certificate',
             'frequency',
             'importance',
             'active',

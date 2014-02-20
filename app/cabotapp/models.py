@@ -332,6 +332,10 @@ class StatusCheck(PolymorphicModel):
         null=True,
         help_text='Time out after this many seconds.',
     )
+    verify_ssl_certificate = models.BooleanField(
+        default=True,
+        help_text='Set to false to allow not try to verify ssl certificates (default True)',
+    )
 
     # Jenkins checks
     max_queued_build_time = models.IntegerField(
@@ -496,7 +500,7 @@ class HttpStatusCheck(StatusCheck):
             resp = requests.get(
                 self.endpoint,
                 timeout=self.timeout,
-                verify=True,
+                verify=self.verify_ssl_certificate,
                 auth=auth
             )
         except requests.RequestException as e:
