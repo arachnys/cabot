@@ -497,12 +497,19 @@ class HttpStatusCheck(StatusCheck):
         result = StatusCheckResult(check=self)
         auth = (self.username, self.password)
         try:
-            resp = requests.get(
-                self.endpoint,
-                timeout=self.timeout,
-                verify=self.verify_ssl_certificate,
-                auth=auth
-            )
+            if self.username or self.password:
+                resp = requests.get(
+                    self.endpoint,
+                    timeout=self.timeout,
+                    verify=self.verify_ssl_certificate,
+                    auth=auth
+                )
+            else:
+                resp = requests.get(
+                    self.endpoint,
+                    timeout=self.timeout,
+                    verify=self.verify_ssl_certificate,
+                )
         except requests.RequestException as e:
             result.error = u'Request error occurred: %s' % (e,)
             result.succeeded = False
