@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% load extra %}
+
+{% block content %}
+<div class="row">
+  <div class="col-xs-12">
+    <div class="col-xs-1"><h2><i class="fa fa-gears"></i></h2></div>
+    <div class="col-xs-5"><h2><span class="break"></span>{{ service.name }}</h2></div>
+  </div>
+</div>
+{% if not checks %}
+  No checks
+{% else %}
+  {% for check in checks %}
+    <div class="row">
+      <div class="col-xs-12">
+        <div class="col-xs-1"><h3><i class="glyphicon glyphicon-{% if check.polymorphic_ctype.model == 'graphitestatuscheck' %}signal{% elif check.polymorphic_ctype.model == 'httpstatuscheck' %}arrow-up{% elif check.polymorphic_ctype.model == 'jenkinsstatuscheck' %}ok{% endif %}"></i></h3></div>
+        <div class="col-xs-11"><h3>{{ check.name }}</h3></div>
+      </div>
+    </div>
+    {% if check.problems %}
+      <table class="table bootstrap-datatable datatable">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Duration</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for start_time, duration in check.problems %}
+            <tr>
+            <td>
+                {{ start_time }}
+            </td>
+            <td>
+                {{ duration|format_timedelta }}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+    {% if check.success_rate %}
+    <p>Success rate: {{ check.success_rate|floatformat:"2" }}%.</p>
+    {% endif %}
+  {% endfor %}
+{% endif %}
+{% endblock content %}
