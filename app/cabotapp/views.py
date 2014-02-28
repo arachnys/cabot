@@ -15,6 +15,7 @@ from django import forms
 from .graphite import get_data, get_matching_metrics
 from .alert import telephone_alert_twiml_callback
 from django.contrib.auth.models import User
+from django.utils import timezone
 from django.utils.timezone import utc
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ValidationError
@@ -267,7 +268,7 @@ class StatusCheckReportForm(forms.Form):
             ).order_by('time')
             groups = dropwhile(lambda item: item[0], groupby(results, key=lambda r: r.succeeded))
             times = [next(group).time for succeeded, group in groups]
-            pairs = izip_longest(*([iter(times)] * 2), fillvalue=datetime.now())
+            pairs = izip_longest(*([iter(times)] * 2), fillvalue=timezone.now())
             check.problems = [(start, end - start) for start, end in pairs]
             if results:
                 check.success_rate = results.filter(succeeded=True).count() / float(len(results)) * 100
