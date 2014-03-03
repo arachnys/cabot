@@ -19,7 +19,7 @@
         <div class="col-xs-11"><h3>{{ check.name }}</h3></div>
       </div>
     </div>
-    {% if check.success_rate is not None %}
+    {% if check.success_rate != None %}
     <h4>Success rate: {{ check.success_rate|floatformat:"2" }}%.</h4>
     {% endif %}
     {% if check.problems %}
