@@ -200,7 +200,12 @@ drawRickshaw = (data, labels, events = []) ->
 </script>
 <script type="text/javascript">
 $(function(){
-    $(':input.datepicker').datepicker({dateFormat: 'yy-mm-dd'});
+    $(':input.datepicker').datepicker({
+        dateFormat: 'yy-mm-dd',
+        buttonImage: '{{ STATIC_URL }}theme/img/calendar.gif',
+        buttonImageOnly: true,
+        showOn: 'button'
+    });
 });
 </script>
 {% endcompress %}

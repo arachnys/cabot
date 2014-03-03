@@ -1,5 +1,6 @@
 from django.template import RequestContext, loader
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
+from dateutil.relativedelta import relativedelta
 from django.http import HttpResponse, HttpResponseRedirect
 from django.core.urlresolvers import reverse_lazy
 from django.conf import settings
@@ -397,7 +398,13 @@ class ServiceDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super(ServiceDetailView, self).get_context_data(**kwargs)
-        context['report_form'] = StatusCheckReportForm(initial={'checks': self.object.status_checks.all(), 'service': self.object})
+        date_from = date.today() - relativedelta(day=1)
+        context['report_form'] = StatusCheckReportForm(initial={
+            'checks': self.object.status_checks.all(),
+            'service': self.object,
+            'date_from': date_from,
+            'date_to': date_from + relativedelta(months=1) - relativedelta(days=1)
+        })
         return context
 
 
