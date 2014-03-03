@@ -259,6 +259,7 @@ class StatusCheckReportForm(forms.Form):
 
     def get_report(self):
         checks = self.cleaned_data['checks']
+        now = timezone.now()
         for check in checks:
             # Group results of the check by status (failed alternating with succeeded),
             # take time of the first one in each group (starting from a failed group),
@@ -269,8 +270,8 @@ class StatusCheckReportForm(forms.Form):
             ).order_by('time')
             groups = dropwhile(lambda item: item[0], groupby(results, key=lambda r: r.succeeded))
             times = [next(group).time for succeeded, group in groups]
-            pairs = izip_longest(*([iter(times)] * 2), fillvalue=timezone.now())
-            check.problems = [(start, end - start) for start, end in pairs]
+            pairs = izip_longest(*([iter(times)] * 2))
+            check.problems = [(start, end, (end or now) - start) for start, end in pairs]
             if results:
                 check.success_rate = results.filter(succeeded=True).count() / float(len(results)) * 100
         return checks
