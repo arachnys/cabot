@@ -299,7 +299,7 @@ class JenkinsCheckCreateView(CheckCreateView):
 
     def form_valid(self, form):
         form.instance.frequency = 1
-        return super(JenkinsStatusCheckView, self).form_valid(form)
+        return super(JenkinsCheckCreateView, self).form_valid(form)
 
 
 class JenkinsCheckUpdateView(CheckUpdateView):
@@ -308,7 +308,7 @@ class JenkinsCheckUpdateView(CheckUpdateView):
 
     def form_valid(self, form):
         form.instance.frequency = 1
-        return super(JenkinsStatusCheckView, self).form_valid(form)
+        return super(JenkinsCheckUpdateView, self).form_valid(form)
 
 
 class StatusCheckListView(LoginRequiredMixin, ListView):
