@@ -1,5 +1,6 @@
 from django.template import RequestContext, loader
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
+from dateutil.relativedelta import relativedelta
 from django.http import HttpResponse, HttpResponseRedirect
 from django.core.urlresolvers import reverse_lazy
 from django.conf import settings
@@ -7,19 +8,20 @@ from models import (
     StatusCheck, GraphiteStatusCheck, JenkinsStatusCheck, HttpStatusCheck,
     StatusCheckResult, UserProfile, Service, Shift, get_duty_officers)
 from tasks import run_status_check as _run_status_check
-from tasks import update_service as _update_service
-from tasks import run_all_checks as _run_all_checks
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
-from django.views.generic import DetailView, CreateView, UpdateView, ListView, DeleteView
+from django.views.generic import (
+    DetailView, CreateView, UpdateView, ListView, DeleteView, TemplateView)
 from django import forms
 from .graphite import get_data, get_matching_metrics
 from .alert import telephone_alert_twiml_callback
 from django.contrib.auth.models import User
+from django.utils import timezone
 from django.utils.timezone import utc
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ValidationError
 
+from itertools import groupby, dropwhile, izip_longest
 import requests
 import json
 import re
@@ -238,6 +240,42 @@ class ServiceForm(forms.ModelForm):
         raise ValidationError('Please specify a valid JS snippet link')
 
 
+class StatusCheckReportForm(forms.Form):
+    service = forms.ModelChoiceField(
+        queryset=Service.objects.all(),
+        widget=forms.HiddenInput
+    )
+    checks = forms.ModelMultipleChoiceField(
+        queryset=StatusCheck.objects.all(),
+        widget=forms.SelectMultiple(
+            attrs={
+                'data-rel': 'chosen',
+                'style': 'width: 70%',
+            },
+        )
+    )
+    date_from = forms.DateField(label='From', widget=forms.DateInput(attrs={'class': 'datepicker'}))
+    date_to = forms.DateField(label='To', widget=forms.DateInput(attrs={'class': 'datepicker'}))
+
+    def get_report(self):
+        checks = self.cleaned_data['checks']
+        for check in checks:
+            # Group results of the check by status (failed alternating with succeeded),
+            # take time of the first one in each group (starting from a failed group),
+            # split them into pairs and form the list of problems.
+            results = check.statuscheckresult_set.filter(
+                time__gte=self.cleaned_data['date_from'],
+                time__lt=self.cleaned_data['date_to'] + timedelta(days=1)
+            ).order_by('time')
+            groups = dropwhile(lambda item: item[0], groupby(results, key=lambda r: r.succeeded))
+            times = [next(group).time for succeeded, group in groups]
+            pairs = izip_longest(*([iter(times)] * 2), fillvalue=timezone.now())
+            check.problems = [(start, end - start) for start, end in pairs]
+            if results:
+                check.success_rate = results.filter(succeeded=True).count() / float(len(results)) * 100
+        return checks
+
+
 class CheckCreateView(LoginRequiredMixin, CreateView):
     template_name = 'cabotapp/statuscheck_form.html'
 
@@ -366,6 +404,17 @@ class ServiceDetailView(LoginRequiredMixin, DetailView):
     model = Service
     context_object_name = 'service'
 
+    def get_context_data(self, **kwargs):
+        context = super(ServiceDetailView, self).get_context_data(**kwargs)
+        date_from = date.today() - relativedelta(day=1)
+        context['report_form'] = StatusCheckReportForm(initial={
+            'checks': self.object.status_checks.all(),
+            'service': self.object,
+            'date_from': date_from,
+            'date_to': date_from + relativedelta(months=1) - relativedelta(days=1)
+        })
+        return context
+
 
 class ServiceCreateView(LoginRequiredMixin, CreateView):
     model = Service
@@ -398,6 +447,15 @@ class ShiftListView(LoginRequiredMixin, ListView):
         return Shift.objects.filter(
             end__gt=datetime.utcnow().replace(tzinfo=utc),
             deleted=False).order_by('start')
+
+
+class StatusCheckReportView(LoginRequiredMixin, TemplateView):
+    template_name = 'cabotapp/statuscheck_report.html'
+
+    def get_context_data(self, **kwargs):
+        form = StatusCheckReportForm(self.request.GET)
+        if form.is_valid():
+            return {'checks': form.get_report(), 'service': form.cleaned_data['service']}
 
 
 # Misc JSON api and other stuff

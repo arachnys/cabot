@@ -5,7 +5,7 @@ from cabotapp.views import (
     HttpCheckCreateView, HttpCheckUpdateView,
     JenkinsCheckCreateView, JenkinsCheckUpdateView,
     StatusCheckDeleteView, StatusCheckListView, StatusCheckDetailView,
-    StatusCheckResultDetailView)
+    StatusCheckResultDetailView, StatusCheckReportView)
 from cabotapp.views import (ServiceListView, ServiceDetailView,
                             ServiceUpdateView, ServiceCreateView, ServiceDeleteView,
                             UserProfileUpdateView, ShiftListView, subscriptions)
@@ -43,7 +43,7 @@ urlpatterns = patterns('',
                        url(r'^service/(?P<pk>\d+)/',
                            view=ServiceDetailView.as_view(), name='service'),
 
-                       url(r'^checks/', view=StatusCheckListView.as_view(),
+                       url(r'^checks/$', view=StatusCheckListView.as_view(),
                            name='checks'),
                        url(r'^check/run/(?P<pk>\d+)/',
                            view=run_status_check, name='run-check'),
@@ -52,6 +52,8 @@ urlpatterns = patterns('',
                            ), name='delete-check'),
                        url(r'^check/(?P<pk>\d+)/',
                            view=StatusCheckDetailView.as_view(), name='check'),
+                       url(r'^checks/report/$',
+                           view=StatusCheckReportView.as_view(), name='checks-report'),
 
                        url(r'^graphitecheck/create/',
                            view=GraphiteCheckCreateView.as_view(
