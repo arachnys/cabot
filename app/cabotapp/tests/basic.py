@@ -1,20 +1,19 @@
 # -*- coding: utf-8 -*-
 
 import requests
-from cabotapp.alert import _send_hipchat_alert
 from django.utils import timezone
 from django.core.urlresolvers import reverse
 from django.test import TestCase
-from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 from django.test.client import Client
 from cabotapp.models import (
-    StatusCheck, GraphiteStatusCheck, JenkinsStatusCheck,
+    GraphiteStatusCheck, JenkinsStatusCheck,
     HttpStatusCheck, Service, StatusCheckResult)
+from cabotapp.views import StatusCheckReportForm
 from mock import Mock, patch
 from twilio import rest
 from django.core import mail
-from datetime import timedelta
+from datetime import timedelta, date
 import json
 import os
 
@@ -310,3 +309,17 @@ class TestWebInterface(LocalTestCase):
         reloaded = Service.objects.get(id=self.service.id)
         # Still the same
         self.assertEqual(reloaded.hackpad_id, snippet_link)
+
+    def test_checks_report(self):
+        form = StatusCheckReportForm({
+            'service': self.service.id,
+            'checks': [self.graphite_check.id],
+            'date_from': date.today() - timedelta(days=1),
+            'date_to': date.today(),
+        })
+        self.assertTrue(form.is_valid())
+        checks = form.get_report()
+        self.assertEqual(len(checks), 1)
+        check = checks[0]
+        self.assertEqual(len(check.problems), 1)
+        self.assertEqual(check.success_rate, 50)
