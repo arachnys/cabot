@@ -26,15 +26,19 @@
       <table class="table bootstrap-datatable datatable">
         <thead>
           <tr>
-            <th>Time</th>
+            <th>Start time</th>
+            <th>End time</th>
             <th>Duration</th>
           </tr>
         </thead>
         <tbody>
-        {% for start_time, duration in check.problems %}
+        {% for start_time, end_time, duration in check.problems %}
             <tr>
             <td>
                 {{ start_time }}
+            </td>
+            <td>
+                {% if end_time %}{{ end_time }}{% else %}-{% endif %}
             </td>
             <td>
                 {{ duration|format_timedelta }}
