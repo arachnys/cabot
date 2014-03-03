@@ -186,11 +186,6 @@ class JenkinsStatusCheckForm(StatusCheckForm):
         )
         widgets = dict(**base_widgets)
 
-    def form_valid(self, form):
-        # We want to update Jenkins statuses once a minute
-        form.instance.frequency = 1
-        return super(JenkinsStatusCheckForm, self).form_valid(form)
-
 
 class UserProfileForm(forms.ModelForm):
 
@@ -302,10 +297,18 @@ class JenkinsCheckCreateView(CheckCreateView):
     model = JenkinsStatusCheck
     form_class = JenkinsStatusCheckForm
 
+    def form_valid(self, form):
+        form.instance.frequency = 1
+        return super(JenkinsStatusCheckView, self).form_valid(form)
+
 
 class JenkinsCheckUpdateView(CheckUpdateView):
     model = JenkinsStatusCheck
     form_class = JenkinsStatusCheckForm
+
+    def form_valid(self, form):
+        form.instance.frequency = 1
+        return super(JenkinsStatusCheckView, self).form_valid(form)
 
 
 class StatusCheckListView(LoginRequiredMixin, ListView):
