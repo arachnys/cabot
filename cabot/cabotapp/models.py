@@ -5,7 +5,7 @@ from polymorphic import PolymorphicModel
 from django.db.models import F
 from django.contrib.admin.models import User
 
-from jenkins import get_job_status
+from .jenkins import get_job_status
 from .alert import send_alert
 from .calendar import get_events
 from .graphite import parse_metric

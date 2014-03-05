@@ -1,12 +1,12 @@
 from django.conf.urls.defaults import patterns, include, url
-from cabotapp.views import (
+from cabot.cabotapp.views import (
     run_status_check, graphite_api_data, twiml_callback, checks_run_recently,
     GraphiteCheckCreateView, GraphiteCheckUpdateView,
     HttpCheckCreateView, HttpCheckUpdateView,
     JenkinsCheckCreateView, JenkinsCheckUpdateView,
     StatusCheckDeleteView, StatusCheckListView, StatusCheckDetailView,
     StatusCheckResultDetailView, StatusCheckReportView)
-from cabotapp.views import (ServiceListView, ServiceDetailView,
+from cabot.cabotapp.views import (ServiceListView, ServiceDetailView,
                             ServiceUpdateView, ServiceCreateView, ServiceDeleteView,
                             UserProfileUpdateView, ShiftListView, subscriptions)
 from django.contrib import admin

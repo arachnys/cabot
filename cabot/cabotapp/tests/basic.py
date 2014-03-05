@@ -6,7 +6,7 @@ from django.core.urlresolvers import reverse
 from django.test import TestCase
 from django.contrib.auth.models import User
 from django.test.client import Client
-from cabotapp.models import (
+from cabot.cabotapp.models import (
     GraphiteStatusCheck, JenkinsStatusCheck,
     HttpStatusCheck, Service, StatusCheckResult)
 from cabotapp.views import StatusCheckReportForm

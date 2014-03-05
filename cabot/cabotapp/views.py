@@ -4,10 +4,10 @@ from dateutil.relativedelta import relativedelta
 from django.http import HttpResponse, HttpResponseRedirect
 from django.core.urlresolvers import reverse_lazy
 from django.conf import settings
-from models import (
+from .models import (
     StatusCheck, GraphiteStatusCheck, JenkinsStatusCheck, HttpStatusCheck,
     StatusCheckResult, UserProfile, Service, Shift, get_duty_officers)
-from tasks import run_status_check as _run_status_check
+from .tasks import run_status_check as _run_status_check
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.views.generic import (
