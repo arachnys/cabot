@@ -6,9 +6,10 @@ static/CACHE/*
 node_modules/*
 .python-eggs/*
 cabot.egg-info
-cabot/.env
+cabot/static/CACHE
+.env
 .DS_Store
-celerybeat-schedule.db
+celerybeat-schedule
 *.pyc
 *.swp
 *.orig
