@@ -6,7 +6,7 @@
     <div class="col-xs-1"><h2><i class="fa fa-gears"></i></h2></div>
     <div class="col-xs-10"><h2><span class="break"></span>Services</h2></div>
     <div class="col-xs-1 text-right">
-      <h2><a href="{% url create-service %}" title="New service"><i class="glyphicon glyphicon-plus"></i></a></h2>
+      <h2><a href="{% url "create-service" %}" title="New service"><i class="glyphicon glyphicon-plus"></i></a></h2>
     </div>
   </div>
   <div class="col-xs-12">
@@ -27,7 +27,7 @@
       {% for service in services %}
         <tr class="{% if service.alerts_enabled %}enabled{% else %}warning{% endif %}">
           <td>
-            <a href="{% url service pk=service.id %}" title="Alerts {% if service.alerts_enabled %}enabled{% else %}disabled{% endif %}">{{service.name}} </a>
+            <a href="{% url "service" pk=service.id %}" title="Alerts {% if service.alerts_enabled %}enabled{% else %}disabled{% endif %}">{{service.name}} </a>
           </td>
           <td>
             <span class="label label-{% if not service.alerts_enabled %}warning{% else %}{% if service.overall_status == service.PASSING_STATUS %}success{% else %}danger{% endif %}{% endif %}">{% if service.alerts_enabled %}{{ service.overall_status|lower|capfirst }}{% else %}Disabled{% endif %}</span>
@@ -39,7 +39,7 @@
             <span class="label label-{% if service.inactive_status_checks.all.count > 0 %}warning{% else %}default{% endif %}">{{ service.inactive_status_checks.all.count }}</span>
           </td>
           <td class="text-right">
-            <a class="btn btn-xs" href="{% url update-service pk=service.id %}" role="button">
+            <a class="btn btn-xs" href="{% url "update-service" pk=service.id %}" role="button">
               <i class="glyphicon glyphicon-edit"></i>
             </a>
           </td>

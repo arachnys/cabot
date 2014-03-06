@@ -1,4 +1,4 @@
-from django.conf.urls.defaults import patterns, include, url
+from django.conf.urls import patterns, include, url
 from cabot.cabotapp.views import (
     run_status_check, graphite_api_data, twiml_callback, checks_run_recently,
     GraphiteCheckCreateView, GraphiteCheckUpdateView,

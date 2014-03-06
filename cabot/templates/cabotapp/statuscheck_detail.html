@@ -13,7 +13,7 @@
       {% if check.polymorphic_ctype.model == 'jenkinsstatuscheck' %}
         <a href="{% jenkins_human_url check.name %}" class=""><i class="glyphicon glyphicon-link"></i></a>
       {% endif %}
-      <a href="{% if check.polymorphic_ctype.model == 'graphitestatuscheck' %}{% url update-check pk=check.id %}{% elif check.polymorphic_ctype.model == 'httpstatuscheck' %}{% url update-http-check pk=check.id %}{% elif check.polymorphic_ctype.model == 'jenkinsstatuscheck' %}{% url update-jenkins-check pk=check.id %}{% endif %}" class=""><i class="glyphicon glyphicon-edit"></i></a> <a href="{% url run-check pk=check.id %}"><i class="glyphicon glyphicon-refresh"></i></a>
+      <a href="{% if check.polymorphic_ctype.model == 'graphitestatuscheck' %}{% url "update-check" pk=check.id %}{% elif check.polymorphic_ctype.model == 'httpstatuscheck' %}{% url "update-http-check" pk=check.id %}{% elif check.polymorphic_ctype.model == 'jenkinsstatuscheck' %}{% url "update-jenkins-check" pk=check.id %}{% endif %}" class=""><i class="glyphicon glyphicon-edit"></i></a> <a href="{% url "run-check" pk=check.id %}"><i class="glyphicon glyphicon-refresh"></i></a>
     </h2></div>
   </div>
 </div>
@@ -45,7 +45,7 @@
             </span>
           </td>
           <td>
-            <a href="{% url result pk=result.id %}">{{ result.time }}</a>
+            <a href="{% url "result" pk=result.id %}">{{ result.time }}</a>
           </td>
           <td>{{ result.time_complete }}</td>
           <td>{{ result.took }}</td>
@@ -63,7 +63,7 @@
   {% if service.hackpad_id %}
   <div class="col-xs-12">
     <div class="col-xs-1"><h3><i class="fa fa-exclamation-triangle"></i></h3></div>
-    <div class="col-xs-11"><h3>Recovery instructions for linked service <a href="{% url service service.id %}">{{ service.name }}</a></h3></div>
+    <div class="col-xs-11"><h3>Recovery instructions for linked service <a href="{% url "service" service.id %}">{{ service.name }}</a></h3></div>
     <div class="col-xs-12">
       <script src="{{ service.hackpad_id }}"></script>
     </div>
