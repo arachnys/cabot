@@ -9,7 +9,7 @@ from django.test.client import Client
 from cabot.cabotapp.models import (
     GraphiteStatusCheck, JenkinsStatusCheck,
     HttpStatusCheck, Service, StatusCheckResult)
-from cabotapp.views import StatusCheckReportForm
+from cabot.cabotapp.views import StatusCheckReportForm
 from mock import Mock, patch
 from twilio import rest
 from django.core import mail
@@ -165,7 +165,7 @@ class TestCheckRun(LocalTestCase):
         self.service.update_status()
         self.assertEqual(self.service.overall_status, Service.PASSING_STATUS)
 
-    @patch('cabotapp.graphite.requests.get', fake_graphite_response)
+    @patch('cabot.cabotapp.graphite.requests.get', fake_graphite_response)
     def test_graphite_run(self):
         checkresults = self.graphite_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 2)
@@ -187,7 +187,7 @@ class TestCheckRun(LocalTestCase):
         self.assertEqual(self.graphite_check.calculated_status,
                          Service.CALCULATED_PASSING_STATUS)
 
-    @patch('cabotapp.jenkins.requests.get', fake_jenkins_response)
+    @patch('cabot.cabotapp.jenkins.requests.get', fake_jenkins_response)
     def test_jenkins_run(self):
         checkresults = self.jenkins_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 0)
@@ -196,7 +196,7 @@ class TestCheckRun(LocalTestCase):
         self.assertEqual(len(checkresults), 1)
         self.assertFalse(self.jenkins_check.last_result().succeeded)
 
-    @patch('cabotapp.jenkins.requests.get', jenkins_blocked_response)
+    @patch('cabot.cabotapp.jenkins.requests.get', jenkins_blocked_response)
     def test_jenkins_blocked_build(self):
         checkresults = self.jenkins_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 0)
@@ -205,7 +205,7 @@ class TestCheckRun(LocalTestCase):
         self.assertEqual(len(checkresults), 1)
         self.assertFalse(self.jenkins_check.last_result().succeeded)
 
-    @patch('cabotapp.models.requests.get', throws_timeout)
+    @patch('cabot.cabotapp.models.requests.get', throws_timeout)
     def test_timeout_handling_in_jenkins(self):
         checkresults = self.jenkins_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 0)
@@ -216,7 +216,7 @@ class TestCheckRun(LocalTestCase):
         self.assertIn(u'Error fetching from Jenkins - фиктивная ошибка',
                       self.jenkins_check.last_result().error)
 
-    @patch('cabotapp.models.requests.get', fake_http_200_response)
+    @patch('cabot.cabotapp.models.requests.get', fake_http_200_response)
     def test_http_run(self):
         checkresults = self.http_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 0)
@@ -240,7 +240,7 @@ class TestCheckRun(LocalTestCase):
         self.assertEqual(self.http_check.calculated_status,
                          Service.CALCULATED_FAILING_STATUS)
 
-    @patch('cabotapp.models.requests.get', throws_timeout)
+    @patch('cabot.cabotapp.models.requests.get', throws_timeout)
     def test_timeout_handling_in_http(self):
         checkresults = self.http_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 0)
@@ -251,7 +251,7 @@ class TestCheckRun(LocalTestCase):
         self.assertIn(u'Request error occurred: фиктивная ошибка innit',
                       self.http_check.last_result().error)
 
-    @patch('cabotapp.models.requests.get', fake_http_404_response)
+    @patch('cabot.cabotapp.models.requests.get', fake_http_404_response)
     def test_http_run_bad_resp(self):
         checkresults = self.http_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 0)
