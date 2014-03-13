@@ -19,6 +19,7 @@ if not DEBUG:
 
 USE_TZ = True
 
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost:8000').split(',')
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
