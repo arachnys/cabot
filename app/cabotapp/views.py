@@ -277,6 +277,24 @@ class StatusCheckReportForm(forms.Form):
         return checks
 
 
+class QuickUserCreateForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(QuickUserCreateForm, self).__init__(*args, **kwargs)
+        self.fields['email'].required = True
+
+    def save(self, commit=True):
+        user = super(QuickUserCreateForm, self).save(commit=False)
+        user.username = user.email
+        user.set_unusable_password()
+        if commit:
+            user.save()
+        return user
+
+    class Meta:
+        model = User
+        fields = ('email',)
+
+
 class CheckCreateView(LoginRequiredMixin, CreateView):
     template_name = 'cabotapp/statuscheck_form.html'
 
@@ -457,6 +475,12 @@ class StatusCheckReportView(LoginRequiredMixin, TemplateView):
         form = StatusCheckReportForm(self.request.GET)
         if form.is_valid():
             return {'checks': form.get_report(), 'service': form.cleaned_data['service']}
+
+
+class QuickUserCreateView(LoginRequiredMixin, CreateView):
+    success_url = reverse_lazy('subscriptions')
+    form_class = QuickUserCreateForm
+    template_name = 'cabotapp/quick_user_form.html'
 
 
 # Misc JSON api and other stuff

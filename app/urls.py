@@ -5,7 +5,7 @@ from cabotapp.views import (
     HttpCheckCreateView, HttpCheckUpdateView,
     JenkinsCheckCreateView, JenkinsCheckUpdateView,
     StatusCheckDeleteView, StatusCheckListView, StatusCheckDetailView,
-    StatusCheckResultDetailView, StatusCheckReportView)
+    StatusCheckResultDetailView, StatusCheckReportView, QuickUserCreateView)
 from cabotapp.views import (ServiceListView, ServiceDetailView,
                             ServiceUpdateView, ServiceCreateView, ServiceDeleteView,
                             UserProfileUpdateView, ShiftListView, subscriptions)
@@ -29,6 +29,8 @@ urlpatterns = patterns('',
                            view=password_reset_confirm, name='password-reset-confirm'),
                        url(r'^status/', view=checks_run_recently,
                            name='system-status'),
+                       url(r'^accounts/quick-add/', view=QuickUserCreateView.as_view(),
+                           name='quick-user-create'),
 
                        url(r'^services/', view=ServiceListView.as_view(),
                            name='services'),
