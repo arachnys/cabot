@@ -54,7 +54,7 @@ def get_all_metrics(limit=None):
     return metrics
 
 
-def parse_metric(metric, mins_to_check=5):
+def parse_metric(metric, lookback_count=5):
     """
     Returns dict with:
     - num_series_with_data: Number of series with data
@@ -80,7 +80,7 @@ def parse_metric(metric, mins_to_check=5):
     all_values = []
     for target in data:
         values = [float(t[0])
-                  for t in target['datapoints'][-mins_to_check:] if t[0] is not None]
+                  for t in target['datapoints'][-lookback_count:] if t[0] is not None]
         if values:
             ret['num_series_with_data'] += 1
         else:
