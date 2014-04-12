@@ -16,6 +16,10 @@ CELERYBEAT_SCHEDULE = {
         'task': 'app.cabotapp.tasks.update_shifts',
         'schedule': timedelta(seconds=1800),
     },
+    'clean-db': {
+        'task': 'app.cabotapp.tasks.clean_db',
+        'schedule': timedelta(seconds=60*60*24),
+    },
 }
 
 CELERY_TIMEZONE = 'UTC'
