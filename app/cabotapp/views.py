@@ -9,6 +9,7 @@ from models import (
     StatusCheckResult, UserProfile, Service, Shift, get_duty_officers)
 from tasks import run_status_check as _run_status_check
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import Group
 from django.utils.decorators import method_decorator
 from django.views.generic import (
     DetailView, CreateView, UpdateView, ListView, DeleteView, TemplateView)
@@ -292,13 +293,29 @@ class QuickUserCreateForm(forms.ModelForm):
         user.username = base64.urlsafe_b64encode(hashlib.sha256(converted).digest())[:30]
 
         user.set_unusable_password()
+
+        def _add_group():
+            group, created = Group.objects.get_or_create(name='subscribers')
+            user.groups.add(group)
+
         if commit:
             user.save()
+            _add_group()
+        else:
+            real_save_m2m = self.save_m2m
+
+            def save_m2m():
+                real_save_m2m()
+                _add_group()
+            self.save_m2m = save_m2m
+
         return user
 
     class Meta:
         model = User
         fields = ('email',)
+
+User.__unicode__ = lambda self: self.email if self.groups.filter(name='subscribers').exists() else self.username
 
 
 class CheckCreateView(LoginRequiredMixin, CreateView):
