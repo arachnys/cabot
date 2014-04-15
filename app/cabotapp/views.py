@@ -21,6 +21,8 @@ from django.utils.timezone import utc
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ValidationError
 
+import base64
+import hashlib
 from itertools import groupby, dropwhile, izip_longest
 import requests
 import json
@@ -284,7 +286,11 @@ class QuickUserCreateForm(forms.ModelForm):
 
     def save(self, commit=True):
         user = super(QuickUserCreateForm, self).save(commit=False)
-        user.username = user.email
+
+        # Stolen from django-email-as-username.
+        converted = user.email.lower().encode('utf8', 'ignore')
+        user.username = base64.urlsafe_b64encode(hashlib.sha256(converted).digest())[:30]
+
         user.set_unusable_password()
         if commit:
             user.save()
