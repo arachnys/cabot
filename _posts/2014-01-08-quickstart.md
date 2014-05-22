@@ -16,7 +16,7 @@ Getting started is easy via a VPS on [AWS](https://aws.amazon.com) or [DigitalOc
 
         $ cd cabot
 
-2.  Add your keys for external services to `conf/production.env`:
+2.  Add your keys for external services to `conf/production.env` using `production.env.example` as a template:
 
         $ cp conf/production.env.example conf/production.env
 
