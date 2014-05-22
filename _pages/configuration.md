@@ -1,1 +1,0 @@
-/Users/david/Documents/workspace/cabot-gh-pages/_posts/2014-01-08-configuration.md
