@@ -22,8 +22,9 @@ Getting started is easy via a VPS on [AWS](https://aws.amazon.com) or [DigitalOc
 
 3.  Spin up a new VPS instance (on e.g. AWS or DigitalOcean) - you can create a new DigitalOcean "droplet" from the command line via [`tugboat`](https://github.com/pearkes/tugboat)
 
-        $ tugboat create cabot --size=63 --image=1505447 --region=1`
+        $ tugboat create cabot --size=66 --image=3101045 --region=1
         # create a new droplet called `cabot` with 1GB of memory running Ubuntu 12.04 in New York region
+        # --image and --size arguments seem to change, see tugboat docs for details
 
 4.  Provision the newly-created VPS using [Fabric](http://docs.fabfile.org/)
 
