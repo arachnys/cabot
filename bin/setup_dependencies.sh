@@ -56,7 +56,7 @@ packages=(
   'libxslt-dev'
   'nodejs'
   'npm'
-  'postgresql-9.1'
+  'mysql-server'
   'nginx'
   'htop'
 )
