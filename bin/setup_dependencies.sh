@@ -5,40 +5,40 @@ set -o pipefail
 
 cd "$(dirname "$0")"
 
-# Add the 'ubuntu' user if it does not already exist
-if [ -z "$(cat /etc/passwd | grep '^ubuntu:')" ]; then
-  useradd -m --shell /bin/bash ubuntu
+# Add the 'cabot' user if it does not already exist
+if [ -z "$(cat /etc/passwd | grep '^cabot:')" ]; then
+  useradd -m --shell /bin/bash cabot
 fi
 
-# Give the ubuntu user sudo privileges without a password
-if [ ! -e /etc/sudoers.d/ubuntu ]; then
-  echo 'ubuntu ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/ubuntu
-  chmod 440 /etc/sudoers.d/ubuntu
+# Give the cabot user sudo privileges without a password
+if [ ! -e /etc/sudoers.d/cabot ]; then
+  echo 'cabot ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/cabot
+  chmod 440 /etc/sudoers.d/cabot
 fi
 
-# Generate a keypair the ubuntu user
-if [ ! -f /home/ubuntu/.ssh/id_rsa ]; then
-  su ubuntu -c 'mkdir -p ~/.ssh && ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa'
+# Generate a keypair the cabot user
+if [ ! -f /home/cabot/.ssh/id_rsa ]; then
+  su cabot -c 'mkdir -p ~/.ssh && ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa'
 fi
 
 if [ ! -z "$LOCAL_SSH_KEY" ]; then
-  if grep -Fxq "$LOCAL_SSH_KEY" /home/ubuntu/.ssh/authorized_keys; then
+  if grep -Fxq "$LOCAL_SSH_KEY" /home/cabot/.ssh/authorized_keys; then
     echo 'Local SSH public key already in remote authorized_keys'
   else
     echo 'Adding local SSH public key to authorized_keys'
-    echo "$LOCAL_SSH_KEY" >> /home/ubuntu/.ssh/authorized_keys
-    echo 'Key successfully added. You should now be able to SSH to this host as ubuntu@host'
+    echo "$LOCAL_SSH_KEY" >> /home/cabot/.ssh/authorized_keys
+    echo 'Key successfully added. You should now be able to SSH to this host as cabot@host'
   fi
 fi
 
 # SSH permissions
-chown -R ubuntu:ubuntu /home/ubuntu/.ssh
-chmod -R 600 /home/ubuntu/.ssh
-chmod +x /home/ubuntu/.ssh
+chown -R cabot:cabot /home/cabot/.ssh
+chmod -R 600 /home/cabot/.ssh
+chmod +x /home/cabot/.ssh
 
 # Disable root access
 passwd -l root
-echo 'SSH access for root disabled. You will need to connect as ubuntu.'
+echo 'SSH access for root disabled. You will need to connect as cabot.'
 
 packages=(
   'gcc'
@@ -133,7 +133,7 @@ server {
   }
 
   location /static/ {
-    alias /home/ubuntu/cabot/static/;
+    alias /home/cabot/cabot/static/;
   }
 
   # Uncomment line below to force https

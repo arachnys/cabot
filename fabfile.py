@@ -6,10 +6,10 @@ from subprocess import check_output
 
 env.use_ssh_config = True
 
-env.user = 'ubuntu'
+env.user = 'cabot'
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-HOME_DIR = '/home/ubuntu'
+HOME_DIR = '/home/cabot'
 DEPLOY_PATH = '%s/cabot' % HOME_DIR
 LOG_DIR = '/var/log/cabot/'
 VENV_DIR = '%s/venv' % HOME_DIR
