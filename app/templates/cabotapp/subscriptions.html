@@ -43,6 +43,7 @@
             <a href="{% url update-service pk=service.id %}">{{service.name}}</a>
             {% if service.email_alert %}<span class="label label-{% if service.alerts_enabled %}success{% else %}warning{% endif %}">email</span>{% endif %}
             {% if service.hipchat_alert %}<span class="label label-{% if service.alerts_enabled %}success{% else %}warning{% endif %}">hipchat</span>{% endif %}
+            {% if service.pushover_alert %}<span class="label label-{% if service.alerts_enabled %}success{% else %}warning{% endif %}">pushover</span>{% endif %}
             {% if service.sms_alert %}<span class="label label-{% if service.alerts_enabled %}success{% else %}warning{% endif %}">sms</span>{% endif %}
             {% if service.telephone_alert %}<span class="label label-{% if service.alerts_enabled %}success{% else %}warning{% endif %}">phone</span>{% endif %}
           </td>

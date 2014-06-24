@@ -208,6 +208,7 @@ class ServiceForm(forms.ModelForm):
             'status_checks',
             'email_alert',
             'hipchat_alert',
+            'pushover_alert',
             'sms_alert',
             'telephone_alert',
             'alerts_enabled',
