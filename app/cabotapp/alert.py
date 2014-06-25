@@ -25,9 +25,7 @@ Passing checks:{% for check in service.all_passing_checks %}
 
 hipchat_template = "Service {{ service.name }} {% if service.overall_status == service.PASSING_STATUS %}is back to normal{% else %}reporting {{ service.overall_status }} status{% endif %}: {{ scheme }}://{{ host }}{% url service pk=service.id %}. {% if service.overall_status != service.PASSING_STATUS %}Checks failing:{% for check in service.all_failing_checks %} {{ check.name }}{% if check.last_result.error %} ({{ check.last_result.error|safe }}){% endif %}{% endfor %}{% endif %}{% if alert %}{% for alias in users %} @{{ alias }}{% endfor %}{% endif %}"
 
-pushover_template = """{% if service.overall_status != service.PASSING_STATUS %}{% for check in service.all_failing_checks %}
-{{ check.name }}{% if check.last_result.error %} ({% if check.check_category == 'HTTP check' %}{% if check.last_result.raw_data %}{{ check.last_result.raw_data }}{% else %}{{check.last_result.error}}{% endif %}{% else %}{{ check.last_result.error|safe }}{% endif %}){% endif %} [{{ check.importance }}]{% endfor %}
-{% else %}Service recovered. All checks passing.{% endif %}"""
+pushover_template = """{% if service.overall_status != service.PASSING_STATUS %}{% for check in service.all_failing_checks %}[{{ check.importance }}] {{ check.name.upper }} failed{% if check.last_result.error %} ({{ check.last_result.error|safe }}).{% if check.check_category == 'HTTP check' %} Raw: {{ check.last_result.raw_data|slice:':40' }}{% endif %}{% endif %}\n{% endfor %}{% else %}Service recovered. All checks passing.{% endif %}"""
 
 sms_template = "Service {{ service.name }} {% if service.overall_status == service.PASSING_STATUS %}is back to normal{% else %}reporting {{ service.overall_status }} status{% endif %}: {{ scheme }}://{{ host }}{% url service pk=service.id %}"
 
