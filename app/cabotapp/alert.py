@@ -116,11 +116,6 @@ def _send_hipchat_alert(message, color='green', sender='Cabot'):
     })
 
 def send_pushover_alert(service, users, duty_officers):
-    # Do not re-alert at all
-    if service.overall_status == service.old_overall_status:
-      pass
-      # return
-
     title= ''
     priority = 0
     pushover_keys = [u.profile.pushover_key for u in users if hasattr(
@@ -134,10 +129,8 @@ def send_pushover_alert(service, users, duty_officers):
           priority -= 1  # Don't alert for recovery from WARNING status
     else:
         title= u'\u274C '
-        #title= u'\u2757 '
         priority += 1
         if service.overall_status == service.CRITICAL_STATUS:
-          #title= u'\u203c '
           pushover_keys += [u.profile.pushover_key for u in duty_officers if hasattr(
                 u, 'profile') and u.profile.pushover_key]
 
