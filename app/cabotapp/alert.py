@@ -25,6 +25,10 @@ Passing checks:{% for check in service.all_passing_checks %}
 
 hipchat_template = "Service {{ service.name }} {% if service.overall_status == service.PASSING_STATUS %}is back to normal{% else %}reporting {{ service.overall_status }} status{% endif %}: {{ scheme }}://{{ host }}{% url service pk=service.id %}. {% if service.overall_status != service.PASSING_STATUS %}Checks failing:{% for check in service.all_failing_checks %} {{ check.name }}{% if check.last_result.error %} ({{ check.last_result.error|safe }}){% endif %}{% endfor %}{% endif %}{% if alert %}{% for alias in users %} @{{ alias }}{% endfor %}{% endif %}"
 
+pushover_template = """{% if service.overall_status != service.PASSING_STATUS %}{% for check in service.all_failing_checks %}
+{{ check.name }}{% if check.last_result.error %} ({% if check.check_category == 'HTTP check' %}{% if check.last_result.raw_data %}{{ check.last_result.raw_data }}{% else %}{{check.last_result.error}}{% endif %}{% else %}{{ check.last_result.error|safe }}{% endif %}){% endif %} [{{ check.importance }}]{% endfor %}
+{% else %}Service recovered. All checks passing.{% endif %}"""
+
 sms_template = "Service {{ service.name }} {% if service.overall_status == service.PASSING_STATUS %}is back to normal{% else %}reporting {{ service.overall_status }} status{% endif %}: {{ scheme }}://{{ host }}{% url service pk=service.id %}"
 
 telephone_template = "This is an urgent message from Arachnys monitoring. Service \"{{ service.name }}\" is erroring. Please check Cabot urgently."
@@ -109,6 +113,57 @@ def _send_hipchat_alert(message, color='green', sender='Cabot'):
         'message_format': 'text',
     })
 
+def send_pushover_alert(service, users, duty_officers):
+    # Do not re-alert at all
+    if service.overall_status == service.old_overall_status:
+      pass
+      # return
+
+    title= ''
+    priority = 0
+    pushover_keys = [u.profile.pushover_key for u in users if hasattr(
+        u, 'profile') and u.profile.pushover_key]
+
+    if service.overall_status == service.WARNING_STATUS:
+        title= u'\u26A0\ufe0f '
+    elif service.overall_status == service.PASSING_STATUS:
+        title= u'\u2705 '
+        if service.old_overall_status == service.WARNING_STATUS:
+          priority -= 1  # Don't alert for recovery from WARNING status
+    else:
+        title= u'\u274C '
+        #title= u'\u2757 '
+        priority += 1
+        if service.overall_status == service.CRITICAL_STATUS:
+          #title= u'\u203c '
+          pushover_keys += [u.profile.pushover_key for u in duty_officers if hasattr(
+                u, 'profile') and u.profile.pushover_key]
+
+    c = Context({
+        'service': service,
+        'host': settings.WWW_HTTP_HOST,
+        'scheme': settings.WWW_SCHEME,
+    })
+
+    message = Template(pushover_template).render(c)
+    title += service.name
+    url= Template('{{ scheme }}://{{ host }}{% url service pk=service.id %}').render(c)
+    url_title= 'Show in Cabot'
+
+    for key in pushover_keys:
+      _send_pushover_alert(message, key, title, priority, url, url_title)
+
+
+def _send_pushover_alert(message, user, title= None, priority=0, url= None, url_title=None):
+    resp = requests.post(settings.PUSHOVER_URL, data={
+        'token': settings.PUSHOVER_TOKEN,
+        'user': user,
+        'title': title,
+        'message': message,
+        'priority': priority,
+        'url': url,
+        'url_title': url_title,
+    })
 
 def send_sms_alert(service, users, duty_officers):
     client = TwilioRestClient(
