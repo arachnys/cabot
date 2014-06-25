@@ -40,6 +40,8 @@ def send_alert(service, duty_officers=None):
         send_email_alert(service, users, duty_officers)
     if service.hipchat_alert:
         send_hipchat_alert(service, users, duty_officers)
+    if service.pushover_alert:
+        send_pushover_alert(service, users, duty_officers)
     if service.sms_alert:
         send_sms_alert(service, users, duty_officers)
     if service.telephone_alert:
