@@ -127,6 +127,7 @@ def deploy(deploy_version=None):
                  'static/CACHE', '.vagrant', '*.pyc', 'dev.db'],
     )
     with cd(deploy_path):
+        _ensure_dirs()
         _setup_venv()
         create_database()
         install_requirements(deploy_path)
