@@ -48,6 +48,8 @@ def run_migrations(deploy_path=DEPLOY_PATH):
             sudo(
                 "foreman run python manage.py migrate cabotapp --noinput -e conf/{env}.env".format(env=env.deploy_version))
             # Wrap in failure for legacy reasons
+            # https://github.com/celery/django-celery/issues/149
+            print "You can ignore an error message regarding 'relation \"celery_taskmeta\" already exists'"
             with settings(warn_only=True):
                 sudo(
                     "foreman run python manage.py migrate djcelery --noinput -e conf/{env}.env".format(env=env.deploy_version))
