@@ -302,7 +302,7 @@ class CheckCreateView(LoginRequiredMixin, CreateView):
         return initial
 
     def get_success_url(self):
-        return reverse('check', kwargs={'pk': self.object.id})
+        return reverse('service', kwargs={'pk': self.request.GET.get('service')})
 
 
 class CheckUpdateView(LoginRequiredMixin, UpdateView):
