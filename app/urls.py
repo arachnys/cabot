@@ -3,10 +3,12 @@ from cabotapp.views import (
     run_status_check, graphite_api_data, twiml_callback, checks_run_recently,
     GraphiteCheckCreateView, GraphiteCheckUpdateView,
     HttpCheckCreateView, HttpCheckUpdateView,
+    ICMPCheckCreateView, ICMPCheckUpdateView,
     JenkinsCheckCreateView, JenkinsCheckUpdateView,
     StatusCheckDeleteView, StatusCheckListView, StatusCheckDetailView,
     StatusCheckResultDetailView, StatusCheckReportView)
-from cabotapp.views import (ServiceListView, ServiceDetailView,
+from cabotapp.views import (InstanceListView, InstanceDetailView,
+                            InstanceUpdateView, InstanceCreateView, InstanceDeleteView, ServiceListView, ServiceDetailView,
                             ServiceUpdateView, ServiceCreateView, ServiceDeleteView,
                             UserProfileUpdateView, ShiftListView, subscriptions)
 from django.contrib import admin
@@ -43,6 +45,19 @@ urlpatterns = patterns('',
                        url(r'^service/(?P<pk>\d+)/',
                            view=ServiceDetailView.as_view(), name='service'),
 
+                       url(r'^instances/', view=InstanceListView.as_view(),
+                           name='instances'),
+                       url(r'^instance/create/', view=InstanceCreateView.as_view(),
+                           name='create-instance'),
+                       url(r'^instance/update/(?P<pk>\d+)/',
+                           view=InstanceUpdateView.as_view(
+                           ), name='update-instance'),
+                       url(r'^instance/delete/(?P<pk>\d+)/',
+                           view=InstanceDeleteView.as_view(
+                           ), name='delete-instance'),
+                       url(r'^instance/(?P<pk>\d+)/',
+                           view=InstanceDetailView.as_view(), name='instance'),
+
                        url(r'^checks/$', view=StatusCheckListView.as_view(),
                            name='checks'),
                        url(r'^check/run/(?P<pk>\d+)/',
@@ -55,6 +70,11 @@ urlpatterns = patterns('',
                        url(r'^checks/report/$',
                            view=StatusCheckReportView.as_view(), name='checks-report'),
 
+                       url(r'^icmpcheck/create/', view=ICMPCheckCreateView.as_view(),
+                           name='create-icmp-check'),
+                       url(r'^icmpcheck/update/(?P<pk>\d+)/',
+                           view=ICMPCheckUpdateView.as_view(
+                           ), name='update-icmp-check'),
                        url(r'^graphitecheck/create/',
                            view=GraphiteCheckCreateView.as_view(
                            ), name='create-check'),
