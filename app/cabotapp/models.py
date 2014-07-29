@@ -21,6 +21,8 @@ import time
 import requests
 from celery.utils.log import get_task_logger
 
+RAW_DATA_LIMIT = 5000
+
 logger = get_task_logger(__name__)
 
 CHECK_TYPES = (
@@ -351,7 +353,7 @@ class StatusCheck(PolymorphicModel):
         return self.name
 
     def recent_results(self):
-        return self.statuscheckresult_set.all().order_by('-time_complete')[:10]
+        return self.statuscheckresult_set.all().order_by('-time_complete').defer('raw_data')[:10]
 
     def last_result(self):
         try:
@@ -630,6 +632,11 @@ class StatusCheckResult(models.Model):
             return u"%s..." % self.error[:snippet_len - 3]
         else:
             return self.error
+
+    def save(self, *args, **kwargs):
+        if isinstance(self.raw_data, basestring):
+            self.raw_data = self.raw_data[:RAW_DATA_LIMIT]
+        return super(StatusCheckResult, self).save(*args, **kwargs)
 
 
 class UserProfile(models.Model):
