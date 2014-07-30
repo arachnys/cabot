@@ -303,6 +303,11 @@ class StatusCheck(PolymorphicModel):
         null=True,
         help_text='The minimum number of data series (hosts) you expect to see.',
     )
+    lookback_count = models.IntegerField(
+        null=True, # For backwards compatibility
+        blank=True,
+        help_text='The number of recent data points to check. For example, if frequency is 5 (minutes between each check) and Graphite data intervals are set at 10 seconds, then you may want to set lookback count to 30. Defaults to value set for frequency.',
+    )
 
     # HTTP checks
     endpoint = models.TextField(
@@ -388,6 +393,8 @@ class StatusCheck(PolymorphicModel):
             self.calculated_status = Service.CALCULATED_PASSING_STATUS
         else:
             self.calculated_status = Service.CALCULATED_FAILING_STATUS
+        if not self.lookback_count:
+            self.lookback_count = self.frequency
         self.cached_health = serialize_recent_results(recent_results)
         ret = super(StatusCheck, self).save(*args, **kwargs)
         # Update linked services
@@ -431,7 +438,9 @@ class GraphiteStatusCheck(StatusCheck):
         )
 
     def _run(self):
-        series = parse_metric(self.metric, mins_to_check=self.frequency)
+        # For backwards compatibility
+        lookback_count = self.lookback_count or self.frequency
+        series = parse_metric(self.metric, lookback_count=lookback_count)
         failure_value = None
         if series['error']:
             failed = True
