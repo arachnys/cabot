@@ -602,7 +602,7 @@ class StatusCheckResult(models.Model):
     nullable
     """
     check = models.ForeignKey(StatusCheck)
-    time = models.DateTimeField(null=False)
+    time = models.DateTimeField(null=False, db_index=True)
     time_complete = models.DateTimeField(null=True, db_index=True)
     raw_data = models.TextField(null=True)
     succeeded = models.BooleanField(default=False)
