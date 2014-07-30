@@ -42,6 +42,9 @@
       <div class="navbar-collapse collapse" id="navbar-main">
         <ul class="nav navbar-nav">
           <li>
+            <a href="{% url instances %}"><i class="fa fa-desktop"></i> Instances</a>
+          </li>
+          <li>
             <a href="{% url services %}"><i class="fa fa-gears"></i> Services</a>
           </li>
           <li>
@@ -54,15 +57,21 @@
                 <li>
                   <a href="{% url create-service %}"><i class="fa fa-gears"></i> Service</a>
                 </li>
+                <li>
+                  <a href="{% url create-instance %}"><i class="fa fa-desktop"></i> Instance</a>
+                </li>
                 <li class="divider"></li>
                 <li>
-                  <a href="{% url create-check %}?service={{ service.id }}" class=""><i class="glyphicon glyphicon-signal" title="Add new metric check"></i> Graphite check</a>
+                  <a href="{% url create-check %}?service={{ service.id }}&instance={{ instance.id }}" class=""><i class="glyphicon glyphicon-signal" title="Add new metric check"></i> Graphite check</a>
                 </li>
                 <li>
-                  <a href="{% url create-http-check %}?service={{ service.id }}" class="" title="Add new Http check"><i class="glyphicon glyphicon-arrow-up"></i> Http check</a>
+                  <a href="{% url create-http-check %}?service={{ service.id }}&instance={{ instance.id }}" class="" title="Add new Http check"><i class="glyphicon glyphicon-arrow-up"></i> Http check</a>
                 </li>
                 <li>
-                  <a href="{% url create-jenkins-check %}?service={{ service.id }}" class="" title="Add new Jenkins check"><i class="glyphicon glyphicon-ok"></i> Jenkins check</a>
+                  <a href="{% url create-jenkins-check %}?service={{ service.id }}&instance={{ instance.id }}" class="" title="Add new Jenkins check"><i class="glyphicon glyphicon-ok"></i> Jenkins check</a>
+                </li>
+                <li>
+                  <a href="{% url create-icmp-check %}?service={{ service.id }}&instance={{ instance.id }}" class="" title="Add new ICMP check"><i class="glyphicon glyphicon-transfer"></i> ICMP check</a>
                 </li>
               </ul>
             </li>

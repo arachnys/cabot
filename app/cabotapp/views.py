@@ -5,8 +5,8 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.core.urlresolvers import reverse_lazy
 from django.conf import settings
 from models import (
-    StatusCheck, GraphiteStatusCheck, JenkinsStatusCheck, HttpStatusCheck,
-    StatusCheckResult, UserProfile, Service, Shift, get_duty_officers)
+    StatusCheck, GraphiteStatusCheck, JenkinsStatusCheck, HttpStatusCheck, ICMPStatusCheck,
+    StatusCheckResult, UserProfile, Service, Instance, Shift, get_duty_officers)
 from tasks import run_status_check as _run_status_check
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
@@ -59,7 +59,6 @@ class StatusCheckResultDetailView(LoginRequiredMixin, DetailView):
     model = StatusCheckResult
     context_object_name = 'result'
 
-
 class SymmetricalForm(forms.ModelForm):
     symmetrical_fields = ()  # Iterable of 2-tuples (field, model)
 
@@ -90,7 +89,7 @@ base_widgets = {
 
 
 class StatusCheckForm(SymmetricalForm):
-    symmetrical_fields = ('service_set',)
+    symmetrical_fields = ('service_set', 'instance_set')
     service_set = forms.ModelMultipleChoiceField(
         queryset=Service.objects.all(),
         required=False,
@@ -103,6 +102,17 @@ class StatusCheckForm(SymmetricalForm):
         )
     )
 
+    instance_set = forms.ModelMultipleChoiceField(
+        queryset=Instance.objects.all(),
+        required=False,
+        help_text='Link to instance(s).',
+        widget=forms.SelectMultiple(
+            attrs={
+                'data-rel': 'chosen',
+                'style': 'width: 70%',
+            },
+        )
+    )
 
 class GraphiteStatusCheckForm(StatusCheckForm):
 
@@ -134,6 +144,19 @@ class GraphiteStatusCheckForm(StatusCheckForm):
             })
         })
 
+
+class ICMPStatusCheckForm(StatusCheckForm):
+
+    class Meta:
+        model = ICMPStatusCheck
+        fields = (
+            'name',
+            'frequency',
+            'importance',
+            'active',
+            'debounce',
+        )
+        widgets = dict(**base_widgets)
 
 class HttpStatusCheckForm(StatusCheckForm):
 
@@ -195,6 +218,69 @@ class UserProfileForm(forms.ModelForm):
         model = UserProfile
         exclude = ('user',)
 
+class InstanceForm(SymmetricalForm):
+
+    symmetrical_fields = ('service_set',)
+    service_set = forms.ModelMultipleChoiceField(
+        queryset=Service.objects.all(),
+        required=False,
+        help_text='Link to service(s).',
+        widget=forms.SelectMultiple(
+            attrs={
+                'data-rel': 'chosen',
+                'style': 'width: 70%',
+            },
+        )
+    )
+
+
+    class Meta:
+        model = Instance
+        template_name = 'instance_form.html'
+        fields = (
+            'name',
+            'address',
+            'users_to_notify',
+            'status_checks',
+            'service_set',
+            'email_alert',
+            'hipchat_alert',
+            'sms_alert',
+            'telephone_alert',
+            'alerts_enabled',
+            'hackpad_id',
+        )
+        widgets = {
+            'name': forms.TextInput(attrs={'style': 'width: 30%;'}),
+            'address': forms.TextInput(attrs={'style': 'width: 70%;'}),
+            'status_checks': forms.SelectMultiple(attrs={
+                'data-rel': 'chosen',
+                'style': 'width: 70%',
+            }),
+            'service_set': forms.SelectMultiple(attrs={
+                'data-rel': 'chosen',
+                'style': 'width: 70%',
+            }),
+            'users_to_notify': forms.CheckboxSelectMultiple(),
+            'hackpad_id': forms.TextInput(attrs={'style': 'width:30%;'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        ret = super(InstanceForm, self).__init__(*args, **kwargs)
+        self.fields['users_to_notify'].queryset = User.objects.filter(
+            is_active=True)
+        return ret
+
+    def clean_hackpad_id(self):
+        value = self.cleaned_data['hackpad_id']
+        if not value:
+            return ''
+        for pattern in settings.RECOVERY_SNIPPETS_WHITELIST:
+            if re.match(pattern, value):
+                return value
+        raise ValidationError('Please specify a valid JS snippet link')
+
+
 
 class ServiceForm(forms.ModelForm):
 
@@ -206,6 +292,7 @@ class ServiceForm(forms.ModelForm):
             'url',
             'users_to_notify',
             'status_checks',
+            'instances',
             'email_alert',
             'hipchat_alert',
             'sms_alert',
@@ -217,6 +304,10 @@ class ServiceForm(forms.ModelForm):
             'name': forms.TextInput(attrs={'style': 'width: 30%;'}),
             'url': forms.TextInput(attrs={'style': 'width: 70%;'}),
             'status_checks': forms.SelectMultiple(attrs={
+                'data-rel': 'chosen',
+                'style': 'width: 70%',
+            }),
+            'instances': forms.SelectMultiple(attrs={
                 'data-rel': 'chosen',
                 'style': 'width: 70%',
             }),
@@ -293,16 +384,31 @@ class CheckCreateView(LoginRequiredMixin, CreateView):
         if metric:
             initial['metric'] = metric
         service_id = self.request.GET.get('service')
+	instance_id = self.request.GET.get('instance')
+
         if service_id:
             try:
                 service = Service.objects.get(id=service_id)
                 initial['service_set'] = [service]
             except Service.DoesNotExist:
                 pass
+
+        if instance_id:
+            try:
+                instance = Instance.objects.get(id=instance_id)
+                initial['instance_set'] = [instance]
+            except Instance.DoesNotExist:
+                pass
+
         return initial
 
     def get_success_url(self):
-        return reverse('check', kwargs={'pk': self.object.id})
+        if self.request.GET.get('service') != None:
+            return reverse('service', kwargs={'pk': self.request.GET.get('service')})
+        if self.request.GET.get('instance') != None:
+            return reverse('instance', kwargs={'pk': self.request.GET.get('instance')})
+        return reverse('checks')  
+		
 
 
 class CheckUpdateView(LoginRequiredMixin, UpdateView):
@@ -311,8 +417,16 @@ class CheckUpdateView(LoginRequiredMixin, UpdateView):
     def get_success_url(self):
         return reverse('check', kwargs={'pk': self.object.id})
 
+class ICMPCheckCreateView(CheckCreateView):
+    model = ICMPStatusCheck
+    form_class = ICMPStatusCheckForm
 
-class GraphiteCheckCreateView(CheckCreateView):
+
+class ICMPCheckUpdateView(CheckUpdateView):
+    model = ICMPStatusCheck
+    form_class = ICMPStatusCheckForm
+
+class ICMPhiteCheckCreateView(CheckCreateView):
     model = GraphiteStatusCheck
     form_class = GraphiteStatusCheckForm
 
@@ -321,6 +435,9 @@ class GraphiteCheckUpdateView(CheckUpdateView):
     model = GraphiteStatusCheck
     form_class = GraphiteStatusCheckForm
 
+class GraphiteCheckCreateView(CheckCreateView):
+    model = GraphiteStatusCheck
+    form_class = GraphiteStatusCheckForm
 
 class HttpCheckCreateView(CheckCreateView):
     model = HttpStatusCheck
@@ -393,6 +510,14 @@ class UserProfileUpdateView(LoginRequiredMixin, UpdateView):
             return profile
 
 
+class InstanceListView(LoginRequiredMixin, ListView):
+
+    model = Instance
+    context_object_name = 'instances'
+
+    def get_queryset(self):
+        return Instance.objects.all().order_by('name').prefetch_related('status_checks')
+
 class ServiceListView(LoginRequiredMixin, ListView):
     model = Service
     context_object_name = 'services'
@@ -400,6 +525,20 @@ class ServiceListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         return Service.objects.all().order_by('name').prefetch_related('status_checks')
 
+class InstanceDetailView(LoginRequiredMixin, DetailView):
+    model = Instance
+    context_object_name = 'instance'
+
+    def get_context_data(self, **kwargs):
+        context = super(InstanceDetailView, self).get_context_data(**kwargs)
+        date_from = date.today() - relativedelta(day=1)
+        context['report_form'] = StatusCheckReportForm(initial={
+            'checks': self.object.status_checks.all(),
+            'service': self.object,
+            'date_from': date_from,
+            'date_to': date_from + relativedelta(months=1) - relativedelta(days=1)
+        })
+        return context
 
 class ServiceDetailView(LoginRequiredMixin, DetailView):
     model = Service
@@ -417,6 +556,29 @@ class ServiceDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
+class InstanceCreateView(LoginRequiredMixin, CreateView):
+    model = Instance
+    form_class = InstanceForm
+
+    def get_success_url(self):
+        return reverse('instance', kwargs={'pk': self.object.id})
+
+    def get_initial(self):
+        if self.initial:
+            initial = self.initial
+        else:
+            initial = {}
+        service_id = self.request.GET.get('service')
+
+        if service_id:
+            try:
+                service = Service.objects.get(id=service_id)
+                initial['service_set'] = [service]
+            except Service.DoesNotExist:
+                pass
+
+        return initial
+
 class ServiceCreateView(LoginRequiredMixin, CreateView):
     model = Service
     form_class = ServiceForm
@@ -424,6 +586,12 @@ class ServiceCreateView(LoginRequiredMixin, CreateView):
     def get_success_url(self):
         return reverse('service', kwargs={'pk': self.object.id})
 
+class InstanceUpdateView(LoginRequiredMixin, UpdateView):
+    model = Instance
+    form_class = InstanceForm
+
+    def get_success_url(self):
+        return reverse('instance', kwargs={'pk': self.object.id})
 
 class ServiceUpdateView(LoginRequiredMixin, UpdateView):
     model = Service
@@ -439,6 +607,11 @@ class ServiceDeleteView(LoginRequiredMixin, DeleteView):
     context_object_name = 'service'
     template_name = 'cabotapp/service_confirm_delete.html'
 
+class InstanceDeleteView(LoginRequiredMixin, DeleteView):
+    model = Instance
+    success_url = reverse_lazy('instances')
+    context_object_name = 'instance'
+    template_name = 'cabotapp/instance_confirm_delete.html'
 
 class ShiftListView(LoginRequiredMixin, ListView):
     model = Shift
