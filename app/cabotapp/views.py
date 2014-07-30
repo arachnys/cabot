@@ -157,6 +157,7 @@ class ICMPStatusCheckForm(StatusCheckForm):
             'active',
             'debounce',
         )
+        widgets = dict(**base_widgets)
 
 class HttpStatusCheckForm(StatusCheckForm):
 
