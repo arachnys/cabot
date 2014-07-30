@@ -560,7 +560,21 @@ class InstanceCreateView(LoginRequiredMixin, CreateView):
     model = Instance
     form_class = InstanceForm
 
+    def generateDefaultPingCheck(self):
+        pc = ICMPStatusCheck()
+        pc.created_by = self.request.user
+        pc.name = "Default Ping Check"
+        pc.frequency = 5
+        pc.importance = Service.ERROR_STATUS
+        pc.active = True
+        pc.debounce = 0
+        pc.save()
+        pc.instance_set = [Instance.objects.get(pk=self.object.id)]
+        pc.save()
+
     def get_success_url(self):
+#Where else can I run things when an instance gets created?
+        generateDefaultPingCheck(self)
         return reverse('instance', kwargs={'pk': self.object.id})
 
     def get_initial(self):
