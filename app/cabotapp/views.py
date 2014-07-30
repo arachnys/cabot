@@ -229,7 +229,6 @@ class InstanceForm(forms.ModelForm):
             'address',
             'users_to_notify',
             'status_checks',
-            'services',
             'email_alert',
             'hipchat_alert',
             'sms_alert',
@@ -241,10 +240,6 @@ class InstanceForm(forms.ModelForm):
             'name': forms.TextInput(attrs={'style': 'width: 30%;'}),
             'address': forms.TextInput(attrs={'style': 'width: 70%;'}),
             'status_checks': forms.SelectMultiple(attrs={
-                'data-rel': 'chosen',
-                'style': 'width: 70%',
-            }),
-            'services': forms.SelectMultiple(attrs={
                 'data-rel': 'chosen',
                 'style': 'width: 70%',
             }),

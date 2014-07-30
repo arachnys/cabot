@@ -247,11 +247,6 @@ class Service(CheckGroupMixin):
 
 class Instance(CheckGroupMixin):
 	
-    services = models.ManyToManyField(
-        'Service',
-        blank=True,
-        help_text='Services running on this instance.',
-    )
     name = models.TextField()
 
     class Meta:
