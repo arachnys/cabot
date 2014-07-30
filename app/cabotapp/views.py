@@ -59,7 +59,6 @@ class StatusCheckResultDetailView(LoginRequiredMixin, DetailView):
     model = StatusCheckResult
     context_object_name = 'result'
 
-
 class SymmetricalForm(forms.ModelForm):
     symmetrical_fields = ()  # Iterable of 2-tuples (field, model)
 
@@ -219,7 +218,21 @@ class UserProfileForm(forms.ModelForm):
         model = UserProfile
         exclude = ('user',)
 
-class InstanceForm(forms.ModelForm):
+class InstanceForm(SymmetricalForm):
+
+    symmetrical_fields = ('service_set',)
+    service_set = forms.ModelMultipleChoiceField(
+        queryset=Service.objects.all(),
+        required=False,
+        help_text='Link to service(s).',
+        widget=forms.SelectMultiple(
+            attrs={
+                'data-rel': 'chosen',
+                'style': 'width: 70%',
+            },
+        )
+    )
+
 
     class Meta:
         model = Instance
@@ -229,6 +242,7 @@ class InstanceForm(forms.ModelForm):
             'address',
             'users_to_notify',
             'status_checks',
+            'service_set',
             'email_alert',
             'hipchat_alert',
             'sms_alert',
@@ -240,6 +254,10 @@ class InstanceForm(forms.ModelForm):
             'name': forms.TextInput(attrs={'style': 'width: 30%;'}),
             'address': forms.TextInput(attrs={'style': 'width: 70%;'}),
             'status_checks': forms.SelectMultiple(attrs={
+                'data-rel': 'chosen',
+                'style': 'width: 70%',
+            }),
+            'service_set': forms.SelectMultiple(attrs={
                 'data-rel': 'chosen',
                 'style': 'width: 70%',
             }),
@@ -261,6 +279,8 @@ class InstanceForm(forms.ModelForm):
             if re.match(pattern, value):
                 return value
         raise ValidationError('Please specify a valid JS snippet link')
+
+
 
 class ServiceForm(forms.ModelForm):
 
@@ -542,6 +562,22 @@ class InstanceCreateView(LoginRequiredMixin, CreateView):
 
     def get_success_url(self):
         return reverse('instance', kwargs={'pk': self.object.id})
+
+    def get_initial(self):
+        if self.initial:
+            initial = self.initial
+        else:
+            initial = {}
+        service_id = self.request.GET.get('service')
+
+        if service_id:
+            try:
+                service = Service.objects.get(id=service_id)
+                initial['service_set'] = [service]
+            except Service.DoesNotExist:
+                pass
+
+        return initial
 
 class ServiceCreateView(LoginRequiredMixin, CreateView):
     model = Service
