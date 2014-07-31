@@ -346,7 +346,7 @@ class StatusCheck(PolymorphicModel):
         null=True,
         help_text='Number of successive failures permitted before check will be marked as failed. Default is 0, i.e. fail on first failure.'
     )
-    created_by = models.ForeignKey(User, default=User.objects.get(is_active=True), null=True) 
+    created_by = models.ForeignKey(User, null=True) 
     calculated_status = models.CharField(
         max_length=50, choices=Service.STATUSES, default=Service.CALCULATED_PASSING_STATUS, blank=True)
     last_run = models.DateTimeField(null=True)
