@@ -8,72 +8,14 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding model 'Instance'
-        db.create_table('cabotapp_instance', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('last_alert_sent', self.gf('django.db.models.fields.DateTimeField')(null=True, blank=True)),
-            ('email_alert', self.gf('django.db.models.fields.BooleanField')(default=False)),
-            ('hipchat_alert', self.gf('django.db.models.fields.BooleanField')(default=True)),
-            ('sms_alert', self.gf('django.db.models.fields.BooleanField')(default=False)),
-            ('telephone_alert', self.gf('django.db.models.fields.BooleanField')(default=False)),
-            ('alerts_enabled', self.gf('django.db.models.fields.BooleanField')(default=True)),
-            ('overall_status', self.gf('django.db.models.fields.TextField')(default='PASSING')),
-            ('old_overall_status', self.gf('django.db.models.fields.TextField')(default='PASSING')),
-            ('hackpad_id', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
-            ('name', self.gf('django.db.models.fields.TextField')()),
-            ('address', self.gf('django.db.models.fields.TextField')(blank=True)),
-        ))
-        db.send_create_signal('cabotapp', ['Instance'])
 
-        # Adding M2M table for field users_to_notify on 'Instance'
-        db.create_table('cabotapp_instance_users_to_notify', (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('instance', models.ForeignKey(orm['cabotapp.instance'], null=False)),
-            ('user', models.ForeignKey(orm['auth.user'], null=False))
-        ))
-        db.create_unique('cabotapp_instance_users_to_notify', ['instance_id', 'user_id'])
-
-        # Adding M2M table for field status_checks on 'Instance'
-        db.create_table('cabotapp_instance_status_checks', (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('instance', models.ForeignKey(orm['cabotapp.instance'], null=False)),
-            ('statuscheck', models.ForeignKey(orm['cabotapp.statuscheck'], null=False))
-        ))
-        db.create_unique('cabotapp_instance_status_checks', ['instance_id', 'statuscheck_id'])
-
-        # Adding M2M table for field services on 'Instance'
-        db.create_table('cabotapp_instance_services', (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('instance', models.ForeignKey(orm['cabotapp.instance'], null=False)),
-            ('service', models.ForeignKey(orm['cabotapp.service'], null=False))
-        ))
-        db.create_unique('cabotapp_instance_services', ['instance_id', 'service_id'])
-
-        # Adding M2M table for field instances on 'Service'
-        db.create_table('cabotapp_service_instances', (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('service', models.ForeignKey(orm['cabotapp.service'], null=False)),
-            ('instance', models.ForeignKey(orm['cabotapp.instance'], null=False))
-        ))
-        db.create_unique('cabotapp_service_instances', ['service_id', 'instance_id'])
-
+        # Changing field 'StatusCheck.created_by'
+        db.alter_column('cabotapp_statuscheck', 'created_by_id', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'], null=True))
 
     def backwards(self, orm):
-        # Deleting model 'Instance'
-        db.delete_table('cabotapp_instance')
 
-        # Removing M2M table for field users_to_notify on 'Instance'
-        db.delete_table('cabotapp_instance_users_to_notify')
-
-        # Removing M2M table for field status_checks on 'Instance'
-        db.delete_table('cabotapp_instance_status_checks')
-
-        # Removing M2M table for field services on 'Instance'
-        db.delete_table('cabotapp_instance_services')
-
-        # Removing M2M table for field instances on 'Service'
-        db.delete_table('cabotapp_service_instances')
-
+        # Changing field 'StatusCheck.created_by'
+        db.alter_column('cabotapp_statuscheck', 'created_by_id', self.gf('django.db.models.fields.related.ForeignKey')(default=None, to=orm['auth.User']))
 
     models = {
         'auth.group': {
@@ -117,7 +59,6 @@ class Migration(SchemaMigration):
             'name': ('django.db.models.fields.TextField', [], {}),
             'old_overall_status': ('django.db.models.fields.TextField', [], {'default': "'PASSING'"}),
             'overall_status': ('django.db.models.fields.TextField', [], {'default': "'PASSING'"}),
-            'services': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['cabotapp.Service']", 'symmetrical': 'False', 'blank': 'True'}),
             'sms_alert': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'status_checks': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['cabotapp.StatusCheck']", 'symmetrical': 'False', 'blank': 'True'}),
             'telephone_alert': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
@@ -167,7 +108,7 @@ class Migration(SchemaMigration):
             'cached_health': ('django.db.models.fields.TextField', [], {'null': 'True'}),
             'calculated_status': ('django.db.models.fields.CharField', [], {'default': "'passing'", 'max_length': '50', 'blank': 'True'}),
             'check_type': ('django.db.models.fields.CharField', [], {'max_length': '100', 'null': 'True'}),
-            'created_by': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.User']"}),
+            'created_by': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.User']", 'null': 'True'}),
             'debounce': ('django.db.models.fields.IntegerField', [], {'default': '0', 'null': 'True'}),
             'endpoint': ('django.db.models.fields.TextField', [], {'null': 'True'}),
             'expected_num_hosts': ('django.db.models.fields.IntegerField', [], {'default': '0', 'null': 'True'}),
@@ -194,7 +135,7 @@ class Migration(SchemaMigration):
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'raw_data': ('django.db.models.fields.TextField', [], {'null': 'True'}),
             'succeeded': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'time': ('django.db.models.fields.DateTimeField', [], {}),
+            'time': ('django.db.models.fields.DateTimeField', [], {'db_index': 'True'}),
             'time_complete': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'db_index': 'True'})
         },
         'cabotapp.userprofile': {
