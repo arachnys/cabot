@@ -71,6 +71,14 @@ def update_service(service_or_id):
         service = service_or_id
     service.update_status()
 
+@task(ignore_result=True)
+def update_instance(instance_or_id):
+    from .models import Instance
+    if not isinstance(instance_or_id, Service):
+        instance = Instance.objects.get(id=instance_or_id)
+    else:
+        instance = instance_or_id
+    instance.update_status()
 
 @task(ignore_result=True)
 def update_shifts():

@@ -70,7 +70,7 @@
           </td>
           {% endif %}
           <td title="">
-            {% if check.polymorphic_ctype.model == 'graphitestatuscheck' %}{{ check.metric|truncatechars:70 }} {{ check.check_type }} {{ check.value }}{% if check.expected_num_hosts %} (from {{ check.expected_num_hosts }} hosts){% endif %}{% elif check.polymorphic_ctype.model == 'httpstatuscheck' %}Status code {{ check.status_code }} from {{ check.endpoint }}{% if check.text_match %}; match text /{{ check.text_match }}/{% endif %}{% elif check.polymorphic_ctype.model == 'jenkinsstatuscheck' %}Monitor job {{ check.name }}{% if check.max_queued_build_time %}; check no build waiting for >{{ check.max_queued_build_time }} minutes{% endif %}{% endif %}
+            {% if check.polymorphic_ctype.model == 'graphitestatuscheck' %}{{ check.metric|truncatechars:70 }} {{ check.check_type }} {{ check.value }}{% if check.expected_num_hosts %} (from {{ check.expected_num_hosts }} hosts){% endif %}{% elif check.polymorphic_ctype.model == 'icmpstatuscheck' %}ICMP Reply from {{ check.instance_set.all.0.address }}{% elif check.polymorphic_ctype.model == 'httpstatuscheck' %}Status code {{ check.status_code }} from {{ check.endpoint }}{% if check.text_match %}; match text /{{ check.text_match }}/{% endif %}{% elif check.polymorphic_ctype.model == 'jenkinsstatuscheck' %}Monitor job {{ check.name }}{% if check.max_queued_build_time %}; check no build waiting for >{{ check.max_queued_build_time }} minutes{% endif %}{% endif %}
           </td>
           <td>{{ check.get_importance_display }}</td>
           <td>

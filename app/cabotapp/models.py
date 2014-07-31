@@ -3,6 +3,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from polymorphic import PolymorphicModel
 from django.db.models import F
+from django.core.urlresolvers import reverse
 from django.contrib.admin.models import User
 
 from jenkins import get_job_status
@@ -10,7 +11,7 @@ from .alert import send_alert
 from .calendar import get_events
 from .graphite import parse_metric
 from .alert import send_alert
-from .tasks import update_service
+from .tasks import update_service, update_instance
 from datetime import datetime, timedelta
 from django.utils import timezone
 
@@ -18,6 +19,7 @@ import json
 import re
 import time
 import os
+import subprocess
 
 import requests
 from celery.utils.log import get_task_logger
@@ -132,24 +134,6 @@ class CheckGroupMixin(models.Model):
     def __unicode__(self):
         return self.name
 
-    def update_status(self):
-        self.old_overall_status = self.overall_status
-        # Only active checks feed into our calculation
-        status_checks_failed_count = self.all_failing_checks().count()
-        self.overall_status = self.most_severe(self.all_failing_checks())
-        self.snapshot = ServiceStatusSnapshot(
-            service=self,
-            num_checks_active=self.active_status_checks().count(),
-            num_checks_passing=self.active_status_checks(
-            ).count() - status_checks_failed_count,
-            num_checks_failing=status_checks_failed_count,
-            overall_status=self.overall_status,
-            time=timezone.now(),
-        )
-        self.snapshot.save()
-        self.save()
-        if not (self.overall_status == Service.PASSING_STATUS and self.old_overall_status == Service.PASSING_STATUS):
-            self.alert()
 
     def most_severe(self, check_list):
         failures = [c.importance for c in check_list]
@@ -233,6 +217,24 @@ class CheckGroupMixin(models.Model):
 
 class Service(CheckGroupMixin):
 
+    def update_status(self):
+        self.old_overall_status = self.overall_status
+        # Only active checks feed into our calculation
+        status_checks_failed_count = self.all_failing_checks().count()
+        self.overall_status = self.most_severe(self.all_failing_checks())
+        self.snapshot = ServiceStatusSnapshot(
+            service=self,
+            num_checks_active=self.active_status_checks().count(),
+            num_checks_passing=self.active_status_checks(
+            ).count() - status_checks_failed_count,
+            num_checks_failing=status_checks_failed_count,
+            overall_status=self.overall_status,
+            time=timezone.now(),
+        )
+        self.snapshot.save()
+        self.save()
+        if not (self.overall_status == Service.PASSING_STATUS and self.old_overall_status == Service.PASSING_STATUS):
+            self.alert()
     instances = models.ManyToManyField(
         'Instance',
         blank=True,
@@ -250,6 +252,26 @@ class Service(CheckGroupMixin):
 
 
 class Instance(CheckGroupMixin):
+
+
+    def update_status(self):
+        self.old_overall_status = self.overall_status
+        # Only active checks feed into our calculation
+        status_checks_failed_count = self.all_failing_checks().count()
+        self.overall_status = self.most_severe(self.all_failing_checks())
+        self.snapshot = InstanceStatusSnapshot(
+            instance=self,
+            num_checks_active=self.active_status_checks().count(),
+            num_checks_passing=self.active_status_checks(
+            ).count() - status_checks_failed_count,
+            num_checks_failing=status_checks_failed_count,
+            overall_status=self.overall_status,
+            time=timezone.now(),
+        )
+        self.snapshot.save()
+        self.save()
+        if not (self.overall_status == Service.PASSING_STATUS and self.old_overall_status == Service.PASSING_STATUS):
+            self.alert()
 
 
     class Meta:
@@ -279,6 +301,17 @@ class ServiceStatusSnapshot(models.Model):
     def __unicode__(self):
         return u"%s: %s" % (self.service.name, self.overall_status)
 
+class InstanceStatusSnapshot(models.Model):
+    instance = models.ForeignKey(Instance, related_name='snapshots')
+    time = models.DateTimeField(db_index=True)
+    num_checks_active = models.IntegerField(default=0)
+    num_checks_passing = models.IntegerField(default=0)
+    num_checks_failing = models.IntegerField(default=0)
+    overall_status = models.TextField(default=Service.PASSING_STATUS)
+    did_send_alert = models.IntegerField(default=False)
+
+    def __unicode__(self):
+        return u"%s: %s" % (self.instance.name, self.overall_status)
 
 class StatusCheck(PolymorphicModel):
 
@@ -403,6 +436,11 @@ class StatusCheck(PolymorphicModel):
         except Exception as e:
             result = StatusCheckResult(check=self)
             result.error = u'Error in performing check: %s' % (e,)
+            if result.error.startswith("Error in performing check: get() returned more than one Instance"):
+                first_instance = self.instance_set.all().order_by('id')[0]
+                self.instance_set = [first_instance]
+                first_instance_link = '<a href="%s">' % reverse('instance', kwargs={'pk': first_instance.pk}) + first_instance.name + "</a>"
+                result.error = "Error: This type of check can only be attached to one instance. All instances, apart from the oldest one (%s), have been detached from this check. The check will run normally next time." % first_instance_link
             result.succeeded = False
         finish = timezone.now()
         result.time = start
@@ -427,6 +465,7 @@ class StatusCheck(PolymorphicModel):
         ret = super(StatusCheck, self).save(*args, **kwargs)
         # Update linked services
         self.update_related_services()
+        self.update_related_instances()
         return ret
 
     def update_related_services(self):
@@ -434,6 +473,7 @@ class StatusCheck(PolymorphicModel):
         for service in services:
             update_service.delay(service.id)
 
+    def update_related_instances(self):
         instances = self.instance_set.all()
         for instance in instances:
             update_service.delay(instance.id)
@@ -451,12 +491,18 @@ class ICMPStatusCheck(StatusCheck):
         result = StatusCheckResult(check=self)
         instances = self.instance_set.all()
         target = self.instance_set.get().address
-        response = os.system("ping -c 1 " + target)
+
+#We need to read both STDOUT and STDERR because ping can write to both, depending on the kind of error. Thanks a lot, ping.
+        ping_process = subprocess.Popen("ping -c 1 " + target, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+        response = ping_process.wait()
+
         if response == 0:
             result.succeeded = True
         else:
+            output = ping_process.stdout.read()
             result.succeeded = False
-            result.error = "Could not connect, host is most likely down"
+            result.error = output
+
         return result
 
 
