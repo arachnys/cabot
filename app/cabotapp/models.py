@@ -90,6 +90,8 @@ class CheckGroupMixin(models.Model):
         (CRITICAL_STATUS, 'Critical'),
     )
 
+    name = models.TextField()
+
     users_to_notify = models.ManyToManyField(
         User,
         blank=True,
@@ -197,6 +199,24 @@ class CheckGroupMixin(models.Model):
             s['time'] = time.mktime(s['time'].timetuple())
         return snapshots
 
+    def graphite_status_checks(self):
+        return self.status_checks.filter(polymorphic_ctype__model='graphitestatuscheck')
+
+    def http_status_checks(self):
+        return self.status_checks.filter(polymorphic_ctype__model='httpstatuscheck')
+
+    def jenkins_status_checks(self):
+        return self.status_checks.filter(polymorphic_ctype__model='jenkinsstatuscheck')
+
+    def active_graphite_status_checks(self):
+        return self.graphite_status_checks().filter(active=True)
+
+    def active_http_status_checks(self):
+        return self.http_status_checks().filter(active=True)
+
+    def active_jenkins_status_checks(self):
+        return self.jenkins_status_checks().filter(active=True)
+
     def active_status_checks(self):
         return self.status_checks.filter(active=True)
 
@@ -217,7 +237,6 @@ class Service(CheckGroupMixin):
         help_text='Instances this service is running on.',
     )
 
-    name = models.TextField()
 
     url = models.TextField(
         blank=True,
@@ -227,27 +246,9 @@ class Service(CheckGroupMixin):
     class Meta:
         ordering = ['name']
 
-    def graphite_status_checks(self):
-        return self.status_checks.filter(polymorphic_ctype__model='graphitestatuscheck')
-
-    def http_status_checks(self):
-        return self.status_checks.filter(polymorphic_ctype__model='httpstatuscheck')
-
-    def jenkins_status_checks(self):
-        return self.status_checks.filter(polymorphic_ctype__model='jenkinsstatuscheck')
-
-    def active_graphite_status_checks(self):
-        return self.graphite_status_checks().filter(active=True)
-
-    def active_http_status_checks(self):
-        return self.http_status_checks().filter(active=True)
-
-    def active_jenkins_status_checks(self):
-        return self.jenkins_status_checks().filter(active=True)
 
 class Instance(CheckGroupMixin):
 	
-    name = models.TextField()
 
     class Meta:
         ordering = ['name']
@@ -257,30 +258,11 @@ class Instance(CheckGroupMixin):
         help_text="Address (IP/Hostname) of service."
     )
 
-#Temporary, will be replaced by Pingchecks
-    def graphite_status_checks(self):
-        return self.status_checks.filter(polymorphic_ctype__model='graphitestatuscheck')
-
-    def http_status_checks(self):
-        return self.status_checks.filter(polymorphic_ctype__model='httpstatuscheck')
-
-    def jenkins_status_checks(self):
-        return self.status_checks.filter(polymorphic_ctype__model='jenkinsstatuscheck')
-
     def icmp_status_checks(self):
         return self.status_checks.filter(polymorphic_ctype__model='icmpstatuscheck')
 
-    def active_graphite_status_checks(self):
-        return self.graphite_status_checks().filter(active=True)
-
-    def active_http_status_checks(self):
-        return self.http_status_checks().filter(active=True)
-
     def active_icmp_status_checks(self):
         return self.icmp_status_checks().filter(active=True)
-
-    def active_jenkins_status_checks(self):
-        return self.jenkins_status_checks().filter(active=True)
 
 
 class ServiceStatusSnapshot(models.Model):

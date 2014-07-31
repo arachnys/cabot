@@ -248,7 +248,6 @@ class InstanceForm(SymmetricalForm):
             'sms_alert',
             'telephone_alert',
             'alerts_enabled',
-            'hackpad_id',
         )
         widgets = {
             'name': forms.TextInput(attrs={'style': 'width: 30%;'}),
@@ -262,7 +261,6 @@ class InstanceForm(SymmetricalForm):
                 'style': 'width: 70%',
             }),
             'users_to_notify': forms.CheckboxSelectMultiple(),
-            'hackpad_id': forms.TextInput(attrs={'style': 'width:30%;'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -270,16 +268,6 @@ class InstanceForm(SymmetricalForm):
         self.fields['users_to_notify'].queryset = User.objects.filter(
             is_active=True)
         return ret
-
-    def clean_hackpad_id(self):
-        value = self.cleaned_data['hackpad_id']
-        if not value:
-            return ''
-        for pattern in settings.RECOVERY_SNIPPETS_WHITELIST:
-            if re.match(pattern, value):
-                return value
-        raise ValidationError('Please specify a valid JS snippet link')
-
 
 
 class ServiceForm(forms.ModelForm):
@@ -403,9 +391,9 @@ class CheckCreateView(LoginRequiredMixin, CreateView):
         return initial
 
     def get_success_url(self):
-        if self.request.GET.get('service') != None:
+        if self.request.GET.get('service'):
             return reverse('service', kwargs={'pk': self.request.GET.get('service')})
-        if self.request.GET.get('instance') != None:
+        if self.request.GET.get('instance'):
             return reverse('instance', kwargs={'pk': self.request.GET.get('instance')})
         return reverse('checks')  
 		
@@ -574,7 +562,7 @@ class InstanceCreateView(LoginRequiredMixin, CreateView):
 
     def get_success_url(self):
 #Where else can I run things when an instance gets created?
-        generateDefaultPingCheck(self)
+        self.generateDefaultPingCheck()
         return reverse('instance', kwargs={'pk': self.object.id})
 
     def get_initial(self):
