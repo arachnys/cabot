@@ -11,6 +11,7 @@ class Migration(SchemaMigration):
         # Adding model 'Instance'
         db.create_table('cabotapp_instance', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('name', self.gf('django.db.models.fields.TextField')()),
             ('last_alert_sent', self.gf('django.db.models.fields.DateTimeField')(null=True, blank=True)),
             ('email_alert', self.gf('django.db.models.fields.BooleanField')(default=False)),
             ('hipchat_alert', self.gf('django.db.models.fields.BooleanField')(default=True)),
@@ -20,7 +21,6 @@ class Migration(SchemaMigration):
             ('overall_status', self.gf('django.db.models.fields.TextField')(default='PASSING')),
             ('old_overall_status', self.gf('django.db.models.fields.TextField')(default='PASSING')),
             ('hackpad_id', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
-            ('name', self.gf('django.db.models.fields.TextField')()),
             ('address', self.gf('django.db.models.fields.TextField')(blank=True)),
         ))
         db.send_create_signal('cabotapp', ['Instance'])
@@ -41,14 +41,6 @@ class Migration(SchemaMigration):
         ))
         db.create_unique('cabotapp_instance_status_checks', ['instance_id', 'statuscheck_id'])
 
-        # Adding M2M table for field services on 'Instance'
-        db.create_table('cabotapp_instance_services', (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('instance', models.ForeignKey(orm['cabotapp.instance'], null=False)),
-            ('service', models.ForeignKey(orm['cabotapp.service'], null=False))
-        ))
-        db.create_unique('cabotapp_instance_services', ['instance_id', 'service_id'])
-
         # Adding M2M table for field instances on 'Service'
         db.create_table('cabotapp_service_instances', (
             ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
@@ -67,9 +59,6 @@ class Migration(SchemaMigration):
 
         # Removing M2M table for field status_checks on 'Instance'
         db.delete_table('cabotapp_instance_status_checks')
-
-        # Removing M2M table for field services on 'Instance'
-        db.delete_table('cabotapp_instance_services')
 
         # Removing M2M table for field instances on 'Service'
         db.delete_table('cabotapp_service_instances')
@@ -117,7 +106,6 @@ class Migration(SchemaMigration):
             'name': ('django.db.models.fields.TextField', [], {}),
             'old_overall_status': ('django.db.models.fields.TextField', [], {'default': "'PASSING'"}),
             'overall_status': ('django.db.models.fields.TextField', [], {'default': "'PASSING'"}),
-            'services': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['cabotapp.Service']", 'symmetrical': 'False', 'blank': 'True'}),
             'sms_alert': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'status_checks': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['cabotapp.StatusCheck']", 'symmetrical': 'False', 'blank': 'True'}),
             'telephone_alert': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
@@ -194,7 +182,7 @@ class Migration(SchemaMigration):
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'raw_data': ('django.db.models.fields.TextField', [], {'null': 'True'}),
             'succeeded': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'time': ('django.db.models.fields.DateTimeField', [], {}),
+            'time': ('django.db.models.fields.DateTimeField', [], {'db_index': 'True'}),
             'time_complete': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'db_index': 'True'})
         },
         'cabotapp.userprofile': {
