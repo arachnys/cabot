@@ -270,6 +270,8 @@ class InstanceForm(SymmetricalForm):
         return ret
 
 
+
+
 class ServiceForm(forms.ModelForm):
 
     class Meta:
@@ -395,7 +397,7 @@ class CheckCreateView(LoginRequiredMixin, CreateView):
             return reverse('service', kwargs={'pk': self.request.GET.get('service')})
         if self.request.GET.get('instance'):
             return reverse('instance', kwargs={'pk': self.request.GET.get('instance')})
-        return reverse('checks')
+        return reverse('checks')  
 
 
 class CheckUpdateView(LoginRequiredMixin, UpdateView):
@@ -547,21 +549,7 @@ class InstanceCreateView(LoginRequiredMixin, CreateView):
     model = Instance
     form_class = InstanceForm
 
-    def generateDefaultPingCheck(self):
-        pc = ICMPStatusCheck()
-        pc.created_by = self.request.user
-        pc.name = "Default Ping Check"
-        pc.frequency = 5
-        pc.importance = Service.ERROR_STATUS
-        pc.active = True
-        pc.debounce = 0
-        pc.save()
-        pc.instance_set = [Instance.objects.get(pk=self.object.id)]
-        pc.save()
-
     def get_success_url(self):
-#Where else can I run things when an instance gets created?
-        self.generateDefaultPingCheck()
         return reverse('instance', kwargs={'pk': self.object.id})
 
     def get_initial(self):

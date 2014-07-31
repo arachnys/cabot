@@ -260,6 +260,26 @@ class Instance(CheckGroupMixin):
         help_text="Address (IP/Hostname) of service."
     )
 
+    def generate_default_ping_check(self):
+        pc = StatusCheck(
+            name="Default Ping Check for %s" % self.name,
+            frequency=5,
+            importance=Service.ERROR_STATUS,
+            debounce=0,
+            created_by=None,
+        )
+        pc.save()
+        self.status_checks.add(pc)
+
+    def save(self, *args, **kwargs):
+        ret = super(Instance, self).save(*args, **kwargs)
+        if self.status_checks.count() == 0:
+            self.generate_default_ping_check()
+            self.save()
+        return ret
+
+    
+
     def icmp_status_checks(self):
         return self.status_checks.filter(polymorphic_ctype__model='icmpstatuscheck')
 
@@ -313,7 +333,7 @@ class StatusCheck(PolymorphicModel):
         null=True,
         help_text='Number of successive failures permitted before check will be marked as failed. Default is 0, i.e. fail on first failure.'
     )
-    created_by = models.ForeignKey(User)
+    created_by = models.ForeignKey(User, default=User.objects.get(is_active=True), null=True) 
     calculated_status = models.CharField(
         max_length=50, choices=Service.STATUSES, default=Service.CALCULATED_PASSING_STATUS, blank=True)
     last_run = models.DateTimeField(null=True)
@@ -433,6 +453,10 @@ class StatusCheck(PolymorphicModel):
         services = self.service_set.all()
         for service in services:
             update_service.delay(service.id)
+
+        instances = self.instance_set.all()
+        for instance in instances:
+            update_service.delay(instance.id)
 
 class ICMPStatusCheck(StatusCheck):
 

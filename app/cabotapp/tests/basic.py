@@ -8,7 +8,7 @@ from django.contrib.auth.models import User
 from django.test.client import Client
 from cabotapp.models import (
     GraphiteStatusCheck, JenkinsStatusCheck,
-    HttpStatusCheck, Service, StatusCheckResult)
+    HttpStatusCheck, ICMPStatusCheck, Service, Instance, StatusCheckResult)
 from cabotapp.views import StatusCheckReportForm
 from mock import Mock, patch
 from twilio import rest
@@ -66,6 +66,14 @@ class LocalTestCase(TestCase):
         self.service = Service.objects.create(
             name='Service',
         )
+
+        import ipdb; ipdb.set_trace()
+        self.instance = Instance(
+            name='Instance',
+            address='localhost'
+        )
+        self.instance.save()
+
         self.service.status_checks.add(
             self.graphite_check, self.jenkins_check, self.http_check)
         # Passing is most recent
