@@ -250,7 +250,7 @@ class Service(CheckGroupMixin):
 
 
 class Instance(CheckGroupMixin):
-	
+
 
     class Meta:
         ordering = ['name']
@@ -259,26 +259,6 @@ class Instance(CheckGroupMixin):
         blank=True,
         help_text="Address (IP/Hostname) of service."
     )
-
-    def generate_default_ping_check(self):
-        pc = StatusCheck(
-            name="Default Ping Check for %s" % self.name,
-            frequency=5,
-            importance=Service.ERROR_STATUS,
-            debounce=0,
-            created_by=None,
-        )
-        pc.save()
-        self.status_checks.add(pc)
-
-    def save(self, *args, **kwargs):
-        ret = super(Instance, self).save(*args, **kwargs)
-        if self.status_checks.count() == 0:
-            self.generate_default_ping_check()
-            self.save()
-        return ret
-
-    
 
     def icmp_status_checks(self):
         return self.status_checks.filter(polymorphic_ctype__model='icmpstatuscheck')
@@ -460,7 +440,6 @@ class StatusCheck(PolymorphicModel):
 
 class ICMPStatusCheck(StatusCheck):
 
-    
     class Meta(StatusCheck.Meta):
         proxy = True
 

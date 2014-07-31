@@ -549,6 +549,23 @@ class InstanceCreateView(LoginRequiredMixin, CreateView):
     model = Instance
     form_class = InstanceForm
 
+    def form_valid(self, form):
+        ret = super(InstanceCreateView, self).form_valid(form)
+        if self.object.status_checks.filter(polymorphic_ctype__model='icmpstatuscheck').count() == 0:
+            self.generate_default_ping_check(self.object)
+        return ret
+
+    def generate_default_ping_check(self, obj):
+        pc = ICMPStatusCheck(
+            name="Default Ping Check for %s" % obj.name,
+            frequency=5,
+            importance=Service.ERROR_STATUS,
+            debounce=0,
+            created_by=None,
+        )
+        pc.save()
+        obj.status_checks.add(pc)
+
     def get_success_url(self):
         return reverse('instance', kwargs={'pk': self.object.id})
 
