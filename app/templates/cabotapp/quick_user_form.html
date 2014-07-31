@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Add new email</h2>
+<form class="form-horizontal" action="" method="post" role="form">
+  {% include "cabotapp/_base_form.html" %}
+  <div class="col-xs-12">
+    <div class="form-group">
+      <div class="col-xs-6 col-xs-offset-2">
+        <button type="submit" class="btn btn-primary">Submit</button>
+        <a href="{% url dashboard %}" class="btn">Back to dashboard</a>
+      </div>
+    </div>
+  </div>
+</form>
+{% endblock %}

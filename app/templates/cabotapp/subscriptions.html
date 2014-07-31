@@ -4,8 +4,9 @@
 <div class="row">
   <div class="col-xs-12">
     <div class="col-xs-1"><h2><i class="fa fa-table"></i></h2></div>
-    <div class="col-xs-10"><h2>Subscriptions</h2></div>
+    <div class="col-xs-9"><h2>Subscriptions</h2></div>
     <div class="col-xs-1 text-right"><h2><a href="/admin/auth/user/add/"><i class="glyphicon glyphicon-plus" title="Add new user (in Django admin interface)"></i><i class="glyphicon glyphicon-user"></i></a></h2></div>
+    <div class="col-xs-1 text-right"><h2><a href="{% url quick-user-create %}"><i class="glyphicon glyphicon-plus" title="Add new email"></i>@</a></h2></div>
   </div>
   <div class="col-xs-12">
     {% if not services %}

@@ -9,6 +9,7 @@ from models import (
     StatusCheckResult, UserProfile, Service, Shift, get_duty_officers)
 from tasks import run_status_check as _run_status_check
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import Group
 from django.utils.decorators import method_decorator
 from django.views.generic import (
     DetailView, CreateView, UpdateView, ListView, DeleteView, TemplateView)
@@ -21,6 +22,8 @@ from django.utils.timezone import utc
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ValidationError
 
+import base64
+import hashlib
 from itertools import groupby, dropwhile, izip_longest
 import requests
 import json
@@ -277,6 +280,44 @@ class StatusCheckReportForm(forms.Form):
         return checks
 
 
+class QuickUserCreateForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(QuickUserCreateForm, self).__init__(*args, **kwargs)
+        self.fields['email'].required = True
+
+    def save(self, commit=True):
+        user = super(QuickUserCreateForm, self).save(commit=False)
+
+        # Stolen from django-email-as-username.
+        converted = user.email.lower().encode('utf8', 'ignore')
+        user.username = base64.urlsafe_b64encode(hashlib.sha256(converted).digest())[:30]
+
+        user.set_unusable_password()
+
+        def _add_group():
+            group, created = Group.objects.get_or_create(name='subscribers')
+            user.groups.add(group)
+
+        if commit:
+            user.save()
+            _add_group()
+        else:
+            real_save_m2m = self.save_m2m
+
+            def save_m2m():
+                real_save_m2m()
+                _add_group()
+            self.save_m2m = save_m2m
+
+        return user
+
+    class Meta:
+        model = User
+        fields = ('email',)
+
+User.__unicode__ = lambda self: self.email if self.groups.filter(name='subscribers').exists() else self.username
+
+
 class CheckCreateView(LoginRequiredMixin, CreateView):
     template_name = 'cabotapp/statuscheck_form.html'
 
@@ -461,6 +502,12 @@ class StatusCheckReportView(LoginRequiredMixin, TemplateView):
         form = StatusCheckReportForm(self.request.GET)
         if form.is_valid():
             return {'checks': form.get_report(), 'service': form.cleaned_data['service']}
+
+
+class QuickUserCreateView(LoginRequiredMixin, CreateView):
+    success_url = reverse_lazy('subscriptions')
+    form_class = QuickUserCreateForm
+    template_name = 'cabotapp/quick_user_form.html'
 
 
 # Misc JSON api and other stuff
