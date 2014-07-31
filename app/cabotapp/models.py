@@ -17,6 +17,7 @@ from django.utils import timezone
 import json
 import re
 import time
+import os
 
 import requests
 from celery.utils.log import get_task_logger
@@ -65,7 +66,11 @@ def calculate_debounced_passing(recent_results, debounce=0):
     return False
 
 
-class Service(models.Model):
+class CheckGroupMixin(models.Model):
+
+    class Meta:
+        abstract = True
+
     PASSING_STATUS = 'PASSING'
     WARNING_STATUS = 'WARNING'
     ERROR_STATUS = 'ERROR'
@@ -88,10 +93,7 @@ class Service(models.Model):
     )
 
     name = models.TextField()
-    url = models.TextField(
-        blank=True,
-        help_text="URL of service."
-    )
+
     users_to_notify = models.ManyToManyField(
         User,
         blank=True,
@@ -126,8 +128,6 @@ class Service(models.Model):
         help_text='Gist, Hackpad or Refheap js embed with recovery instructions e.g. https://you.hackpad.com/some_document.js'
     )
 
-    class Meta:
-        ordering = ['name']
 
     def __unicode__(self):
         return self.name
@@ -201,18 +201,6 @@ class Service(models.Model):
             s['time'] = time.mktime(s['time'].timetuple())
         return snapshots
 
-    def active_status_checks(self):
-        return self.status_checks.filter(active=True)
-
-    def inactive_status_checks(self):
-        return self.status_checks.filter(active=False)
-
-    def all_passing_checks(self):
-        return self.active_status_checks().filter(calculated_status=self.CALCULATED_PASSING_STATUS)
-
-    def all_failing_checks(self):
-        return self.active_status_checks().exclude(calculated_status=self.CALCULATED_PASSING_STATUS)
-
     def graphite_status_checks(self):
         return self.status_checks.filter(polymorphic_ctype__model='graphitestatuscheck')
 
@@ -230,6 +218,53 @@ class Service(models.Model):
 
     def active_jenkins_status_checks(self):
         return self.jenkins_status_checks().filter(active=True)
+
+    def active_status_checks(self):
+        return self.status_checks.filter(active=True)
+
+    def inactive_status_checks(self):
+        return self.status_checks.filter(active=False)
+
+    def all_passing_checks(self):
+        return self.active_status_checks().filter(calculated_status=self.CALCULATED_PASSING_STATUS)
+
+    def all_failing_checks(self):
+        return self.active_status_checks().exclude(calculated_status=self.CALCULATED_PASSING_STATUS)
+
+class Service(CheckGroupMixin):
+
+    instances = models.ManyToManyField(
+        'Instance',
+        blank=True,
+        help_text='Instances this service is running on.',
+    )
+
+
+    url = models.TextField(
+        blank=True,
+        help_text="URL of service."
+    )
+
+    class Meta:
+        ordering = ['name']
+
+
+class Instance(CheckGroupMixin):
+	
+
+    class Meta:
+        ordering = ['name']
+
+    address = models.TextField(
+        blank=True,
+        help_text="Address (IP/Hostname) of service."
+    )
+
+    def icmp_status_checks(self):
+        return self.status_checks.filter(polymorphic_ctype__model='icmpstatuscheck')
+
+    def active_icmp_status_checks(self):
+        return self.icmp_status_checks().filter(active=True)
 
 
 class ServiceStatusSnapshot(models.Model):
@@ -399,6 +434,28 @@ class StatusCheck(PolymorphicModel):
         for service in services:
             update_service.delay(service.id)
 
+class ICMPStatusCheck(StatusCheck):
+
+    
+    class Meta(StatusCheck.Meta):
+        proxy = True
+
+    @property
+    def check_category(self):
+        return "ICMP/Ping Check"
+
+    def _run(self):
+        result = StatusCheckResult(check=self)
+        instances = self.instance_set.all()
+        target = self.instance_set.get().address
+        response = os.system("ping -c 1 " + target)
+        if response == 0:
+            result.succeeded = True
+        else:
+            result.succeeded = False
+            result.error = "Could not connect, host is most likely down"
+        return result
+
 
 class GraphiteStatusCheck(StatusCheck):
 
@@ -531,7 +588,6 @@ class HttpStatusCheck(StatusCheck):
             else:
                 result.succeeded = True
         return result
-
 
 class JenkinsStatusCheck(StatusCheck):
 

@@ -15,9 +15,6 @@
       {% if checks_type == "All" or checks_type == "Jenkins" %}
       &nbsp;<a href="{% url create-jenkins-check %}?service={{ service.id }}" class="" title="Add new Jenkins check"><i class="glyphicon glyphicon-plus"></i><i class="glyphicon glyphicon-ok"></i></a>
       {% endif %}
-      {% if checks_type == "All" or checks_type == "ICMP" %}
-      &nbsp;<a href="{% url create-icmp-check %}?service={{ service.id }}" class="" title="Add new ICMP check"><i class="glyphicon glyphicon-plus"></i><i class="glyphicon glyphicon-transfer"></i></a>
-      {% endif %}
       </h3>
     </div>
   </div>
@@ -40,7 +37,6 @@
           <th>Test description</th>
           <th>Importance</th>
           <th>Service(s)</th>
-          <th>Instance(s)</th>
           <th></th>
         </tr>
       </thead>
@@ -60,7 +56,7 @@
             {% endif %}
           </td>
           <td title="Last result from {{ check.last_run|timesince }} ago (rightmost is newest)" class="sparktristate" values="{{ check.cached_health }}">
-            {% if not check.cached_health %}
+            {% if not check.recent_results %}
             No results available
             {% endif %}
           </td>
@@ -83,18 +79,6 @@
             {% endfor %}
             {% if not check.service_set.all %}
             <span class="label label-warning">No service</span>
-            {% endif %}
-          </td>
-          <td>
-            {% for instance in check.instance_set.all %}
-            <a href="{% url instance pk=instance.id %}">{{ instance.name }}</a>
-            {% if forloop.last %}
-            {% else %}
-            /
-            {% endif %}
-            {% endfor %}
-            {% if not check.instance_set.all %}
-            <span class="label label-warning">No instance</span>
             {% endif %}
           </td>
           <td class="text-right">
