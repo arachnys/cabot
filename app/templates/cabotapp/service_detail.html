@@ -69,15 +69,15 @@
 </div>
 <hr>
 
-{% include 'cabotapp/_statuscheck_list_service.html' with checks=service.graphite_status_checks.all service=service checks_type="Graphite" %}
+{% include 'cabotapp/_statuscheck_list.html' with checks=service.graphite_status_checks.all service=service checks_type="Graphite" %}
 
 <hr>
 
-{% include 'cabotapp/_statuscheck_list_service.html' with checks=service.http_status_checks.all service=service checks_type="Http" %}
+{% include 'cabotapp/_statuscheck_list.html' with checks=service.http_status_checks.all service=service checks_type="Http" %}
 
 <hr>
 
-{% include 'cabotapp/_statuscheck_list_service.html' with checks=service.jenkins_status_checks.all service=service checks_type="Jenkins" %}
+{% include 'cabotapp/_statuscheck_list.html' with checks=service.jenkins_status_checks.all service=service checks_type="Jenkins" %}
 
 <hr>
 

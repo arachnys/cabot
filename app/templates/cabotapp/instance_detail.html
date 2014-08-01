@@ -8,7 +8,7 @@
   <div class="col-xs-12">
     <div class="col-xs-1"><h2><i class="fa fa-desktop"></i></h2></div>
     <div class="col-xs-5"><h2><span class="break"></span>{{ instance.name }}</h2></div>
-    <div class="col-xs-4 text-right"><h2><span class="label label-{% if instance.overall_status == instance.PASSING_STATUS %}success{% else %}danger{% endif %}">{{ instance.overall_status|lower|capfirst }}</span> <span class="label label-{% if instance.alerts_enabled %}success{% else %}warning{% endif %}">{% if instance.alerts_enabled %}Alerts enabled{%else %}Alerts disabled{% endif %}</span></h2></div>
+    <div class="col-xs-4 text-right"><h2><span class="label label-{% if instance.overall_status == instance.PASSING_STATUS %}success{% else %}danger{% endif %}">{{ instance.overall_status|lower|capfirst }}</span> </h2></div>
     <div class="col-xs-2 text-right"><h2><a href="{% url update-instance instance.id %}"><i class="glyphicon glyphicon-edit"></i></a></h2></div>
   </div>
 </div>
@@ -67,19 +67,19 @@
 
 <hr>
 
-{% include 'cabotapp/_statuscheck_list_instance.html' with checks=instance.graphite_status_checks.all instance=instance checks_type="Graphite" %}
+{% include 'cabotapp/_statuscheck_list.html' with checks=instance.graphite_status_checks.all instance=instance checks_type="Graphite" %}
 
 <hr>
 
-{% include 'cabotapp/_statuscheck_list_instance.html' with checks=instance.http_status_checks.all instance=instance checks_type="Http" %}
+{% include 'cabotapp/_statuscheck_list.html' with checks=instance.http_status_checks.all instance=instance checks_type="Http" %}
 
 <hr>
 
-{% include 'cabotapp/_statuscheck_list_instance.html' with checks=instance.jenkins_status_checks.all instance=instance checks_type="Jenkins" %}
+{% include 'cabotapp/_statuscheck_list.html' with checks=instance.jenkins_status_checks.all instance=instance checks_type="Jenkins" %}
 
 <hr>
 
-{% include 'cabotapp/_statuscheck_list_instance.html' with checks=instance.icmp_status_checks.all instance=instance checks_type="ICMP" %}
+{% include 'cabotapp/_statuscheck_list.html' with checks=instance.icmp_status_checks.all instance=instance checks_type="ICMP" %}
 
 <hr>
 
