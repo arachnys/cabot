@@ -38,7 +38,7 @@ class LoginRequiredMixin(object):
 def subscriptions(request):
     """ Simple list of all checks """
     t = loader.get_template('cabotapp/subscriptions.html')
-    services = Service.objects.all().order_by('alerts_enabled')
+    services = Service.objects.all()
     users = User.objects.filter(is_active=True)
     c = RequestContext(request, {
         'services': services,
