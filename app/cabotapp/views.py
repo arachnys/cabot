@@ -268,7 +268,6 @@ class InstanceForm(SymmetricalForm):
             'hipchat_alert',
             'sms_alert',
             'telephone_alert',
-            'alerts_enabled',
         )
         widgets = {
             'name': forms.TextInput(attrs={'style': 'width: 30%;'}),
