@@ -31,7 +31,7 @@
 {% load compress %}
 {{ block.super }}
 <script type="text/javascript">
-window.DATA = {{ result.raw_check_data|safe }};
+window.DATA = {{ result.raw_data|safe }};
 </script>
 {% compress js %}
 <script type="text/javascript" src="{{ STATIC_URL }}arachnys/js/raphael.js"></script>
