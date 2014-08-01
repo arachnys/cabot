@@ -56,7 +56,7 @@
             {% endif %}
           </td>
           <td title="Last result from {{ check.last_run|timesince }} ago (rightmost is newest)" class="sparktristate" values="{{ check.cached_health }}">
-            {% if not check.recent_results %}
+            {% if not check.cached_health %}
             No results available
             {% endif %}
           </td>
