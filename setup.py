@@ -11,16 +11,13 @@ setup(
     author_email='info@arachnys.com',
     url='http://cabotapp.com',
     license='MIT',
-    # Not hosted on PyPI
-    dependency_links=[
-        'https://argparse.googlecode.com/files/argparse-1.2.1.tar.gz',
-    ],
     install_requires=[
         'Django==1.4.10',
         'PyJWT==0.1.2',
         'South==0.7.6',
         'amqp==1.3.3',
         'anyjson==0.3.3',
+        'argparse==1.2.1',
         'billiard==3.3.0.13',
         'celery==3.1.7',
         'distribute==0.6.24',
