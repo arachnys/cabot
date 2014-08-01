@@ -100,6 +100,10 @@ class CheckGroupMixin(models.Model):
         blank=True,
         help_text='Users who should receive alerts.',
     )
+    alerts_enabled = models.BooleanField(
+        default=True,
+        help_text='Alert when this service is not healthy.',
+    )
     status_checks = models.ManyToManyField(
         'StatusCheck',
         blank=True,
@@ -235,11 +239,6 @@ class Service(CheckGroupMixin):
         help_text='Instances this service is running on.',
     )
 
-    alerts_enabled = models.BooleanField(
-        default=True,
-        help_text='Alert when this service is not healthy.',
-    )
-
     url = models.TextField(
         blank=True,
         help_text="URL of service."
@@ -271,6 +270,9 @@ class Instance(CheckGroupMixin):
         if not (self.overall_status == Service.PASSING_STATUS and self.old_overall_status == Service.PASSING_STATUS):
             self.alert()
 
+    def alert():
+        return
+#We don't want alerts for instances
 
     class Meta:
         ordering = ['name']
