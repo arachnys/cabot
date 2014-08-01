@@ -9,7 +9,7 @@
     <div class="col-xs-1"><h2><i class="fa fa-desktop"></i></h2></div>
     <div class="col-xs-5"><h2><span class="break"></span>{{ instance.name }}</h2></div>
     <div class="col-xs-4 text-right"><h2><span class="label label-{% if instance.overall_status == instance.PASSING_STATUS %}success{% else %}danger{% endif %}">{{ instance.overall_status|lower|capfirst }}</span> </h2></div>
-    <div class="col-xs-2 text-right"><h2><a href="{% url update-instance instance.id %}"><i class="glyphicon glyphicon-edit"></i></a></h2></div>
+    <div class="col-xs-2 text-right"><h2><a class = "" href="{% url duplicate-instance instance.id %}"><i class="fa fa-copy"></i> </a><a class = "" href="{% url update-instance instance.id %}"><i class="glyphicon glyphicon-edit"></i> </a></h2></div>
   </div>
 </div>
 <hr>

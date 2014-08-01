@@ -1,7 +1,7 @@
 from django.conf.urls.defaults import patterns, include, url
 from cabotapp.views import (
     run_status_check, graphite_api_data, twiml_callback, checks_run_recently,
-    duplicate_icmp_check, duplicate_graphite_check, duplicate_http_check, duplicate_jenkins_check,
+    duplicate_icmp_check, duplicate_graphite_check, duplicate_http_check, duplicate_jenkins_check, duplicate_instance,
     GraphiteCheckCreateView, GraphiteCheckUpdateView,
     HttpCheckCreateView, HttpCheckUpdateView,
     ICMPCheckCreateView, ICMPCheckUpdateView,
@@ -53,6 +53,8 @@ urlpatterns = patterns('',
                        url(r'^instance/update/(?P<pk>\d+)/',
                            view=InstanceUpdateView.as_view(
                            ), name='update-instance'),
+                       url(r'^instance/duplicate/(?P<pk>\d+)/',
+                           view=duplicate_instance, name='duplicate-instance'),
                        url(r'^instance/delete/(?P<pk>\d+)/',
                            view=InstanceDeleteView.as_view(
                            ), name='delete-instance'),

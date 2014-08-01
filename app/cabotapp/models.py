@@ -251,6 +251,20 @@ class Service(CheckGroupMixin):
 class Instance(CheckGroupMixin):
 
 
+    def duplicate(self):
+        checks = self.status_checks.all()
+        new_instance = self
+        new_instance.pk = None
+        new_instance.id = None
+        new_instance.name = "Copy of %s" % self.name
+        
+        new_instance.save()
+
+        for check in checks:
+            check.duplicate(inst_set=[new_instance,], serv_set=check.service_set.all())
+
+        return new_instance.pk
+
     def update_status(self):
         self.old_overall_status = self.overall_status
         # Only active checks feed into our calculation
@@ -468,10 +482,13 @@ class StatusCheck(PolymorphicModel):
         self.update_related_instances()
         return ret
 
-    def duplicate(self):
+    def duplicate(self, inst_set=[None,], serv_set=[None,]):
         new_check = self
         new_check.pk = None
         new_check.id = None
+        new_check.save()
+        new_check.instance_set = inst_set
+        new_check.service_set = serv_set
         new_check.save()
         return new_check.pk
 

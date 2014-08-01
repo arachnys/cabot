@@ -66,7 +66,7 @@
           </td>
           {% if checks_type == "All" %}
           <td class="text-center">
-          <i class="glyphicon glyphicon-{% if check.polymorphic_ctype.model == 'graphitestatuscheck' %}signal{% elif check.polymorphic_ctype.model == 'httpstatuscheck' %}arrow-up{% elif check.polymorphic_ctype.model == 'jenkinsstatuscheck' %}ok{% endif %}"></i>
+          <i class="glyphicon glyphicon-{% if check.polymorphic_ctype.model == 'graphitestatuscheck' %}signal{% elif check.polymorphic_ctype.model == 'httpstatuscheck' %}arrow-up{% elif check.polymorphic_ctype.model == 'jenkinsstatuscheck' %}ok{% elif check.polymorphic_ctype.model == 'icmpstatuscheck' %}transfer{% endif %}"></i>
           </td>
           {% endif %}
           <td title="">
@@ -101,7 +101,7 @@
             <a class="btn btn-xs" href="{% if check.polymorphic_ctype.model == 'graphitestatuscheck' %}{% url update-check pk=check.id %}{% elif check.polymorphic_ctype.model == 'httpstatuscheck' %}{% url update-http-check pk=check.id %}{% elif check.polymorphic_ctype.model == 'icmpstatuscheck' %}{% url update-icmp-check pk=check.id %}{% elif check.polymorphic_ctype.model == 'jenkinsstatuscheck' %}{% url update-jenkins-check pk=check.id %}{% endif %}">
               <i class="glyphicon glyphicon-edit"></i><span class="break"></span>
             </a>
-            <a class="btn btn-xs" href="{% if check.polymorphic_ctype.model == 'graphitestatuscheck' %}{% url duplicate-check pk=check.id %}{% elif check.polymorphic_ctype.model == 'httpstatuscheck' %}{% url duplicate-http-check pk=check.id %}{% elif check.polymorphic_ctype.model == 'icmpstatuscheck' %}{% url duplicate-icmp-check pk=check.id %}{% elif check.polymorphic_ctype.model == 'jenkinsstatuscheck' %}{% url duplicate-jenkins-check pk=check.id %}{% endif %}">
+            <a class="btn btn-xs" href="{% if check.polymorphic_ctype.model == 'graphitestatuscheck' %}{% url duplicate-graphite-check pk=check.id %}{% elif check.polymorphic_ctype.model == 'httpstatuscheck' %}{% url duplicate-http-check pk=check.id %}{% elif check.polymorphic_ctype.model == 'icmpstatuscheck' %}{% url duplicate-icmp-check pk=check.id %}{% elif check.polymorphic_ctype.model == 'jenkinsstatuscheck' %}{% url duplicate-jenkins-check pk=check.id %}{% endif %}">
               <i class="fa fa-copy"></i><span class="break"></span>
             </a>
             <a class="btn btn-xs" href="{% url run-check pk=check.id %}">

@@ -60,6 +60,11 @@ def duplicate_icmp_check(request, pk):
     npk = pc.duplicate()
     return HttpResponseRedirect(reverse('update-icmp-check', kwargs={'pk': npk}))
 
+def duplicate_instance(request, pk):
+    instance = Instance.objects.get(pk=pk)
+    new_instance = instance.duplicate()
+    return HttpResponseRedirect(reverse('update-instance', kwargs={'pk': new_instance}))
+
 def duplicate_http_check(request, pk):
     pc = StatusCheck.objects.get(pk=pk)
     npk = pc.duplicate()
@@ -472,7 +477,7 @@ class StatusCheckListView(LoginRequiredMixin, ListView):
     context_object_name = 'checks'
 
     def get_queryset(self):
-        return StatusCheck.objects.all().order_by('name').prefetch_related('service_set')
+        return StatusCheck.objects.all().order_by('name').prefetch_related('service_set', 'instance_set')
 
 
 class StatusCheckDeleteView(LoginRequiredMixin, DeleteView):
