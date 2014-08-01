@@ -7,10 +7,10 @@ from django.core.urlresolvers import reverse
 from django.contrib.admin.models import User
 
 from jenkins import get_job_status
-from .alert import send_alert
+from .alert_service import send_alert as service_send_alert
+from .alert_instance import send_alert as instance_send_alert
 from .calendar import get_events
 from .graphite import parse_metric
-from .alert import send_alert
 from .tasks import update_service, update_instance
 from datetime import datetime, timedelta
 from django.utils import timezone
@@ -173,8 +173,7 @@ class CheckGroupMixin(models.Model):
         self.save()
         self.snapshot.did_send_alert = True
         self.snapshot.save()
-        # send_alert handles the logic of how exactly alerts should be handled
-        send_alert(self, duty_officers=get_duty_officers())
+        # send_alert needs to be called separately from the instance and the service
 
     @property
     def recent_snapshots(self):
@@ -241,6 +240,10 @@ class Service(CheckGroupMixin):
         help_text='Instances this service is running on.',
     )
 
+    def alert(self):
+        ret = super(Service, self).alert(*args, **kwargs)
+        service_send_alert(self, duty_officers=get_duty_officers())
+        return ret
 
     url = models.TextField(
         blank=True,
@@ -281,6 +284,11 @@ class Instance(CheckGroupMixin):
         blank=True,
         help_text="Address (IP/Hostname) of service."
     )
+
+    def alert(self):
+        ret = super(Instance, self).alert(*args, **kwargs)
+        instance_send_alert(self, duty_officers=get_duty_officers())
+        return ret
 
     def icmp_status_checks(self):
         return self.status_checks.filter(polymorphic_ctype__model='icmpstatuscheck')
