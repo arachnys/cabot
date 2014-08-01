@@ -85,6 +85,7 @@ class StatusCheckResultDetailView(LoginRequiredMixin, DetailView):
     model = StatusCheckResult
     context_object_name = 'result'
 
+
 class SymmetricalForm(forms.ModelForm):
     symmetrical_fields = ()  # Iterable of 2-tuples (field, model)
 
@@ -115,7 +116,9 @@ base_widgets = {
 
 
 class StatusCheckForm(SymmetricalForm):
+
     symmetrical_fields = ('service_set', 'instance_set')
+
     service_set = forms.ModelMultipleChoiceField(
         queryset=Service.objects.all(),
         required=False,
@@ -139,6 +142,7 @@ class StatusCheckForm(SymmetricalForm):
             },
         )
     )
+
 
 class GraphiteStatusCheckForm(StatusCheckForm):
 
@@ -183,6 +187,7 @@ class ICMPStatusCheckForm(StatusCheckForm):
             'debounce',
         )
         widgets = dict(**base_widgets)
+
 
 class HttpStatusCheckForm(StatusCheckForm):
 
@@ -244,6 +249,7 @@ class UserProfileForm(forms.ModelForm):
         model = UserProfile
         exclude = ('user',)
 
+
 class InstanceForm(SymmetricalForm):
 
     symmetrical_fields = ('service_set',)
@@ -289,8 +295,6 @@ class InstanceForm(SymmetricalForm):
         self.fields['users_to_notify'].queryset = User.objects.filter(
             is_active=True)
         return ret
-
-
 
 
 class ServiceForm(forms.ModelForm):
@@ -523,6 +527,7 @@ class InstanceListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         return Instance.objects.all().order_by('name').prefetch_related('status_checks')
 
+
 class ServiceListView(LoginRequiredMixin, ListView):
     model = Service
     context_object_name = 'services'
@@ -629,11 +634,13 @@ class ServiceDeleteView(LoginRequiredMixin, DeleteView):
     context_object_name = 'service'
     template_name = 'cabotapp/service_confirm_delete.html'
 
+
 class InstanceDeleteView(LoginRequiredMixin, DeleteView):
     model = Instance
     success_url = reverse_lazy('instances')
     context_object_name = 'instance'
     template_name = 'cabotapp/instance_confirm_delete.html'
+
 
 class ShiftListView(LoginRequiredMixin, ListView):
     model = Shift

@@ -5,6 +5,7 @@ from polymorphic import PolymorphicModel
 from django.db.models import F
 from django.core.urlresolvers import reverse
 from django.contrib.admin.models import User
+from celery.exceptions import SoftTimeLimitExceeded
 
 from jenkins import get_job_status
 from .alert import send_alert
@@ -13,6 +14,7 @@ from .graphite import parse_metric
 from .tasks import update_service, update_instance
 from datetime import datetime, timedelta
 from django.utils import timezone
+from django.db import transaction
 
 import json
 import re
@@ -172,7 +174,7 @@ class CheckGroupMixin(models.Model):
         self.save()
         self.snapshot.did_send_alert = True
         self.snapshot.save()
-        service_send_alert(self, duty_officers=get_duty_officers())
+        send_alert(self, duty_officers=get_duty_officers())
 
     @property
     def recent_snapshots(self):
@@ -257,11 +259,11 @@ class Instance(CheckGroupMixin):
         new_instance.pk = None
         new_instance.id = None
         new_instance.name = "Copy of %s" % self.name
-        
+
         new_instance.save()
 
         for check in checks:
-            check.duplicate(inst_set=[new_instance,], serv_set=check.service_set.all())
+            check.duplicate(inst_set=[new_instance], serv_set=())
 
         return new_instance.pk
 
@@ -281,12 +283,6 @@ class Instance(CheckGroupMixin):
         )
         self.snapshot.save()
         self.save()
-        if not (self.overall_status == Service.PASSING_STATUS and self.old_overall_status == Service.PASSING_STATUS):
-            self.alert()
-
-    def alert():
-        return
-#We don't want alerts for instances
 
     class Meta:
         ordering = ['name']
@@ -302,27 +298,26 @@ class Instance(CheckGroupMixin):
     def active_icmp_status_checks(self):
         return self.icmp_status_checks().filter(active=True)
 
+class Snapshot(models.Model):
 
-class ServiceStatusSnapshot(models.Model):
-    service = models.ForeignKey(Service, related_name='snapshots')
+    class Meta:
+        abstract = True
+
     time = models.DateTimeField(db_index=True)
     num_checks_active = models.IntegerField(default=0)
     num_checks_passing = models.IntegerField(default=0)
     num_checks_failing = models.IntegerField(default=0)
     overall_status = models.TextField(default=Service.PASSING_STATUS)
     did_send_alert = models.IntegerField(default=False)
+
+class ServiceStatusSnapshot(Snapshot):
+    service = models.ForeignKey(Service, related_name='snapshots')
 
     def __unicode__(self):
         return u"%s: %s" % (self.service.name, self.overall_status)
 
-class InstanceStatusSnapshot(models.Model):
+class InstanceStatusSnapshot(Snapshot):
     instance = models.ForeignKey(Instance, related_name='snapshots')
-    time = models.DateTimeField(db_index=True)
-    num_checks_active = models.IntegerField(default=0)
-    num_checks_passing = models.IntegerField(default=0)
-    num_checks_failing = models.IntegerField(default=0)
-    overall_status = models.TextField(default=Service.PASSING_STATUS)
-    did_send_alert = models.IntegerField(default=False)
 
     def __unicode__(self):
         return u"%s: %s" % (self.instance.name, self.overall_status)
@@ -360,7 +355,7 @@ class StatusCheck(PolymorphicModel):
         null=True,
         help_text='Number of successive failures permitted before check will be marked as failed. Default is 0, i.e. fail on first failure.'
     )
-    created_by = models.ForeignKey(User, null=True) 
+    created_by = models.ForeignKey(User, null=True)
     calculated_status = models.CharField(
         max_length=50, choices=Service.STATUSES, default=Service.CALCULATED_PASSING_STATUS, blank=True)
     last_run = models.DateTimeField(null=True)
@@ -435,11 +430,11 @@ class StatusCheck(PolymorphicModel):
         return self.name
 
     def recent_results(self):
-        return self.statuscheckresult_set.all().order_by('-time_complete').defer('raw_data')[:10]
+        return StatusCheckResult.objects.filter(check=self).order_by('-time_complete').defer('raw_data')[:10]
 
     def last_result(self):
         try:
-            return self.recent_results()[0]
+            return StatusCheckResult.objects.filter(check=self).order_by('-time_complete').defer('raw_data')[0]
         except:
             return None
 
@@ -447,14 +442,13 @@ class StatusCheck(PolymorphicModel):
         start = timezone.now()
         try:
             result = self._run()
+        except SoftTimeLimitExceeded as e:
+            result = StatusCheckResult(check=self)
+            result.error = u'Error in performing check: Celery soft time limit exceeded'
+            result.succeeded = False
         except Exception as e:
             result = StatusCheckResult(check=self)
             result.error = u'Error in performing check: %s' % (e,)
-            if result.error.startswith("Error in performing check: get() returned more than one Instance"):
-                first_instance = self.instance_set.all().order_by('id')[0]
-                self.instance_set = [first_instance]
-                first_instance_link = '<a href="%s">' % reverse('instance', kwargs={'pk': first_instance.pk}) + first_instance.name + "</a>"
-                result.error = "Error: This type of check can only be attached to one instance. All instances, apart from the oldest one (%s), have been detached from this check. The check will run normally next time." % first_instance_link
             result.succeeded = False
         finish = timezone.now()
         result.time = start
@@ -470,25 +464,50 @@ class StatusCheck(PolymorphicModel):
         raise NotImplementedError('Subclasses should implement')
 
     def save(self, *args, **kwargs):
-        recent_results = self.recent_results()
-        if calculate_debounced_passing(recent_results, self.debounce):
-            self.calculated_status = Service.CALCULATED_PASSING_STATUS
+        if self.pk:
+            # This should not be necessary
+            with transaction.commit_manually():
+                try:
+                    recent_results = list(self.recent_results())
+                    if calculate_debounced_passing(recent_results, self.debounce):
+                        self.calculated_status = Service.CALCULATED_PASSING_STATUS
+                    else:
+                        self.calculated_status = Service.CALCULATED_FAILING_STATUS
+                    self.cached_health = serialize_recent_results(recent_results)
+                    transaction.commit()
+                except SoftTimeLimitExceeded as e:
+                    # Something weird with postgres
+                    transaction.rollback()
+                    logger.error('Celery time limit exceeded for getting results for %s' % self.pk)
+                    self.calculated_status = Service.CALCULATED_FAILING_STATUS
+                    self.cached_health = '-1'
+                except Exception as e:
+                    transaction.rollback()
+                    logger.error('Got exception when saving check: %s' % e)
+                    self.calculated_status = Service.CALCULATED_FAILING_STATUS
+                    self.cached_health = '-1'
+            try:
+                updated = StatusCheck.objects.get(pk=self.pk)
+            except StatusCheck.DoesNotExist as e:
+                logger.error('Cannot find myself (check %s) in the database, presumably have been deleted' % self.pk)
+                return
         else:
-            self.calculated_status = Service.CALCULATED_FAILING_STATUS
-        self.cached_health = serialize_recent_results(recent_results)
+            self.cached_health = ''
+            self.calculated_status = Service.CALCULATED_PASSING_STATUS
         ret = super(StatusCheck, self).save(*args, **kwargs)
-        # Update linked services
         self.update_related_services()
         self.update_related_instances()
         return ret
 
-    def duplicate(self, inst_set=[None,], serv_set=[None,]):
+    def duplicate(self, inst_set=None, serv_set=None):
         new_check = self
         new_check.pk = None
         new_check.id = None
         new_check.save()
-        new_check.instance_set = inst_set
-        new_check.service_set = serv_set
+        if inst_set is not None:
+            new_check.instance_set = inst_set
+        if serv_set is not None:
+            new_check.service_set = serv_set
         new_check.save()
         return new_check.pk
 
@@ -500,7 +519,7 @@ class StatusCheck(PolymorphicModel):
     def update_related_instances(self):
         instances = self.instance_set.all()
         for instance in instances:
-            update_service.delay(instance.id)
+            update_instance.delay(instance.id)
 
 class ICMPStatusCheck(StatusCheck):
 
@@ -516,7 +535,7 @@ class ICMPStatusCheck(StatusCheck):
         instances = self.instance_set.all()
         target = self.instance_set.get().address
 
-#We need to read both STDOUT and STDERR because ping can write to both, depending on the kind of error. Thanks a lot, ping.
+        # We need to read both STDOUT and STDERR because ping can write to both, depending on the kind of error. Thanks a lot, ping.
         ping_process = subprocess.Popen("ping -c 1 " + target, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
         response = ping_process.wait()
 
