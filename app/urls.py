@@ -1,6 +1,7 @@
 from django.conf.urls.defaults import patterns, include, url
 from cabotapp.views import (
     run_status_check, graphite_api_data, twiml_callback, checks_run_recently,
+    duplicate_icmp_check, duplicate_graphite_check, duplicate_http_check, duplicate_jenkins_check,
     GraphiteCheckCreateView, GraphiteCheckUpdateView,
     HttpCheckCreateView, HttpCheckUpdateView,
     ICMPCheckCreateView, ICMPCheckUpdateView,
@@ -70,27 +71,39 @@ urlpatterns = patterns('',
                        url(r'^checks/report/$',
                            view=StatusCheckReportView.as_view(), name='checks-report'),
 
+
                        url(r'^icmpcheck/create/', view=ICMPCheckCreateView.as_view(),
                            name='create-icmp-check'),
                        url(r'^icmpcheck/update/(?P<pk>\d+)/',
                            view=ICMPCheckUpdateView.as_view(
                            ), name='update-icmp-check'),
+                       url(r'^icmpcheck/duplicate/(?P<pk>\d+)/',
+                           view=duplicate_icmp_check, name='duplicate-icmp-check'),
+
                        url(r'^graphitecheck/create/',
                            view=GraphiteCheckCreateView.as_view(
                            ), name='create-check'),
                        url(r'^graphitecheck/update/(?P<pk>\d+)/',
                            view=GraphiteCheckUpdateView.as_view(
                            ), name='update-check'),
+                       url(r'^graphitecheck/duplicate/(?P<pk>\d+)/',
+                           view=duplicate_graphite_check, name='duplicate-graphite-check'),
+
                        url(r'^httpcheck/create/', view=HttpCheckCreateView.as_view(),
                            name='create-http-check'),
                        url(r'^httpcheck/update/(?P<pk>\d+)/',
                            view=HttpCheckUpdateView.as_view(
                            ), name='update-http-check'),
+                       url(r'^httpcheck/duplicate/(?P<pk>\d+)/',
+                           view=duplicate_http_check, name='duplicate-http-check'),
+
                        url(r'^jenkins_check/create/', view=JenkinsCheckCreateView.as_view(),
                            name='create-jenkins-check'),
                        url(r'^jenkins_check/update/(?P<pk>\d+)/',
                            view=JenkinsCheckUpdateView.as_view(
                            ), name='update-jenkins-check'),
+                       url(r'^jenkins_check/duplicate/(?P<pk>\d+)/',
+                           view=duplicate_jenkins_check, name='duplicate-jenkins-check'),
 
                        url(r'^result/(?P<service_id>\d+)/twiml_callback/',
                            view=twiml_callback, name='twiml-callback'),

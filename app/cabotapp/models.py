@@ -241,7 +241,7 @@ class Service(CheckGroupMixin):
     )
 
     def alert(self):
-        ret = super(Service, self).alert(*args, **kwargs)
+        ret = super(Service, self).alert()
         service_send_alert(self, duty_officers=get_duty_officers())
         return ret
 
@@ -286,7 +286,7 @@ class Instance(CheckGroupMixin):
     )
 
     def alert(self):
-        ret = super(Instance, self).alert(*args, **kwargs)
+        ret = super(Instance, self).alert()
         instance_send_alert(self, duty_officers=get_duty_officers())
         return ret
 
@@ -475,6 +475,13 @@ class StatusCheck(PolymorphicModel):
         self.update_related_services()
         self.update_related_instances()
         return ret
+
+    def duplicate(self):
+        new_check = self
+        new_check.pk = None
+        new_check.id = None
+        new_check.save()
+        return new_check.pk
 
     def update_related_services(self):
         services = self.service_set.all()

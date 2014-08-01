@@ -55,6 +55,27 @@ def run_status_check(request, pk):
     return HttpResponseRedirect(reverse('check', kwargs={'pk': pk}))
 
 
+def duplicate_icmp_check(request, pk):
+    pc = StatusCheck.objects.get(pk=pk)
+    npk = pc.duplicate()
+    return HttpResponseRedirect(reverse('update-icmp-check', kwargs={'pk': npk}))
+
+def duplicate_http_check(request, pk):
+    pc = StatusCheck.objects.get(pk=pk)
+    npk = pc.duplicate()
+    return HttpResponseRedirect(reverse('update-http-check', kwargs={'pk': npk}))
+
+def duplicate_graphite_check(request, pk):
+    pc = StatusCheck.objects.get(pk=pk)
+    npk = pc.duplicate()
+    return HttpResponseRedirect(reverse('update-graphite-check', kwargs={'pk': npk}))
+
+def duplicate_jenkins_check(request, pk):
+    pc = StatusCheck.objects.get(pk=pk)
+    npk = pc.duplicate()
+    return HttpResponseRedirect(reverse('update-jenkins-check', kwargs={'pk': npk}))
+
+
 class StatusCheckResultDetailView(LoginRequiredMixin, DetailView):
     model = StatusCheckResult
     context_object_name = 'result'
@@ -414,11 +435,6 @@ class ICMPCheckCreateView(CheckCreateView):
 class ICMPCheckUpdateView(CheckUpdateView):
     model = ICMPStatusCheck
     form_class = ICMPStatusCheckForm
-
-class ICMPhiteCheckCreateView(CheckCreateView):
-    model = GraphiteStatusCheck
-    form_class = GraphiteStatusCheckForm
-
 
 class GraphiteCheckUpdateView(CheckUpdateView):
     model = GraphiteStatusCheck
