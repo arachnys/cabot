@@ -5,8 +5,8 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.core.urlresolvers import reverse_lazy
 from django.conf import settings
 from models import (
-    StatusCheck, GraphiteStatusCheck, JenkinsStatusCheck, HttpStatusCheck,
-    StatusCheckResult, UserProfile, Service, Shift, get_duty_officers)
+    StatusCheck, GraphiteStatusCheck, JenkinsStatusCheck, HttpStatusCheck, ICMPStatusCheck,
+    StatusCheckResult, UserProfile, Service, Instance, Shift, get_duty_officers)
 from tasks import run_status_check as _run_status_check
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
@@ -38,7 +38,7 @@ class LoginRequiredMixin(object):
 def subscriptions(request):
     """ Simple list of all checks """
     t = loader.get_template('cabotapp/subscriptions.html')
-    services = Service.objects.all().order_by('alerts_enabled')
+    services = Service.objects.all()
     users = User.objects.filter(is_active=True)
     c = RequestContext(request, {
         'services': services,
@@ -53,6 +53,32 @@ def run_status_check(request, pk):
     """Runs a specific check"""
     _run_status_check(check_or_id=pk)
     return HttpResponseRedirect(reverse('check', kwargs={'pk': pk}))
+
+
+def duplicate_icmp_check(request, pk):
+    pc = StatusCheck.objects.get(pk=pk)
+    npk = pc.duplicate()
+    return HttpResponseRedirect(reverse('update-icmp-check', kwargs={'pk': npk}))
+
+def duplicate_instance(request, pk):
+    instance = Instance.objects.get(pk=pk)
+    new_instance = instance.duplicate()
+    return HttpResponseRedirect(reverse('update-instance', kwargs={'pk': new_instance}))
+
+def duplicate_http_check(request, pk):
+    pc = StatusCheck.objects.get(pk=pk)
+    npk = pc.duplicate()
+    return HttpResponseRedirect(reverse('update-http-check', kwargs={'pk': npk}))
+
+def duplicate_graphite_check(request, pk):
+    pc = StatusCheck.objects.get(pk=pk)
+    npk = pc.duplicate()
+    return HttpResponseRedirect(reverse('update-graphite-check', kwargs={'pk': npk}))
+
+def duplicate_jenkins_check(request, pk):
+    pc = StatusCheck.objects.get(pk=pk)
+    npk = pc.duplicate()
+    return HttpResponseRedirect(reverse('update-jenkins-check', kwargs={'pk': npk}))
 
 
 class StatusCheckResultDetailView(LoginRequiredMixin, DetailView):
@@ -90,11 +116,25 @@ base_widgets = {
 
 
 class StatusCheckForm(SymmetricalForm):
-    symmetrical_fields = ('service_set',)
+
+    symmetrical_fields = ('service_set', 'instance_set')
+
     service_set = forms.ModelMultipleChoiceField(
         queryset=Service.objects.all(),
         required=False,
         help_text='Link to service(s).',
+        widget=forms.SelectMultiple(
+            attrs={
+                'data-rel': 'chosen',
+                'style': 'width: 70%',
+            },
+        )
+    )
+
+    instance_set = forms.ModelMultipleChoiceField(
+        queryset=Instance.objects.all(),
+        required=False,
+        help_text='Link to instance(s).',
         widget=forms.SelectMultiple(
             attrs={
                 'data-rel': 'chosen',
@@ -133,6 +173,20 @@ class GraphiteStatusCheckForm(StatusCheckForm):
                 'data-rel': 'chosen',
             })
         })
+
+
+class ICMPStatusCheckForm(StatusCheckForm):
+
+    class Meta:
+        model = ICMPStatusCheck
+        fields = (
+            'name',
+            'frequency',
+            'importance',
+            'active',
+            'debounce',
+        )
+        widgets = dict(**base_widgets)
 
 
 class HttpStatusCheckForm(StatusCheckForm):
@@ -196,6 +250,53 @@ class UserProfileForm(forms.ModelForm):
         exclude = ('user',)
 
 
+class InstanceForm(SymmetricalForm):
+
+    symmetrical_fields = ('service_set',)
+    service_set = forms.ModelMultipleChoiceField(
+        queryset=Service.objects.all(),
+        required=False,
+        help_text='Link to service(s).',
+        widget=forms.SelectMultiple(
+            attrs={
+                'data-rel': 'chosen',
+                'style': 'width: 70%',
+            },
+        )
+    )
+
+
+    class Meta:
+        model = Instance
+        template_name = 'instance_form.html'
+        fields = (
+            'name',
+            'address',
+            'users_to_notify',
+            'status_checks',
+            'service_set',
+        )
+        widgets = {
+            'name': forms.TextInput(attrs={'style': 'width: 30%;'}),
+            'address': forms.TextInput(attrs={'style': 'width: 70%;'}),
+            'status_checks': forms.SelectMultiple(attrs={
+                'data-rel': 'chosen',
+                'style': 'width: 70%',
+            }),
+            'service_set': forms.SelectMultiple(attrs={
+                'data-rel': 'chosen',
+                'style': 'width: 70%',
+            }),
+            'users_to_notify': forms.CheckboxSelectMultiple(),
+        }
+
+    def __init__(self, *args, **kwargs):
+        ret = super(InstanceForm, self).__init__(*args, **kwargs)
+        self.fields['users_to_notify'].queryset = User.objects.filter(
+            is_active=True)
+        return ret
+
+
 class ServiceForm(forms.ModelForm):
 
     class Meta:
@@ -206,6 +307,7 @@ class ServiceForm(forms.ModelForm):
             'url',
             'users_to_notify',
             'status_checks',
+            'instances',
             'email_alert',
             'hipchat_alert',
             'sms_alert',
@@ -217,6 +319,10 @@ class ServiceForm(forms.ModelForm):
             'name': forms.TextInput(attrs={'style': 'width: 30%;'}),
             'url': forms.TextInput(attrs={'style': 'width: 70%;'}),
             'status_checks': forms.SelectMultiple(attrs={
+                'data-rel': 'chosen',
+                'style': 'width: 70%',
+            }),
+            'instances': forms.SelectMultiple(attrs={
                 'data-rel': 'chosen',
                 'style': 'width: 70%',
             }),
@@ -293,20 +399,30 @@ class CheckCreateView(LoginRequiredMixin, CreateView):
         if metric:
             initial['metric'] = metric
         service_id = self.request.GET.get('service')
+	instance_id = self.request.GET.get('instance')
+
         if service_id:
             try:
                 service = Service.objects.get(id=service_id)
                 initial['service_set'] = [service]
             except Service.DoesNotExist:
                 pass
+
+        if instance_id:
+            try:
+                instance = Instance.objects.get(id=instance_id)
+                initial['instance_set'] = [instance]
+            except Instance.DoesNotExist:
+                pass
+
         return initial
 
     def get_success_url(self):
-        if self.request.GET.get('service') != '':
+        if self.request.GET.get('service'):
             return reverse('service', kwargs={'pk': self.request.GET.get('service')})
-        else:
-            return reverse('checks')  
-		
+        if self.request.GET.get('instance'):
+            return reverse('instance', kwargs={'pk': self.request.GET.get('instance')})
+        return reverse('checks')  
 
 
 class CheckUpdateView(LoginRequiredMixin, UpdateView):
@@ -315,16 +431,22 @@ class CheckUpdateView(LoginRequiredMixin, UpdateView):
     def get_success_url(self):
         return reverse('check', kwargs={'pk': self.object.id})
 
+class ICMPCheckCreateView(CheckCreateView):
+    model = ICMPStatusCheck
+    form_class = ICMPStatusCheckForm
 
-class GraphiteCheckCreateView(CheckCreateView):
-    model = GraphiteStatusCheck
-    form_class = GraphiteStatusCheckForm
 
+class ICMPCheckUpdateView(CheckUpdateView):
+    model = ICMPStatusCheck
+    form_class = ICMPStatusCheckForm
 
 class GraphiteCheckUpdateView(CheckUpdateView):
     model = GraphiteStatusCheck
     form_class = GraphiteStatusCheckForm
 
+class GraphiteCheckCreateView(CheckCreateView):
+    model = GraphiteStatusCheck
+    form_class = GraphiteStatusCheckForm
 
 class HttpCheckCreateView(CheckCreateView):
     model = HttpStatusCheck
@@ -359,7 +481,7 @@ class StatusCheckListView(LoginRequiredMixin, ListView):
     context_object_name = 'checks'
 
     def get_queryset(self):
-        return StatusCheck.objects.all().order_by('name').prefetch_related('service_set')
+        return StatusCheck.objects.all().order_by('name').prefetch_related('service_set', 'instance_set')
 
 
 class StatusCheckDeleteView(LoginRequiredMixin, DeleteView):
@@ -397,6 +519,15 @@ class UserProfileUpdateView(LoginRequiredMixin, UpdateView):
             return profile
 
 
+class InstanceListView(LoginRequiredMixin, ListView):
+
+    model = Instance
+    context_object_name = 'instances'
+
+    def get_queryset(self):
+        return Instance.objects.all().order_by('name').prefetch_related('status_checks')
+
+
 class ServiceListView(LoginRequiredMixin, ListView):
     model = Service
     context_object_name = 'services'
@@ -404,6 +535,20 @@ class ServiceListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         return Service.objects.all().order_by('name').prefetch_related('status_checks')
 
+class InstanceDetailView(LoginRequiredMixin, DetailView):
+    model = Instance
+    context_object_name = 'instance'
+
+    def get_context_data(self, **kwargs):
+        context = super(InstanceDetailView, self).get_context_data(**kwargs)
+        date_from = date.today() - relativedelta(day=1)
+        context['report_form'] = StatusCheckReportForm(initial={
+            'checks': self.object.status_checks.all(),
+            'service': self.object,
+            'date_from': date_from,
+            'date_to': date_from + relativedelta(months=1) - relativedelta(days=1)
+        })
+        return context
 
 class ServiceDetailView(LoginRequiredMixin, DetailView):
     model = Service
@@ -421,6 +566,46 @@ class ServiceDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
+class InstanceCreateView(LoginRequiredMixin, CreateView):
+    model = Instance
+    form_class = InstanceForm
+
+    def form_valid(self, form):
+        ret = super(InstanceCreateView, self).form_valid(form)
+        if self.object.status_checks.filter(polymorphic_ctype__model='icmpstatuscheck').count() == 0:
+            self.generate_default_ping_check(self.object)
+        return ret
+
+    def generate_default_ping_check(self, obj):
+        pc = ICMPStatusCheck(
+            name="Default Ping Check for %s" % obj.name,
+            frequency=5,
+            importance=Service.ERROR_STATUS,
+            debounce=0,
+            created_by=None,
+        )
+        pc.save()
+        obj.status_checks.add(pc)
+
+    def get_success_url(self):
+        return reverse('instance', kwargs={'pk': self.object.id})
+
+    def get_initial(self):
+        if self.initial:
+            initial = self.initial
+        else:
+            initial = {}
+        service_id = self.request.GET.get('service')
+
+        if service_id:
+            try:
+                service = Service.objects.get(id=service_id)
+                initial['service_set'] = [service]
+            except Service.DoesNotExist:
+                pass
+
+        return initial
+
 class ServiceCreateView(LoginRequiredMixin, CreateView):
     model = Service
     form_class = ServiceForm
@@ -428,6 +613,12 @@ class ServiceCreateView(LoginRequiredMixin, CreateView):
     def get_success_url(self):
         return reverse('service', kwargs={'pk': self.object.id})
 
+class InstanceUpdateView(LoginRequiredMixin, UpdateView):
+    model = Instance
+    form_class = InstanceForm
+
+    def get_success_url(self):
+        return reverse('instance', kwargs={'pk': self.object.id})
 
 class ServiceUpdateView(LoginRequiredMixin, UpdateView):
     model = Service
@@ -442,6 +633,13 @@ class ServiceDeleteView(LoginRequiredMixin, DeleteView):
     success_url = reverse_lazy('services')
     context_object_name = 'service'
     template_name = 'cabotapp/service_confirm_delete.html'
+
+
+class InstanceDeleteView(LoginRequiredMixin, DeleteView):
+    model = Instance
+    success_url = reverse_lazy('instances')
+    context_object_name = 'instance'
+    template_name = 'cabotapp/instance_confirm_delete.html'
 
 
 class ShiftListView(LoginRequiredMixin, ListView):

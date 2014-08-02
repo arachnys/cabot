@@ -8,7 +8,7 @@ from django.contrib.auth.models import User
 from django.test.client import Client
 from cabotapp.models import (
     GraphiteStatusCheck, JenkinsStatusCheck,
-    HttpStatusCheck, Service, StatusCheckResult)
+    HttpStatusCheck, ICMPStatusCheck, Service, Instance, StatusCheckResult)
 from cabotapp.views import StatusCheckReportForm
 from mock import Mock, patch
 from twilio import rest
@@ -66,6 +66,7 @@ class LocalTestCase(TestCase):
         self.service = Service.objects.create(
             name='Service',
         )
+
         self.service.status_checks.add(
             self.graphite_check, self.jenkins_check, self.http_check)
         # Passing is most recent
@@ -309,6 +310,22 @@ class TestWebInterface(LocalTestCase):
         reloaded = Service.objects.get(id=self.service.id)
         # Still the same
         self.assertEqual(reloaded.hackpad_id, snippet_link)
+
+    def test_create_instance(self):
+        instances = Instance.objects.all()
+        self.assertEqual(len(instances), 0)
+        self.client.login(username=self.username, password=self.password)
+        resp = self.client.post(
+            reverse('create-instance'),
+            data={
+                'name': 'My little instance',
+            },
+            follow=True,
+        )
+        instances = Instance.objects.all()
+        self.assertEqual(len(instances), 1)
+        instance = instances[0]
+        self.assertEqual(len(instance.status_checks.all()), 1)
 
     def test_checks_report(self):
         form = StatusCheckReportForm({
