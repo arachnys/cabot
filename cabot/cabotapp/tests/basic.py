@@ -9,7 +9,7 @@ from django.test.client import Client
 from cabot.cabotapp.models import (
     GraphiteStatusCheck, JenkinsStatusCheck,
     HttpStatusCheck, ICMPStatusCheck, Service, Instance, StatusCheckResult)
-from cabotapp.views import StatusCheckReportForm
+from cabot.cabotapp.views import StatusCheckReportForm
 from mock import Mock, patch
 from twilio import rest
 from django.core import mail

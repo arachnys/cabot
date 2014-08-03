@@ -9,7 +9,7 @@ from cabot.cabotapp.views import (
     StatusCheckDeleteView, StatusCheckListView, StatusCheckDetailView,
     StatusCheckResultDetailView, StatusCheckReportView)
 
-from cabotapp.views import (InstanceListView, InstanceDetailView,
+from cabot.cabotapp.views import (InstanceListView, InstanceDetailView,
                             InstanceUpdateView, InstanceCreateView, InstanceDeleteView,
                             ServiceListView, ServiceDetailView,
                             ServiceUpdateView, ServiceCreateView, ServiceDeleteView,
