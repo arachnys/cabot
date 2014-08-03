@@ -34,10 +34,8 @@ def _setup_venv():
 
 
 def install_requirements(deploy_path=DEPLOY_PATH):
-    with cd(deploy_path):
-        with prefix("source {venv}/bin/activate".format(venv=VENV_DIR)):
-            sudo(
-                "{venv}/bin/pip install -r requirements.txt --exists-action=w".format(venv=VENV_DIR))
+    sudo("{venv}/bin/pip install -e {path} --exists-action=w".format(
+        venv=VENV_DIR, path=deploy_path))
 
 
 def run_migrations(deploy_path=DEPLOY_PATH):

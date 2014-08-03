@@ -7,7 +7,7 @@ from django.core.urlresolvers import reverse
 from django.contrib.admin.models import User
 from celery.exceptions import SoftTimeLimitExceeded
 
-from jenkins import get_job_status
+from .jenkins import get_job_status
 from .alert import send_alert
 from .calendar import get_events
 from .graphite import parse_metric

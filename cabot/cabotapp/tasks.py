@@ -11,11 +11,6 @@ from celery.task import task
 from django.conf import settings
 from django.utils import timezone
 
-
-# Add the root to the python path
-root = os.path.abspath(os.path.join(settings.PROJECT_ROOT, '../'))
-sys.path.append(root)
-
 celery = Celery(__name__)
 celery.config_from_object(settings)
 

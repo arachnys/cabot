@@ -5,8 +5,11 @@ backups/*
 static/CACHE/*
 node_modules/*
 .python-eggs/*
+cabot.egg-info
+cabot/static/CACHE
+.env
 .DS_Store
-celerybeat-schedule.db
+celerybeat-schedule
 *.pyc
 *.swp
 *.orig
