@@ -86,3 +86,5 @@ These credentials are required for SMS and phone alerts.
 #### Using MySQL?
 
 Cabot uses Postgresql by default but it's easy enough to set it up with another database backend such as MySQL: https://github.com/arachnys/cabot/issues/29#issuecomment-34172620
+
+See also [JensRantil's branch](https://github.com/JensRantil/cabot/commit/2a5f04849c10b58ca2424bc55d2b203c8d5627bb) which has provisioning setup for MySQL.
