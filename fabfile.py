@@ -15,9 +15,9 @@ LOG_DIR = '/var/log/cabot/'
 VENV_DIR = '%s/venv' % HOME_DIR
 BACKUP_DIR = '/tmp/'
 
-PG_DATABASE = 'index'
-PG_USERNAME = 'cabot'
-PG_PASSWORD = 'cabot'  # You should probably change this
+MY_DATABASE = 'cabot'
+MY_USERNAME = 'cabot'
+MY_PASSWORD = 'cabot'  # You should probably change this
 
 
 def _ensure_dirs():
@@ -153,18 +153,20 @@ def backup():
     """
     backup_file = 'outfile.sql.gz'
     with cd(BACKUP_DIR):
-        run('PGPASSWORD=cabot pg_dump -U cabot index | gzip > {}'.format(backup_file))
+        run('mysqldump -u root {0} | gzip > {1}'.format(MY_DATABASE, backup_file))
         get(backup_file, 'backups/%(basename)s')
 
 
 def create_database():
     """Creates role and database"""
     with settings(warn_only=True):
-        sudo(
-            'psql -c "CREATE USER %s WITH NOCREATEDB NOCREATEUSER ENCRYPTED PASSWORD E\'%s\'"' %
-            (PG_USERNAME, PG_PASSWORD), user='postgres')
-        sudo('psql -c "CREATE DATABASE %s WITH OWNER %s"' %
-             (PG_DATABASE, PG_USERNAME), user='postgres')
+        run(
+            'mysql -u root -e "CREATE USER %s@localhost IDENTIFIED BY \'%s\'"' %
+            (MY_USERNAME, MY_PASSWORD))
+        run('mysql -u root -e "CREATE DATABASE %s;"' %
+            (MY_DATABASE,))
+        run('mysql -u root -e "GRANT ALL PRIVILEGES ON `%s`.* TO `%s`@localhost"' %
+            (MY_DATABASE, MY_USERNAME))
 
 
 @parallel
