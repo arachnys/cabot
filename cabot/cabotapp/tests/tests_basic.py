@@ -12,6 +12,7 @@ from cabot.cabotapp.models import (
 from cabot.cabotapp.views import StatusCheckReportForm
 from mock import Mock, patch
 from twilio import rest
+from django.utils import timezone
 from django.core import mail
 from datetime import timedelta, date
 import json
@@ -143,6 +144,7 @@ class TestCheckRun(LocalTestCase):
         # Now two most recent are failing
         self.most_recent_result.succeeded = False
         self.most_recent_result.save()
+        self.graphite_check.last_run = timezone.now()
         self.graphite_check.save()
         self.assertEqual(self.graphite_check.calculated_status,
                          Service.CALCULATED_FAILING_STATUS)

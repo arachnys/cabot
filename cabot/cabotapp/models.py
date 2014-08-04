@@ -14,7 +14,6 @@ from .graphite import parse_metric
 from .tasks import update_service, update_instance
 from datetime import datetime, timedelta
 from django.utils import timezone
-from django.db import transaction
 
 import json
 import re
@@ -468,28 +467,13 @@ class StatusCheck(PolymorphicModel):
         raise NotImplementedError('Subclasses should implement')
 
     def save(self, *args, **kwargs):
-        if self.pk:
-            # This should not be necessary
-            with transaction.commit_manually():
-                try:
-                    recent_results = list(self.recent_results())
-                    if calculate_debounced_passing(recent_results, self.debounce):
-                        self.calculated_status = Service.CALCULATED_PASSING_STATUS
-                    else:
-                        self.calculated_status = Service.CALCULATED_FAILING_STATUS
-                    self.cached_health = serialize_recent_results(recent_results)
-                    transaction.commit()
-                except SoftTimeLimitExceeded as e:
-                    # Something weird with postgres
-                    transaction.rollback()
-                    logger.error('Celery time limit exceeded for getting results for %s' % self.pk)
-                    self.calculated_status = Service.CALCULATED_FAILING_STATUS
-                    self.cached_health = '-1'
-                except Exception as e:
-                    transaction.rollback()
-                    logger.error('Got exception when saving check: %s' % e)
-                    self.calculated_status = Service.CALCULATED_FAILING_STATUS
-                    self.cached_health = '-1'
+        if self.last_run:
+            recent_results = list(self.recent_results())
+            if calculate_debounced_passing(recent_results, self.debounce):
+                self.calculated_status = Service.CALCULATED_PASSING_STATUS
+            else:
+                self.calculated_status = Service.CALCULATED_FAILING_STATUS
+            self.cached_health = serialize_recent_results(recent_results)
             try:
                 updated = StatusCheck.objects.get(pk=self.pk)
             except StatusCheck.DoesNotExist as e:
