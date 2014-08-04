@@ -1,0 +1,43 @@
+
+<table class="table bootstrap-datatable datatable">
+      <thead>
+        <tr>
+{% if not instances %}
+        <div class="col-xs-11 col-xs-offset-1">
+        <hr></hr>
+            No instances configured
+        </div>
+        </tr>
+{% else %}
+          <th>Name</th>
+          <th>Overall</th>
+          <th>Active checks</th>
+          <th>Disabled checks</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for instance in instances %}
+        <tr class="enabled">
+          <td>
+            <a href="{% url "instance" pk=instance.id %}" title="Alerts {% if instance.alerts_enabled %}enabled{% else %}disabled{% endif %}">{{instance.name}} </a>
+          </td>
+          <td>
+            <span class="label label-{% if instance.overall_status == instance.PASSING_STATUS %}success{% else %}danger{% endif %}">{{ instance.overall_status|lower|capfirst }}</span>
+          </td>
+          <td>
+            <span class="label label-{% if instance.active_status_checks.all.count > 0 %}{% if instance.overall_status != instance.PASSING_STATUS %}danger{% else %}success{% endif %}{% else %}default{% endif %}">{{ instance.active_status_checks.all.count }}</span>
+          </td>
+          <td>
+            <span class="label label-{% if instance.inactive_status_checks.all.count > 0 %}warning{% else %}default{% endif %}">{{ instance.inactive_status_checks.all.count }}</span>
+          </td>
+          <td class="text-right">
+            <a class="btn btn-xs" href="{% url "update-instance" pk=instance.id %}" role="button">
+              <i class="glyphicon glyphicon-edit"></i>
+            </a>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+{% endif %}
+    </table>

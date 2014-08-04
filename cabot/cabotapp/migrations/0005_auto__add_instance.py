@@ -8,13 +8,60 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding index on 'StatusCheckResult', fields ['time']
-        db.create_index('cabotapp_statuscheckresult', ['time'])
+        # Adding model 'Instance'
+        db.create_table('cabotapp_instance', (
+            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('name', self.gf('django.db.models.fields.TextField')()),
+            ('last_alert_sent', self.gf('django.db.models.fields.DateTimeField')(null=True, blank=True)),
+            ('email_alert', self.gf('django.db.models.fields.BooleanField')(default=False)),
+            ('hipchat_alert', self.gf('django.db.models.fields.BooleanField')(default=True)),
+            ('sms_alert', self.gf('django.db.models.fields.BooleanField')(default=False)),
+            ('telephone_alert', self.gf('django.db.models.fields.BooleanField')(default=False)),
+            ('alerts_enabled', self.gf('django.db.models.fields.BooleanField')(default=True)),
+            ('overall_status', self.gf('django.db.models.fields.TextField')(default='PASSING')),
+            ('old_overall_status', self.gf('django.db.models.fields.TextField')(default='PASSING')),
+            ('hackpad_id', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
+            ('address', self.gf('django.db.models.fields.TextField')(blank=True)),
+        ))
+        db.send_create_signal('cabotapp', ['Instance'])
+
+        # Adding M2M table for field users_to_notify on 'Instance'
+        db.create_table('cabotapp_instance_users_to_notify', (
+            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
+            ('instance', models.ForeignKey(orm['cabotapp.instance'], null=False)),
+            ('user', models.ForeignKey(orm['auth.user'], null=False))
+        ))
+        db.create_unique('cabotapp_instance_users_to_notify', ['instance_id', 'user_id'])
+
+        # Adding M2M table for field status_checks on 'Instance'
+        db.create_table('cabotapp_instance_status_checks', (
+            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
+            ('instance', models.ForeignKey(orm['cabotapp.instance'], null=False)),
+            ('statuscheck', models.ForeignKey(orm['cabotapp.statuscheck'], null=False))
+        ))
+        db.create_unique('cabotapp_instance_status_checks', ['instance_id', 'statuscheck_id'])
+
+        # Adding M2M table for field instances on 'Service'
+        db.create_table('cabotapp_service_instances', (
+            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
+            ('service', models.ForeignKey(orm['cabotapp.service'], null=False)),
+            ('instance', models.ForeignKey(orm['cabotapp.instance'], null=False))
+        ))
+        db.create_unique('cabotapp_service_instances', ['service_id', 'instance_id'])
 
 
     def backwards(self, orm):
-        # Removing index on 'StatusCheckResult', fields ['time']
-        db.delete_index('cabotapp_statuscheckresult', ['time'])
+        # Deleting model 'Instance'
+        db.delete_table('cabotapp_instance')
+
+        # Removing M2M table for field users_to_notify on 'Instance'
+        db.delete_table('cabotapp_instance_users_to_notify')
+
+        # Removing M2M table for field status_checks on 'Instance'
+        db.delete_table('cabotapp_instance_status_checks')
+
+        # Removing M2M table for field instances on 'Service'
+        db.delete_table('cabotapp_service_instances')
 
 
     models = {
@@ -47,6 +94,23 @@ class Migration(SchemaMigration):
             'user_permissions': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['auth.Permission']", 'symmetrical': 'False', 'blank': 'True'}),
             'username': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '30'})
         },
+        'cabotapp.instance': {
+            'Meta': {'ordering': "['name']", 'object_name': 'Instance'},
+            'address': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
+            'alerts_enabled': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
+            'email_alert': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'hackpad_id': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
+            'hipchat_alert': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'last_alert_sent': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
+            'name': ('django.db.models.fields.TextField', [], {}),
+            'old_overall_status': ('django.db.models.fields.TextField', [], {'default': "'PASSING'"}),
+            'overall_status': ('django.db.models.fields.TextField', [], {'default': "'PASSING'"}),
+            'sms_alert': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'status_checks': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['cabotapp.StatusCheck']", 'symmetrical': 'False', 'blank': 'True'}),
+            'telephone_alert': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'users_to_notify': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['auth.User']", 'symmetrical': 'False', 'blank': 'True'})
+        },
         'cabotapp.service': {
             'Meta': {'ordering': "['name']", 'object_name': 'Service'},
             'alerts_enabled': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
@@ -54,6 +118,7 @@ class Migration(SchemaMigration):
             'hackpad_id': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'hipchat_alert': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'instances': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['cabotapp.Instance']", 'symmetrical': 'False', 'blank': 'True'}),
             'last_alert_sent': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
             'name': ('django.db.models.fields.TextField', [], {}),
             'old_overall_status': ('django.db.models.fields.TextField', [], {'default': "'PASSING'"}),
