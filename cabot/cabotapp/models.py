@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 from polymorphic import PolymorphicModel
 from django.db.models import F
 from django.core.urlresolvers import reverse
-from django.contrib.admin.models import User
+from django.contrib.auth.models import User
 from celery.exceptions import SoftTimeLimitExceeded
 
 from .jenkins import get_job_status

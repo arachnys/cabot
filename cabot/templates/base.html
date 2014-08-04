@@ -32,7 +32,7 @@
   <div class="navbar navbar-default navbar-fixed-top">
     <div class="container">
       <div class="navbar-header">
-        <a href="{% url services %}" class="navbar-brand"><img src="{{ STATIC_URL }}arachnys/img/icon_48x48.png" width='20' height='20' /> Cabot by Arachnys</a>
+        <a href="{% url "services" %}" class="navbar-brand"><img src="{{ STATIC_URL }}arachnys/img/icon_48x48.png" width='20' height='20' /> Cabot by Arachnys</a>
         <button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#navbar-main">
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
@@ -42,36 +42,36 @@
       <div class="navbar-collapse collapse" id="navbar-main">
         <ul class="nav navbar-nav">
           <li>
-            <a href="{% url instances %}"><i class="fa fa-desktop"></i> Instances</a>
+            <a href="{% url "instances" %}"><i class="fa fa-desktop"></i> Instances</a>
           </li>
           <li>
-            <a href="{% url services %}"><i class="fa fa-gears"></i> Services</a>
+            <a href="{% url "services" %}"><i class="fa fa-gears"></i> Services</a>
           </li>
           <li>
-            <a href="{% url checks %}"><i class="fa fa-cog"></i> Checks</a>
+            <a href="{% url "checks" %}"><i class="fa fa-cog"></i> Checks</a>
           </li>
           <ul class="nav navbar-nav navbar-left">
             <li class="dropdown">
               <a class="dropdown-toggle" data-toggle="dropdown" href="#" id="download">New <span class="caret"></span></a>
               <ul class="dropdown-menu" aria-labelledby="New">
                 <li>
-                  <a href="{% url create-service %}"><i class="fa fa-gears"></i> Service</a>
+                  <a href="{% url "create-service" %}"><i class="fa fa-gears"></i> Service</a>
                 </li>
                 <li>
-                  <a href="{% url create-instance %}"><i class="fa fa-desktop"></i> Instance</a>
+                  <a href="{% url "create-instance" %}"><i class="fa fa-desktop"></i> Instance</a>
                 </li>
                 <li class="divider"></li>
                 <li>
-                  <a href="{% url create-check %}?service={{ service.id }}&instance={{ instance.id }}" class=""><i class="glyphicon glyphicon-signal" title="Add new metric check"></i> Graphite check</a>
+                  <a href="{% url "create-check" %}?service={{ service.id }}&instance={{ instance.id }}" class=""><i class="glyphicon glyphicon-signal" title="Add new metric check"></i> Graphite check</a>
                 </li>
                 <li>
-                  <a href="{% url create-http-check %}?service={{ service.id }}&instance={{ instance.id }}" class="" title="Add new Http check"><i class="glyphicon glyphicon-arrow-up"></i> Http check</a>
+                  <a href="{% url "create-http-check" %}?service={{ service.id }}&instance={{ instance.id }}" class="" title="Add new Http check"><i class="glyphicon glyphicon-arrow-up"></i> Http check</a>
                 </li>
                 <li>
-                  <a href="{% url create-jenkins-check %}?service={{ service.id }}&instance={{ instance.id }}" class="" title="Add new Jenkins check"><i class="glyphicon glyphicon-ok"></i> Jenkins check</a>
+                  <a href="{% url "create-jenkins-check" %}?service={{ service.id }}&instance={{ instance.id }}" class="" title="Add new Jenkins check"><i class="glyphicon glyphicon-ok"></i> Jenkins check</a>
                 </li>
                 <li>
-                  <a href="{% url create-icmp-check %}?service={{ service.id }}&instance={{ instance.id }}" class="" title="Add new ICMP check"><i class="glyphicon glyphicon-transfer"></i> ICMP check</a>
+                  <a href="{% url "create-icmp-check" %}?service={{ service.id }}&instance={{ instance.id }}" class="" title="Add new ICMP check"><i class="glyphicon glyphicon-transfer"></i> ICMP check</a>
                 </li>
               </ul>
             </li>
@@ -79,10 +79,10 @@
         </ul>
         <ul class="nav navbar-nav navbar-right">
           <li>
-            <a href="{% url subscriptions %}"><i class="fa fa-table"></i> Alert subscriptions</a>
+            <a href="{% url "subscriptions" %}"><i class="fa fa-table"></i> Alert subscriptions</a>
           </li>
           <li>
-            <a href="{% url shifts %}"><i class="glyphicon glyphicon-time"></i> Duty rota</a>
+            <a href="{% url "shifts" %}"><i class="glyphicon glyphicon-time"></i> Duty rota</a>
           </li>
           {% if user.is_authenticated %}
           <li class="dropdown">

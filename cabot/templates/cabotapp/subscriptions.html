@@ -29,7 +29,7 @@
             </span>
             {% endif %}
             {% endif %}
-            <a href="{% url user-profile pk=user.id %}" class="btn btn-xs">
+            <a href="{% url "user-profile" pk=user.id %}" class="btn btn-xs">
               <i class="glyphicon glyphicon-edit"></i>
             </a>
           </th>
@@ -40,7 +40,7 @@
       {% for service in services %}
         <tr class="{% if service.alerts_enabled %}enabled{% else %}warning{% endif %}" >
           <td title="{{ check.description }}">
-            <a href="{% url update-service pk=service.id %}">{{service.name}}</a>
+            <a href="{% url "update-service" pk=service.id %}">{{service.name}}</a>
             {% if service.email_alert %}<span class="label label-{% if service.alerts_enabled %}success{% else %}warning{% endif %}">email</span>{% endif %}
             {% if service.hipchat_alert %}<span class="label label-{% if service.alerts_enabled %}success{% else %}warning{% endif %}">hipchat</span>{% endif %}
             {% if service.sms_alert %}<span class="label label-{% if service.alerts_enabled %}success{% else %}warning{% endif %}">sms</span>{% endif %}

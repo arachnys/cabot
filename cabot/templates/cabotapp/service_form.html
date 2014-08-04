@@ -14,11 +14,11 @@
     <div class="form-group">
       <div class="col-xs-6 col-xs-offset-2">
         <button type="submit" class="btn btn-primary">Submit</button>
-        <a href="{% url dashboard %}" class="btn">Back to dashboard</a>
+        <a href="{% url "dashboard" %}" class="btn">Back to dashboard</a>
       </div>
       {% if form.instance.id %}
       <div class="col-xs-4">
-        <a class="btn btn-danger" href="{% url delete-service form.instance.id %}">Delete service</a>
+        <a class="btn btn-danger" href="{% url "delete-service" form.instance.id %}">Delete service</a>
       </div>
       {% endif %}
     </div>
