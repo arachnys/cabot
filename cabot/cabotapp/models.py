@@ -493,10 +493,9 @@ class StatusCheck(PolymorphicModel):
         new_check.id = None
         new_check.save()
         if inst_set is not None:
-            new_check.instance_set = inst_set
+            new_check.instance_set.add(*inst_set)
         if serv_set is not None:
-            new_check.service_set = serv_set
-        new_check.save()
+            new_check.service_set.add(*serv_set)
         return new_check.pk
 
     def update_related_services(self):
