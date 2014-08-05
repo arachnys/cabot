@@ -31,11 +31,11 @@ If you're on OSX there's a [guide to how to set up your development environment 
 
 ### Running tests
 
-    $ foreman run python manage.py test cabotapp
+    $ foreman run python manage.py test cabot
 
 Test coverage is currently pretty poor so any contributions are welcome.
 
-Tests can be found in `app/cabotapp/tests/`. Currently using `Mock` for mocking out external calls.
+Tests can be found in `cabot/cabotapp/tests/`. Currently using `Mock` for mocking out external calls.
 
 ### Requirements
 
