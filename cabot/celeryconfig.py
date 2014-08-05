@@ -19,7 +19,7 @@ CELERYBEAT_SCHEDULE = {
         'schedule': timedelta(seconds=1800),
     },
     'clean-db': {
-        'task': 'app.cabotapp.tasks.clean_db',
+        'task': 'cabot.cabotapp.tasks.clean_db',
         'schedule': timedelta(seconds=60*60*24),
     },
 }
