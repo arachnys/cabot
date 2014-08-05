@@ -487,7 +487,7 @@ class StatusCheck(PolymorphicModel):
         self.update_related_instances()
         return ret
 
-    def duplicate(self, inst_set=None, serv_set=None):
+    def duplicate(self, inst_set=(), serv_set=()):
         new_check = self
         new_check.pk = None
         new_check.id = None
