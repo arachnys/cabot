@@ -86,10 +86,10 @@ urlpatterns = patterns('',
 
                        url(r'^graphitecheck/create/',
                            view=GraphiteCheckCreateView.as_view(
-                           ), name='create-check'),
+                           ), name='create-graphite-check'),
                        url(r'^graphitecheck/update/(?P<pk>\d+)/',
                            view=GraphiteCheckUpdateView.as_view(
-                           ), name='update-check'),
+                           ), name='update-graphite-check'),
                        url(r'^graphitecheck/duplicate/(?P<pk>\d+)/',
                            view=duplicate_graphite_check, name='duplicate-graphite-check'),
 
