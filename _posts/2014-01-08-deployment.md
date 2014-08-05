@@ -16,6 +16,19 @@ For example, if you host the majority of your infrastructure on AWS it might be 
 
 A guide to getting started on DigitalOcean using the `tugboat` CLI is included in this documentation.
 
+### Upgrading
+
+Upgrading to a new version should be as simple as merging in changes from upstream and deploying over the top of your existing install.
+
+The only major gotcha is for those upgrading from any version pre [3872565](https://github.com/arachnys/cabot/commit/38725651445df61eda06b86a6933317153088e4b) to any later version.
+
+Because that commit changed the paths of the celery workers, they will not be shut down properly by new deploys. The best way of upgrading in this case is to:
+
+*   Stop Cabot (`sudo service cabot stop`) - should stop all "old" workers
+*   Deploy (which will start new workers)
+
+If you deploy without stopping the old workers first you may need to kill the old ones by hand. (You'll be able to see them by running `ps aux | grep app.cabotapp`)
+
 ### Failover and redundancy
 
 Currently Cabot only supports a single telephone provider for alerts, making Cabot dependent on connecting to Twilio's servers and on those servers working correctly whenever Cabot tries to send an SMS or phone alert.
