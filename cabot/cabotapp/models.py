@@ -262,7 +262,7 @@ class Instance(CheckGroupMixin):
         new_instance.save()
 
         for check in checks:
-            check.duplicate(inst_set=[new_instance], serv_set=())
+            check.duplicate(inst_set=(new_instance,), serv_set=())
 
         return new_instance.pk
 
@@ -491,10 +491,11 @@ class StatusCheck(PolymorphicModel):
         new_check = self
         new_check.pk = None
         new_check.id = None
+        new_check.last_run = None
         new_check.save()
-        if inst_set is not None:
+        if inst_set:
             new_check.instance_set.add(*inst_set)
-        if serv_set is not None:
+        if serv_set:
             new_check.service_set.add(*serv_set)
         return new_check.pk
 

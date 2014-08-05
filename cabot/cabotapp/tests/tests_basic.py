@@ -266,6 +266,22 @@ class TestCheckRun(LocalTestCase):
                          Service.CALCULATED_FAILING_STATUS)
 
 
+class TestInstances(LocalTestCase):
+
+    def test_duplicate_instance(self):
+        instances = Instance.objects.all()
+        self.assertEqual(len(instances), 0)
+        self.instance = Instance.objects.create(
+            name='Hello',
+            address='192.168.0.1',
+        )
+        self.instance.duplicate()
+        instances = Instance.objects.all()
+        self.assertEqual(len(instances), 2)
+        new = instances.filter(name__icontains='Copy of')[0]
+        self.assertEqual(new.name, 'Copy of Hello')
+
+
 class TestWebInterface(LocalTestCase):
 
     def setUp(self):
