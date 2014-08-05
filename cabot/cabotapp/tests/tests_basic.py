@@ -275,11 +275,19 @@ class TestInstances(LocalTestCase):
             name='Hello',
             address='192.168.0.1',
         )
+        pingcheck = ICMPStatusCheck.objects.create(
+            name='Hello check',
+        )
+        self.instance.status_checks.add(pingcheck)
         self.instance.duplicate()
         instances = Instance.objects.all()
         self.assertEqual(len(instances), 2)
         new = instances.filter(name__icontains='Copy of')[0]
         self.assertEqual(new.name, 'Copy of Hello')
+        old = instances.exclude(name__icontains='Copy of')[0]
+        self.assertEqual(len(new.status_checks.all()), 1)
+        self.assertEqual(len(old.status_checks.all()), 1)
+        self.assertNotEqual(new.status_checks.all()[0], old.status_checks.all()[0])
 
 
 class TestWebInterface(LocalTestCase):
@@ -358,3 +366,4 @@ class TestWebInterface(LocalTestCase):
         check = checks[0]
         self.assertEqual(len(check.problems), 1)
         self.assertEqual(check.success_rate, 50)
+

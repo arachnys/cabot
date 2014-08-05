@@ -257,7 +257,7 @@ class Instance(CheckGroupMixin):
         new_instance = self
         new_instance.pk = None
         new_instance.id = None
-        new_instance.name = "Copy of %s" % self.name
+        new_instance.name = u"Copy of %s" % self.name
 
         new_instance.save()
 
@@ -493,10 +493,8 @@ class StatusCheck(PolymorphicModel):
         new_check.id = None
         new_check.last_run = None
         new_check.save()
-        if inst_set:
-            new_check.instance_set.add(*inst_set)
-        if serv_set:
-            new_check.service_set.add(*serv_set)
+        for linked in list(inst_set) + list(serv_set):
+            linked.status_checks.add(new_check)
         return new_check.pk
 
     def update_related_services(self):
