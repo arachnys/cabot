@@ -1,31 +1,33 @@
 # -*- coding: utf-8 -*-
-import datetime
 from south.db import db
 from south.v2 import SchemaMigration
-from django.db import models
 
 
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding model 'InstanceStatusSnapshot'
-        db.create_table('cabotapp_instancestatussnapshot', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('instance', self.gf('django.db.models.fields.related.ForeignKey')(related_name='snapshots', to=orm['cabotapp.Instance'])),
-            ('time', self.gf('django.db.models.fields.DateTimeField')(db_index=True)),
-            ('num_checks_active', self.gf('django.db.models.fields.IntegerField')(default=0)),
-            ('num_checks_passing', self.gf('django.db.models.fields.IntegerField')(default=0)),
-            ('num_checks_failing', self.gf('django.db.models.fields.IntegerField')(default=0)),
-            ('overall_status', self.gf('django.db.models.fields.TextField')(default='PASSING')),
-            ('did_send_alert', self.gf('django.db.models.fields.IntegerField')(default=False)),
-        ))
-        db.send_create_signal('cabotapp', ['InstanceStatusSnapshot'])
+        # Adding field 'UserProfile.slack_alias'
+        db.add_column('cabotapp_userprofile', 'slack_alias',
+                self.gf('django.db.models.fields.CharField')(default='', max_length=50, blank=True),
+                keep_default=False)
+
+        # Adding field 'Service.slack_alert'
+        db.add_column('cabotapp_service', 'slack_alert',
+                self.gf('django.db.models.fields.BooleanField')(default=True),
+                keep_default=False)
+
+        # Adding field 'Service.slack_alert'
+        db.add_column('cabotapp_instance', 'slack_alert',
+                self.gf('django.db.models.fields.BooleanField')(default=True),
+                keep_default=False)
 
 
     def backwards(self, orm):
-        # Deleting model 'InstanceStatusSnapshot'
-        db.delete_table('cabotapp_instancestatussnapshot')
+        # Deleting field 'UserProfile.slack_alias'
+        db.delete_column('cabotapp_userprofile', 'slack_alias')
 
+        # Deleting field 'Service.slack_alert'
+        db.delete_column('cabotapp_service', 'slack_alert')
 
     models = {
         'auth.group': {
@@ -69,6 +71,7 @@ class Migration(SchemaMigration):
             'name': ('django.db.models.fields.TextField', [], {}),
             'old_overall_status': ('django.db.models.fields.TextField', [], {'default': "'PASSING'"}),
             'overall_status': ('django.db.models.fields.TextField', [], {'default': "'PASSING'"}),
+            'slack_alert': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'sms_alert': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'status_checks': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['cabotapp.StatusCheck']", 'symmetrical': 'False', 'blank': 'True'}),
             'telephone_alert': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
@@ -97,6 +100,7 @@ class Migration(SchemaMigration):
             'name': ('django.db.models.fields.TextField', [], {}),
             'old_overall_status': ('django.db.models.fields.TextField', [], {'default': "'PASSING'"}),
             'overall_status': ('django.db.models.fields.TextField', [], {'default': "'PASSING'"}),
+            'slack_alert': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'sms_alert': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'status_checks': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['cabotapp.StatusCheck']", 'symmetrical': 'False', 'blank': 'True'}),
             'telephone_alert': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
@@ -163,9 +167,9 @@ class Migration(SchemaMigration):
             'Meta': {'object_name': 'UserProfile'},
             'fallback_alert_user': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'hipchat_alias': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '50', 'blank': 'True'}),
-            'slack_alias': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '50', 'blank': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'mobile_number': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '20', 'blank': 'True'}),
+            'slack_alias': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '50', 'blank': 'True'}),
             'user': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'profile'", 'unique': 'True', 'to': "orm['auth.User']"})
         },
         'contenttypes.contenttype': {
