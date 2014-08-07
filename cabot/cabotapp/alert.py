@@ -106,7 +106,8 @@ def _send_chat_alert(chat_type, message, color='green', sender='Cabot'):
     if chat_type == 'hipchat':
         _send_hipchat_alert(message, color, sender)
     else:
-        _send_slack_alert(message, color, sender)
+        icon_url = settings.SLACK_ICON_URL
+        _send_slack_alert(message, icon_url, sender)
 
 
 def _send_hipchat_alert(message, color='green', sender='Cabot'):
@@ -123,15 +124,16 @@ def _send_hipchat_alert(message, color='green', sender='Cabot'):
     })
 
 
-def _send_slack_alert(message, color='green', sender='Cabot'):
+def _send_slack_alert(message, icon_url, sender='Cabot'):
     room = settings.SLACK_ALERT_ROOM
     api_key = settings.SLACK_API_KEY
-    url = settings.SLACK_URL % settings.SLACK_COMPANY_NAME
+    url = settings.SLACK_URL
     logger.info('%s?token=%s' % (url, api_key))
-    requests.post('%s?token=%s' % (url, api_key), data=json.dumps({
+    resp = requests.post('%s?token=%s' % (url, api_key), data=json.dumps({
         'channel': room,
         'username': sender,
-        'text': message
+        'text': message,
+        'icon_url': icon_url
     }))
 
 
