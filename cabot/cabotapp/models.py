@@ -116,6 +116,7 @@ class CheckGroupMixin(models.Model):
     )
     email_alert = models.BooleanField(default=False)
     hipchat_alert = models.BooleanField(default=True)
+    slack_alert = models.BooleanField(default=True)
     sms_alert = models.BooleanField(default=False)
     telephone_alert = models.BooleanField(
         default=False,
@@ -777,6 +778,7 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, related_name='profile')
     mobile_number = models.CharField(max_length=20, blank=True, default='')
     hipchat_alias = models.CharField(max_length=50, blank=True, default='')
+    slack_alias = models.CharField(max_length=50, blank=True, default='')
     fallback_alert_user = models.BooleanField(default=False)
 
     def __unicode__(self):

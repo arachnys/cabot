@@ -310,6 +310,7 @@ class ServiceForm(forms.ModelForm):
             'instances',
             'email_alert',
             'hipchat_alert',
+            'slack_alert',
             'sms_alert',
             'telephone_alert',
             'alerts_enabled',

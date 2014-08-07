@@ -1,4 +1,4 @@
-from os import environ as env
+import json
 
 from django.conf import settings
 from django.core.mail import send_mail
@@ -23,7 +23,7 @@ Passing checks:{% for check in service.all_passing_checks %}
 {% endif %}
 """
 
-hipchat_template = "Service {{ service.name }} {% if service.overall_status == service.PASSING_STATUS %}is back to normal{% else %}reporting {{ service.overall_status }} status{% endif %}: {{ scheme }}://{{ host }}{% url 'service' pk=service.id %}. {% if service.overall_status != service.PASSING_STATUS %}Checks failing:{% for check in service.all_failing_checks %} {{ check.name }}{% if check.last_result.error %} ({{ check.last_result.error|safe }}){% endif %}{% endfor %}{% endif %}{% if alert %}{% for alias in users %} @{{ alias }}{% endfor %}{% endif %}"
+chat_template = "Service {{ service.name }} {% if service.overall_status == service.PASSING_STATUS %}is back to normal{% else %}reporting {{ service.overall_status }} status{% endif %}: {{ scheme }}://{{ host }}{% url 'service' pk=service.id %}. {% if service.overall_status != service.PASSING_STATUS %}Checks failing:{% for check in service.all_failing_checks %} {{ check.name }}{% if check.last_result.error %} ({{ check.last_result.error|safe }}){% endif %}{% endfor %}{% endif %}{% if alert %}{% for alias in users %} @{{ alias }}{% endfor %}{% endif %}"
 
 sms_template = "Service {{ service.name }} {% if service.overall_status == service.PASSING_STATUS %}is back to normal{% else %}reporting {{ service.overall_status }} status{% endif %}: {{ scheme }}://{{ host }}{% url 'service' pk=service.id %}"
 
@@ -35,7 +35,9 @@ def send_alert(service, duty_officers=None):
     if service.email_alert:
         send_email_alert(service, users, duty_officers)
     if service.hipchat_alert:
-        send_hipchat_alert(service, users, duty_officers)
+        send_chat_alert('hipchat', service, users, duty_officers)
+    if service.slack_alert:
+        send_chat_alert('slack', service, users, duty_officers)
     if service.sms_alert:
         send_sms_alert(service, users, duty_officers)
     if service.telephone_alert:
@@ -67,10 +69,12 @@ def send_email_alert(service, users, duty_officers):
     )
 
 
-def send_hipchat_alert(service, users, duty_officers):
+def send_chat_alert(chat_type, service, users, duty_officers):
     alert = True
-    hipchat_aliases = [u.profile.hipchat_alias for u in users if hasattr(
-        u, 'profile') and u.profile.hipchat_alias]
+    aliases = [
+        getattr(u.profile, '%s_alias' % chat_type) for u in users
+        if hasattr(u, 'profile') and hasattr(u.profile, '%s_alias' % chat_type)
+    ]
     if service.overall_status == service.WARNING_STATUS:
         alert = False  # Don't alert at all for WARNING
     if service.overall_status == service.ERROR_STATUS:
@@ -83,24 +87,33 @@ def send_hipchat_alert(service, users, duty_officers):
     else:
         color = 'red'
         if service.overall_status == service.CRITICAL_STATUS:
-            hipchat_aliases += [u.profile.hipchat_alias for u in duty_officers if hasattr(
-                u, 'profile') and u.profile.hipchat_alias]
+            aliases += [
+                getattr(u.profile, '%s_alias' % chat_type) for u in duty_officers
+                if hasattr(u, 'profile') and hasattr(u.profile, '%s_alias' % chat_type)
+            ]
     c = Context({
         'service': service,
-        'users': hipchat_aliases,
+        'users': aliases,
         'host': settings.WWW_HTTP_HOST,
         'scheme': settings.WWW_SCHEME,
         'alert': alert,
     })
-    message = Template(hipchat_template).render(c)
-    _send_hipchat_alert(message, color=color, sender='Cabot/%s' % service.name)
+    message = Template(chat_template).render(c)
+    _send_chat_alert(chat_type, message, color=color, sender='Cabot/%s' % service.name)
+
+
+def _send_chat_alert(chat_type, message, color='green', sender='Cabot'):
+    if chat_type == 'hipchat':
+        _send_hipchat_alert(message, color, sender)
+    else:
+        _send_slack_alert(message, color, sender)
 
 
 def _send_hipchat_alert(message, color='green', sender='Cabot'):
     room = settings.HIPCHAT_ALERT_ROOM
     api_key = settings.HIPCHAT_API_KEY
     url = settings.HIPCHAT_URL
-    resp = requests.post(url + '?auth_token=' + api_key, data={
+    requests.post(url + '?auth_token=' + api_key, data={
         'room_id': room,
         'from': sender[:15],
         'message': message,
@@ -108,6 +121,18 @@ def _send_hipchat_alert(message, color='green', sender='Cabot'):
         'color': color,
         'message_format': 'text',
     })
+
+
+def _send_slack_alert(message, color='green', sender='Cabot'):
+    room = settings.SLACK_ALERT_ROOM
+    api_key = settings.SLACK_API_KEY
+    url = settings.SLACK_URL % settings.SLACK_COMPANY_NAME
+    logger.info('%s?token=%s' % (url, api_key))
+    requests.post('%s?token=%s' % (url, api_key), data=json.dumps({
+        'channel': room,
+        'username': sender,
+        'text': message
+    }))
 
 
 def send_sms_alert(service, users, duty_officers):
