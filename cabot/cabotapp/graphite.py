@@ -1,5 +1,3 @@
-from os import environ as env
-
 from django.conf import settings
 import requests
 import logging
@@ -7,6 +5,7 @@ import logging
 graphite_api = settings.GRAPHITE_API
 user = settings.GRAPHITE_USER
 password = settings.GRAPHITE_PASS
+graphite_from = settings.GRAPHITE_FROM
 auth = (user, password)
 
 
@@ -16,7 +15,7 @@ def get_data(target_pattern):
         params={
             'target': target_pattern,
             'format': 'json',
-            'from': '-10min'
+            'from': graphite_from
         }
     )
     resp.raise_for_status()
@@ -42,7 +41,6 @@ def get_matching_metrics(pattern):
 def get_all_metrics(limit=None):
     """Grabs all metrics by navigating find API recursively"""
     metrics = []
-    count = 0
 
     def get_leafs_of_node(nodepath):
         for obj in get_matching_metrics(nodepath)['metrics']:
