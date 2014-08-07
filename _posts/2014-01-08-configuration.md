@@ -47,6 +47,8 @@ These settings are required for [Graphite checks](graphite-checks.html).
 *   `GRAPHITE_USER`
 *   `GRAPHITE_PASS`
     *   username and password (basic auth) for Graphite server
+*   `GRAPHITE_FROM`
+    *   Cabot by default set [this parameter](http://graphite.readthedocs.org/en/latest/render_api.html?highlight=minute%20hour#from-until) to `-10min` but if you want to set another time horizon you can put it here using the naming defined by Graphite.
 
 #### [Jenkins](jenkins-checks.html) integration
 
