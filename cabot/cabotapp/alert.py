@@ -1,3 +1,4 @@
+
 import json
 
 from django.conf import settings
@@ -129,7 +130,7 @@ def _send_slack_alert(message, icon_url, sender='Cabot'):
     api_key = settings.SLACK_API_KEY
     url = settings.SLACK_URL
     logger.info('%s?token=%s' % (url, api_key))
-    resp = requests.post('%s?token=%s' % (url, api_key), data=json.dumps({
+    requests.post('%s?token=%s' % (url, api_key), data=json.dumps({
         'channel': room,
         'username': sender,
         'text': message,
