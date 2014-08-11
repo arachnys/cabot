@@ -69,6 +69,21 @@ You must set these correctly if you want Cabot to be able to send alerts to your
 *   `HIPCHAT_API_KEY`
     *   write-only API key for Hipchat
 
+#### Slack [alerting](alerting.html)
+
+Important: You must integrate in your slack the [Incoming Webhooks](https://ticketea.slack.com/services/new/incoming-webhook) plugin to be able to send notifications.
+
+You must set these correctly if you want Cabot to be able to send alerts to your Slack room.
+
+*   `SLACK_URL`
+    * this is the slack url of you company pointing to incoming webhook, e.g.   `https://companyname.slack.com/services/hooks/incoming-webhook`
+*   `SLACK_ALERT_ROOM`
+    *   name of the slack room where you want to send the notifications, e.g. `#general`
+*   `SLACK_API_KEY`
+    *   API key for Slack
+*   `SLACK_ICON_URL`
+    *   icon url that is going to show as avatar for the Cabot notifications
+
 #### Twilio (SMS and phone [alerts](alerting.html)) integration
 
 These credentials are required for SMS and phone alerts.
