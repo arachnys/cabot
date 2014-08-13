@@ -433,11 +433,13 @@ class StatusCheck(PolymorphicModel):
         return self.name
 
     def recent_results(self):
-        return StatusCheckResult.objects.filter(check=self).order_by('-time_complete').defer('raw_data')[:10]
+        # Not great to use id but we are getting lockups, possibly because of something to do with index
+        # on time_complete
+        return StatusCheckResult.objects.filter(check=self).order_by('-id').defer('raw_data')[:10]
 
     def last_result(self):
         try:
-            return StatusCheckResult.objects.filter(check=self).order_by('-time_complete').defer('raw_data')[0]
+            return StatusCheckResult.objects.filter(check=self).order_by('-id').defer('raw_data')[0]
         except:
             return None
 

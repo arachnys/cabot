@@ -70,14 +70,6 @@ class LocalTestCase(TestCase):
 
         self.service.status_checks.add(
             self.graphite_check, self.jenkins_check, self.http_check)
-        # Passing is most recent
-        self.most_recent_result = StatusCheckResult(
-            check=self.graphite_check,
-            time=timezone.now() - timedelta(seconds=1),
-            time_complete=timezone.now(),
-            succeeded=True
-        )
-        self.most_recent_result.save()
         # failing is second most recent
         self.older_result = StatusCheckResult(
             check=self.graphite_check,
@@ -86,6 +78,14 @@ class LocalTestCase(TestCase):
             succeeded=False
         )
         self.older_result.save()
+        # Passing is most recent
+        self.most_recent_result = StatusCheckResult(
+            check=self.graphite_check,
+            time=timezone.now() - timedelta(seconds=1),
+            time_complete=timezone.now(),
+            succeeded=True
+        )
+        self.most_recent_result.save()
         self.graphite_check.save()  # Will recalculate status
 
 
