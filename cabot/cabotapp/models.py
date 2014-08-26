@@ -687,6 +687,7 @@ class JenkinsStatusCheck(StatusCheck):
         try:
             status = get_job_status(self.name)
             active = status['active']
+            result.job_number = status['job_number']
             if status['status_code'] == 404:
                 result.error = u'Job %s not found on Jenkins' % self.name
                 result.succeeded = False
@@ -743,6 +744,9 @@ class StatusCheckResult(models.Model):
     raw_data = models.TextField(null=True)
     succeeded = models.BooleanField(default=False)
     error = models.TextField(null=True)
+
+    # Jenkins specific
+    job_number = models.PositiveIntegerField(null=True)
 
     def __unicode__(self):
         return '%s: %s @%s' % (self.status, self.check.name, self.time)

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import requests
+from django.conf import settings
 from django.utils import timezone
 from django.core.urlresolvers import reverse
 from django.test import TestCase
@@ -12,15 +13,14 @@ from rest_framework.test import APITestCase
 from rest_framework.reverse import reverse as api_reverse
 from cabot.cabotapp.models import (
     GraphiteStatusCheck, JenkinsStatusCheck,
-    HttpStatusCheck, ICMPStatusCheck, Service, Instance, StatusCheckResult,
-    UserProfile)
+    HttpStatusCheck, ICMPStatusCheck, Service, Instance,
+    StatusCheckResult, UserProfile)
 from cabot.cabotapp.views import StatusCheckReportForm
 from cabot.cabotapp.alert import (send_hipchat_alert, send_alert)
 from mock import Mock, patch
 from twilio import rest
-from django.utils import timezone
 from django.core import mail
-from datetime import timedelta, date
+from datetime import timedelta, date, datetime
 import json
 import os
 import base64
