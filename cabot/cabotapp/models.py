@@ -742,6 +742,9 @@ class StatusCheckResult(models.Model):
     succeeded = models.BooleanField(default=False)
     error = models.TextField(null=True)
 
+    # Jenkins specific
+    job_number = models.PositiveIntegerField(null=True)
+
     def __unicode__(self):
         return '%s: %s @%s' % (self.status, self.check.name, self.time)
 
