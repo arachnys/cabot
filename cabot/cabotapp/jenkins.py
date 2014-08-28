@@ -22,6 +22,7 @@ def get_job_status(jobname):
     resp = requests.get(endpoint, auth=auth, verify=True)
     status = resp.json
     ret['status_code'] = resp.status_code
+    ret['job_number'] = status['lastBuild'].get('number', None)
     if status['color'].startswith('blue'):
         ret['active'] = True
         ret['succeeded'] = True

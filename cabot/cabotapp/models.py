@@ -685,6 +685,7 @@ class JenkinsStatusCheck(StatusCheck):
         try:
             status = get_job_status(self.name)
             active = status['active']
+            result.job_number = status['job_number']
             if status['status_code'] == 404:
                 result.error = u'Job %s not found on Jenkins' % self.name
                 result.succeeded = False
