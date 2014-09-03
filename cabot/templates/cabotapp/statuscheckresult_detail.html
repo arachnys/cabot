@@ -5,7 +5,7 @@
   <div class="col-xs-12">
     <div class="col-xs-1"><h2><i class="glyphicon glyphicon-{% if result.check.polymorphic_ctype.model == 'graphitestatuscheck' %}signal{% elif result.check.polymorphic_ctype.model == 'httpstatuscheck' %}arrow-up{% elif result.check.polymorphic_ctype.model == 'jenkinsstatuscheck' %}ok{% endif %}"></i></h2></div>
     <div class="col-xs-9">
-      <h2>Check result: <a href="{% url "check" result.check.id %}">{{ result.check.name }}</a></h2>
+      <h2>Check result: <a href="{% url check result.check.id %}">{{ result.check.name }}</a></h2>
     </div>
     <div class="col-xs-2 text-right"><h2><span class="label label-{% if result.succeeded %}success{% else %}danger{% endif %}">{{ result.status|capfirst }}</span></h2></div>
   </div>

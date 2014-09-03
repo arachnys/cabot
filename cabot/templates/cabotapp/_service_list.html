@@ -20,7 +20,7 @@
       {% for service in services %}
         <tr class="{% if service.alerts_enabled %}enabled{% else %}warning{% endif %}">
           <td>
-            <a href="{% url "service" pk=service.id %}" title="Alerts {% if service.alerts_enabled %}enabled{% else %}disabled{% endif %}">{{service.name}} </a>
+            <a href="{% url service pk=service.id %}" title="Alerts {% if service.alerts_enabled %}enabled{% else %}disabled{% endif %}">{{service.name}} </a>
           </td>
           <td>
             <span class="label label-{% if not service.alerts_enabled %}warning{% else %}{% if service.overall_status == service.PASSING_STATUS %}success{% else %}danger{% endif %}{% endif %}">{% if service.alerts_enabled %}{{ service.overall_status|lower|capfirst }}{% else %}Disabled{% endif %}</span>
@@ -32,7 +32,7 @@
             <span class="label label-{% if service.inactive_status_checks.all.count > 0 %}warning{% else %}default{% endif %}">{{ service.inactive_status_checks.all.count }}</span>
           </td>
           <td class="text-right">
-            <a class="btn btn-xs" href="{% url "update-service" pk=service.id %}" role="button">
+            <a class="btn btn-xs" href="{% url update-service pk=service.id %}" role="button">
               <i class="glyphicon glyphicon-edit"></i>
             </a>
           </td>
