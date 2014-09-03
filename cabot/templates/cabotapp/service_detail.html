@@ -9,7 +9,7 @@
     <div class="col-xs-1"><h2><i class="fa fa-gears"></i></h2></div>
     <div class="col-xs-5"><h2><span class="break"></span>{{ service.name }}</h2></div>
     <div class="col-xs-4 text-right"><h2><span class="label label-{% if service.overall_status == service.PASSING_STATUS %}success{% else %}danger{% endif %}">{{ service.overall_status|lower|capfirst }}</span> <span class="label label-{% if service.alerts_enabled %}success{% else %}warning{% endif %}">{% if service.alerts_enabled %}Alerts enabled{%else %}Alerts disabled{% endif %}</span></h2></div>
-    <div class="col-xs-2 text-right"><h2><a href="{% url "update-service" service.id %}"><i class="glyphicon glyphicon-edit"></i></a></h2></div>
+    <div class="col-xs-2 text-right"><h2><a href="{% url update-service service.id %}"><i class="glyphicon glyphicon-edit"></i></a></h2></div>
   </div>
 </div>
 <hr>
@@ -61,7 +61,7 @@
     <div class="col-xs-8"><h3>Instances</h3></div>
     <div class="col-xs-3 text-right">
      <h3>
-          <a href="{% url "create-instance" %}?service={{ service.id }}" class=""><i class="glyphicon glyphicon-plus" title="Add new instance for this service"></i><i class="fa fa-desktop" title=""></i></a>
+          <a href="{% url create-instance %}?service={{ service.id }}" class=""><i class="glyphicon glyphicon-plus" title="Add new instance for this service"></i><i class="fa fa-desktop" title=""></i></a>
      </h3>
     </div>
 {% include 'cabotapp/_instance_list.html' with instances=service.instances.all %}
@@ -88,7 +88,7 @@
       <h3>Status check report</h3>
     </div>
     <div class="col-xs-12">
-      <form action="{% url "checks-report" %}" method="get">
+      <form action="{% url checks-report %}" method="get">
         <div class="form-group">
           <div class="col-xs-12">
             {{ report_form.service }}

@@ -22,7 +22,7 @@
       {% for shift in shifts %}
         <tr>
           <td>
-            <a href="{% url "user-profile" pk=shift.user.id %}">{{ shift.user.username }}</a>
+            <a href="{% url user-profile pk=shift.user.id %}">{{ shift.user.username }}</a>
           </td>
           <td>
             {{ shift.start }} - {{ shift.end }}
