@@ -312,6 +312,7 @@ class ServiceForm(forms.ModelForm):
             'hipchat_alert',
             'sms_alert',
             'telephone_alert',
+            'script_alert',
             'alerts_enabled',
             'hackpad_id',
         )
