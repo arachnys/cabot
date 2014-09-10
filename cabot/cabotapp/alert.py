@@ -174,9 +174,11 @@ def send_script_alert(service):
     proc = subprocess.Popen(
         [settings.SCRIPT_PATH, json.dumps({
             'service': {
+                'id': service.id,
                 'name': service.name,
-                'overrall_status': service.PASSING_STATUS,
+                'overall_status': service.overall_status,
                 'all_failing_checks': [{
+                    'id': check.id,
                     'name': check.name,
                     'recent_results': [{
                         'succeeded': result.succeeded,
@@ -186,6 +188,7 @@ def send_script_alert(service):
                     'importance_display': check.get_importance_display()
                 } for check in service.all_failing_checks()],
                 'all_passing_checks': [{
+                    'id': check.id,
                     'name': check.name,
                     'recent_results': [{
                         'succeeded': result.succeeded,
