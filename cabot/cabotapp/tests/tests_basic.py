@@ -395,6 +395,6 @@ class TestAlerts(LocalTestCase):
 
         send_hipchat_alert(self.service, [self.user], [])
         self.assertEqual(mock_send.call_args[0][0],
-            'Service %s reporting ERROR status: %s://%s%s. Checks failing: <a href="%sjob/1/console">%s</a>  @%s' %
-            (self.service.name, settings.WWW_SCHEME, settings.WWW_HTTP_HOST, reverse('service', kwargs={'pk': self.service.id}),settings.JENKINS_API, self.jenkins_check.name, self.user.profile.hipchat_alias))
+            'Service %s reporting ERROR status: %s://%s%s. Checks failing: %s %sjob/%s/1/console  @%s' %
+            (self.service.name, settings.WWW_SCHEME, settings.WWW_HTTP_HOST, reverse('service', kwargs={'pk': self.service.id}), self.jenkins_check.name, settings.JENKINS_API, self.jenkins_check.name, self.user.profile.hipchat_alias))
 
