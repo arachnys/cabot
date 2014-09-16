@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import requests
+from django.conf import settings
 from django.utils import timezone
 from django.core.urlresolvers import reverse
 from django.test import TestCase
@@ -8,13 +9,13 @@ from django.contrib.auth.models import User
 from django.test.client import Client
 from cabot.cabotapp.models import (
     GraphiteStatusCheck, JenkinsStatusCheck,
-    HttpStatusCheck, ICMPStatusCheck, Service, Instance, StatusCheckResult)
+    HttpStatusCheck, ICMPStatusCheck, Service, Instance,
+    StatusCheckResult, UserProfile)
 from cabot.cabotapp.views import StatusCheckReportForm
 from mock import Mock, patch
 from twilio import rest
-from django.utils import timezone
 from django.core import mail
-from datetime import timedelta, date
+from datetime import timedelta, date, datetime
 import json
 import os
 
@@ -366,4 +367,34 @@ class TestWebInterface(LocalTestCase):
         check = checks[0]
         self.assertEqual(len(check.problems), 1)
         self.assertEqual(check.success_rate, 50)
+
+
+class TestAlerts(LocalTestCase):
+    @patch('cabot.cabotapp.alert._send_hipchat_alert')
+    def test_hipchat(self, mock_send):
+        profile = UserProfile(user=self.user, hipchat_alias='test')
+        profile.save()
+        from cabot.cabotapp.alert import send_hipchat_alert
+
+        send_hipchat_alert(self.service, [self.user], [])
+        self.assertEqual(mock_send.call_args[0][0],
+            'Service %s is back to normal: %s://%s%s.  @%s' % (self.service.name, settings.WWW_SCHEME, settings.WWW_HTTP_HOST, reverse('service', kwargs={'pk': self.service.id}), self.user.profile.hipchat_alias))
+
+        jenkins_failed = StatusCheckResult(
+            check=self.jenkins_check,
+            time=timezone.now() - timedelta(seconds=60),
+            time_complete=timezone.now() - timedelta(seconds=59),
+            succeeded=False,
+            job_number=1
+        )
+        self.jenkins_check.last_run = datetime.now()
+
+        jenkins_failed.save()
+        self.jenkins_check.save()
+        self.service.update_status()
+
+        send_hipchat_alert(self.service, [self.user], [])
+        self.assertEqual(mock_send.call_args[0][0],
+            'Service %s reporting ERROR status: %s://%s%s. Checks failing: %s %sjob/%s/1/console  @%s' %
+            (self.service.name, settings.WWW_SCHEME, settings.WWW_HTTP_HOST, reverse('service', kwargs={'pk': self.service.id}), self.jenkins_check.name, settings.JENKINS_API, self.jenkins_check.name, self.user.profile.hipchat_alias))
 
