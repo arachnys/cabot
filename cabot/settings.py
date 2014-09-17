@@ -118,6 +118,7 @@ INSTALLED_APPS = (
     'mptt',
     'jsonify',
     'cabot.cabotapp',
+    'rest_framework',
 )
 
 
@@ -206,6 +207,20 @@ LOGGING = {
             'propagate': True,
         }
     }
+}
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissions',
+    ],
+    'DEFAULT_FILTER_BACKENDS': [
+        'rest_framework.filters.DjangoFilterBackend',
+        'rest_framework.filters.OrderingFilter',
+    ]
 }
 
 from cabot.celeryconfig import *
