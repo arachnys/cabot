@@ -66,7 +66,7 @@ It's just a lucky coincidence that his name sounds like he could be an automatio
 
 ## API
 
-The API has automatically generated documentation available by browsing http(s)://yourcabotserver.example.com/api.  The browsable documentation displays example GET requests and lists other allowed HTTP methods.  
+The API has automatically generated documentation available by browsing https://cabot.yourcompany.com/api.  The browsable documentation displays example GET requests and lists other allowed HTTP methods.  
 
 To view individual items, append the item `id` to the url.  For example, to view `graphite_check` 1, browse:
 ```
@@ -87,25 +87,25 @@ cabotapp | status check | Can add icmp status check
 cabotapp | status check | Can add jenkins status check
 ```
 
-Access http(s)://yourcabotserver/admin to add/remove users, change user permissions, add/remove groups for group-based permission control, and change group permissions.
+Access the Django admin page at https://cabot.yourcompany.com/admin to add/remove users, change user permissions, add/remove groups for group-based permission control, and change group permissions.
 
 ### Sorting and Filtering
 
-Sorting and filtering can be used by REST clients to restrict returned resources.  All fields visible in the browsable API can be used for filtering and sorting.
+Sorting and filtering can be used by both REST clients and on the browsable API.  All fields visible in the browsable API can be used for filtering and sorting.
 
 Get all `jenkins_checks` with debounce enabled and CRITICAL importance:
 ```
-GET /api/jenkins_checks/?debounce=1&importance=CRITICAL
+https://cabot.yourcompany.com/api/jenkins_checks/?debounce=1&importance=CRITICAL
 ```
 
 Sort `graphite_checks` by `name` field, ascending:
 ```
-GET /api/graphite_checks/?ordering=name
+https://cabot.yourcompany.com/api/graphite_checks/?ordering=name
 ```
 
 Sort by `name` field, descending:
 ```
-GET /api/graphite_checks/?ordering=-name
+https://cabot.yourcompany.com/api/graphite_checks/?ordering=-name
 ```
 
 Other (non-Cabot specific) examples are available in the [Django REST Framework](http://www.django-rest-framework.org/api-guide/filtering#djangofilterbackend) documentation.
