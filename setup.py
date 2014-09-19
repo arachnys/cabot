@@ -13,7 +13,7 @@ setup(
     license='MIT',
     install_requires=[
         'Django==1.6.5',
-        'Markdown=2.5',
+        'Markdown==2.5',
         'PyJWT==0.1.2',
         'South==1.0',
         'amqp==1.3.3',
