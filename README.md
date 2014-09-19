@@ -64,6 +64,52 @@ My dog is called Cabot and he loves monitoring things. Mainly the presence of fo
 
 It's just a lucky coincidence that his name sounds like he could be an automation tool.
 
+## API
+
+The API has automatically generated documentation available by browsing http(s)://yourcabotserver.example.com/api.  The browsable documentation displays example GET requests and lists other allowed HTTP methods.  
+
+To view individual items, append the item `id` to the url.  For example, to view `graphite_check` 1, browse:
+```
+/api/graphite_checks/1/
+```
+
+### Authentication
+
+The API allows HTTP basic auth using standard Django usernames and passwords as well as session authentication (by submitting the login form on the login page).  The API similarly uses standard Django permissions to allow and deny API access.
+
+All resources are GETable by any authenticated user, but individual permissions must be granted for POST, PUT, and other write methods.
+
+As an example, for POST access to all `status_check` subclasses, add the following permissions:
+```
+cabotapp | status check | Can add graphite status check
+cabotapp | status check | Can add http status check
+cabotapp | status check | Can add icmp status check
+cabotapp | status check | Can add jenkins status check
+```
+
+Access http(s)://yourcabotserver/admin to add/remove users, change user permissions, add/remove groups for group-based permission control, and change group permissions.
+
+### Sorting and Filtering
+
+Sorting and filtering can be used by REST clients to restrict returned resources.  All fields visible in the browsable API can be used for filtering and sorting.
+
+Get all `jenkins_checks` with debounce enabled and CRITICAL importance:
+```
+GET /api/jenkins_checks/?debounce=1&importance=CRITICAL
+```
+
+Sort `graphite_checks` by `name` field, ascending:
+```
+GET /api/graphite_checks/?ordering=name
+```
+
+Sort by `name` field, descending:
+```
+GET /api/graphite_checks/?ordering=-name
+```
+
+Other (non-Cabot specific) examples are available in the [Django REST Framework](http://www.django-rest-framework.org/api-guide/filtering#djangofilterbackend) documentation.
+
 ## License
 
 See `LICENSE` file in this repo.

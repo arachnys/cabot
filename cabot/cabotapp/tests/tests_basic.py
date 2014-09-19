@@ -612,7 +612,7 @@ class TestAPI(LocalTestCase):
 
     def test_gets(self):
         for model, items in self.start_data.items():
-            response = self.client.get('{}?ordering=id'.format(api_reverse('{}-list'.format(model))),
+            response = self.client.get(api_reverse('{}-list'.format(model)),
                                        format='json', HTTP_AUTHORIZATION=self.basic_auth)
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertEqual(len(response.data), len(items))
@@ -627,8 +627,11 @@ class TestAPI(LocalTestCase):
     def test_posts(self):
         for model, items in self.post_data.items():
             for item in items:
-                # hackpad_id and other null text fields omitted on create for now due to rest_framework
-                # bug 1879 https://github.com/tomchristie/django-rest-framework/issues/1879
+                # hackpad_id and other null text fields omitted on create 
+                # for now due to rest_framework bug:
+                # https://github.com/tomchristie/django-rest-framework/issues/1879
+                # Update: This has been fixed in master: 
+                # https://github.com/tomchristie/django-rest-framework/pull/1834
                 for field in ('hackpad_id', 'username', 'password'):
                     if field in item:
                         del item[field]
@@ -645,3 +648,99 @@ class TestAPI(LocalTestCase):
                                                format='json', HTTP_AUTHORIZATION=self.basic_auth)
                 self.assertEqual(self.normalize_dict(get_response.data), item)
 
+class TestAPIFiltering(LocalTestCase):
+    def setUp(self):
+        super(TestAPIFiltering, self).setUp()
+
+        self.instance = Instance.objects.create(
+            name='Hello',
+            address='192.168.0.1',
+        )
+        pingcheck = ICMPStatusCheck.objects.create(
+            name='Hello check',
+        )
+        self.instance.status_checks.add(pingcheck)
+
+        self.expected_filter_result = JenkinsStatusCheck.objects.create(
+            name='Filter test 1',
+            debounce=True,
+            importance=Service.CRITICAL_STATUS,
+        )
+        JenkinsStatusCheck.objects.create(
+            name='Filter test 2',
+            debounce=True,
+            importance=Service.WARNING_STATUS,
+        )
+        JenkinsStatusCheck.objects.create(
+            name='Filter test 3',
+            debounce=False,
+            importance=Service.CRITICAL_STATUS,
+        )
+
+        GraphiteStatusCheck.objects.create(
+            name='Z check',
+            metric='stats.fake.value',
+            check_type='>',
+            value='9.0',
+            created_by=self.user,
+            importance=Service.ERROR_STATUS,
+        )
+        GraphiteStatusCheck.objects.create(
+            name='A check',
+            metric='stats.fake.value',
+            check_type='>',
+            value='9.0',
+            created_by=self.user,
+            importance=Service.ERROR_STATUS,
+        )
+        self.expected_sort_names = ['A check', 'Graphite Check', 'Z check']
+
+        self.basic_auth = 'Basic {}'.format(
+            base64.b64encode(
+                '{}:{}'.format(self.username, self.password)
+                    .encode(HTTP_HEADER_ENCODING)
+            ).decode(HTTP_HEADER_ENCODING)
+        )
+
+    def test_query(self):
+        response = self.client.get(
+            '{}?debounce=1&importance=CRITICAL'.format(
+                api_reverse('jenkinsstatuscheck-list')
+            ), 
+            format='json', 
+            HTTP_AUTHORIZATION=self.basic_auth
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(
+            response.data[0]['id'], 
+            self.expected_filter_result.id
+        )
+    
+    def test_positive_sort(self):
+        response = self.client.get(
+            '{}?ordering=name'.format(
+                api_reverse('graphitestatuscheck-list')
+            ), 
+            format='json', 
+            HTTP_AUTHORIZATION=self.basic_auth
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            [item['name'] for item in response.data], 
+            self.expected_sort_names
+        )
+
+    def test_negative_sort(self):
+        response = self.client.get(
+            '{}?ordering=-name'.format(
+                api_reverse('graphitestatuscheck-list')
+            ), 
+            format='json', 
+            HTTP_AUTHORIZATION=self.basic_auth
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            [item['name'] for item in response.data], 
+            self.expected_sort_names[::-1]
+        )

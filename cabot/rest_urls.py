@@ -43,7 +43,8 @@ def create_viewset(arg_model, arg_fields, arg_read_only_fields=(), no_create=Fal
     class ViewSet(viewset_class):
         queryset = arg_queryset
         serializer_class = Serializer
-        ordering = ['-id']
+        ordering = ['id']
+        filter_fields = arg_fields
     return ViewSet
 
 check_group_mixin_fields = (
