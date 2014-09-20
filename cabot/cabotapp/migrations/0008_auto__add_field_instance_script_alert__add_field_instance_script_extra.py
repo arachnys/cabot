@@ -15,7 +15,7 @@ class Migration(SchemaMigration):
 
         # Adding field 'Instance.script_extra_argument'
         db.add_column(u'cabotapp_instance', 'script_extra_argument',
-                      self.gf('django.db.models.fields.TextField')(default='', blank=True),
+                      self.gf('django.db.models.fields.TextField')(null=True, blank=True),
                       keep_default=False)
 
         # Adding field 'Service.script_alert'
@@ -25,7 +25,7 @@ class Migration(SchemaMigration):
 
         # Adding field 'Service.script_extra_argument'
         db.add_column(u'cabotapp_service', 'script_extra_argument',
-                      self.gf('django.db.models.fields.TextField')(default='', blank=True),
+                      self.gf('django.db.models.fields.TextField')(null=True, blank=True),
                       keep_default=False)
 
 
@@ -86,7 +86,7 @@ class Migration(SchemaMigration):
             'old_overall_status': ('django.db.models.fields.TextField', [], {'default': "'PASSING'"}),
             'overall_status': ('django.db.models.fields.TextField', [], {'default': "'PASSING'"}),
             'script_alert': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'script_extra_argument': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
+            'script_extra_argument': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'sms_alert': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'status_checks': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['cabotapp.StatusCheck']", 'symmetrical': 'False', 'blank': 'True'}),
             'telephone_alert': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
@@ -116,7 +116,7 @@ class Migration(SchemaMigration):
             'old_overall_status': ('django.db.models.fields.TextField', [], {'default': "'PASSING'"}),
             'overall_status': ('django.db.models.fields.TextField', [], {'default': "'PASSING'"}),
             'script_alert': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'script_extra_argument': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
+            'script_extra_argument': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'sms_alert': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'status_checks': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['cabotapp.StatusCheck']", 'symmetrical': 'False', 'blank': 'True'}),
             'telephone_alert': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
