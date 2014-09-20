@@ -19,6 +19,8 @@ from django.views.generic.base import RedirectView
 from django.contrib.auth.views import login, logout, password_reset, password_reset_done, password_reset_confirm
 admin.autodiscover()
 
+from cabot import rest_urls
+
 urlpatterns = patterns('',
                        url(r'^$', view=RedirectView.as_view(url='services/', permanent=False),
                            name='dashboard'),
@@ -125,4 +127,9 @@ urlpatterns = patterns('',
                            view=UserProfileUpdateView.as_view(
                            ), name='user-profile'),
                        url(r'^admin/', include(admin.site.urls)),
+
+                       # Comment below line to disable browsable rest api
+                       url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+
+                       url(r'^api/', include(rest_urls.router.urls)),
                        )
