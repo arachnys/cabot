@@ -176,6 +176,8 @@ def send_script_alert(service):
             'service': {
                 'id': service.id,
                 'name': service.name,
+                'url': service.url,
+                'hackpad_id': service.hackpad_id,
                 'overall_status': service.overall_status,
                 'all_failing_checks': [{
                     'id': check.id,
@@ -200,6 +202,7 @@ def send_script_alert(service):
             },
             'host': settings.WWW_HTTP_HOST,
             'scheme': settings.WWW_SCHEME,
+            'extra': service.script_extra_argument,
         })],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE

@@ -13,9 +13,19 @@ class Migration(SchemaMigration):
                       self.gf('django.db.models.fields.BooleanField')(default=False),
                       keep_default=False)
 
+        # Adding field 'Instance.script_extra_argument'
+        db.add_column(u'cabotapp_instance', 'script_extra_argument',
+                      self.gf('django.db.models.fields.TextField')(default='', blank=True),
+                      keep_default=False)
+
         # Adding field 'Service.script_alert'
         db.add_column(u'cabotapp_service', 'script_alert',
                       self.gf('django.db.models.fields.BooleanField')(default=False),
+                      keep_default=False)
+
+        # Adding field 'Service.script_extra_argument'
+        db.add_column(u'cabotapp_service', 'script_extra_argument',
+                      self.gf('django.db.models.fields.TextField')(default='', blank=True),
                       keep_default=False)
 
 
@@ -23,8 +33,14 @@ class Migration(SchemaMigration):
         # Deleting field 'Instance.script_alert'
         db.delete_column(u'cabotapp_instance', 'script_alert')
 
+        # Deleting field 'Instance.script_extra_argument'
+        db.delete_column(u'cabotapp_instance', 'script_extra_argument')
+
         # Deleting field 'Service.script_alert'
         db.delete_column(u'cabotapp_service', 'script_alert')
+
+        # Deleting field 'Service.script_extra_argument'
+        db.delete_column(u'cabotapp_service', 'script_extra_argument')
 
 
     models = {
@@ -70,6 +86,7 @@ class Migration(SchemaMigration):
             'old_overall_status': ('django.db.models.fields.TextField', [], {'default': "'PASSING'"}),
             'overall_status': ('django.db.models.fields.TextField', [], {'default': "'PASSING'"}),
             'script_alert': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'script_extra_argument': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
             'sms_alert': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'status_checks': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['cabotapp.StatusCheck']", 'symmetrical': 'False', 'blank': 'True'}),
             'telephone_alert': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
@@ -99,6 +116,7 @@ class Migration(SchemaMigration):
             'old_overall_status': ('django.db.models.fields.TextField', [], {'default': "'PASSING'"}),
             'overall_status': ('django.db.models.fields.TextField', [], {'default': "'PASSING'"}),
             'script_alert': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'script_extra_argument': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
             'sms_alert': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'status_checks': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['cabotapp.StatusCheck']", 'symmetrical': 'False', 'blank': 'True'}),
             'telephone_alert': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),

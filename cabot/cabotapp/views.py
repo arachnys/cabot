@@ -313,6 +313,7 @@ class ServiceForm(forms.ModelForm):
             'sms_alert',
             'telephone_alert',
             'script_alert',
+            'script_extra_argument',
             'alerts_enabled',
             'hackpad_id',
         )
@@ -328,6 +329,7 @@ class ServiceForm(forms.ModelForm):
                 'style': 'width: 70%',
             }),
             'users_to_notify': forms.CheckboxSelectMultiple(),
+            'script_extra_argument': forms.TextInput(attrs={'style': 'width:30%;'}),
             'hackpad_id': forms.TextInput(attrs={'style': 'width:30%;'}),
         }
 

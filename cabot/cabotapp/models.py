@@ -122,6 +122,11 @@ class CheckGroupMixin(models.Model):
         help_text='Must be enabled, and check importance set to Critical, to receive telephone alerts.',
     )
     script_alert = models.BooleanField(default=False)
+    script_extra_argument = models.TextField(
+        null=True,
+        blank=True,
+        help_text='Will be included in the JSON passed to the script when an alert occurs as \'extra\'.',
+    )
     overall_status = models.TextField(default=PASSING_STATUS)
     old_overall_status = models.TextField(default=PASSING_STATUS)
     hackpad_id = models.TextField(
