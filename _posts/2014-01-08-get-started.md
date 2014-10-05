@@ -21,7 +21,9 @@ order: 1
 
     $ vagrant ssh
     # log in to provisioned Vagrant box
-
+    
+    $ foreman run python manage.py syncdb --migrate
+    # Create DB tables and apply migrations
     $ foreman start
     # run webserver and celery tasks using Django dev server
 
