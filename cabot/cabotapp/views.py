@@ -687,7 +687,7 @@ def jsonify(d):
 @login_required
 def graphite_api_data(request):
     metric = request.GET.get('metric')
-    mins_to_check = request.GET.get('frequency')
+    mins_to_check = int(request.GET.get('frequency'))
     data = None
     matching_metrics = None
     try:

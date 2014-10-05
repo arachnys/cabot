@@ -11,7 +11,7 @@ auth = (user, password)
 
 def get_data(target_pattern, mins_to_check=None):
     if mins_to_check:
-        _from = '-'+str(mins_to_check)+'minute'
+        _from = '-%dminute' % mins_to_check
     else:
         _from = graphite_from
 
