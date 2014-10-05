@@ -37,6 +37,7 @@ GRAPHITE_ENDPOINT = '/graphite/'
 $(document).ready ->
   updateGraphiteData()
   $('#id_metric').on('keyup', updateGraphiteData)
+  $('#id_frequency').on('keyup', updateGraphiteData)
 
   $('#id_metric').autocomplete
     source: (request, response) ->
@@ -57,10 +58,12 @@ $(document).ready ->
 updateGraphiteData = () ->
   $('#graphite_data_container').text 'Getting data'
   m = $('#id_metric').val()
+  f = $('#id_frequency').val()
   $.ajax
     url: GRAPHITE_ENDPOINT
     data:
       metric: m
+      frequency: f
   .done (data) ->
     if data.data? and data.data.length? != 0
       $('#graphite_data_container').text JSON.stringify(data.data, undefined, 2)
