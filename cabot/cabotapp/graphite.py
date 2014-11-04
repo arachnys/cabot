@@ -5,17 +5,17 @@ import logging
 graphite_api = settings.GRAPHITE_API
 user = settings.GRAPHITE_USER
 password = settings.GRAPHITE_PASS
-graphite_from = settings.GRAPHITE_FROM
+graphite_window = settings.GRAPHITE_WINDOW
 auth = (user, password)
 
 
-def get_data(target_pattern):
+def get_data(target_pattern, frequency):
     resp = requests.get(
         graphite_api + 'render', auth=auth,
         params={
             'target': target_pattern,
             'format': 'json',
-            'from': graphite_from
+            'from': '-%dsecond' % (frequency * graphite_window)
         }
     )
     resp.raise_for_status()
@@ -52,7 +52,7 @@ def get_all_metrics(limit=None):
     return metrics
 
 
-def parse_metric(metric, mins_to_check=5):
+def parse_metric(metric, frequency, points_to_check=5):
     """
     Returns dict with:
     - num_series_with_data: Number of series with data
@@ -69,7 +69,7 @@ def parse_metric(metric, mins_to_check=5):
         'raw': ''
     }
     try:
-        data = get_data(metric)
+        data = get_data(metric, frequency)
     except requests.exceptions.RequestException, e:
         ret['error'] = 'Error getting data from Graphite: %s' % e
         ret['raw'] = ret['error']
@@ -78,7 +78,7 @@ def parse_metric(metric, mins_to_check=5):
     all_values = []
     for target in data:
         values = [float(t[0])
-                  for t in target['datapoints'][-mins_to_check:] if t[0] is not None]
+                  for t in target['datapoints'][-points_to_check:] if t[0] is not None]
         if values:
             ret['num_series_with_data'] += 1
         else:

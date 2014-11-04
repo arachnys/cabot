@@ -383,6 +383,10 @@ class StatusCheck(PolymorphicModel):
         null=True,
         help_text='The minimum number of data series (hosts) you expect to see.',
     )
+    points_to_check = models.IntegerField(
+        default=5,
+        help_text='Number of preceding statistic points to check.',
+    )
 
     # HTTP checks
     endpoint = models.TextField(
@@ -568,7 +572,11 @@ class GraphiteStatusCheck(StatusCheck):
         )
 
     def _run(self):
-        series = parse_metric(self.metric, mins_to_check=self.frequency)
+        series = parse_metric(
+            self.metric, 
+            frequency=self.frequency, 
+            points_to_check=self.points_to_check
+        )
         failure_value = None
         if series['error']:
             failed = True

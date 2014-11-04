@@ -154,6 +154,7 @@ class GraphiteStatusCheckForm(StatusCheckForm):
             'check_type',
             'value',
             'frequency',
+            'points_to_check',
             'active',
             'importance',
             'expected_num_hosts',
