@@ -435,6 +435,8 @@ class TestAPI(LocalTestCase):
                     'active': True,
                     'importance': u'ERROR',
                     'frequency': 5,
+                    'x_range': 10,
+                    'points_to_check': 5,
                     'debounce': 0,
                     'id': 1
                 },
@@ -552,6 +554,8 @@ class TestAPI(LocalTestCase):
                     'active': True,
                     'importance': u'CRITICAL',
                     'frequency': 5,
+                    'x_range': 10,
+                    'points_to_check': 5,
                     'debounce': 0,
                     'metric': u'stats.fakeval2',
                     'check_type': u'<',
