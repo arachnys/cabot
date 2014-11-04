@@ -5,17 +5,16 @@ import logging
 graphite_api = settings.GRAPHITE_API
 user = settings.GRAPHITE_USER
 password = settings.GRAPHITE_PASS
-graphite_window = settings.GRAPHITE_WINDOW
 auth = (user, password)
 
 
-def get_data(target_pattern, frequency):
+def get_data(target_pattern, x_range):
     resp = requests.get(
         graphite_api + 'render', auth=auth,
         params={
             'target': target_pattern,
             'format': 'json',
-            'from': '-%dsecond' % (frequency * graphite_window)
+            'from': '-%dminutes' % int(x_range)
         }
     )
     resp.raise_for_status()
@@ -52,7 +51,7 @@ def get_all_metrics(limit=None):
     return metrics
 
 
-def parse_metric(metric, frequency, points_to_check=5):
+def parse_metric(metric, x_range, points_to_check=5):
     """
     Returns dict with:
     - num_series_with_data: Number of series with data
@@ -69,7 +68,7 @@ def parse_metric(metric, frequency, points_to_check=5):
         'raw': ''
     }
     try:
-        data = get_data(metric, frequency)
+        data = get_data(metric, x_range)
     except requests.exceptions.RequestException, e:
         ret['error'] = 'Error getting data from Graphite: %s' % e
         ret['raw'] = ret['error']
