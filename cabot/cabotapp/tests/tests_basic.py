@@ -78,6 +78,7 @@ class LocalTestCase(APITestCase):
         )
         self.service = Service.objects.create(
             name='Service',
+            url='http://example.com',
         )
 
         self.service.status_checks.add(
@@ -411,6 +412,7 @@ class TestAPI(LocalTestCase):
                     'sms_alert': False,
                     'telephone_alert': False,
                     'hackpad_id': None,
+                    'url': 'http://example.com',
                     'id': 1
                 },
             ],
@@ -528,6 +530,7 @@ class TestAPI(LocalTestCase):
                     'sms_alert': False,
                     'telephone_alert': False,
                     'hackpad_id': None,
+                    'url': 'http://example.com',
                     'id': 2
                 },
             ],
