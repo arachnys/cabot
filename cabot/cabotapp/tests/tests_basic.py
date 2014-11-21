@@ -411,7 +411,8 @@ class TestAPI(LocalTestCase):
                     'sms_alert': False,
                     'telephone_alert': False,
                     'hackpad_id': None,
-                    'id': 1
+                    'id': 1,
+                    'url': u''
                 },
             ],
             'instance': [
@@ -528,7 +529,8 @@ class TestAPI(LocalTestCase):
                     'sms_alert': False,
                     'telephone_alert': False,
                     'hackpad_id': None,
-                    'id': 2
+                    'id': 2,
+                    'url': u'',
                 },
             ],
             'instance': [
