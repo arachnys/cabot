@@ -8,7 +8,7 @@ from django.contrib.auth.models import User
 from celery.exceptions import SoftTimeLimitExceeded
 
 from .jenkins import get_job_status
-from .alert import send_alert
+from .alert import (send_alert, AlertPlugin, AlertPluginUserData, update_alert_plugins)
 from .calendar import get_events
 from .graphite import parse_metric
 from .tasks import update_service, update_instance
@@ -35,7 +35,6 @@ CHECK_TYPES = (
     ('<=', 'Less than or equal'),
     ('==', 'Equal to'),
 )
-
 
 def serialize_recent_results(recent_results):
     if not recent_results:
@@ -114,6 +113,13 @@ class CheckGroupMixin(models.Model):
         null=True,
         blank=True,
     )
+
+    alerts = models.ManyToManyField(
+        'AlertPlugin',
+        blank=True,
+        help_text='Alerts channels through which you wish to be notified'
+    )
+
     email_alert = models.BooleanField(default=False)
     hipchat_alert = models.BooleanField(default=True)
     sms_alert = models.BooleanField(default=False)
@@ -548,7 +554,7 @@ class GraphiteStatusCheck(StatusCheck):
 
     def format_error_message(self, failure_value, actual_hosts):
         """
-        A summary of why the check is failing for inclusion in hipchat, sms etc
+        A summary of why the check is failing for inclusion in short alert messages
         Returns something like:
         "5.0 > 4 | 1/2 hosts"
         """
@@ -781,16 +787,16 @@ class StatusCheckResult(models.Model):
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, related_name='profile')
-    mobile_number = models.CharField(max_length=20, blank=True, default='')
-    hipchat_alias = models.CharField(max_length=50, blank=True, default='')
-    fallback_alert_user = models.BooleanField(default=False)
+
+    def user_data(self):
+        for user_data_subclass in AlertPluginUserData.__subclasses__():
+            user_data = user_data_subclass.objects.get_or_create(user=self, title=user_data_subclass.name)
+        return AlertPluginUserData.objects.filter(user=self)
 
     def __unicode__(self):
         return 'User profile: %s' % self.user.username
 
     def save(self, *args, **kwargs):
-        if self.mobile_number.startswith('+'):
-            self.mobile_number = self.mobile_number[1:]
         # Enforce uniqueness
         if self.fallback_alert_user:
             profiles = UserProfile.objects.exclude(id=self.id)
@@ -801,6 +807,9 @@ class UserProfile(models.Model):
     def prefixed_mobile_number(self):
         return '+%s' % self.mobile_number
 
+    mobile_number = models.CharField(max_length=20, blank=True, default='')
+    hipchat_alias = models.CharField(max_length=50, blank=True, default='')
+    fallback_alert_user = models.BooleanField(default=False)
 
 class Shift(models.Model):
     start = models.DateTimeField()

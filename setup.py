@@ -1,9 +1,13 @@
 #!/usr/bin/env python
 from setuptools import setup, find_packages
+from os import environ as env
+
+# pull in active plugins
+plugins = env['CABOT_PLUGINS_ENABLED'].split(',') if 'CABOT_PLUGINS_ENABLED' in env else ["cabot_alert_hipchat", "cabot_alert_twilio", "cabot_alert_email"]
 
 setup(
     name='cabot',
-    version='0.0.0-dev',
+    version='0.0.1-dev',
     description="Self-hosted, easily-deployable monitoring and alerts service"
                 " - like a lightweight PagerDuty",
     long_description=open('README.md').read(),
@@ -12,7 +16,7 @@ setup(
     url='http://cabotapp.com',
     license='MIT',
     install_requires=[
-        'Django==1.6.5',
+        'Django==1.6.8',
         'Markdown==2.5',
         'PyJWT==0.1.2',
         'South==1.0',
@@ -43,14 +47,14 @@ setup(
         'mock==1.0.1',
         'psycogreen==1.0',
         'psycopg2==2.5.1',
-        'pytz==2013.9',
+        'pytz==2014.10',
         'redis==2.9.0',
         'requests==0.14.2',
         'six==1.5.1',
         'twilio==3.4.1',
         'wsgiref==0.1.2',
         'python-dateutil==2.1',
-    ],
+    ] + plugins,
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,

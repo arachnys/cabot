@@ -38,10 +38,9 @@
       <div class="col-xs-3"><h5><span class="break"></span>Alert types</h5></div>
       <div class="col-xs-8">
         <h5>
-        {% if service.email_alert %}<i class="fa fa-envelope"></i> Email{% endif %}
-        {% if service.hipchat_alert %}<i class="fa fa-comment"></i> Hipchat{% endif %}
-        {% if service.sms_alert %}<i class="fa fa-mobile"></i> SMS{% endif %}
-        {% if service.telephone_alert %}<i class="fa fa-phone"></i> Telephone{% endif %}
+        {% for alert in service.alerts.all %}
+          <span class="label label-{% if service.alerts_enabled %}success{% else %}warning{% endif %}">{{ alert }}</span>
+        {% endfor %}
         </h5>
       </div>
     </div>

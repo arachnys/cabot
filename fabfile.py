@@ -34,8 +34,8 @@ def _setup_venv():
 
 
 def install_requirements(deploy_path=DEPLOY_PATH):
-    sudo("{venv}/bin/pip install -e {path} --exists-action=w".format(
-        venv=VENV_DIR, path=deploy_path))
+    sudo("foreman run -e conf/{env}.env {venv}/bin/pip install --editable {path} --exists-action=w".format(
+        env=env.deploy_version, venv=VENV_DIR, path=deploy_path))
 
 
 def run_migrations(deploy_path=DEPLOY_PATH):

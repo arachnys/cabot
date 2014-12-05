@@ -1,5 +1,8 @@
 import os
 import dj_database_url
+from django.conf import settings
+from cabot.celeryconfig import *
+from cabot.cabot_config import *
 
 settings_dir = os.path.dirname(__file__)
 PROJECT_ROOT = os.path.abspath(settings_dir)
@@ -121,6 +124,9 @@ INSTALLED_APPS = (
     'rest_framework',
 )
 
+# Load additional apps from configuration file
+for plugin in CABOT_PLUGINS_ENABLED.split(","):
+    INSTALLED_APPS += (plugin,)
 
 COMPRESS_PRECOMPILERS = (
     ('text/coffeescript', 'coffee --compile --stdio'),
@@ -133,7 +139,7 @@ EMAIL_HOST = os.environ.get('SES_HOST', 'localhost')
 EMAIL_PORT = int(os.environ.get('SES_PORT', 25))
 EMAIL_HOST_USER = os.environ.get('SES_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('SES_PASS', '')
-EMAIL_BACKEND = 'django_smtp_ssl.SSLEmailBackend'
+EMAIL_BACKEND = os.environ.get('SES_BACKEND', 'django_smtp_ssl.SSLEmailBackend')
 
 COMPRESS_OFFLINE = not DEBUG
 
@@ -223,5 +229,4 @@ REST_FRAMEWORK = {
     ]
 }
 
-from cabot.celeryconfig import *
-from cabot.cabot_config import *
+

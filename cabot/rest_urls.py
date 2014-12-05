@@ -2,7 +2,7 @@ from django.db import models as model_fields
 from django.conf.urls import url, include
 from django.contrib.auth import models as django_models
 from polymorphic import PolymorphicModel
-from cabot.cabotapp import models
+from cabot.cabotapp import models, alert
 from rest_framework import routers, serializers, viewsets, mixins
 import logging
 
@@ -52,10 +52,7 @@ check_group_mixin_fields = (
     'users_to_notify',
     'alerts_enabled',
     'status_checks',
-    'email_alert',
-    'hipchat_alert',
-    'sms_alert',
-    'telephone_alert',
+    'alerts',
     'hackpad_id',
 )
 
@@ -63,6 +60,7 @@ router.register(r'services', create_viewset(
     arg_model=models.Service, 
     arg_fields=check_group_mixin_fields + (
         'url',
+        'instances',
     ),
 ))
 
@@ -160,3 +158,10 @@ router.register(r'shifts', create_viewset(
         'deleted',
     )
 ))
+
+router.register(r'alertplugins', create_viewset(
+    arg_model=alert.AlertPlugin,
+    arg_fields=(
+            'title',
+        )
+    ))
