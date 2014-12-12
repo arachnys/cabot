@@ -9,6 +9,8 @@ from twilio.rest import TwilioRestClient
 from twilio import twiml
 import requests
 import logging
+import json
+import subprocess
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +42,8 @@ def send_alert(service, duty_officers=None):
         send_sms_alert(service, users, duty_officers)
     if service.telephone_alert:
         send_telephone_alert(service, users, duty_officers)
+    if service.script_alert:
+        send_script_alert(service)
 
 
 def send_email_alert(service, users, duty_officers):
@@ -166,3 +170,48 @@ def telephone_alert_twiml_callback(service):
     r.say(t, voice='woman')
     r.hangup()
     return r
+
+def send_script_alert(service):
+    proc = subprocess.Popen(
+        [settings.SCRIPT_PATH, json.dumps({
+            'service': {
+                'id': service.id,
+                'name': service.name,
+                'url': service.url,
+                'hackpad_id': service.hackpad_id,
+                'overall_status': service.overall_status,
+                'all_failing_checks': [{
+                    'id': check.id,
+                    'name': check.name,
+                    'recent_results': [{
+                        'succeeded': result.succeeded,
+                        'error': result.error
+                    } for result in check.recent_results()],
+                    'check_category': check.check_category,
+                    'importance_display': check.get_importance_display()
+                } for check in service.all_failing_checks()],
+                'all_passing_checks': [{
+                    'id': check.id,
+                    'name': check.name,
+                    'recent_results': [{
+                        'succeeded': result.succeeded,
+                        'error': result.error
+                    } for result in check.recent_results()],
+                    'check_category': check.check_category,
+                    'importance_display': check.get_importance_display()
+                } for check in service.all_passing_checks()]
+            },
+            'host': settings.WWW_HTTP_HOST,
+            'scheme': settings.WWW_SCHEME,
+            'extra': service.script_extra_argument,
+        })],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )
+    stdout, stderr = proc.communicate()
+    if stdout:
+        logger.info('Script output:\n{}'.format(stdout))
+    if proc.returncode != 0:
+        logger.exception('Error running script; got return code {}:\n{}'.format(proc.returncode, stderr))
+
+

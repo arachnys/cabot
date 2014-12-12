@@ -56,6 +56,8 @@ check_group_mixin_fields = (
     'hipchat_alert',
     'sms_alert',
     'telephone_alert',
+    'script_alert',
+    'script_extra_argument',
     'hackpad_id',
 )
 
