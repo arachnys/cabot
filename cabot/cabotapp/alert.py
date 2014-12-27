@@ -33,13 +33,25 @@ telephone_template = "This is an urgent message from Arachnys monitoring. Servic
 def send_alert(service, duty_officers=None):
     users = service.users_to_notify.all()
     if service.email_alert:
-        send_email_alert(service, users, duty_officers)
+        try:
+            send_email_alert(service, users, duty_officers)
+        except Exception:
+            logging.exception('Could not send EMAIL alert')
     if service.hipchat_alert:
-        send_hipchat_alert(service, users, duty_officers)
+        try:
+            send_hipchat_alert(service, users, duty_officers)
+        except Exception:
+            logging.exception('Could not send HIPCHAT alert')
     if service.sms_alert:
-        send_sms_alert(service, users, duty_officers)
+        try:
+            send_sms_alert(service, users, duty_officers)
+        except Exception:
+            logging.exception('Could not send sms alert')
     if service.telephone_alert:
-        send_telephone_alert(service, users, duty_officers)
+        try:
+            send_telephone_alert(service, users, duty_officers)
+        except Exception:
+            logging.exception('Could not send telephone alert')
 
 
 def send_email_alert(service, users, duty_officers):
