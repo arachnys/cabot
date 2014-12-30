@@ -437,7 +437,6 @@ class StatusCheck(PolymorphicModel):
         # on time_complete
         return StatusCheckResult.objects.filter(check=self).order_by('-id').defer('raw_data')[:10]
 
-    @property
     def last_result(self):
         try:
             return StatusCheckResult.objects.filter(check=self).order_by('-id').defer('raw_data')[0]
