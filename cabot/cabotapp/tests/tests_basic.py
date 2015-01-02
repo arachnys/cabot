@@ -414,7 +414,8 @@ class TestAPI(LocalTestCase):
                     'telephone_alert': False,
                     'hackpad_id': None,
                     'id': 1,
-                    'url': u''
+                    'url': u'',
+                    'overall_status': u'PASSING'
                 },
             ],
             'instance': [
@@ -439,7 +440,8 @@ class TestAPI(LocalTestCase):
                     'importance': u'ERROR',
                     'frequency': 5,
                     'debounce': 0,
-                    'id': 1
+                    'id': 1,
+                    'calculated_status': u'PASSING',
                 },
                 {
                     'name': u'Jenkins Check',
@@ -447,7 +449,8 @@ class TestAPI(LocalTestCase):
                     'importance': u'ERROR',
                     'frequency': 5,
                     'debounce': 0,
-                    'id': 2
+                    'id': 2,
+                    'calculated_status': u'PASSING',
                 },
                 {
                     'name': u'Http Check',
@@ -455,7 +458,8 @@ class TestAPI(LocalTestCase):
                     'importance': u'CRITICAL',
                     'frequency': 5,
                     'debounce': 0,
-                    'id': 3
+                    'id': 3,
+                    'calculated_status': u'PASSING',
                 },
                 {
                     'name': u'Hello check',
@@ -463,7 +467,8 @@ class TestAPI(LocalTestCase):
                     'importance': u'ERROR',
                     'frequency': 5,
                     'debounce': 0,
-                    'id': 4
+                    'id': 4,
+                    'calculated_status': u'PASSING',
                 },
             ],
             'graphitestatuscheck': [
@@ -477,7 +482,8 @@ class TestAPI(LocalTestCase):
                     'check_type': u'>',
                     'value': u'9.0',
                     'expected_num_hosts': 0,
-                    'id': 1
+                    'id': 1,
+                    'calculated_status': u'PASSING',
                 },
             ],
             'httpstatuscheck': [
@@ -494,7 +500,8 @@ class TestAPI(LocalTestCase):
                     'status_code': u'200',
                     'timeout': 10,
                     'verify_ssl_certificate': True,
-                    'id': 3
+                    'id': 3,
+                    'calculated_status': u'PASSING',
                 },
             ],
             'jenkinsstatuscheck': [
@@ -505,7 +512,8 @@ class TestAPI(LocalTestCase):
                     'frequency': 5,
                     'debounce': 0,
                     'max_queued_build_time': 10,
-                    'id': 2
+                    'id': 2,
+                    'calculated_status': u'PASSING',
                 },
             ],
             'icmpstatuscheck': [
@@ -515,7 +523,8 @@ class TestAPI(LocalTestCase):
                     'importance': u'ERROR',
                     'frequency': 5,
                     'debounce': 0,
-                    'id': 4
+                    'id': 4,
+                    'calculated_status': u'PASSING',
                 },
             ],
         }
@@ -533,6 +542,7 @@ class TestAPI(LocalTestCase):
                     'hackpad_id': None,
                     'id': 2,
                     'url': u'',
+                    'overall_status': u'PASSING',
                 },
             ],
             'instance': [
@@ -561,7 +571,8 @@ class TestAPI(LocalTestCase):
                     'check_type': u'<',
                     'value': u'2',
                     'expected_num_hosts': 0,
-                    'id': 5
+                    'id': 5,
+                    'calculated_status': u'PASSING',
                 },
             ],
             'httpstatuscheck': [
@@ -578,7 +589,8 @@ class TestAPI(LocalTestCase):
                     'status_code': u'201',
                     'timeout': 30,
                     'verify_ssl_certificate': True,
-                    'id': 7
+                    'id': 7,
+                    'calculated_status': u'PASSING',
                 },
             ],
             'jenkinsstatuscheck': [
@@ -589,7 +601,8 @@ class TestAPI(LocalTestCase):
                     'frequency': 5,
                     'debounce': 0,
                     'max_queued_build_time': 37,
-                    'id': 6
+                    'id': 6,
+                    'calculated_status': u'PASSING',
                 },
             ],
             'icmpstatuscheck': [
@@ -599,7 +612,8 @@ class TestAPI(LocalTestCase):
                     'importance': u'CRITICAL',
                     'frequency': 5,
                     'debounce': 0,
-                    'id': 8
+                    'id': 8,
+                    'calculated_status': u'PASSING',
                 },
             ],
         }
