@@ -50,6 +50,7 @@ setup(
         'twilio==3.4.1',
         'wsgiref==0.1.2',
         'python-dateutil==2.1',
+        'python-simple-hipchat=0.3.3'
     ],
     packages=find_packages(),
     include_package_data=True,

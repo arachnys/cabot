@@ -121,7 +121,6 @@ INSTALLED_APPS = (
     'rest_framework',
 )
 
-
 COMPRESS_PRECOMPILERS = (
     ('text/coffeescript', 'coffee --compile --stdio'),
     ('text/eco',
@@ -129,11 +128,11 @@ COMPRESS_PRECOMPILERS = (
     ('text/less', 'lessc {infile} > {outfile}'),
 )
 
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', True)
 EMAIL_HOST = os.environ.get('SES_HOST', 'localhost')
 EMAIL_PORT = int(os.environ.get('SES_PORT', 25))
 EMAIL_HOST_USER = os.environ.get('SES_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('SES_PASS', '')
-EMAIL_BACKEND = 'django_smtp_ssl.SSLEmailBackend'
 
 COMPRESS_OFFLINE = not DEBUG
 
