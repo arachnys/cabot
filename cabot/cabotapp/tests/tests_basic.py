@@ -634,7 +634,7 @@ class TestAPI(LocalTestCase):
                 # hackpad_id and other null text fields omitted on create 
                 # for now due to rest_framework bug:
                 # https://github.com/tomchristie/django-rest-framework/issues/1879
-                # Update: This has been fixed in master: 
+                # Update: This has been fixed in master:
                 # https://github.com/tomchristie/django-rest-framework/pull/1834
                 for field in ('hackpad_id', 'username', 'password'):
                     if field in item:
@@ -710,28 +710,28 @@ class TestAPIFiltering(LocalTestCase):
         response = self.client.get(
             '{}?debounce=1&importance=CRITICAL'.format(
                 api_reverse('jenkinsstatuscheck-list')
-            ), 
-            format='json', 
+            ),
+            format='json',
             HTTP_AUTHORIZATION=self.basic_auth
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(
-            response.data[0]['id'], 
+            response.data[0]['id'],
             self.expected_filter_result.id
         )
-    
+
     def test_positive_sort(self):
         response = self.client.get(
             '{}?ordering=name'.format(
                 api_reverse('graphitestatuscheck-list')
-            ), 
-            format='json', 
+            ),
+            format='json',
             HTTP_AUTHORIZATION=self.basic_auth
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            [item['name'] for item in response.data], 
+            [item['name'] for item in response.data],
             self.expected_sort_names
         )
 
@@ -739,13 +739,13 @@ class TestAPIFiltering(LocalTestCase):
         response = self.client.get(
             '{}?ordering=-name'.format(
                 api_reverse('graphitestatuscheck-list')
-            ), 
-            format='json', 
+            ),
+            format='json',
             HTTP_AUTHORIZATION=self.basic_auth
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            [item['name'] for item in response.data], 
+            [item['name'] for item in response.data],
             self.expected_sort_names[::-1]
         )
 
@@ -777,24 +777,24 @@ class TestAlerts(LocalTestCase):
         self.user.is_active = True
         self.user.save()
         self.service.alert()
-        fake_hipchat_alert.assert_called_with(u'Service Service is back to normal: http://localhost/service/1/.  @test_user_hipchat_alias', color='green', sender='Cabot/Service')
-        
+        fake_hipchat_alert.assert_called_with(u'Service Service is back to normal: https://localhost/service/1/.  @test_user_hipchat_alias', color='green', sender='Cabot/Service')
+
         self.user.is_active = False
         self.user.save()
         self.service.alert()
-        fake_hipchat_alert.assert_called_with(u'Service Service is back to normal: http://localhost/service/1/. ', color='green', sender='Cabot/Service')
+        fake_hipchat_alert.assert_called_with(u'Service Service is back to normal: https://localhost/service/1/. ', color='green', sender='Cabot/Service')
 
 
     @patch('cabot.cabotapp.alert._send_hipchat_alert')
     def test_normal_alert(self, fake_hipchat_alert):
-        
+
         self.service.overall_status = Service.PASSING_STATUS
         self.service.old_overall_status = Service.ERROR_STATUS
         self.service.save()
 
         self.service.alert()
-        fake_hipchat_alert.assert_called_with(u'Service Service is back to normal: http://localhost/service/1/.  @test_user_hipchat_alias', color='green', sender='Cabot/Service')
-        
+        fake_hipchat_alert.assert_called_with(u'Service Service is back to normal: https://localhost/service/1/.  @test_user_hipchat_alias', color='green', sender='Cabot/Service')
+
     @patch('cabot.cabotapp.alert._send_hipchat_alert')
     def test_failure_alert(self, fake_hipchat_alert):
         # Most recent failed
@@ -803,4 +803,4 @@ class TestAlerts(LocalTestCase):
         self.service.save()
 
         self.service.alert()
-        fake_hipchat_alert.assert_called_with(u'Service Service reporting failing status: http://localhost/service/1/. Checks failing: @test_user_hipchat_alias', color='red', sender='Cabot/Service')
+        fake_hipchat_alert.assert_called_with(u'Service Service reporting failing status: https://localhost/service/1/. Checks failing: @test_user_hipchat_alias', color='red', sender='Cabot/Service')
