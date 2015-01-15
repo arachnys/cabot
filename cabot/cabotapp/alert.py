@@ -4,9 +4,9 @@ from django.core.urlresolvers import reverse
 from django.template import Context, Template
 from hypchat import HypChat
 
-from twilio.rest import TwiliocRestClient
 from twilio import twiml
 import logging
+from twilio.rest import TwilioRestClient
 
 logger = logging.getLogger(__name__)
 
