@@ -47,7 +47,7 @@ setup(
         'redis==2.9.0',
         'requests==0.14.2',
         'six==1.5.1',
-        'twilio==3.4.1',
+        'twilio==3.6.15',
         'wsgiref==0.1.2',
         'python-dateutil==2.1',
         'hypchat==0.18',
