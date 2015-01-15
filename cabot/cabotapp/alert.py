@@ -108,11 +108,11 @@ def send_hipchat_alert(service, users, duty_officers):
 
 
 def _send_hipchat_alert(message, color='green'):
-    room_id = settings.HIPCHAT_ALERT_ROOM
+    room_id = int(settings.HIPCHAT_ALERT_ROOM)
     api_key = settings.HIPCHAT_API_KEY
     hc = HypChat(api_key)
     rooms = hc.rooms()
-    room = filter(lambda room: room['id'] == room_id, rooms['items'])[0]
+    room = filter(lambda x: x['id'] == room_id, rooms['items'])[0]
     room.message(message, color=color, notify=True, format='text')
 
 
