@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 email_template = """Service {{ service.name }} {{ scheme }}://{{ host }}{% url 'service' pk=service.id %} {% if service.overall_status != service.PASSING_STATUS %}alerting with status: {{ service.overall_status }}{% else %}is back to normal{% endif %}.
 {% if service.overall_status != service.PASSING_STATUS %}
 CHECKS FAILING:{% for check in service.all_failing_checks %}
-  FAILING - {{ check.name }} - Type: {{ check.check_category }} - Importance: {{ check.get_importance_display }}{% endfor %}
+  FAILING - {{ check.name }} - Type: {{ check.check_category }} - Importance: {{ check.get_importance_display }} - Last Result: {{ check.last_result.raw_data }}{% endfor %}
 {% if service.all_passing_checks %}
 Passing checks:{% for check in service.all_passing_checks %}
   PASSING - {{ check.name }} - Type: {{ check.check_category }} - Importance: {{ check.get_importance_display }}{% endfor %}
@@ -23,7 +23,7 @@ Passing checks:{% for check in service.all_passing_checks %}
 {% endif %}
 """
 
-hipchat_template = "Service {{ service.name }} {% if service.overall_status == service.PASSING_STATUS %}is back to normal{% else %}reporting {{ service.overall_status }} status{% endif %}: {{ scheme }}://{{ host }}{% url 'service' pk=service.id %}. {% if service.overall_status != service.PASSING_STATUS %}Checks failing:{% for check in service.all_failing_checks %} {{ check.name }}{% if check.last_result.error %} ({{ check.last_result.error|safe }}){% endif %}{% endfor %}{% endif %}{% if alert %}{% for alias in users %} @{{ alias }}{% endfor %}{% endif %}"
+hipchat_template = "Service {{ service.name }} {% if service.overall_status == service.PASSING_STATUS %}is back to normal{% else %}reporting {{ service.overall_status }} status{% endif %}: {{ scheme }}://{{ host }}{% url 'service' pk=service.id %}. {% if service.overall_status != service.PASSING_STATUS %}Checks failing:{% for check in service.all_failing_checks %}{% if check.check_category == 'Jenkins check' %}{% if check.last_result.error %} {{ check.name }} ({{ check.last_result.error|safe }}) {{jenkins_api}}job/{{ check.name }}/{{ check.last_result.job_number }}/console{% else %} {{ check.name }} {{jenkins_api}}/job/{{ check.name }}/{{check.last_result.job_number}}/console {% endif %}{% else %} {{ check.name }} {% if check.last_result.error %} ({{ check.last_result.error|safe }}){% endif %}{% endif %}{% endfor %}{% endif %}{% if alert %}{% for alias in users %} @{{ alias }}{% endfor %}{% endif %}"
 
 sms_template = "Service {{ service.name }} {% if service.overall_status == service.PASSING_STATUS %}is back to normal{% else %}reporting {{ service.overall_status }} status{% endif %}: {{ scheme }}://{{ host }}{% url 'service' pk=service.id %}"
 
@@ -31,15 +31,27 @@ telephone_template = "This is an urgent message from Arachnys monitoring. Servic
 
 
 def send_alert(service, duty_officers=None):
-    users = service.users_to_notify.all()
+    users = service.users_to_notify.filter(is_active=True)
     if service.email_alert:
-        send_email_alert(service, users, duty_officers)
+        try:
+            send_email_alert(service, users, duty_officers)
+        except Exception:
+            logging.exception('Could not send EMAIL alert')
     if service.hipchat_alert:
-        send_hipchat_alert(service, users, duty_officers)
+        try:
+            send_hipchat_alert(service, users, duty_officers)
+        except Exception:
+            logging.exception('Could not send HIPCHAT alert')
     if service.sms_alert:
-        send_sms_alert(service, users, duty_officers)
+        try:
+            send_sms_alert(service, users, duty_officers)
+        except Exception:
+            logging.exception('Could not send sms alert')
     if service.telephone_alert:
-        send_telephone_alert(service, users, duty_officers)
+        try:
+            send_telephone_alert(service, users, duty_officers)
+        except Exception:
+            logging.exception('Could not send telephone alert')
 
 
 def send_email_alert(service, users, duty_officers):
@@ -91,6 +103,7 @@ def send_hipchat_alert(service, users, duty_officers):
         'host': settings.WWW_HTTP_HOST,
         'scheme': settings.WWW_SCHEME,
         'alert': alert,
+        'jenkins_api': settings.JENKINS_API,
     })
     message = Template(hipchat_template).render(c)
     _send_hipchat_alert(message, color=color, sender='Cabot/%s' % service.name)

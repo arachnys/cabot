@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import requests
+from django.conf import settings
 from django.utils import timezone
 from django.core.urlresolvers import reverse
 from django.test import TestCase
@@ -12,13 +13,14 @@ from rest_framework.test import APITestCase
 from rest_framework.reverse import reverse as api_reverse
 from cabot.cabotapp.models import (
     GraphiteStatusCheck, JenkinsStatusCheck,
-    HttpStatusCheck, ICMPStatusCheck, Service, Instance, StatusCheckResult)
+    HttpStatusCheck, ICMPStatusCheck, Service, Instance,
+    StatusCheckResult, UserProfile)
 from cabot.cabotapp.views import StatusCheckReportForm
+from cabot.cabotapp.alert import (send_hipchat_alert, send_alert)
 from mock import Mock, patch
 from twilio import rest
-from django.utils import timezone
 from django.core import mail
-from datetime import timedelta, date
+from datetime import timedelta, date, datetime
 import json
 import os
 import base64
@@ -411,7 +413,8 @@ class TestAPI(LocalTestCase):
                     'sms_alert': False,
                     'telephone_alert': False,
                     'hackpad_id': None,
-                    'id': 1
+                    'id': 1,
+                    'url': u''
                 },
             ],
             'instance': [
@@ -528,7 +531,8 @@ class TestAPI(LocalTestCase):
                     'sms_alert': False,
                     'telephone_alert': False,
                     'hackpad_id': None,
-                    'id': 2
+                    'id': 2,
+                    'url': u'',
                 },
             ],
             'instance': [
@@ -630,7 +634,7 @@ class TestAPI(LocalTestCase):
                 # hackpad_id and other null text fields omitted on create 
                 # for now due to rest_framework bug:
                 # https://github.com/tomchristie/django-rest-framework/issues/1879
-                # Update: This has been fixed in master: 
+                # Update: This has been fixed in master:
                 # https://github.com/tomchristie/django-rest-framework/pull/1834
                 for field in ('hackpad_id', 'username', 'password'):
                     if field in item:
@@ -706,28 +710,28 @@ class TestAPIFiltering(LocalTestCase):
         response = self.client.get(
             '{}?debounce=1&importance=CRITICAL'.format(
                 api_reverse('jenkinsstatuscheck-list')
-            ), 
-            format='json', 
+            ),
+            format='json',
             HTTP_AUTHORIZATION=self.basic_auth
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(
-            response.data[0]['id'], 
+            response.data[0]['id'],
             self.expected_filter_result.id
         )
-    
+
     def test_positive_sort(self):
         response = self.client.get(
             '{}?ordering=name'.format(
                 api_reverse('graphitestatuscheck-list')
-            ), 
-            format='json', 
+            ),
+            format='json',
             HTTP_AUTHORIZATION=self.basic_auth
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            [item['name'] for item in response.data], 
+            [item['name'] for item in response.data],
             self.expected_sort_names
         )
 
@@ -735,12 +739,68 @@ class TestAPIFiltering(LocalTestCase):
         response = self.client.get(
             '{}?ordering=-name'.format(
                 api_reverse('graphitestatuscheck-list')
-            ), 
-            format='json', 
+            ),
+            format='json',
             HTTP_AUTHORIZATION=self.basic_auth
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            [item['name'] for item in response.data], 
+            [item['name'] for item in response.data],
             self.expected_sort_names[::-1]
         )
+
+
+class TestAlerts(LocalTestCase):
+    def setUp(self):
+        super(TestAlerts, self).setUp()
+
+        self.user_profile = UserProfile.objects.create(
+            user = self.user,
+            hipchat_alias = "test_user_hipchat_alias",)
+        self.user_profile.save()
+
+        self.service.users_to_notify.add(self.user)
+        self.service.update_status()
+
+    def test_users_to_notify(self):
+        self.assertEqual(self.service.users_to_notify.all().count(), 1)
+        self.assertEqual(self.service.users_to_notify.get(pk=1).username, self.user.username)
+
+    @patch('cabot.cabotapp.models.send_alert')
+    def test_alert(self, fake_send_alert):
+        self.service.alert()
+        self.assertEqual(fake_send_alert.call_count, 1)
+        fake_send_alert.assert_called_with(self.service, duty_officers=[])
+
+    @patch('cabot.cabotapp.alert._send_hipchat_alert')
+    def test_inactive_users(self, fake_hipchat_alert):
+        self.user.is_active = True
+        self.user.save()
+        self.service.alert()
+        fake_hipchat_alert.assert_called_with(u'Service Service is back to normal: http://localhost/service/1/.  @test_user_hipchat_alias', color='green', sender='Cabot/Service')
+
+        self.user.is_active = False
+        self.user.save()
+        self.service.alert()
+        fake_hipchat_alert.assert_called_with(u'Service Service is back to normal: http://localhost/service/1/. ', color='green', sender='Cabot/Service')
+
+
+    @patch('cabot.cabotapp.alert._send_hipchat_alert')
+    def test_normal_alert(self, fake_hipchat_alert):
+
+        self.service.overall_status = Service.PASSING_STATUS
+        self.service.old_overall_status = Service.ERROR_STATUS
+        self.service.save()
+
+        self.service.alert()
+        fake_hipchat_alert.assert_called_with(u'Service Service is back to normal: http://localhost/service/1/.  @test_user_hipchat_alias', color='green', sender='Cabot/Service')
+
+    @patch('cabot.cabotapp.alert._send_hipchat_alert')
+    def test_failure_alert(self, fake_hipchat_alert):
+        # Most recent failed
+        self.service.overall_status = Service.CALCULATED_FAILING_STATUS
+        self.service.old_overall_status = Service.PASSING_STATUS
+        self.service.save()
+
+        self.service.alert()
+        fake_hipchat_alert.assert_called_with(u'Service Service reporting failing status: http://localhost/service/1/. Checks failing: @test_user_hipchat_alias', color='red', sender='Cabot/Service')
