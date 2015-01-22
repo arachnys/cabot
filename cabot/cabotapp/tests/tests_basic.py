@@ -777,12 +777,12 @@ class TestAlerts(LocalTestCase):
         self.user.is_active = True
         self.user.save()
         self.service.alert()
-        fake_hipchat_alert.assert_called_with(u'Service Service is back to normal: https://localhost/service/1/.  @test_user_hipchat_alias', color='green', sender='Cabot/Service')
+        fake_hipchat_alert.assert_called_with(u'Service Service is back to normal: http://localhost/service/1/.  @test_user_hipchat_alias', color='green', sender='Cabot/Service')
 
         self.user.is_active = False
         self.user.save()
         self.service.alert()
-        fake_hipchat_alert.assert_called_with(u'Service Service is back to normal: https://localhost/service/1/. ', color='green', sender='Cabot/Service')
+        fake_hipchat_alert.assert_called_with(u'Service Service is back to normal: http://localhost/service/1/. ', color='green', sender='Cabot/Service')
 
 
     @patch('cabot.cabotapp.alert._send_hipchat_alert')
@@ -793,7 +793,7 @@ class TestAlerts(LocalTestCase):
         self.service.save()
 
         self.service.alert()
-        fake_hipchat_alert.assert_called_with(u'Service Service is back to normal: https://localhost/service/1/.  @test_user_hipchat_alias', color='green', sender='Cabot/Service')
+        fake_hipchat_alert.assert_called_with(u'Service Service is back to normal: http://localhost/service/1/.  @test_user_hipchat_alias', color='green', sender='Cabot/Service')
 
     @patch('cabot.cabotapp.alert._send_hipchat_alert')
     def test_failure_alert(self, fake_hipchat_alert):
@@ -803,4 +803,4 @@ class TestAlerts(LocalTestCase):
         self.service.save()
 
         self.service.alert()
-        fake_hipchat_alert.assert_called_with(u'Service Service reporting failing status: https://localhost/service/1/. Checks failing: @test_user_hipchat_alias', color='red', sender='Cabot/Service')
+        fake_hipchat_alert.assert_called_with(u'Service Service reporting failing status: http://localhost/service/1/. Checks failing: @test_user_hipchat_alias', color='red', sender='Cabot/Service')
