@@ -532,6 +532,7 @@ class TestAPI(LocalTestCase):
                     'sms_alert': False,
                     'telephone_alert': False,
                     'hackpad_id': None,
+                    'instances': [],
                     'id': 2,
                     'url': u'',
                 },
