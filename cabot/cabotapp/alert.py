@@ -1,14 +1,12 @@
-from os import environ as env
-
 from django.conf import settings
 from django.core.mail import send_mail
 from django.core.urlresolvers import reverse
 from django.template import Context, Template
+from hypchat import HypChat
 
-from twilio.rest import TwilioRestClient
 from twilio import twiml
-import requests
 import logging
+from twilio.rest import TwilioRestClient
 
 logger = logging.getLogger(__name__)
 
@@ -46,12 +44,12 @@ def send_alert(service, duty_officers=None):
         try:
             send_sms_alert(service, users, duty_officers)
         except Exception:
-            logging.exception('Could not send sms alert')
+            logging.exception('Could not send SMS alert')
     if service.telephone_alert:
         try:
             send_telephone_alert(service, users, duty_officers)
         except Exception:
-            logging.exception('Could not send telephone alert')
+            logging.exception('Could not send PHONE alert')
 
 
 def send_email_alert(service, users, duty_officers):
@@ -106,21 +104,16 @@ def send_hipchat_alert(service, users, duty_officers):
         'jenkins_api': settings.JENKINS_API,
     })
     message = Template(hipchat_template).render(c)
-    _send_hipchat_alert(message, color=color, sender='Cabot/%s' % service.name)
+    _send_hipchat_alert(message, color=color)
 
 
-def _send_hipchat_alert(message, color='green', sender='Cabot'):
-    room = settings.HIPCHAT_ALERT_ROOM
+def _send_hipchat_alert(message, color='green'):
+    room_id = int(settings.HIPCHAT_ALERT_ROOM)
     api_key = settings.HIPCHAT_API_KEY
-    url = settings.HIPCHAT_URL
-    resp = requests.post(url + '?auth_token=' + api_key, data={
-        'room_id': room,
-        'from': sender[:15],
-        'message': message,
-        'notify': 1,
-        'color': color,
-        'message_format': 'text',
-    })
+    hc = HypChat(api_key)
+    rooms = hc.rooms()
+    room = filter(lambda x: x['id'] == room_id, rooms['items'])[0]
+    room.message(message, color=color, notify=True, format='text')
 
 
 def send_sms_alert(service, users, duty_officers):
