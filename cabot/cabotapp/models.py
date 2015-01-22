@@ -235,7 +235,7 @@ class Service(CheckGroupMixin):
         if not (self.overall_status == Service.PASSING_STATUS and self.old_overall_status == Service.PASSING_STATUS):
             self.alert()
     instances = models.ManyToManyField(
-        Instance,
+        'Instance',
         blank=True,
         help_text='Instances this service is running on.',
     )
