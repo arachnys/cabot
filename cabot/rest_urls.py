@@ -57,13 +57,13 @@ check_group_mixin_fields = (
     'sms_alert',
     'telephone_alert',
     'hackpad_id',
-    'instances',
 )
 
 router.register(r'services', create_viewset(
     arg_model=models.Service, 
     arg_fields=check_group_mixin_fields + (
         'url',
+        'instances',
     ),
 ))
 
