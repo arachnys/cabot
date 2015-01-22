@@ -43,7 +43,7 @@ setup(
         'mock==1.0.1',
         'psycogreen==1.0',
         'psycopg2==2.5.1',
-        'pytz==2013.9',
+        'pytz==2014.10',
         'redis==2.9.0',
         'requests==0.14.2',
         'six==1.5.1',
