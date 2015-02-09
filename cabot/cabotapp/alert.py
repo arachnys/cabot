@@ -46,7 +46,10 @@ class AlertPluginUserData(PolymorphicModel):
 def send_alert(service, duty_officers=None):
     users = service.users_to_notify.filter(is_active=True)
     for alert in service.alerts.all():
-        alert.send_alert(service, users, duty_officers)
+        try:
+            alert.send_alert(service, users, duty_officers)
+        except Exception:
+            logging.exception('Could not sent ' + alert.name + ' alert')
 
 def update_alert_plugins():
     for plugin_subclass in AlertPlugin.__subclasses__():
