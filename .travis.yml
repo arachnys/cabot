@@ -18,6 +18,7 @@ install:
  - sudo pip install virtualenv
  - sudo virtualenv venv
  - sudo ./venv/bin/pip install --upgrade setuptools
+ - CABOT_PLUGINS_ENABLED=cabot_alert_hipchat,cabot_alert_twilio,cabot_alert_email
  - sudo ./venv/bin/pip install --timeout=30 --exists-action=w -e . --no-use-wheel
 
 # setup databases

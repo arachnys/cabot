@@ -11,15 +11,19 @@ from tasks import run_status_check as _run_status_check
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.views.generic import (
-    DetailView, CreateView, UpdateView, ListView, DeleteView, TemplateView)
+    DetailView, CreateView, UpdateView, ListView, DeleteView, TemplateView, FormView, View)
 from django import forms
 from .graphite import get_data, get_matching_metrics
-from .alert import telephone_alert_twiml_callback
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.utils.timezone import utc
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ValidationError
+
+from cabot.cabotapp import alert
+from models import AlertPluginUserData
+from django.forms.models import (inlineformset_factory, modelformset_factory)
+from django import shortcuts
 
 from itertools import groupby, dropwhile, izip_longest
 import requests
@@ -242,14 +246,6 @@ class JenkinsStatusCheckForm(StatusCheckForm):
         )
         widgets = dict(**base_widgets)
 
-
-class UserProfileForm(forms.ModelForm):
-
-    class Meta:
-        model = UserProfile
-        exclude = ('user',)
-
-
 class InstanceForm(SymmetricalForm):
 
     symmetrical_fields = ('service_set',)
@@ -308,10 +304,7 @@ class ServiceForm(forms.ModelForm):
             'users_to_notify',
             'status_checks',
             'instances',
-            'email_alert',
-            'hipchat_alert',
-            'sms_alert',
-            'telephone_alert',
+            'alerts',
             'alerts_enabled',
             'hackpad_id',
         )
@@ -323,6 +316,10 @@ class ServiceForm(forms.ModelForm):
                 'style': 'width: 70%',
             }),
             'instances': forms.SelectMultiple(attrs={
+                'data-rel': 'chosen',
+                'style': 'width: 70%',
+            }),
+            'alerts': forms.SelectMultiple(attrs={
                 'data-rel': 'chosen',
                 'style': 'width: 70%',
             }),
@@ -504,20 +501,76 @@ class StatusCheckDetailView(LoginRequiredMixin, DetailView):
         return super(StatusCheckDetailView, self).render_to_response(context, *args, **kwargs)
 
 
-class UserProfileUpdateView(LoginRequiredMixin, UpdateView):
-    model = UserProfile
-    success_url = reverse_lazy('subscriptions')
-    form_class = UserProfileForm
+class UserProfileUpdateView(LoginRequiredMixin, View):
+    model = AlertPluginUserData
+    def get(self, *args, **kwargs):
+        return HttpResponseRedirect(reverse('update-alert-user-data', args=(self.kwargs['pk'], u'General')))
 
-    def get_object(self, *args, **kwargs):
+class UserProfileUpdateAlert(LoginRequiredMixin, View):
+    template = loader.get_template('cabotapp/alertpluginuserdata_form.html')
+    model = AlertPluginUserData
+
+    def get(self, request, pk, alerttype):
         try:
-            return self.model.objects.get(user=self.kwargs['pk'])
-        except self.model.DoesNotExist:
-            user = User.objects.get(id=self.kwargs['pk'])
+            profile = UserProfile.objects.get(user=pk)
+        except UserProfile.DoesNotExist:
+            user = User.objects.get(id=pk)
             profile = UserProfile(user=user)
             profile.save()
-            return profile
 
+        profile.user_data()
+
+        if (alerttype == u'General'):
+            form = GeneralSettingsForm(initial={
+                'first_name': profile.user.first_name,
+                'last_name' : profile.user.last_name,
+                'email_address' : profile.user.email,
+                'enabled' : profile.user.is_active,
+                })
+        else:
+            plugin_userdata = self.model.objects.get(title=alerttype, user=profile)
+            form_model = get_object_form(type(plugin_userdata))
+            form = form_model(instance=plugin_userdata)
+
+        c = RequestContext(request, {
+            'form': form,
+            'alert_preferences': profile.user_data(),
+            })
+        return HttpResponse(self.template.render(c))
+
+    def post(self, request, pk, alerttype):
+        profile = UserProfile.objects.get(user=pk)
+        if (alerttype == u'General'):
+            form = GeneralSettingsForm(request.POST)
+            if form.is_valid():
+                profile.user.first_name = form.cleaned_data['first_name']
+                profile.user.last_name = form.cleaned_data['last_name']
+                profile.user.is_active = form.cleaned_data['enabled']
+                profile.user.email = form.cleaned_data['email_address']
+                profile.user.save()
+                return HttpResponseRedirect(reverse('update-alert-user-data', args=(self.kwargs['pk'], alerttype)))
+
+        else:
+            plugin_userdata = self.model.objects.get(title=alerttype, user=profile)
+            form_model = get_object_form(type(plugin_userdata))
+            form = form_model(request.POST, instance=plugin_userdata)
+            form.save()
+            if form.is_valid():
+                return HttpResponseRedirect(reverse('update-alert-user-data', args=(self.kwargs['pk'], alerttype)))
+
+def get_object_form(model_type):
+    class AlertPreferencesForm(forms.ModelForm):
+        class Meta:
+            model = model_type
+        def is_valid(self):
+            return True
+    return AlertPreferencesForm
+
+class GeneralSettingsForm(forms.Form):
+    first_name = forms.CharField(label='First name', max_length=30, required=False)
+    last_name  = forms.CharField(label='Last name', max_length=30, required=False)
+    email_address = forms.CharField(label='Email Address', max_length=30, required=False)
+    enabled = forms.BooleanField(label='Enabled', required=False)
 
 class InstanceListView(LoginRequiredMixin, ListView):
 
@@ -558,6 +611,7 @@ class ServiceDetailView(LoginRequiredMixin, DetailView):
         context = super(ServiceDetailView, self).get_context_data(**kwargs)
         date_from = date.today() - relativedelta(day=1)
         context['report_form'] = StatusCheckReportForm(initial={
+            'alerts': self.object.alerts.all(),
             'checks': self.object.status_checks.all(),
             'service': self.object,
             'date_from': date_from,
@@ -610,6 +664,7 @@ class ServiceCreateView(LoginRequiredMixin, CreateView):
     model = Service
     form_class = ServiceForm
 
+    alert.update_alert_plugins()
     def get_success_url(self):
         return reverse('service', kwargs={'pk': self.object.id})
 
@@ -662,11 +717,6 @@ class StatusCheckReportView(LoginRequiredMixin, TemplateView):
 
 
 # Misc JSON api and other stuff
-
-def twiml_callback(request, service_id):
-    service = Service.objects.get(id=service_id)
-    twiml = telephone_alert_twiml_callback(service)
-    return HttpResponse(twiml, content_type='application/xml')
 
 
 def checks_run_recently(request):
