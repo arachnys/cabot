@@ -24,6 +24,9 @@ from django.contrib.auth.views import login, logout, password_reset, password_re
 admin.autodiscover()
 
 from importlib import import_module
+import logging
+
+logger = logging.getLogger(__name__)
 
 urlpatterns = patterns('',
                                              url(r'^$', view=RedirectView.as_view(url='services/', permanent=False),
@@ -143,11 +146,11 @@ def append_plugin_urls():
     Appends plugin specific URLs to the urlpatterns variable.
     """
     global urlpatterns
-    for plugin in settings.CABOT_PLUGINS_ENABLED.split(','):
+    for plugin in settings.CABOT_PLUGINS_ENABLED_PARSED:
         try:
             _module = import_module('%s.urls' % plugin)
-        except:
-            pass
+        except Exception as e:
+            logger.error('No url file available for plugin %s' % plugin)
         else:
             urlpatterns += patterns('',
                 url(r'^plugins/%s/' % plugin, include('%s.urls' % plugin))
