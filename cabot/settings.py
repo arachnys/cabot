@@ -122,6 +122,7 @@ INSTALLED_APPS = (
     'jsonify',
     'cabot.cabotapp',
     'rest_framework',
+    'cabot_check_icmp'
 )
 
 # Load additional apps from configuration file
