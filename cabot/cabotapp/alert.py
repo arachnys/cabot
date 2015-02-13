@@ -27,7 +27,7 @@ class AlertPlugin(PolymorphicModel):
     def __unicode__(self):
         return u'%s' % (self.title)
 
-    def send_alert(service, users, duty_officers):
+    def send_alert(self, service, users, duty_officers):
         """
         Implement a send_alert function here that shall be called.
         """
@@ -39,7 +39,7 @@ class AlertPluginUserData(PolymorphicModel):
 
     class Meta:
         unique_together = ('title', 'user',)
-        
+
     def __unicode__(self):
         return u'%s' % (self.title)
 

@@ -1,5 +1,6 @@
 import os
 import dj_database_url
+import re
 from django.conf import settings
 from cabot.celeryconfig import *
 from cabot.cabot_config import *
@@ -135,8 +136,13 @@ INSTALLED_APPS = (
 )
 
 # Load additional apps from configuration file
+CABOT_PLUGINS_ENABLED_PARSED = []
 for plugin in CABOT_PLUGINS_ENABLED.split(","):
-    INSTALLED_APPS += (plugin,)
+    # Hack to clean up if versions of plugins specified
+    exploded = re.split(r'[<>=]+', plugin)
+    CABOT_PLUGINS_ENABLED_PARSED.append(exploded[0])
+
+INSTALLED_APPS += tuple(CABOT_PLUGINS_ENABLED_PARSED)
 
 COMPRESS_PRECOMPILERS = (
     ('text/coffeescript', 'coffee --compile --stdio'),
