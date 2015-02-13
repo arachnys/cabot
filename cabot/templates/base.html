@@ -74,6 +74,11 @@
                 <li>
                   <a href="{% url "create-icmp-check" %}?service={{ service.id }}&instance={{ instance.id }}" class="" title="Add new ICMP check"><i class="glyphicon glyphicon-transfer"></i> ICMP check</a>
                 </li>
+                {% for check in check_plugins %}
+                <li>
+                  {{ check.name }}
+                </li>
+                {% endfor %}
               </ul>
             </li>
           </ul>

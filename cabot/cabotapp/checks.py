@@ -5,7 +5,9 @@ from polymorphic import PolymorphicModel
 from django.db.models import F
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
-from cabot.cabotapp.models import Service
+from cabot.cabotapp.models import (Service, StatusCheckResult, calculate_debounced_passing,
+    serialize_recent_results,)
+from celery.utils.log import get_task_logger
 
 CHECK_TYPES = (
     ('>', 'Greater than'),
@@ -14,6 +16,8 @@ CHECK_TYPES = (
     ('<=', 'Less than or equal'),
     ('==', 'Equal to'),
 )
+
+logger = get_task_logger(__name__)
 
 class CheckPlugin(PolymorphicModel):
     """
@@ -52,68 +56,6 @@ class CheckPlugin(PolymorphicModel):
         max_length=50, choices=Service.STATUSES, default=Service.CALCULATED_PASSING_STATUS, blank=True)
     last_run = models.DateTimeField(null=True)
     cached_health = models.TextField(editable=False, null=True)
-
-    # Graphite checks
-    metric = models.TextField(
-        null=True,
-        help_text='fully.qualified.name of the Graphite metric you want to watch. This can be any valid Graphite expression, including wildcards, multiple hosts, etc.',
-    )
-    check_type = models.CharField(
-        choices=CHECK_TYPES,
-        max_length=100,
-        null=True,
-    )
-    value = models.TextField(
-        null=True,
-        help_text='If this expression evaluates to true, the check will fail (possibly triggering an alert).',
-    )
-    expected_num_hosts = models.IntegerField(
-        default=0,
-        null=True,
-        help_text='The minimum number of data series (hosts) you expect to see.',
-    )
-
-    # HTTP checks
-    endpoint = models.TextField(
-        null=True,
-        help_text='HTTP(S) endpoint to poll.',
-    )
-    username = models.TextField(
-        blank=True,
-        null=True,
-        help_text='Basic auth username.',
-    )
-    password = models.TextField(
-        blank=True,
-        null=True,
-        help_text='Basic auth password.',
-    )
-    text_match = models.TextField(
-        blank=True,
-        null=True,
-        help_text='Regex to match against source of page.',
-    )
-    status_code = models.TextField(
-        default=200,
-        null=True,
-        help_text='Status code expected from endpoint.'
-    )
-    timeout = models.IntegerField(
-        default=30,
-        null=True,
-        help_text='Time out after this many seconds.',
-    )
-    verify_ssl_certificate = models.BooleanField(
-        default=True,
-        help_text='Set to false to allow not try to verify ssl certificates (default True)',
-    )
-
-    # Jenkins checks
-    max_queued_build_time = models.IntegerField(
-        null=True,
-        blank=True,
-        help_text='Alert if build queued for more than this many minutes.',
-    )
 
     class Meta(PolymorphicModel.Meta):
         ordering = ['name']
@@ -157,26 +99,26 @@ class CheckPlugin(PolymorphicModel):
         """
         raise NotImplementedError('Subclasses should implement')
 
-    def save(self, *args, **kwargs):
-        if self.last_run:
-            recent_results = list(self.recent_results())
-            if calculate_debounced_passing(recent_results, self.debounce):
-                self.calculated_status = Service.CALCULATED_PASSING_STATUS
-            else:
-                self.calculated_status = Service.CALCULATED_FAILING_STATUS
-            self.cached_health = serialize_recent_results(recent_results)
-            try:
-                updated = StatusCheck.objects.get(pk=self.pk)
-            except StatusCheck.DoesNotExist as e:
-                logger.error('Cannot find myself (check %s) in the database, presumably have been deleted' % self.pk)
-                return
-        else:
-            self.cached_health = ''
-            self.calculated_status = Service.CALCULATED_PASSING_STATUS
-        ret = super(StatusCheck, self).save(*args, **kwargs)
-        self.update_related_services()
-        self.update_related_instances()
-        return ret
+    # def save(self, *args, **kwargs):
+    #     if self.last_run:
+    #         recent_results = list(self.recent_results())
+    #         if calculate_debounced_passing(recent_results, self.debounce):
+    #             self.calculated_status = Service.CALCULATED_PASSING_STATUS
+    #         else:
+    #             self.calculated_status = Service.CALCULATED_FAILING_STATUS
+    #         self.cached_health = serialize_recent_results(recent_results)
+    #         try:
+    #             updated = CheckPlugin.objects.get(pk=self.pk)
+    #         except CheckPlugin.DoesNotExist as e:
+    #             logger.error('Cannot find myself (check %s) in the database, presumably have been deleted' % self.pk)
+    #             return
+    #     else:
+    #         self.cached_health = ''
+    #         self.calculated_status = Service.CALCULATED_PASSING_STATUS
+    #     ret = super(CheckPlugin, self).save(*args, **kwargs)
+    #     self.update_related_services()
+    #     self.update_related_instances()
+    #     return ret
 
     def duplicate(self, inst_set=(), serv_set=()):
         new_check = self

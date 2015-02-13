@@ -1,6 +1,7 @@
 from django.contrib import admin
 from .models import UserProfile, Service, Shift, ServiceStatusSnapshot, StatusCheck, StatusCheckResult, Instance
 from .alert  import AlertPluginUserData, AlertPlugin
+from .checks import CheckPlugin
 
 admin.site.register(UserProfile)
 admin.site.register(Shift)
@@ -11,3 +12,4 @@ admin.site.register(StatusCheckResult)
 admin.site.register(Instance)
 admin.site.register(AlertPlugin)
 admin.site.register(AlertPluginUserData)
+admin.site.register(CheckPlugin)
