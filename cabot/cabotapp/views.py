@@ -20,7 +20,7 @@ from django.utils.timezone import utc
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ValidationError
 
-from cabot.cabotapp import alert
+from cabot.cabotapp import alert, checks
 from models import AlertPluginUserData
 from django.forms.models import (inlineformset_factory, modelformset_factory)
 from django import shortcuts
@@ -29,6 +29,8 @@ from itertools import groupby, dropwhile, izip_longest
 import requests
 import json
 import re
+
+import urllib
 
 
 class LoginRequiredMixin(object):
@@ -117,7 +119,6 @@ base_widgets = {
     }),
     'importance': forms.RadioSelect(),
 }
-
 
 class StatusCheckForm(SymmetricalForm):
 
@@ -380,8 +381,21 @@ class StatusCheckReportForm(forms.Form):
         return checks
 
 
+from celery.utils.log import get_task_logger
+logger = get_task_logger(__name__)
+
 class CheckCreateView(LoginRequiredMixin, CreateView):
     template_name = 'cabotapp/statuscheck_form.html'
+
+    def get(self, request, plugin_name):
+
+        for plugin in checks.CheckPlugin.__subclasses__():
+            logger.error(plugin.plugin_name)
+            if urllib.unquote_plus(plugin_name) == plugin.plugin_name:
+                self.model = plugin
+                # self.form_class = plugin.form_class
+
+        return super(CreateView, self).get(request, plugin_name)
 
     def form_valid(self, form):
         form.instance.created_by = self.request.user

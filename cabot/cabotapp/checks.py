@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 from cabot.cabotapp.models import (Service, StatusCheckResult, calculate_debounced_passing,
     serialize_recent_results,)
 from celery.utils.log import get_task_logger
+import urllib
 
 CHECK_TYPES = (
     ('>', 'Greater than'),
@@ -29,6 +30,9 @@ class CheckPlugin(PolymorphicModel):
 
     We are using django-polymorphic for polymorphism
     """
+
+    plugin_title  = "Plugin Title"
+    plugin_author = "Plugin Author"
 
     # Common attributes to all
     name = models.TextField()
@@ -61,7 +65,7 @@ class CheckPlugin(PolymorphicModel):
         ordering = ['name']
 
     def __unicode__(self):
-        return self.name
+        return self.check_category + ' - ' + self.name
 
     def recent_results(self):
         # Not great to use id but we are getting lockups, possibly because of something to do with index
@@ -98,6 +102,9 @@ class CheckPlugin(PolymorphicModel):
         Implement on subclasses. Should return a `CheckResult` instance.
         """
         raise NotImplementedError('Subclasses should implement')
+
+    def save(self, *args, **kwargs):
+        self.check_category
 
     # def save(self, *args, **kwargs):
     #     if self.last_run:
@@ -140,5 +147,15 @@ class CheckPlugin(PolymorphicModel):
         for instance in instances:
             update_instance.delay(instance.id)
 
+    plugin_name = "Default"
+
+    @property
+    def get_create_url(self):
+        quoted_url = urllib.quote_plus(self.plugin_name, safe='')
+        return reverse('create-check', args=[quoted_url])
+
 class CheckManager(models.Manager):
-        pass
+        def __init__(self):
+            for check_plugin in CheckPlugin.__subclasses__():
+                check_plugin.objects.get_or_create()
+            return super(BaseManager, self).__init__()

@@ -10,7 +10,7 @@ from cabot.cabotapp.views import (
         StatusCheckDeleteView, StatusCheckListView, StatusCheckDetailView,
         StatusCheckResultDetailView, StatusCheckReportView, UserProfileUpdateAlert)
 
-from cabot.cabotapp.views import (InstanceListView, InstanceDetailView,
+from cabot.cabotapp.views import (InstanceListView, InstanceDetailView, CheckCreateView,
                                                         InstanceUpdateView, InstanceCreateView, InstanceDeleteView,
                                                         ServiceListView, ServiceDetailView,
                                                         ServiceUpdateView, ServiceCreateView, ServiceDeleteView,
@@ -74,6 +74,9 @@ urlpatterns = patterns('',
 
     url(r'^checks/$', view=StatusCheckListView.as_view(),
          name='checks'),
+    url(r'^checks/create/(?P<plugin_name>.+)$', view=CheckCreateView.as_view(),
+         name='create-check'),
+    
     url(r'^check/run/(?P<pk>\d+)/',
          view=run_status_check, name='run-check'),
     url(r'^check/delete/(?P<pk>\d+)/',

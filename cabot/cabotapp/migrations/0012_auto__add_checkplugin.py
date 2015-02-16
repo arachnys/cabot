@@ -12,6 +12,7 @@ class Migration(SchemaMigration):
         db.create_table(u'cabotapp_checkplugin', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('polymorphic_ctype', self.gf('django.db.models.fields.related.ForeignKey')(related_name=u'polymorphic_cabotapp.checkplugin_set', null=True, to=orm['contenttypes.ContentType'])),
+            ('checkcategory', self.gf('django.db.models.fields.TextField')()),
             ('name', self.gf('django.db.models.fields.TextField')()),
             ('active', self.gf('django.db.models.fields.BooleanField')(default=True)),
             ('importance', self.gf('django.db.models.fields.CharField')(default='ERROR', max_length=30)),
@@ -79,6 +80,7 @@ class Migration(SchemaMigration):
             'active': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'cached_health': ('django.db.models.fields.TextField', [], {'null': 'True'}),
             'calculated_status': ('django.db.models.fields.CharField', [], {'default': "'passing'", 'max_length': '50', 'blank': 'True'}),
+            'checkcategory': ('django.db.models.fields.TextField', [], {}),
             'created_by': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['auth.User']", 'null': 'True'}),
             'debounce': ('django.db.models.fields.IntegerField', [], {'default': '0', 'null': 'True'}),
             'frequency': ('django.db.models.fields.IntegerField', [], {'default': '5'}),

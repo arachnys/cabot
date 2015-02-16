@@ -76,7 +76,7 @@
                 </li>
                 {% for check in check_plugins %}
                 <li>
-                  {{ check.name }}
+                  <a href="{{ check.get_create_url }}"><i class="glyphicon glyphicon-transfer"></i> {{ check.plugin_name }}</a>
                 </li>
                 {% endfor %}
               </ul>
