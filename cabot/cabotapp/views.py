@@ -20,7 +20,8 @@ from django.utils.timezone import utc
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ValidationError
 
-from cabot.cabotapp import alert, checks
+from cabot.cabotapp import alert
+import cabot.checks.models as checks
 from models import AlertPluginUserData
 from django.forms.models import (inlineformset_factory, modelformset_factory)
 from django import shortcuts
@@ -113,139 +114,7 @@ class SymmetricalForm(forms.ModelForm):
             self.save_m2m()
         return instance
 
-base_widgets = {
-    'name': forms.TextInput(attrs={
-        'style': 'width:30%',
-    }),
-    'importance': forms.RadioSelect(),
-}
 
-class StatusCheckForm(SymmetricalForm):
-
-    symmetrical_fields = ('service_set', 'instance_set')
-
-    service_set = forms.ModelMultipleChoiceField(
-        queryset=Service.objects.all(),
-        required=False,
-        help_text='Link to service(s).',
-        widget=forms.SelectMultiple(
-            attrs={
-                'data-rel': 'chosen',
-                'style': 'width: 70%',
-            },
-        )
-    )
-
-    instance_set = forms.ModelMultipleChoiceField(
-        queryset=Instance.objects.all(),
-        required=False,
-        help_text='Link to instance(s).',
-        widget=forms.SelectMultiple(
-            attrs={
-                'data-rel': 'chosen',
-                'style': 'width: 70%',
-            },
-        )
-    )
-
-
-class GraphiteStatusCheckForm(StatusCheckForm):
-
-    class Meta:
-        model = GraphiteStatusCheck
-        fields = (
-            'name',
-            'metric',
-            'check_type',
-            'value',
-            'frequency',
-            'active',
-            'importance',
-            'expected_num_hosts',
-            'debounce',
-        )
-        widgets = dict(**base_widgets)
-        widgets.update({
-            'value': forms.TextInput(attrs={
-                'style': 'width: 100px',
-                'placeholder': 'threshold value',
-            }),
-            'metric': forms.TextInput(attrs={
-                'style': 'width: 100%',
-                'placeholder': 'graphite metric key'
-            }),
-            'check_type': forms.Select(attrs={
-                'data-rel': 'chosen',
-            })
-        })
-
-
-class ICMPStatusCheckForm(StatusCheckForm):
-
-    class Meta:
-        model = ICMPStatusCheck
-        fields = (
-            'name',
-            'frequency',
-            'importance',
-            'active',
-            'debounce',
-        )
-        widgets = dict(**base_widgets)
-
-
-class HttpStatusCheckForm(StatusCheckForm):
-
-    class Meta:
-        model = HttpStatusCheck
-        fields = (
-            'name',
-            'endpoint',
-            'username',
-            'password',
-            'text_match',
-            'status_code',
-            'timeout',
-            'verify_ssl_certificate',
-            'frequency',
-            'importance',
-            'active',
-            'debounce',
-        )
-        widgets = dict(**base_widgets)
-        widgets.update({
-            'endpoint': forms.TextInput(attrs={
-                'style': 'width: 100%',
-                'placeholder': 'https://www.arachnys.com',
-            }),
-            'username': forms.TextInput(attrs={
-                'style': 'width: 30%',
-            }),
-            'password': forms.TextInput(attrs={
-                'style': 'width: 30%',
-            }),
-            'text_match': forms.TextInput(attrs={
-                'style': 'width: 100%',
-                'placeholder': '[Aa]rachnys\s+[Rr]ules',
-            }),
-            'status_code': forms.TextInput(attrs={
-                'style': 'width: 20%',
-                'placeholder': '200',
-            }),
-        })
-
-
-class JenkinsStatusCheckForm(StatusCheckForm):
-
-    class Meta:
-        model = JenkinsStatusCheck
-        fields = (
-            'name',
-            'importance',
-            'debounce',
-            'max_queued_build_time',
-        )
-        widgets = dict(**base_widgets)
 
 class InstanceForm(SymmetricalForm):
 
@@ -393,7 +262,7 @@ class CheckCreateView(LoginRequiredMixin, CreateView):
             logger.error(plugin.plugin_name)
             if urllib.unquote_plus(plugin_name) == plugin.plugin_name:
                 self.model = plugin
-                # self.form_class = plugin.form_class
+                self.form_class = ICMPStatusCheckForm
 
         return super(CreateView, self).get(request, plugin_name)
 
@@ -441,50 +310,6 @@ class CheckUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_success_url(self):
         return reverse('check', kwargs={'pk': self.object.id})
-
-class ICMPCheckCreateView(CheckCreateView):
-    model = ICMPStatusCheck
-    form_class = ICMPStatusCheckForm
-
-
-class ICMPCheckUpdateView(CheckUpdateView):
-    model = ICMPStatusCheck
-    form_class = ICMPStatusCheckForm
-
-class GraphiteCheckUpdateView(CheckUpdateView):
-    model = GraphiteStatusCheck
-    form_class = GraphiteStatusCheckForm
-
-class GraphiteCheckCreateView(CheckCreateView):
-    model = GraphiteStatusCheck
-    form_class = GraphiteStatusCheckForm
-
-class HttpCheckCreateView(CheckCreateView):
-    model = HttpStatusCheck
-    form_class = HttpStatusCheckForm
-
-
-class HttpCheckUpdateView(CheckUpdateView):
-    model = HttpStatusCheck
-    form_class = HttpStatusCheckForm
-
-
-class JenkinsCheckCreateView(CheckCreateView):
-    model = JenkinsStatusCheck
-    form_class = JenkinsStatusCheckForm
-
-    def form_valid(self, form):
-        form.instance.frequency = 1
-        return super(JenkinsCheckCreateView, self).form_valid(form)
-
-
-class JenkinsCheckUpdateView(CheckUpdateView):
-    model = JenkinsStatusCheck
-    form_class = JenkinsStatusCheckForm
-
-    def form_valid(self, form):
-        form.instance.frequency = 1
-        return super(JenkinsCheckUpdateView, self).form_valid(form)
 
 
 class StatusCheckListView(LoginRequiredMixin, ListView):

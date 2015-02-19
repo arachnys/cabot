@@ -2,19 +2,17 @@ from django.conf.urls import patterns, include, url
 from django.conf import settings
 from cabot.cabotapp.views import (
         run_status_check, graphite_api_data, checks_run_recently,
-        duplicate_icmp_check, duplicate_graphite_check, duplicate_http_check, duplicate_jenkins_check, duplicate_instance,
-        GraphiteCheckCreateView, GraphiteCheckUpdateView,
-        HttpCheckCreateView, HttpCheckUpdateView,
-        ICMPCheckCreateView, ICMPCheckUpdateView,
-        JenkinsCheckCreateView, JenkinsCheckUpdateView,
         StatusCheckDeleteView, StatusCheckListView, StatusCheckDetailView,
-        StatusCheckResultDetailView, StatusCheckReportView, UserProfileUpdateAlert)
+        StatusCheckResultDetailView, StatusCheckReportView, UserProfileUpdateAlert,
+        duplicate_instance)
 
-from cabot.cabotapp.views import (InstanceListView, InstanceDetailView, CheckCreateView,
-                                                        InstanceUpdateView, InstanceCreateView, InstanceDeleteView,
-                                                        ServiceListView, ServiceDetailView,
-                                                        ServiceUpdateView, ServiceCreateView, ServiceDeleteView,
-                                                        UserProfileUpdateView, ShiftListView, subscriptions)
+from cabot.cabotapp.views import (InstanceListView, InstanceDetailView,
+        InstanceUpdateView, InstanceCreateView, InstanceDeleteView,
+        ServiceListView, ServiceDetailView,
+        ServiceUpdateView, ServiceCreateView, ServiceDeleteView,
+        UserProfileUpdateView, ShiftListView, subscriptions)
+
+from cabot.checks.views import CheckCreateView
 
 from cabot import rest_urls
 
@@ -86,43 +84,6 @@ urlpatterns = patterns('',
          view=StatusCheckDetailView.as_view(), name='check'),
     url(r'^checks/report/$',
          view=StatusCheckReportView.as_view(), name='checks-report'),
-
-
-    url(r'^icmpcheck/create/', view=ICMPCheckCreateView.as_view(),
-         name='create-icmp-check'),
-    url(r'^icmpcheck/update/(?P<pk>\d+)/',
-         view=ICMPCheckUpdateView.as_view(
-         ), name='update-icmp-check'),
-    url(r'^icmpcheck/duplicate/(?P<pk>\d+)/',
-         view=duplicate_icmp_check, name='duplicate-icmp-check'),
-
-    url(r'^graphitecheck/create/',
-         view=GraphiteCheckCreateView.as_view(
-         ), name='create-graphite-check'),
-    url(r'^graphitecheck/update/(?P<pk>\d+)/',
-         view=GraphiteCheckUpdateView.as_view(
-         ), name='update-graphite-check'),
-    url(r'^graphitecheck/duplicate/(?P<pk>\d+)/',
-         view=duplicate_graphite_check, name='duplicate-graphite-check'),
-
-    url(r'^httpcheck/create/', view=HttpCheckCreateView.as_view(),
-         name='create-http-check'),
-    url(r'^httpcheck/update/(?P<pk>\d+)/',
-         view=HttpCheckUpdateView.as_view(
-         ), name='update-http-check'),
-    url(r'^httpcheck/duplicate/(?P<pk>\d+)/',
-         view=duplicate_http_check, name='duplicate-http-check'),
-
-    url(r'^jenkins_check/create/', view=JenkinsCheckCreateView.as_view(),
-         name='create-jenkins-check'),
-    url(r'^jenkins_check/update/(?P<pk>\d+)/',
-         view=JenkinsCheckUpdateView.as_view(
-         ), name='update-jenkins-check'),
-    url(r'^jenkins_check/duplicate/(?P<pk>\d+)/',
-         view=duplicate_jenkins_check, name='duplicate-jenkins-check'),
-    url(r'^result/(?P<pk>\d+)/',
-         view=StatusCheckResultDetailView.as_view(
-         ), name='result'),
 
     url(r'^shifts/', view=ShiftListView.as_view(),
          name='shifts'),

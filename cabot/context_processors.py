@@ -1,4 +1,4 @@
-from cabot.cabotapp.checks import CheckPlugin
+from cabot.checks.models import CheckPlugin
 
 def navbar_processor(request):
 	check_plugins = CheckPlugin.__subclasses__()
