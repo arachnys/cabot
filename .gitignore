@@ -16,3 +16,4 @@ celerybeat-schedule
 .vagrant
 conf/*.env
 dist/
+local_config.yml

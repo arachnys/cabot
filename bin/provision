@@ -17,12 +17,24 @@ PACKAGES=(
   'redis-server'
 )
 
+# OS-specific install instructions
+case $(lsb_release -sc) in
+  "precise")
+    # add-apt-repository is not available in the base system
+    if ! which add-apt-repository; then
+      apt-get update
+      apt-get install -y python-software-properties
+    fi
+  ;;
+  "trusty")
+    # add-apt-repository is not available in the base system
+    if ! which add-apt-repository; then
+      apt-get update
+      apt-get install -y software-properties-common
+    fi
+  ;;
+esac
 
-# add-apt-repository is not available in the base system
-if ! which add-apt-repository; then
-  apt-get update
-  apt-get install -y python-software-properties
-fi
 
 add-apt-repository -y ppa:chris-lea/redis-server
 apt-get update
@@ -30,6 +42,9 @@ apt-get update
 apt-get install -y --force-yes ${PACKAGES[@]}
 
 gem install foreman
+
+# ubuntu 14.04 has `nodejs` not `node`
+[ ! -f /usr/bin/node ] && ln -s /usr/bin/nodejs /usr/bin/node
 
 pip install virtualenv
 if [ ! -d /home/vagrant/venv ]; then
