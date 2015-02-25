@@ -1,0 +1,13 @@
+---
+# Example Local Vagrant config
+# With this file, you can override the amount of RAM and CPUs allocated
+# to the VM, as well as change the base box it uses. Just copy it to
+# local_config.yml and edit with whatever values you want.
+#
+# Note that it doesn't take effect until you vagrant destroy && vagrant up
+
+# double your pleasure double your CPU and RAM
+ram: 2048
+cpu: 2
+# hashicorp ubuntu doesn't support VMWare, so use box-cutter
+box: box-cutter/ubuntu1404
