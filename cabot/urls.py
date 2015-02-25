@@ -150,7 +150,7 @@ def append_plugin_urls():
         try:
             _module = import_module('%s.urls' % plugin)
         except Exception as e:
-            logger.error('No url file available for plugin %s' % plugin)
+            pass
         else:
             urlpatterns += patterns('',
                 url(r'^plugins/%s/' % plugin, include('%s.urls' % plugin))
