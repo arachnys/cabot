@@ -3,7 +3,7 @@ layout: page
 title: "Graphite checks"
 category: use
 date: 2014-01-08 22:53:18
-order: 4
+order: 6
 ---
 
 Graphite checks are a lightweight way of monitoring data that is already being fed into your [Graphite](https://graphite.readthedocs.org/en/latest/index.html) system for analysis, debugging and optimisation. Cabot makes it possible to alert on that data.
