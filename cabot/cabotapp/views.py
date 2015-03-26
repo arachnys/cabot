@@ -158,6 +158,8 @@ class GraphiteStatusCheckForm(StatusCheckForm):
             'check_type',
             'value',
             'frequency',
+            'points_to_check',
+            'x_range',
             'active',
             'importance',
             'expected_num_hosts',
@@ -737,10 +739,11 @@ def jsonify(d):
 @login_required
 def graphite_api_data(request):
     metric = request.GET.get('metric')
+    x_range = request.GET.get('x_range')
     data = None
     matching_metrics = None
     try:
-        data = get_data(metric)
+        data = get_data(metric, x_range)
     except requests.exceptions.RequestException, e:
         pass
     if not data:

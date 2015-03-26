@@ -38,12 +38,14 @@ $(document).ready ->
   updateGraphiteData()
   $('#id_metric').on('keyup', updateGraphiteData)
 
+  r = $('#id_x_range').val()
   $('#id_metric').autocomplete
     source: (request, response) ->
       $.ajax
         url: GRAPHITE_ENDPOINT
         data:
           metric: request.term
+          x_range: r
       .done (data) ->
         metricList = data.matchingMetrics?.metrics?.metrics
         if metricList
@@ -57,10 +59,12 @@ $(document).ready ->
 updateGraphiteData = () ->
   $('#graphite_data_container').text 'Getting data'
   m = $('#id_metric').val()
+  r = $('#id_x_range').val()
   $.ajax
     url: GRAPHITE_ENDPOINT
     data:
       metric: m
+      x_range: r
   .done (data) ->
     if data.data? and data.data.length? != 0
       $('#graphite_data_container').text JSON.stringify(data.data, undefined, 2)
