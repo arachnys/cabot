@@ -283,7 +283,12 @@ class InstanceForm(SymmetricalForm):
                 'data-rel': 'chosen',
                 'style': 'width: 70%',
             }),
+            'alerts': forms.SelectMultiple(attrs={
+                'data-rel': 'chosen',
+                'style': 'width: 70%',
+            }),
             'users_to_notify': forms.CheckboxSelectMultiple(),
+            'hackpad_id': forms.TextInput(attrs={'style': 'width:30%;'}),
         }
 
     def __init__(self, *args, **kwargs):
