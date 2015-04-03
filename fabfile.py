@@ -42,24 +42,24 @@ def run_migrations(deploy_path=DEPLOY_PATH):
     with cd(deploy_path):
         with prefix("source {venv}/bin/activate".format(venv=VENV_DIR)):
             sudo(
-                "foreman run python manage.py syncdb -e conf/{env}.env".format(env=env.deploy_version))
+                "foreman run -e conf/{env}.env python manage.py syncdb".format(env=env.deploy_version))
             sudo(
-                "foreman run python manage.py migrate cabotapp --noinput -e conf/{env}.env".format(env=env.deploy_version))
+                "foreman run -e conf/{env}.env python manage.py migrate cabotapp --noinput".format(env=env.deploy_version))
             # Wrap in failure for legacy reasons
             # https://github.com/celery/django-celery/issues/149
             print "You can ignore an error message regarding 'relation \"celery_taskmeta\" already exists'"
             with settings(warn_only=True):
                 sudo(
-                    "foreman run python manage.py migrate djcelery --noinput -e conf/{env}.env".format(env=env.deploy_version))
+                    "foreman run -e conf/{env}.env python manage.py migrate djcelery --noinput".format(env=env.deploy_version))
 
 
 def collect_static(deploy_path=DEPLOY_PATH):
     with cd(deploy_path):
         with prefix("source {venv}/bin/activate".format(venv=VENV_DIR)):
             sudo(
-                "foreman run python manage.py collectstatic --noinput -e conf/{env}.env".format(env=env.deploy_version))
+                "foreman run -e conf/{env}.env python manage.py collectstatic --noinput".format(env=env.deploy_version))
             sudo(
-                "foreman run python manage.py compress -e conf/{env}.env".format(env=env.deploy_version))
+                "foreman run -e conf/{env}.env python manage.py compress".format(env=env.deploy_version))
 
 
 def setup_upstart(deploy_path=DEPLOY_PATH):
