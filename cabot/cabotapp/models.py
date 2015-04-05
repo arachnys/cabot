@@ -11,6 +11,7 @@ from .jenkins import get_job_status
 from .alert import (send_alert, AlertPlugin, AlertPluginUserData, update_alert_plugins)
 from .calendar import get_events
 from .graphite import parse_metric
+from .graphite import get_data
 from .tasks import update_service, update_instance
 from datetime import datetime, timedelta
 from django.utils import timezone
@@ -389,6 +390,11 @@ class StatusCheck(PolymorphicModel):
         null=True,
         help_text='The minimum number of data series (hosts) you expect to see.',
     )
+    expected_num_metrics = models.IntegerField(
+        default=0,
+        null=True,
+        help_text='The minimum number of data series (metrics) you expect to satisfy given condition.',
+    )
 
     # HTTP checks
     endpoint = models.TextField(
@@ -552,7 +558,7 @@ class GraphiteStatusCheck(StatusCheck):
     def check_category(self):
         return "Metric check"
 
-    def format_error_message(self, failure_value, actual_hosts):
+    def format_error_message(self, failure_value, actual_hosts, actual_metrics):
         """
         A summary of why the check is failing for inclusion in short alert messages
         Returns something like:
@@ -564,6 +570,11 @@ class GraphiteStatusCheck(StatusCheck):
                                                 self.expected_num_hosts)
             if self.expected_num_hosts > actual_hosts:
                 return u'Hosts missing%s' % hosts_string
+        if self.expected_num_metrics > 0:
+            metrics_string = u' | %s/%s metrics' % (actual_metrics,
+                                                self.expected_num_metrics)
+            if self.expected_num_metrics > actual_metrics:
+                return u'Metrics satisfying condition missing%s' % metrics_string
         if failure_value is None:
             return "Failed to get metric from Graphite"
         return u"%0.1f %s %0.1f%s" % (
@@ -613,6 +624,44 @@ class GraphiteStatusCheck(StatusCheck):
         if series['num_series_with_data'] < self.expected_num_hosts:
             failed = True
 
+        matched_metrics = 0
+        if self.expected_num_metrics > 0:
+            metric_failed = True
+            json_series = get_data(self.metric)
+#            json_series = json.dumps(series['raw'])
+            logger.info("Processing series " + str(json_series))
+            for line in json_series:
+                last_value = line['datapoints'][-self.frequency][0]
+#                logger.error("Processing value " + str(last_value) + " Should be " + self.check_type + self.value)
+                if last_value is not None:
+                    if self.check_type == '<':
+                        metric_failed = not last_value < float(self.value)
+                    elif self.check_type == '<=':
+                        metric_failed = not last_value <= float(self.value)
+                    elif self.check_type == '>':
+                        metric_failed = not last_value > float(self.value)
+                    elif self.check_type == '>=':
+                        metric_failed = not last_value >= float(self.value)
+                    elif self.check_type == '==':
+                        metric_failed = not last_value == float(self.value)
+                    else:
+                        raise Exception(u'Check type %s not supported' %
+                                        self.check_type)
+                    if metric_failed:
+                        metric_failure_value = last_value
+                    else:
+                        matched_metrics += 1
+                        logger.info("Metrics matched: " + str(matched_metrics))
+                        logger.info("Required metrics: " + str (self.expected_num_metrics))
+                else:
+                    failed = True
+                logger.info("Processing series ...")
+            if matched_metrics != self.expected_num_metrics:
+                failed = True
+            else:
+                failed = False
+
+
         try:
             result.raw_data = json.dumps(series['raw'])
         except:
@@ -622,9 +671,11 @@ class GraphiteStatusCheck(StatusCheck):
             result.error = self.format_error_message(
                 failure_value,
                 series['num_series_with_data'],
+                matched_metrics,
             )
 
         result.actual_hosts = series['num_series_with_data']
+        result.actual_metrics = matched_metrics
         result.failure_value = failure_value
         return result
 
