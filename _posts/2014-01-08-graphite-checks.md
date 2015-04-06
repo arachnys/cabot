@@ -35,6 +35,7 @@ For example, if you want to alert when your series `hosts.production.*.disk.sda.
 
 *   `Importance` - if this check fails, the service it relates to will have this status.
 *   `Expected num hosts` - sometimes you want to be sure that a metric is in fact being collected properly (`collectd` often seems to crash, etc). Setting this will cause the check to fail if Cabot detects that fewer than this number of hosts are sending metrics to Graphite for this key expression.
+*   `Expected num metrics` - similar to `Expected num hosts`, but it sets the  number of metrics that should fulfil the check criteria in order for the check to pass. For example, if you have 3 metrics in graphite and set this value to 3, your check criteria is >1 and one of metrics becomes 0 you will get an alert
 *   `Debounce` - prevent alerts when a single point (or multiple points) in the data series exceeds the value set. This prevents interruptions by metrics which quickly return to normal.
     *   A value of `2` means that no alert will be issued if the check fails twice in a row and then succeeds.
 
