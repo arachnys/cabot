@@ -147,13 +147,24 @@ def append_plugin_urls():
     """
     global urlpatterns
     for plugin in settings.CABOT_PLUGINS_ENABLED_PARSED:
+        override_url = False
+
         try:
             _module = import_module('%s.urls' % plugin)
         except Exception as e:
             pass
         else:
-            urlpatterns += patterns('',
-                url(r'^plugins/%s/' % plugin, include('%s.urls' % plugin))
+            try:
+                override_url = _module.override_url
+            except Exception, e:
+                pass
+
+            if override_url is False:
+                logger.info(override_url)
+                urlpatterns += patterns('',
+                    url(r'^plugins/%s/' % plugin, include('%s.urls' % plugin))
                 )
+            else:
+                urlpatterns =  _module.urlpatterns + urlpatterns
 
 append_plugin_urls()
