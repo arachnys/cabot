@@ -54,6 +54,7 @@ setup(
         'twilio==3.4.1',
         'wsgiref==0.1.2',
         'python-dateutil==2.1',
+        'django-auth-ldap==1.2.6',
     ] + plugins,
     packages=find_packages(),
     include_package_data=True,

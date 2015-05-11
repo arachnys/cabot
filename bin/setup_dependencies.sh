@@ -58,6 +58,8 @@ packages=(
   'postgresql'
   'nginx'
   'htop'
+  'libsasl2-dev'
+  'libldap2-dev'
 )
 
 sudo apt-get update
