@@ -15,6 +15,8 @@ PACKAGES=(
   'npm'
   'redis-tools'
   'redis-server'
+  'libsasl2-dev'
+  'libldap2-dev'
 )
 
 # OS-specific install instructions
