@@ -172,7 +172,7 @@ server {
 #   }
 
 #   location /static/ {
-#     alias $DEPLOY_PATH/static/;
+#     alias /home/ubuntu/cabot/static/;
 #   }
 # }
 EOF
