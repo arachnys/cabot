@@ -3,7 +3,7 @@
 <head>
 
   <meta charset="utf-8">
-  <title>{% block title %}Cabot by Arachnys{% endblock title %}</title>
+  <title>{% block title %}Cabot by Affirm{% endblock title %}</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
   {% load compress %}
@@ -33,7 +33,7 @@
   <div class="navbar navbar-default navbar-fixed-top">
     <div class="container">
       <div class="navbar-header">
-        <a href="{% url "services" %}" class="navbar-brand"><img src="{{ STATIC_URL }}arachnys/img/icon_48x48.png" width='20' height='20' /> Cabot by Arachnys</a>
+        <a href="{% url "services" %}" class="navbar-brand"><img src="{{ STATIC_URL }}arachnys/img/icon_48x48.png" width='20' height='20' /> Cabot by Affirm</a>
         <button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#navbar-main">
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
@@ -62,6 +62,9 @@
                   <a href="{% url "create-instance" %}"><i class="fa fa-desktop"></i> Instance</a>
                 </li>
                 <li class="divider"></li>
+                <li>
+                  <a href="{% url "create-influxdb-check" %}?service={{ service.id }}&instance={{ instance.id }}" class=""><i class="glyphicon glyphicon-signal" title="Add new metric check"></i> InfluxDB check</a>
+                </li>
                 <li>
                   <a href="{% url "create-graphite-check" %}?service={{ service.id }}&instance={{ instance.id }}" class=""><i class="glyphicon glyphicon-signal" title="Add new metric check"></i> Graphite check</a>
                 </li>

@@ -10,8 +10,7 @@ from celery.exceptions import SoftTimeLimitExceeded
 from .jenkins import get_job_status
 from .alert import (send_alert, AlertPlugin, AlertPluginUserData, update_alert_plugins)
 from .calendar import get_events
-from .graphite import parse_metric
-from .graphite import get_data
+from .influx import parse_metric
 from .tasks import update_service, update_instance
 from datetime import datetime, timedelta
 from django.utils import timezone
@@ -21,6 +20,7 @@ import re
 import time
 import os
 import subprocess
+import yaml
 
 import requests
 from celery.utils.log import get_task_logger
@@ -36,6 +36,7 @@ CHECK_TYPES = (
     ('<=', 'Less than or equal'),
     ('==', 'Equal to'),
 )
+
 
 def serialize_recent_results(recent_results):
     if not recent_results:
@@ -356,6 +357,10 @@ class StatusCheck(PolymorphicModel):
         default=Service.ERROR_STATUS,
         help_text='Severity level of a failure. Critical alerts are for failures you want to wake you up at 2am, Errors are things you can sleep through but need to fix in the morning, and warnings for less important things.'
     )
+    interval = models.IntegerField(
+        default=5,
+        help_text='Time duration (in minutes) for checking metrics')
+
     frequency = models.IntegerField(
         default=5,
         help_text='Minutes between each check.',
@@ -371,11 +376,33 @@ class StatusCheck(PolymorphicModel):
     last_run = models.DateTimeField(null=True)
     cached_health = models.TextField(editable=False, null=True)
 
-    # Graphite checks
+    # Graphite/InfluxDB checks
     metric = models.TextField(
         null=True,
-        help_text='fully.qualified.name of the Graphite metric you want to watch. This can be any valid Graphite expression, including wildcards, multiple hosts, etc.',
+        help_text='fully.qualified.name of the metric you want to watch. '
+                  'This can be any valid expression, including wildcards, '
+                  'multiple hosts, etc.',
     )
+
+    # InfluxDB specific
+    metric_selector = models.CharField(
+        max_length=50,
+        null=False,
+        default='value',
+        help_text='The selector for the metric. '
+                  'Can be specified as "value", "mean(value)", '
+                  '"percentile(value, 90)" etc.',
+    )
+
+    group_by = models.CharField(
+        max_length=50,
+        null=False,
+        default='',
+        help_text='The "group by" clause for the metric. '
+                  'Can be specified as "group by time(10s)", '
+                  '"group by time(10s), host" etc.',
+    )
+
     check_type = models.CharField(
         choices=CHECK_TYPES,
         max_length=100,
@@ -411,10 +438,40 @@ class StatusCheck(PolymorphicModel):
         null=True,
         help_text='Basic auth password.',
     )
+    http_method = models.CharField(
+        null=False,
+        max_length=10,
+        default='GET',
+        choices=(('GET', 'GET'), ('POST', 'POST'), ('HEAD', 'HEAD')),
+        help_text='The method to use for invocation',
+    )
+    http_params = models.TextField(
+        default=None,
+        null=True,
+        blank=True,
+        help_text='Yaml representation of "header: regex" to send as parameters',
+    )
+    http_body = models.TextField(
+        null=True,
+        default=None,
+        blank=True,
+        help_text='Yaml representation of key: value to send as data'
+    )
+    allow_http_redirects = models.BooleanField(
+        default=True,
+        help_text='Indicates if the check should follow an http redirect'
+    )
     text_match = models.TextField(
         blank=True,
         null=True,
         help_text='Regex to match against source of page.',
+    )
+    header_match = models.TextField(
+        default=None,
+        null=True,
+        blank=True,
+        help_text='Yaml representation of "header: regex" to match in '
+                  'the results',
     )
     status_code = models.TextField(
         default=200,
@@ -558,9 +615,12 @@ class GraphiteStatusCheck(StatusCheck):
     def check_category(self):
         return "Metric check"
 
-    def format_error_message(self, failure_value, actual_hosts, actual_metrics):
+    def format_error_message(self, failure_value, actual_hosts,
+                             actual_metrics, name):
         """
-        A summary of why the check is failing for inclusion in short alert messages
+        A summary of why the check is failing for inclusion in short
+        alert messages
+
         Returns something like:
         "5.0 > 4 | 1/2 hosts"
         """
@@ -571,10 +631,11 @@ class GraphiteStatusCheck(StatusCheck):
             if self.expected_num_hosts > actual_hosts:
                 return u'Hosts missing%s' % hosts_string
         if self.expected_num_metrics > 0:
-            metrics_string = u' | %s/%s metrics' % (actual_metrics,
+            metrics_string = u'%s | %s/%s metrics' % (name,
+                                                actual_metrics,
                                                 self.expected_num_metrics)
             if self.expected_num_metrics > actual_metrics:
-                return u'Metrics satisfying condition missing%s' % metrics_string
+                return u'Metrics condition missed for %s' % metrics_string
         if failure_value is None:
             return "Failed to get metric from Graphite"
         return u"%0.1f %s %0.1f%s" % (
@@ -585,16 +646,33 @@ class GraphiteStatusCheck(StatusCheck):
         )
 
     def _run(self):
-        series = parse_metric(self.metric, mins_to_check=self.frequency)
-        failure_value = None
-        if series['error']:
-            failed = True
-        else:
-            failed = None
+        series = parse_metric(self.metric,
+                              selector=self.metric_selector,
+                              group_by=self.group_by,
+                              time_delta=self.interval * 6)
 
         result = StatusCheckResult(
             check=self,
         )
+
+        if series['error']:
+            result.succeeded = False
+            result.error = 'Error fetching metric from source'
+            return result
+        else:
+            failed = None
+
+        # Add a threshold in the graph
+        threshold = None
+        if not failed:
+            if series['raw'] and series['raw'][0]['datapoints']:
+                start = series['raw'][0]['datapoints'][0]
+                end = series['raw'][0]['datapoints'][-1]
+                threshold = dict(target='alert.threshold',
+                                 datapoints=[(self.value, start[1]),
+                                             (self.value, end[1])])
+
+        # First do some crazy average checks (if we expect more than 1 metric)
         if series['num_series_with_data'] > 0:
             result.average_value = series['average_value']
             if self.check_type == '<':
@@ -624,45 +702,54 @@ class GraphiteStatusCheck(StatusCheck):
         if series['num_series_with_data'] < self.expected_num_hosts:
             failed = True
 
-        matched_metrics = 0
         if self.expected_num_metrics > 0:
-            metric_failed = True
-            json_series = get_data(self.metric)
-#            json_series = json.dumps(series['raw'])
+            json_series = series['raw']
             logger.info("Processing series " + str(json_series))
             for line in json_series:
-                last_value = line['datapoints'][-self.frequency][0]
-#                logger.error("Processing value " + str(last_value) + " Should be " + self.check_type + self.value)
-                if last_value is not None:
-                    if self.check_type == '<':
-                        metric_failed = not last_value < float(self.value)
-                    elif self.check_type == '<=':
-                        metric_failed = not last_value <= float(self.value)
-                    elif self.check_type == '>':
-                        metric_failed = not last_value > float(self.value)
-                    elif self.check_type == '>=':
-                        metric_failed = not last_value >= float(self.value)
-                    elif self.check_type == '==':
-                        metric_failed = not last_value == float(self.value)
-                    else:
-                        raise Exception(u'Check type %s not supported' %
-                                        self.check_type)
-                    if metric_failed:
-                        metric_failure_value = last_value
-                    else:
-                        matched_metrics += 1
-                        logger.info("Metrics matched: " + str(matched_metrics))
-                        logger.info("Required metrics: " + str (self.expected_num_metrics))
-                else:
-                    failed = True
-                logger.info("Processing series ...")
-            if matched_metrics != self.expected_num_metrics:
-                failed = True
-            else:
-                failed = False
+                matched_metrics = 0
+                metric_failed = True
 
+                for point in line['datapoints'][-self.expected_num_metrics:]:
+
+                    last_value = point[0]
+
+                    if last_value is not None:
+                        if self.check_type == '<':
+                            metric_failed = not last_value < float(self.value)
+                        elif self.check_type == '<=':
+                            metric_failed = not last_value <= float(self.value)
+                        elif self.check_type == '>':
+                            metric_failed = not last_value > float(self.value)
+                        elif self.check_type == '>=':
+                            metric_failed = not last_value >= float(self.value)
+                        elif self.check_type == '==':
+                            metric_failed = not last_value == float(self.value)
+                        else:
+                            raise Exception(u'Check type %s not supported' %
+                                            self.check_type)
+                        if metric_failed:
+                            metric_failure_value = last_value
+                            failed_metric_name = line['target']
+                            break
+                        else:
+                            matched_metrics += 1
+                            logger.info("Metrics matched: " + str(matched_metrics))
+                            logger.info("Required metrics: " + str (self.expected_num_metrics))
+                    else:
+                        failed = True
+
+                logger.info("Processing series ...")
+
+                if matched_metrics < self.expected_num_metrics:
+                    failed = True
+                    failed_metric_name = line['target']
+                    break
+                else:
+                    failed = False
 
         try:
+            if threshold is not None:
+                series['raw'].append(threshold)
             result.raw_data = json.dumps(series['raw'])
         except:
             result.raw_data = series['raw']
@@ -672,12 +759,18 @@ class GraphiteStatusCheck(StatusCheck):
                 failure_value,
                 series['num_series_with_data'],
                 matched_metrics,
+                failed_metric_name,
             )
 
         result.actual_hosts = series['num_series_with_data']
         result.actual_metrics = matched_metrics
         result.failure_value = failure_value
         return result
+
+
+class InfluxDBStatusCheck(GraphiteStatusCheck):
+    class Meta(GraphiteStatusCheck.Meta):
+        proxy = True
 
 
 class HttpStatusCheck(StatusCheck):
@@ -691,39 +784,68 @@ class HttpStatusCheck(StatusCheck):
 
     def _run(self):
         result = StatusCheckResult(check=self)
-        auth = (self.username, self.password)
+        if self.username:
+            auth = (self.username, self.password)
+        else:
+            auth = None
+
         try:
-            if self.username or self.password:
-                resp = requests.get(
-                    self.endpoint,
-                    timeout=self.timeout,
-                    verify=self.verify_ssl_certificate,
-                    auth=auth
-                )
-            else:
-                resp = requests.get(
-                    self.endpoint,
-                    timeout=self.timeout,
-                    verify=self.verify_ssl_certificate,
-                )
+            http_params = yaml.load(self.http_params)
+        except:
+            http_params = self.http_params
+
+        try:
+            http_body = yaml.load(self.http_body)
+        except:
+            http_body = self.http_body
+
+        try:
+            header_match = yaml.load(self.header_match)
+        except:
+            header_match = self.header_match
+
+        try:
+            resp = requests.request(
+                method = self.http_method,
+                url = self.endpoint,
+                data = http_body,
+                params = http_params,
+                timeout = self.timeout,
+                verify = self.verify_ssl_certificate,
+                auth = auth,
+                allow_redirects = self.allow_http_redirects
+            )
         except requests.RequestException as e:
             result.error = u'Request error occurred: %s' % (e,)
             result.succeeded = False
         else:
+            result.raw_data = resp.content
+            result.succeeded = False
+
             if self.status_code and resp.status_code != int(self.status_code):
                 result.error = u'Wrong code: got %s (expected %s)' % (
                     resp.status_code, int(self.status_code))
-                result.succeeded = False
-                result.raw_data = resp.content
-            elif self.text_match:
+                return result
+
+            if self.text_match is not None:
                 if not re.search(self.text_match, resp.content):
                     result.error = u'Failed to find match regex /%s/ in response body' % self.text_match
-                    result.raw_data = resp.content
-                    result.succeeded = False
-                else:
-                    result.succeeded = True
-            else:
-                result.succeeded = True
+                    return result
+
+            if type(header_match) is dict and header_match:
+                for header, match in header_match.iteritems():
+                    if header not in resp.headers:
+                        result.error = u'Missing response header: %s' % (header)
+                        return result
+
+                    value = resp.headers[header]
+                    if not re.match(match, value):
+                        result.error = u'Mismatch in header: %s / %s' % (header, value)
+                        return result
+
+            # Mark it as success. phew!!
+            result.succeeded = True
+
         return result
 
 class JenkinsStatusCheck(StatusCheck):

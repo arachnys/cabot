@@ -4,16 +4,26 @@ from dateutil.relativedelta import relativedelta
 from django.http import HttpResponse, HttpResponseRedirect
 from django.core.urlresolvers import reverse_lazy
 from django.conf import settings
-from models import (
-    StatusCheck, GraphiteStatusCheck, JenkinsStatusCheck, HttpStatusCheck, ICMPStatusCheck,
-    StatusCheckResult, UserProfile, Service, Instance, Shift, get_duty_officers)
+from models import (StatusCheck,
+                    GraphiteStatusCheck,
+                    JenkinsStatusCheck,
+                    HttpStatusCheck,
+                    ICMPStatusCheck,
+                    InfluxDBStatusCheck,
+                    StatusCheckResult,
+                    UserProfile,
+                    Service,
+                    Instance,
+                    Shift,
+                    get_duty_officers)
+
 from tasks import run_status_check as _run_status_check
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.views.generic import (
     DetailView, CreateView, UpdateView, ListView, DeleteView, TemplateView, FormView, View)
 from django import forms
-from .graphite import get_data, get_matching_metrics
+from .influx import get_data, get_matching_metrics
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.utils.timezone import utc
@@ -58,6 +68,10 @@ def run_status_check(request, pk):
     _run_status_check(check_or_id=pk)
     return HttpResponseRedirect(reverse('check', kwargs={'pk': pk}))
 
+def duplicate_influxdb_check(request, pk):
+    pc = StatusCheck.objects.get(pk=pk)
+    npk = pc.duplicate()
+    return HttpResponseRedirect(reverse('update-influxdb-check', kwargs={'pk': npk}))
 
 def duplicate_icmp_check(request, pk):
     pc = StatusCheck.objects.get(pk=pk)
@@ -155,11 +169,49 @@ class GraphiteStatusCheckForm(StatusCheckForm):
         fields = (
             'name',
             'metric',
+            'metric_selector',
+            'group_by',
             'check_type',
             'value',
             'frequency',
             'active',
             'importance',
+            'interval',
+            'expected_num_hosts',
+            'expected_num_metrics',
+            'debounce',
+        )
+        widgets = dict(**base_widgets)
+        widgets.update({
+            'value': forms.TextInput(attrs={
+                'style': 'width: 100px',
+                'placeholder': 'threshold value',
+            }),
+            'metric': forms.TextInput(attrs={
+                'style': 'width: 100%',
+                'placeholder': 'graphite metric key'
+            }),
+            'check_type': forms.Select(attrs={
+                'data-rel': 'chosen',
+            })
+        })
+
+
+class InfluxDBStatusCheckForm(StatusCheckForm):
+
+    class Meta:
+        model = GraphiteStatusCheck
+        fields = (
+            'name',
+            'metric',
+            'metric_selector',
+            'group_by',
+            'check_type',
+            'value',
+            'frequency',
+            'active',
+            'importance',
+            'interval',
             'expected_num_hosts',
             'expected_num_metrics',
             'debounce',
@@ -201,9 +253,14 @@ class HttpStatusCheckForm(StatusCheckForm):
         fields = (
             'name',
             'endpoint',
+            'http_method',
             'username',
             'password',
+            'http_params',
+            'http_body',
             'text_match',
+            'header_match',
+            'allow_http_redirects',
             'status_code',
             'timeout',
             'verify_ssl_certificate',
@@ -450,6 +507,14 @@ class GraphiteCheckUpdateView(CheckUpdateView):
 class GraphiteCheckCreateView(CheckCreateView):
     model = GraphiteStatusCheck
     form_class = GraphiteStatusCheckForm
+
+class InfluxDBCheckUpdateView(CheckUpdateView):
+    model = InfluxDBStatusCheck
+    form_class = InfluxDBStatusCheckForm
+
+class InfluxDBCheckCreateView(CheckCreateView):
+    model = InfluxDBStatusCheck
+    form_class = InfluxDBStatusCheckForm
 
 class HttpCheckCreateView(CheckCreateView):
     model = HttpStatusCheck
@@ -745,14 +810,23 @@ def graphite_api_data(request):
     metric = request.GET.get('metric')
     data = None
     matching_metrics = None
+
     try:
-        data = get_data(metric)
-    except requests.exceptions.RequestException, e:
-        pass
-    if not data:
+        matching_metrics = dict(metrics=get_matching_metrics(metric))
+    except Exception, exp:
+        return jsonify(dict(status='error', message=str(exp)))
+
+    # Fetch metric data only if the number of matching metrics is less
+    # than a pre-defined limit. If not, we could end up killing a
+    # few data stores (like influxdb) by querying the entire list of
+    # metrics
+    metric_list_limit = settings.METRIC_FETCH_LIMIT
+    if 1 <= len(matching_metrics['metrics']['metrics']) <= metric_list_limit:
         try:
-            matching_metrics = get_matching_metrics(metric)
-        except requests.exceptions.RequestException, e:
-            return jsonify({'status': 'error', 'message': str(e)})
-        matching_metrics = {'metrics': matching_metrics}
-    return jsonify({'status': 'ok', 'data': data, 'matchingMetrics': matching_metrics})
+            data = get_data(metric)
+        except Exception, exp:
+            pass
+
+    return jsonify(dict(status='ok',
+                        data=data,
+                        matchingMetrics=matching_metrics))

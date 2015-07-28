@@ -2,8 +2,9 @@ from django.conf.urls import patterns, include, url
 from django.conf import settings
 from cabot.cabotapp.views import (
         run_status_check, graphite_api_data, checks_run_recently,
-        duplicate_icmp_check, duplicate_graphite_check, duplicate_http_check, duplicate_jenkins_check, duplicate_instance,
+        duplicate_icmp_check, duplicate_graphite_check, duplicate_http_check, duplicate_jenkins_check, duplicate_instance, duplicate_influxdb_check,
         GraphiteCheckCreateView, GraphiteCheckUpdateView,
+        InfluxDBCheckCreateView, InfluxDBCheckUpdateView,
         HttpCheckCreateView, HttpCheckUpdateView,
         ICMPCheckCreateView, ICMPCheckUpdateView,
         JenkinsCheckCreateView, JenkinsCheckUpdateView,
@@ -92,6 +93,15 @@ urlpatterns = patterns('',
                                                      ), name='update-icmp-check'),
                                              url(r'^icmpcheck/duplicate/(?P<pk>\d+)/',
                                                      view=duplicate_icmp_check, name='duplicate-icmp-check'),
+
+                                             url(r'^influxdbcheck/create/',
+                                                     view=InfluxDBCheckCreateView.as_view(
+                                                     ), name='create-influxdb-check'),
+                                             url(r'^influxdbcheck/update/(?P<pk>\d+)/',
+                                                     view=InfluxDBCheckUpdateView.as_view(
+                                                     ), name='update-influxdb-check'),
+                                             url(r'^influxdbcheck/duplicate/(?P<pk>\d+)/',
+                                                     view=duplicate_influxdb_check, name='duplicate-influxdb-check'),
 
                                              url(r'^graphitecheck/create/',
                                                      view=GraphiteCheckCreateView.as_view(
