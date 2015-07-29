@@ -407,6 +407,7 @@ class StatusCheck(PolymorphicModel):
         max_length=256,
         null=False,
         default='',
+        blank=True,
         help_text='The "where clause" for selecting the metric'
     )
 
@@ -758,7 +759,7 @@ class GraphiteStatusCheck(StatusCheck):
         try:
             if threshold is not None:
                 series['raw'].append(threshold)
-            result.raw_data = json.dumps(series['raw'])
+            result.raw_data = json.dumps(series['raw'], indent=2)
         except:
             result.raw_data = series['raw']
         result.succeeded = not failed
