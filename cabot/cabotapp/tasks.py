@@ -40,7 +40,7 @@ def run_status_check(check_or_id):
 def run_all_checks():
     from .models import StatusCheck
     from datetime import timedelta, datetime
-    checks = StatusCheck.objects.all()
+    checks = StatusCheck.objects.filter(active=True).all()
     seconds = range(60)
     for check in checks:
         if check.last_run:
