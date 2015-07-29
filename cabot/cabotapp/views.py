@@ -599,6 +599,7 @@ class UserProfileUpdateAlert(LoginRequiredMixin, View):
                 'last_name' : profile.user.last_name,
                 'email_address' : profile.user.email,
                 'enabled' : profile.user.is_active,
+                'fallback_alert_user': profile.fallback_alert_user,
                 })
         else:
             plugin_userdata = self.model.objects.get(title=alerttype, user=profile)
@@ -620,7 +621,9 @@ class UserProfileUpdateAlert(LoginRequiredMixin, View):
                 profile.user.last_name = form.cleaned_data['last_name']
                 profile.user.is_active = form.cleaned_data['enabled']
                 profile.user.email = form.cleaned_data['email_address']
+                profile.fallback_alert_user = form.cleaned_data['fallback_alert_user']
                 profile.user.save()
+                profile.save()
                 return HttpResponseRedirect(reverse('update-alert-user-data', args=(self.kwargs['pk'], alerttype)))
 
         else:
@@ -644,6 +647,7 @@ class GeneralSettingsForm(forms.Form):
     last_name  = forms.CharField(label='Last name', max_length=30, required=False)
     email_address = forms.CharField(label='Email Address', max_length=30, required=False)
     enabled = forms.BooleanField(label='Enabled', required=False)
+    fallback_alert_user = forms.BooleanField(label='Fallback Duty Officer', required=False)
 
 class InstanceListView(LoginRequiredMixin, ListView):
 
