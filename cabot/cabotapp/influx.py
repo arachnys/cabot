@@ -27,7 +27,9 @@ def _get_influxdb_client(influxdb_dsn=settings.INFLUXDB_DSN,
     return _influxdb_client
 
 
-def get_data(pattern, selector='value', group_by=None,
+def get_data(pattern, selector='value',
+             where_clause=None,
+             group_by=None,
              time_delta=settings.INFLUXDB_FROM,
              limit=settings.INFLUXDB_LIMIT):
     '''
@@ -44,21 +46,34 @@ def get_data(pattern, selector='value', group_by=None,
                  'group by time(60m), host'
     '''
 
-    # Prepare a time limit for the the query
-    if time_delta is not None:
-        time_str = 'where time > now() - %dm' % (time_delta)
-    else:
-        time_str = ''
-
     if group_by is None:
         group_by = ''
 
     if group_by:
         group_by = 'group by %s' % group_by
 
+    if where_clause:
+        where_str = 'where %s' % where_clause
+    else:
+        where_str = ''
+
+    # Prepare a time limit for the the query
+    if time_delta is not None:
+        time_str = 'time > now() - %dm' % (time_delta)
+
+        if where_str:
+            where_str += ' and %s' % time_str
+        else:
+            where_str = 'where %s' % time_str
+
+    if limit is not None:
+        limit_str = 'limit %d' % (limit)
+    else:
+        limit_str = ''
+
     data = defaultdict(list)
-    query = 'select %s from /.*%s.*/ %s %s limit %d' % \
-        (selector, pattern, group_by, time_str, limit)
+    query = 'select %s from /.*%s.*/ %s %s %s' % \
+        (selector, pattern, group_by, where_str, limit_str)
 
     logging.debug('Make influxdb query %s' % query)
 
@@ -116,7 +131,10 @@ def get_all_metrics(limit=None):
     return metrics
 
 
-def parse_metric(metric, selector='value', group_by=None,
+def parse_metric(metric,
+                 selector='value',
+                 group_by=None,
+                 where_clause=None,
                  time_delta=settings.INFLUXDB_FROM):
     '''
     Returns dict with:
@@ -137,7 +155,9 @@ def parse_metric(metric, selector='value', group_by=None,
         data = get_data(metric,
                         selector=selector,
                         group_by=group_by,
-                        time_delta=time_delta)
+                        where_clause=where_clause,
+                        time_delta=time_delta,
+                        limit=None)
 
     except Exception, exp:
         ret['error'] = 'Error getting data from InfluxDB: %s' % exp

@@ -25,7 +25,7 @@ import yaml
 import requests
 from celery.utils.log import get_task_logger
 
-RAW_DATA_LIMIT = 5000
+RAW_DATA_LIMIT = 500000
 
 logger = get_task_logger(__name__)
 
@@ -403,6 +403,13 @@ class StatusCheck(PolymorphicModel):
                   '"group by time(10s), host" etc.',
     )
 
+    where_clause = models.CharField(
+        max_length=256,
+        null=False,
+        default='',
+        help_text='The "where clause" for selecting the metric'
+    )
+
     check_type = models.CharField(
         choices=CHECK_TYPES,
         max_length=100,
@@ -649,6 +656,7 @@ class GraphiteStatusCheck(StatusCheck):
         series = parse_metric(self.metric,
                               selector=self.metric_selector,
                               group_by=self.group_by,
+                              where_clause=self.where_clause,
                               time_delta=self.interval * 6)
 
         result = StatusCheckResult(
@@ -664,13 +672,12 @@ class GraphiteStatusCheck(StatusCheck):
 
         # Add a threshold in the graph
         threshold = None
-        if not failed:
-            if series['raw'] and series['raw'][0]['datapoints']:
-                start = series['raw'][0]['datapoints'][0]
-                end = series['raw'][0]['datapoints'][-1]
-                threshold = dict(target='alert.threshold',
-                                 datapoints=[(self.value, start[1]),
-                                             (self.value, end[1])])
+        if series['raw'] and series['raw'][0]['datapoints']:
+            start = series['raw'][0]['datapoints'][0]
+            end = series['raw'][0]['datapoints'][-1]
+            threshold = dict(target='alert.threshold',
+                             datapoints=[(self.value, start[1]),
+                                         (self.value, end[1])])
 
         # First do some crazy average checks (if we expect more than 1 metric)
         if series['num_series_with_data'] > 0:
@@ -728,7 +735,7 @@ class GraphiteStatusCheck(StatusCheck):
                             raise Exception(u'Check type %s not supported' %
                                             self.check_type)
                         if metric_failed:
-                            metric_failure_value = last_value
+                            failure_value = last_value
                             failed_metric_name = line['target']
                             break
                         else:
@@ -742,6 +749,7 @@ class GraphiteStatusCheck(StatusCheck):
 
                 if matched_metrics < self.expected_num_metrics:
                     failed = True
+                    failure_value = None
                     failed_metric_name = line['target']
                     break
                 else:
@@ -754,6 +762,7 @@ class GraphiteStatusCheck(StatusCheck):
         except:
             result.raw_data = series['raw']
         result.succeeded = not failed
+
         if not result.succeeded:
             result.error = self.format_error_message(
                 failure_value,
