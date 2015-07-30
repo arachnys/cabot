@@ -248,3 +248,5 @@ if AUTH_LDAP.lower() == "true":
 _TEMPLATE_CONTEXT_PROCESSORS = (
     'django.contrib.auth.context_processors.auth',
 )
+
+WWW_HTTP_HOST = 'cabot.example.com'
