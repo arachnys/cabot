@@ -57,6 +57,7 @@ setup(
         'django-auth-ldap==1.2.6',
         'influxdb==2.7.1',
         'PyYAML==3.11',
+        'python-social-auth==0.2.12',
     ] + plugins,
     packages=find_packages(),
     include_package_data=True,

@@ -9,6 +9,7 @@ from cabot.cabotapp.views import (
         ICMPCheckCreateView, ICMPCheckUpdateView,
         JenkinsCheckCreateView, JenkinsCheckUpdateView,
         StatusCheckDeleteView, StatusCheckListView, StatusCheckDetailView,
+        AuthComplete, LoginError,
         StatusCheckResultDetailView, StatusCheckReportView, UserProfileUpdateAlert)
 
 from cabot.cabotapp.views import (InstanceListView, InstanceDetailView,
@@ -149,6 +150,9 @@ urlpatterns = patterns('',
                                              url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 
                                              url(r'^api/', include(rest_urls.router.urls)),
+                                             url(r'^complete/(?P<backend>[^/]+)/$', AuthComplete.as_view()),
+                                             url(r'^login-error/$', LoginError.as_view()),
+                                             url(r'', include('social.apps.django_app.urls', namespace='social')),
                                              )
 
 def append_plugin_urls():

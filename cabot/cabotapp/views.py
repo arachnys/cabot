@@ -34,6 +34,9 @@ from cabot.cabotapp import alert
 from models import AlertPluginUserData
 from django.forms.models import (inlineformset_factory, modelformset_factory)
 from django import shortcuts
+from django.contrib import messages
+from social.exceptions import AuthFailed
+from social.apps.django_app.views import complete
 
 from itertools import groupby, dropwhile, izip_longest
 import requests
@@ -836,3 +839,18 @@ def graphite_api_data(request):
     return jsonify(dict(status='ok',
                         data=data,
                         matchingMetrics=matching_metrics))
+
+
+class AuthComplete(View):
+    def get(self, request, *args, **kwargs):
+        backend = kwargs.pop('backend')
+        try:
+            return complete(request, backend, *args, **kwargs)
+        except AuthFailed:
+            messages.error(request, "Your domain isn't authorized")
+            return HttpResponseRedirect(reverse('login'))
+
+
+class LoginError(View):
+    def get(self, request, *args, **kwargs):
+        return HttpResponse(status=401)
