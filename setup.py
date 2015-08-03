@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 from os import environ as env
 
 # pull in active plugins
-plugins = env['CABOT_PLUGINS_ENABLED'].split(',') if 'CABOT_PLUGINS_ENABLED' in env else ["cabot_alert_hipchat", "cabot_alert_twilio", "cabot_alert_email", "cabot_alert_pagerduty"]
+plugins = env['CABOT_PLUGINS_ENABLED'].split(',') if 'CABOT_PLUGINS_ENABLED' in env else ["cabot_alert_hipchat", "cabot_alert_twilio", "cabot_alert_email"]
 
 setup(
     name='cabot',
