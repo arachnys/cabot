@@ -1,6 +1,5 @@
-
 from django.conf import settings
-from icalendar import Calendar, Event
+from icalendar import Calendar
 import requests
 
 

@@ -1,6 +1,3 @@
-import os
-import os.path
-import sys
 import random
 import logging
 
@@ -39,7 +36,7 @@ def run_status_check(check_or_id):
 @task(ignore_result=True)
 def run_all_checks():
     from .models import StatusCheck
-    from datetime import timedelta, datetime
+    from datetime import timedelta
     checks = StatusCheck.objects.filter(active=True).all()
     seconds = range(60)
     for check in checks:
@@ -88,13 +85,16 @@ def clean_db(days_to_retain=60):
     """
     Clean up database otherwise it gets overwhelmed with StatusCheckResults.
 
-    To loop over undeleted results, spawn new tasks to make sure db connection closed etc
+    To loop over undeleted results, spawn new tasks to make sure
+    db connection closed etc
     """
     from .models import StatusCheckResult, ServiceStatusSnapshot
     from datetime import timedelta
 
-    to_discard_results = StatusCheckResult.objects.filter(time__lte=timezone.now()-timedelta(days=days_to_retain))
-    to_discard_snapshots = ServiceStatusSnapshot.objects.filter(time__lte=timezone.now()-timedelta(days=days_to_retain))
+    to_discard_results = StatusCheckResult.objects.filter(
+        time__lte=timezone.now()-timedelta(days=days_to_retain))
+    to_discard_snapshots = ServiceStatusSnapshot.objects.filter(
+        time__lte=timezone.now()-timedelta(days=days_to_retain))
 
     result_ids = to_discard_results.values_list('id', flat=True)[:100]
     snapshot_ids = to_discard_snapshots.values_list('id', flat=True)[:100]
@@ -107,10 +107,11 @@ def clean_db(days_to_retain=60):
         return
 
     logger.info('Processing %s StatusCheckResult objects' % len(result_ids))
-    logger.info('Processing %s ServiceStatusSnapshot objects' % len(snapshot_ids))
+    logger.info('Processing %s ServiceStatusSnapshot objects' %
+                len(snapshot_ids))
 
     StatusCheckResult.objects.filter(id__in=result_ids).delete()
     ServiceStatusSnapshot.objects.filter(id__in=snapshot_ids).delete()
 
-    clean_db.apply_async(kwargs={'days_to_retain': days_to_retain}, countdown=3)
-
+    clean_db.apply_async(kwargs={'days_to_retain': days_to_retain},
+                         countdown=3)
