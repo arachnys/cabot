@@ -7,7 +7,7 @@ plugins = env['CABOT_PLUGINS_ENABLED'].split(',') if 'CABOT_PLUGINS_ENABLED' in 
 
 setup(
     name='cabot',
-    version='0.0.1-dev',
+    version='0.0.2-dev',
     description="Self-hosted, easily-deployable monitoring and alerts service"
                 " - like a lightweight PagerDuty",
     long_description=open('README.md').read(),
@@ -58,6 +58,7 @@ setup(
         'influxdb==2.7.1',
         'PyYAML==3.11',
         'python-social-auth==0.2.12',
+        'boto==2.38.0',
     ] + plugins,
     packages=find_packages(),
     include_package_data=True,
