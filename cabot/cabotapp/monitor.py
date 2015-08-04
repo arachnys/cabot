@@ -43,7 +43,11 @@ def _notify_cloudwatch(task_name, state):
     Update cloudwatch with a metric alert about a task
     '''
     if CONNECTION:
-        metric = '%s.%s.%s' % (PREFIX, task_name, state)
+        if PREFIX:
+            metric = '%s.%s.%s' % (PREFIX, task_name, state)
+        else:
+            metric = '%s.%s' % (task_name, state)
+
         try:
             CONNECTION.put_metric_data(NAMESPACE, metric, 1,
                                        dimensions=DIMENSIONS)
@@ -56,7 +60,7 @@ def notify_success(sender=None, *args, **kwargs):
     '''
     Update cloudwatch about a task success
     '''
-    _notify_cloudwatch(sender, 'success')
+    _notify_cloudwatch(sender.name, 'success')
 
 
 @task_failure.connect
@@ -64,4 +68,4 @@ def notify_failure(sender=None, *args, **kwargs):
     '''
     Update cloudwatch about a task failure
     '''
-    _notify_cloudwatch(sender, 'failure')
+    _notify_cloudwatch(sender.name, 'failure')
