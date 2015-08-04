@@ -8,7 +8,10 @@ from celery.utils.log import get_task_logger
 
 logger = get_task_logger(__name__)
 
-auth = (settings.JENKINS_USER, settings.JENKINS_PASS)
+if settings.JENKINS_USER:
+    auth = (settings.JENKINS_USER, settings.JENKINS_PASS)
+else:
+    auth = None
 
 
 def get_job_status(jobname):
