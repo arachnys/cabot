@@ -710,6 +710,7 @@ class GraphiteStatusCheck(StatusCheck):
         if series['num_series_with_data'] < self.expected_num_hosts:
             failed = True
 
+        failed_metric_name = None
         matched_metrics = 0
 
         if self.expected_num_metrics > 0:
