@@ -93,12 +93,17 @@
             <a class="dropdown-toggle" data-toggle="dropdown" href="#" id="download">{{ user.username }} <span class="caret"></span></a>
             <ul class="dropdown-menu" aria-labelledby="admin">
               <li>
+                <a href="/user/{% user.id %}/profile/"><i class="glyphicon glyphicon-user"></i> My profile</a>
+              </li>
+              {% if user.is_staff %}
+              <li>
                 <a href="/admin/auth/user/add/"><i class="glyphicon glyphicon-user"></i> Add user</a>
               </li>
               <li class="divider"></li>
               <li>
                 <a href="/admin/"><i class="glyphicon glyphicon-lock"></i> Django admin</a>
               </li>
+              {% endif %}
               <li class="divider"></li>
               <li>
                 <a href="/accounts/logout/"><i class="glyphicon glyphicon-log-out"></i> Log out</a>
