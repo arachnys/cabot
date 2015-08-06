@@ -17,7 +17,7 @@
           <th></th>
           {% for user in users %}
           <th>
-            {% if user.first_name %}{{ user.first_name }}{% else if user.email %}{{ user.email }}{% else %}{{ user.username }}{% endif %}
+            {% if user.first_name %}{{ user.first_name }}{% elif user.email %}{{ user.email }}{% else %}{{ user.username }}{% endif %}
             {% if user in duty_officers %}
             <span class="label label-success">
               On duty
