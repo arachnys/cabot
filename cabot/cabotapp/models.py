@@ -710,6 +710,8 @@ class GraphiteStatusCheck(StatusCheck):
         if series['num_series_with_data'] < self.expected_num_hosts:
             failed = True
 
+        matched_metrics = 0
+
         if self.expected_num_metrics > 0:
             json_series = series['raw']
             logger.info("Processing series " + str(json_series))
