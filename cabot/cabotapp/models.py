@@ -680,6 +680,10 @@ class GraphiteStatusCheck(StatusCheck):
                              datapoints=[(self.value, start[1]),
                                          (self.value, end[1])])
 
+        failure_value = 0
+        failed_metric_name = None
+        matched_metrics = 0
+
         # First do some crazy average checks (if we expect more than 1 metric)
         if series['num_series_with_data'] > 0:
             result.average_value = series['average_value']
@@ -709,9 +713,6 @@ class GraphiteStatusCheck(StatusCheck):
 
         if series['num_series_with_data'] < self.expected_num_hosts:
             failed = True
-
-        failed_metric_name = None
-        matched_metrics = 0
 
         if self.expected_num_metrics > 0:
             json_series = series['raw']
