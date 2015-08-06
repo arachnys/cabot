@@ -42,8 +42,8 @@ def get_data(pattern, selector='value',
                  'percentile(value, 95)'
 
     * group_by - can be specified as
-                 'group by time(10s)'
-                 'group by time(60m), host'
+                 'time(10s)'
+                 'time(60m), host'
     '''
 
     if group_by is None:

@@ -19,5 +19,6 @@ def get_events():
                 'end': component.decoded('dtend'),
                 'summary': component.decoded('summary'),
                 'uid': component.decoded('uid'),
+                'attendee': component.decoded('attendee'),
             })
     return events

@@ -399,8 +399,8 @@ class StatusCheck(PolymorphicModel):
         null=False,
         default='',
         help_text='The "group by" clause for the metric. '
-                  'Can be specified as "group by time(10s)", '
-                  '"group by time(10s), host" etc.',
+                  'Can be specified as "time(1m)", '
+                  '"time(2m), host" etc.',
     )
 
     where_clause = models.CharField(
@@ -418,7 +418,7 @@ class StatusCheck(PolymorphicModel):
     )
     value = models.TextField(
         null=True,
-        help_text='If this expression evaluates to true, the check will fail (possibly triggering an alert).',
+        help_text='If this expression evaluates to False, the check will fail (possibly triggering an alert).',
     )
     expected_num_hosts = models.IntegerField(
         default=0,
@@ -1039,8 +1039,17 @@ def update_shifts():
     future_shifts.update(deleted=True)
 
     for event in events:
-        e = event['summary'].lower().strip()
-        if e in user_lookup:
+        summary = event['summary'].lower().strip()
+        attendee = event['attendee'].lower().strip()
+
+        if summary in user_lookup:
+            e = summary
+        elif attendee in user_lookup:
+            e = attendee
+        else:
+            e = None
+
+        if e is not None:
             user = user_lookup[e]
             try:
                 s = Shift.objects.get(uid=event['uid'])
