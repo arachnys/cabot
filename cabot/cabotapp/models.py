@@ -684,23 +684,23 @@ class GraphiteStatusCheck(StatusCheck):
         if series['num_series_with_data'] > 0:
             result.average_value = series['average_value']
             if self.check_type == '<':
-                failed = float(series['min']) < float(self.value)
+                failed = not float(series['min']) < float(self.value)
                 if failed:
                     failure_value = series['min']
             elif self.check_type == '<=':
-                failed = float(series['min']) <= float(self.value)
+                failed = not float(series['min']) <= float(self.value)
                 if failed:
                     failure_value = series['min']
             elif self.check_type == '>':
-                failed = float(series['max']) > float(self.value)
+                failed = not float(series['max']) > float(self.value)
                 if failed:
                     failure_value = series['max']
             elif self.check_type == '>=':
-                failed = float(series['max']) >= float(self.value)
+                failed = not float(series['max']) >= float(self.value)
                 if failed:
                     failure_value = series['max']
             elif self.check_type == '==':
-                failed = float(self.value) in series['all_values']
+                failed = not float(self.value) in series['all_values']
                 if failed:
                     failure_value = float(self.value)
             else:
