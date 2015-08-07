@@ -714,7 +714,7 @@ class GraphiteStatusCheck(StatusCheck):
         if series['num_series_with_data'] < self.expected_num_hosts:
             failed = True
 
-        reference_point = time.now() - ((self.interval + 2) * 60)
+        reference_point = time.time() - ((self.interval + 2) * 60)
 
         if self.expected_num_metrics > 0:
             json_series = series['raw']
