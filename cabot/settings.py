@@ -97,6 +97,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'social.apps.django_app.middleware.SocialAuthExceptionMiddleware',
+    'rollbar.contrib.django.middleware.RollbarNotifierMiddleware',
 )
 
 ROOT_URLCONF = 'cabot.urls'
@@ -196,27 +197,31 @@ LOGGING = {
         'mail_admins': {
             'level': 'ERROR',
             'class': 'django.utils.log.AdminEmailHandler'
+        },
+        'rollbar': {
+            'level': 'ERROR',
+            'class': 'rollbar.logger.RollbarHandler',
         }
     },
     'loggers': {
         'django': {
-            'handlers': ['console', 'log_file', 'mail_admins'],
+            'handlers': ['console', 'log_file', 'mail_admins', 'rollbar'],
             'level': 'INFO',
             'propagate': True,
         },
         'django.request': {
-            'handlers': ['console', 'log_file', 'mail_admins'],
+            'handlers': ['console', 'log_file', 'mail_admins', 'rollbar'],
             'level': 'ERROR',
             'propagate': False,
         },
         'django.db.backends': {
-            'handlers': ['console', 'log_file', 'mail_admins'],
+            'handlers': ['console', 'log_file', 'mail_admins', 'rollbar'],
             'level': 'INFO',
             'propagate': False,
         },
         # Catch All Logger -- Captures any other logging
         '': {
-            'handlers': ['console', 'log_file', 'mail_admins'],
+            'handlers': ['console', 'log_file', 'mail_admins', 'rollbar'],
             'level': 'INFO',
             'propagate': True,
         }
@@ -292,3 +297,13 @@ AWS_CLOUDWATCH_ACCESS_KEY = os.environ.get('AWS_CLOUDWATCH_ACCESS_KEY', None)
 AWS_CLOUDWATCH_SECRET_KEY = os.environ.get('AWS_CLOUDWATCH_SECRET_KEY', None)
 AWS_CLOUDWATCH_PREFIX = os.environ.get('AWS_CLOUDWATCH_PREFIX', None)
 AWS_CLOUDWATCH_NAMESPACE = os.environ.get('AWS_CLOUDWATCH_NAMESPACE', 'Cabot')
+
+# Rollbar settings
+ROLLBAR = {
+    'access_token': os.environ.get('ROLLBAR_ACCESS_TOKEN', None),
+    'environment': os.environ.get('ROLLBAR_ENVIRONMENT', 'prod'),
+    'branch': os.environ.get('ROLLBAR_BRANCH', 'master'),
+    'root': PROJECT_ROOT,
+}
+
+CELERYD_HIJACK_ROOT_LOGGER = False

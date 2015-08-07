@@ -59,6 +59,7 @@ setup(
         'PyYAML==3.11',
         'python-social-auth==0.2.12',
         'boto==2.38.0',
+        'rollbar==0.9.12',
     ] + plugins,
     packages=find_packages(),
     include_package_data=True,

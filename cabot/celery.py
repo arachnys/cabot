@@ -6,6 +6,11 @@ from celery import Celery
 
 from django.conf import settings
 
+if settings.ROLLBAR['access_token']:
+    import rollbar
+    rollbar.init(settings.ROLLBAR['access_token'],
+                 settings.ROLLBAR['environment'])
+
 # set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'cabot.settings')
 
