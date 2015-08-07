@@ -742,7 +742,6 @@ class GraphiteStatusCheck(StatusCheck):
                         if metric_failed:
                             failure_value = last_value
                             failed_metric_name = line['target']
-                            break
                         else:
                             matched_metrics += 1
                             logger.info("Metrics matched: " + str(matched_metrics))
