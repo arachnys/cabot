@@ -30,11 +30,11 @@ except ImportError:
 
 try:
     import boto.utils
-    _instance = boto.utils.get_instance_metadata()
+    _instance = boto.utils.get_instance_metadata(num_retries=2)
     DIMENSIONS = {
         'instance-id': _instance['instance-id'],
     }
-except ImportError:
+except:
     DIMENSIONS = {}
 
 
