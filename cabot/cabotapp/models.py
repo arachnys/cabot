@@ -714,6 +714,8 @@ class GraphiteStatusCheck(StatusCheck):
         if series['num_series_with_data'] < self.expected_num_hosts:
             failed = True
 
+        reference_point = time.now() - ((self.interval + 2) * 60)
+
         if self.expected_num_metrics > 0:
             json_series = series['raw']
             logger.info("Processing series " + str(json_series))
@@ -721,9 +723,15 @@ class GraphiteStatusCheck(StatusCheck):
                 matched_metrics = 0
                 metric_failed = True
 
-                for point in line['datapoints'][-self.expected_num_metrics:]:
+                for point in line['datapoints']:
 
                     last_value = point[0]
+                    time_stamp = point[1]
+
+                    if time_stamp <= reference_point:
+                        logger.debug('Point %s is older than ref ts %d' % \
+                            (str(point), reference_point))
+                        continue
 
                     if last_value is not None:
                         if self.check_type == '<':
