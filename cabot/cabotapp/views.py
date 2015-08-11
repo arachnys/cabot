@@ -832,7 +832,7 @@ def graphite_api_data(request):
     metric_list_limit = settings.METRIC_FETCH_LIMIT
     if 1 <= len(matching_metrics['metrics']['metrics']) <= metric_list_limit:
         try:
-            data = get_data(metric)
+            data = get_data(metric, fetchall=True)
         except Exception, exp:
             pass
 

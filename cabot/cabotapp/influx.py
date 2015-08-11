@@ -31,7 +31,8 @@ def get_data(pattern, selector='value',
              where_clause=None,
              group_by=None,
              time_delta=settings.INFLUXDB_FROM,
-             limit=settings.INFLUXDB_LIMIT):
+             limit=settings.INFLUXDB_LIMIT,
+             fetchall=False):
     '''
     Query a metric and it's data from influxdb.
     Return the value in a graphite compatible format
@@ -71,8 +72,11 @@ def get_data(pattern, selector='value',
     else:
         limit_str = ''
 
+    if fetchall:
+        pattern = '.*%s.*' % (pattern)
+
     data = defaultdict(list)
-    query = 'select %s from /.*%s.*/ %s %s %s' % \
+    query = 'select %s from /%s/ %s %s %s order asc' % \
         (selector, pattern, group_by, where_str, limit_str)
 
     logging.debug('Make influxdb query %s' % query)
@@ -85,15 +89,17 @@ def get_data(pattern, selector='value',
     for series in resp:
         name = series['name']
 
-        if series['columns'][2] == 'value':
+        if len(series['columns']) == 2:
+            for ts, value in series['points']:
+                data[name].append((value, ts))
+        elif series['columns'][2] == 'value':
             for ts, seq, value in series['points']:
                 data[name].append((value, ts))
         else:
             for ts, value, group in series['points']:
                 data['%s.%s' % (name, group)].append((value, ts))
 
-    def _sorter(x, y): return cmp(x[1], y[1])
-    return [dict(target=key, datapoints=sorted(value, cmp=_sorter))
+    return [dict(target=key, datapoints=value)
             for key, value in data.iteritems()]
 
 
@@ -162,7 +168,7 @@ def parse_metric(metric,
     except Exception, exp:
         ret['error'] = 'Error getting data from InfluxDB: %s' % exp
         ret['raw'] = ret['error']
-        logging.error('Error getting data from InfluxDB: %s' % exp)
+        logging.exception('Error getting data from InfluxDB: %s' % exp)
         return ret
 
     all_values = []
