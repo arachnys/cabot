@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>Delete service</h1>
+<h1>Delete instance</h1>
 <form action="." method="post">{% csrf_token %}
   <button type="submit" class="btn btn-danger">Delete {{ object }}</button>
 </form>
