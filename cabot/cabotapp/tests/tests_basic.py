@@ -439,7 +439,7 @@ class TestAPI(LocalTestCase):
                     'frequency': 5,
                     'debounce': 0,
                     'id': 1,
-                    'calculated_status': u'PASSING',
+                    'calculated_status': u'passing',
                 },
                 {
                     'name': u'Jenkins Check',
@@ -448,7 +448,7 @@ class TestAPI(LocalTestCase):
                     'frequency': 5,
                     'debounce': 0,
                     'id': 2,
-                    'calculated_status': u'PASSING',
+                    'calculated_status': u'passing',
                 },
                 {
                     'name': u'Http Check',
@@ -457,7 +457,7 @@ class TestAPI(LocalTestCase):
                     'frequency': 5,
                     'debounce': 0,
                     'id': 3,
-                    'calculated_status': u'PASSING',
+                    'calculated_status': u'passing',
                 },
                 {
                     'name': u'Hello check',
@@ -466,7 +466,7 @@ class TestAPI(LocalTestCase):
                     'frequency': 5,
                     'debounce': 0,
                     'id': 4,
-                    'calculated_status': u'PASSING',
+                    'calculated_status': u'passing',
                 },
             ],
             'graphitestatuscheck': [
@@ -482,7 +482,7 @@ class TestAPI(LocalTestCase):
                     'expected_num_hosts': 0,
                     'expected_num_metrics': 0,
                     'id': 1,
-                    'calculated_status': u'PASSING',
+                    'calculated_status': u'passing',
                 },
             ],
             'httpstatuscheck': [
@@ -500,7 +500,7 @@ class TestAPI(LocalTestCase):
                     'timeout': 10,
                     'verify_ssl_certificate': True,
                     'id': 3,
-                    'calculated_status': u'PASSING',
+                    'calculated_status': u'passing',
                 },
             ],
             'jenkinsstatuscheck': [
@@ -512,7 +512,7 @@ class TestAPI(LocalTestCase):
                     'debounce': 0,
                     'max_queued_build_time': 10,
                     'id': 2,
-                    'calculated_status': u'PASSING',
+                    'calculated_status': u'passing',
                 },
             ],
             'icmpstatuscheck': [
@@ -523,7 +523,7 @@ class TestAPI(LocalTestCase):
                     'frequency': 5,
                     'debounce': 0,
                     'id': 4,
-                    'calculated_status': u'PASSING',
+                    'calculated_status': u'passing',
                 },
             ],
         }
@@ -568,7 +568,7 @@ class TestAPI(LocalTestCase):
                     'expected_num_hosts': 0,
                     'expected_num_metrics': 0,
                     'id': 5,
-                    'calculated_status': u'PASSING',
+                    'calculated_status': u'passing',
                 },
             ],
             'httpstatuscheck': [
@@ -586,7 +586,7 @@ class TestAPI(LocalTestCase):
                     'timeout': 30,
                     'verify_ssl_certificate': True,
                     'id': 7,
-                    'calculated_status': u'PASSING',
+                    'calculated_status': u'passing',
                 },
             ],
             'jenkinsstatuscheck': [
@@ -598,7 +598,7 @@ class TestAPI(LocalTestCase):
                     'debounce': 0,
                     'max_queued_build_time': 37,
                     'id': 6,
-                    'calculated_status': u'PASSING',
+                    'calculated_status': u'passing',
                 },
             ],
             'icmpstatuscheck': [
@@ -609,7 +609,7 @@ class TestAPI(LocalTestCase):
                     'frequency': 5,
                     'debounce': 0,
                     'id': 8,
-                    'calculated_status': u'PASSING',
+                    'calculated_status': u'passing',
                 },
             ],
         }
@@ -659,7 +659,7 @@ class TestAPI(LocalTestCase):
                         item[field] = None
                 self.assertEqual(self.normalize_dict(create_response.data), item)
                 get_response = self.client.get(api_reverse('{}-detail'.format(model), args=[item['id']]),
-                                               format='json', HTTP_AUTHORIZATION=self.basic_auth)
+                                               format='json', HTTP_AUTHORIZATION=self.basic_auth)                            
                 self.assertEqual(self.normalize_dict(get_response.data), item)
 
 class TestAPIFiltering(LocalTestCase):
