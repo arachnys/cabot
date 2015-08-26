@@ -61,6 +61,7 @@ router.register(r'services', create_viewset(
     arg_fields=check_group_mixin_fields + (
         'url',
         'instances',
+        'overall_status',
     ),
 ))
 
@@ -68,6 +69,7 @@ router.register(r'instances', create_viewset(
     arg_model=models.Instance, 
     arg_fields=check_group_mixin_fields + (
         'address',
+        'overall_status',
     ),
 ))
 
@@ -77,6 +79,7 @@ status_check_fields = (
     'importance',
     'frequency',
     'debounce',
+    'calculated_status',
 )
 
 router.register(r'status_checks', create_viewset(
