@@ -90,6 +90,7 @@ def parse_metric(metric, mins_to_check=5):
         ret['series'].append(series)
     if all_values:
         ret['average_value'] = sum(all_values) / len(all_values)
+    ret['all_values'] = all_values
     ret['raw'] = data
     return ret
 
