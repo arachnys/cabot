@@ -161,7 +161,7 @@ class GraphiteStatusCheckForm(StatusCheckForm):
             'active',
             'importance',
             'expected_num_hosts',
-            'expected_num_metrics',
+            'allowed_num_failures',
             'debounce',
         )
         widgets = dict(**base_widgets)

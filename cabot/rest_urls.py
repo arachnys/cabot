@@ -24,7 +24,7 @@ def create_viewset(arg_model, arg_fields, arg_read_only_fields=(), no_create=Fal
 
     viewset_class = None
     if no_create:
-        class NoCreateViewSet(mixins.RetrieveModelMixin, 
+        class NoCreateViewSet(mixins.RetrieveModelMixin,
                               mixins.UpdateModelMixin,
                               mixins.DestroyModelMixin,
                               mixins.ListModelMixin,
@@ -57,7 +57,7 @@ check_group_mixin_fields = (
 )
 
 router.register(r'services', create_viewset(
-    arg_model=models.Service, 
+    arg_model=models.Service,
     arg_fields=check_group_mixin_fields + (
         'url',
         'instances',
@@ -66,7 +66,7 @@ router.register(r'services', create_viewset(
 ))
 
 router.register(r'instances', create_viewset(
-    arg_model=models.Instance, 
+    arg_model=models.Instance,
     arg_fields=check_group_mixin_fields + (
         'address',
         'overall_status',
@@ -83,29 +83,29 @@ status_check_fields = (
 )
 
 router.register(r'status_checks', create_viewset(
-    arg_model=models.StatusCheck, 
+    arg_model=models.StatusCheck,
     arg_fields=status_check_fields,
     no_create=True,
 ))
 
 router.register(r'icmp_checks', create_viewset(
-    arg_model=models.ICMPStatusCheck, 
+    arg_model=models.ICMPStatusCheck,
     arg_fields=status_check_fields,
 ))
 
 router.register(r'graphite_checks', create_viewset(
-    arg_model=models.GraphiteStatusCheck, 
+    arg_model=models.GraphiteStatusCheck,
     arg_fields=status_check_fields + (
         'metric',
         'check_type',
         'value',
         'expected_num_hosts',
-        'expected_num_metrics',
+        'allowed_num_failures',
     ),
 ))
 
 router.register(r'http_checks', create_viewset(
-    arg_model=models.HttpStatusCheck, 
+    arg_model=models.HttpStatusCheck,
     arg_fields=status_check_fields + (
         'endpoint',
         'username',
@@ -118,7 +118,7 @@ router.register(r'http_checks', create_viewset(
 ))
 
 router.register(r'jenkins_checks', create_viewset(
-    arg_model=models.JenkinsStatusCheck, 
+    arg_model=models.JenkinsStatusCheck,
     arg_fields=status_check_fields + (
         'max_queued_build_time',
     ),

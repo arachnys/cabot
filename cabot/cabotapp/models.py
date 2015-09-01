@@ -390,10 +390,10 @@ class StatusCheck(PolymorphicModel):
         null=True,
         help_text='The minimum number of data series (hosts) you expect to see.',
     )
-    expected_num_metrics = models.IntegerField(
+    allowed_num_failures = models.IntegerField(
         default=0,
         null=True,
-        help_text='The minimum number of data series (metrics) you expect to satisfy given condition.',
+        help_text='The maximum number of data series (metrics) you expect to fail. For example, you might be OK with 2 out of 3 webservers having OK load (1 failing), but not 1 out of 3 (2 failing).',
     )
 
     # HTTP checks
@@ -465,6 +465,7 @@ class StatusCheck(PolymorphicModel):
             result.succeeded = False
         except Exception as e:
             result = StatusCheckResult(check=self)
+            logger.error("Error performing check: %s" % (e,))
             result.error = u'Error in performing check: %s' % (e,)
             result.succeeded = False
         finish = timezone.now()
@@ -558,125 +559,100 @@ class GraphiteStatusCheck(StatusCheck):
     def check_category(self):
         return "Metric check"
 
-    def format_error_message(self, failure_value, actual_hosts, actual_metrics):
+    def format_error_message(self, failure_value, actual_hosts, actual_failures):
         """
         A summary of why the check is failing for inclusion in short alert messages
         Returns something like:
         "5.0 > 4 | 1/2 hosts"
         """
+        if isinstance(failure_value, (list, tuple)):
+            failure_value = ', '.join([u'%0.1f' % v for v in failure_value])
+        else:
+            failure_value = u'%0.1f' % failure_value
         hosts_string = u''
+        failures_string = u''
         if self.expected_num_hosts > 0:
             hosts_string = u' | %s/%s hosts' % (actual_hosts,
                                                 self.expected_num_hosts)
             if self.expected_num_hosts > actual_hosts:
                 return u'Hosts missing%s' % hosts_string
-        if self.expected_num_metrics > 0:
-            metrics_string = u' | %s/%s metrics' % (actual_metrics,
-                                                self.expected_num_metrics)
-            if self.expected_num_metrics > actual_metrics:
-                return u'Metrics satisfying condition missing%s' % metrics_string
+        if self.allowed_num_failures and actual_failures:
+            failures_string = u' | %s/%s series failing (%s allowed)' % (
+                actual_failures,
+                actual_hosts,
+                self.allowed_num_failures,
+            )
         if failure_value is None:
             return "Failed to get metric from Graphite"
-        return u"%0.1f %s %0.1f%s" % (
+        return u"%s %s %0.1f%s%s" % (
             failure_value,
             self.check_type,
             float(self.value),
-            hosts_string
+            hosts_string,
+            failures_string,
         )
 
     def _run(self):
-        series = parse_metric(self.metric, mins_to_check=self.frequency)
-        failure_value = None
-        if series['error']:
-            failed = True
-        else:
-            failed = None
+        result = StatusCheckResult(check=self)
 
-        result = StatusCheckResult(
-            check=self,
-        )
-        if series['num_series_with_data'] > 0:
-            result.average_value = series['average_value']
-            if self.check_type == '<':
-                failed = float(series['min']) < float(self.value)
-                if failed:
-                    failure_value = series['min']
-            elif self.check_type == '<=':
-                failed = float(series['min']) <= float(self.value)
-                if failed:
-                    failure_value = series['min']
-            elif self.check_type == '>':
-                failed = float(series['max']) > float(self.value)
-                if failed:
-                    failure_value = series['max']
-            elif self.check_type == '>=':
-                failed = float(series['max']) >= float(self.value)
-                if failed:
-                    failure_value = series['max']
-            elif self.check_type == '==':
-                failed = float(self.value) in series['all_values']
-                if failed:
-                    failure_value = float(self.value)
-            else:
-                raise Exception(u'Check type %s not supported' %
-                                self.check_type)
-
-        if series['num_series_with_data'] < self.expected_num_hosts:
-            failed = True
-
-        matched_metrics = 0
-        if self.expected_num_metrics > 0:
-            metric_failed = True
-            json_series = get_data(self.metric)
-#            json_series = json.dumps(series['raw'])
-            logger.info("Processing series " + str(json_series))
-            for line in json_series:
-                last_value = line['datapoints'][-self.frequency][0]
-#                logger.error("Processing value " + str(last_value) + " Should be " + self.check_type + self.value)
-                if last_value is not None:
-                    if self.check_type == '<':
-                        metric_failed = not last_value < float(self.value)
-                    elif self.check_type == '<=':
-                        metric_failed = not last_value <= float(self.value)
-                    elif self.check_type == '>':
-                        metric_failed = not last_value > float(self.value)
-                    elif self.check_type == '>=':
-                        metric_failed = not last_value >= float(self.value)
-                    elif self.check_type == '==':
-                        metric_failed = not last_value == float(self.value)
-                    else:
-                        raise Exception(u'Check type %s not supported' %
-                                        self.check_type)
-                    if metric_failed:
-                        metric_failure_value = last_value
-                    else:
-                        matched_metrics += 1
-                        logger.info("Metrics matched: " + str(matched_metrics))
-                        logger.info("Required metrics: " + str (self.expected_num_metrics))
+        graphite_output = parse_metric(self.metric, mins_to_check=self.frequency)
+        if graphite_output['num_series_with_data'] > 0:
+            result.average_value = graphite_output['average_value']
+            failures = []
+            failed = False
+            for s in graphite_output['series']:
+                failure_value = None
+                if self.check_type == '<':
+                    failed = float(s['min']) < float(self.value)
+                    if failed:
+                        failure_value = s['min']
+                elif self.check_type == '<=':
+                    failed = float(s['min']) <= float(self.value)
+                    if failed:
+                        failure_value = s['min']
+                elif self.check_type == '>':
+                    failed = float(s['max']) > float(self.value)
+                    if failed:
+                        failure_value = s['max']
+                elif self.check_type == '>=':
+                    failed = float(s['max']) >= float(self.value)
+                    if failed:
+                        failure_value = s['max']
+                elif self.check_type == '==':
+                    failed = float(self.value) in s['all_values']
+                    if failed:
+                        failure_value = float(self.value)
                 else:
-                    failed = True
-                logger.info("Processing series ...")
-            if matched_metrics != self.expected_num_metrics:
-                failed = True
-            else:
-                failed = False
+                    raise Exception(u'Check type %s not supported' %
+                                    self.check_type)
 
+                if failure_value:
+                    failures.append(failure_value)
+
+        if graphite_output['num_series_with_data'] < self.expected_num_hosts:
+            failed = True
+        allowed_num_failures = self.allowed_num_failures or 0
+        # If there are more than expected failures
+        if len(failures) - self.allowed_num_failures > 0:
+            result.succeeded = False
+        else:
+            if graphite_output['error']:
+                result.succeeded = False
+            else:
+                result.succeeded = True
 
         try:
-            result.raw_data = json.dumps(series['raw'])
+            result.raw_data = json.dumps(graphite_output['raw'])
         except:
-            result.raw_data = series['raw']
-        result.succeeded = not failed
+            result.raw_data = graphite_output['raw']
+
         if not result.succeeded:
             result.error = self.format_error_message(
-                failure_value,
-                series['num_series_with_data'],
-                matched_metrics,
+                failures,
+                graphite_output['num_series_with_data'],
+                len(failures),
             )
 
-        result.actual_hosts = series['num_series_with_data']
-        result.actual_metrics = matched_metrics
-        result.failure_value = failure_value
         return result
 
 

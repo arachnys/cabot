@@ -205,6 +205,33 @@ class TestCheckRun(LocalTestCase):
         self.assertEqual(len(checkresults), 4)
         self.assertEqual(self.graphite_check.calculated_status,
                          Service.CALCULATED_PASSING_STATUS)
+        # As should this - passing but failures allowed
+        self.graphite_check.allowed_num_failures = 2
+        self.graphite_check.save()
+        self.graphite_check.run()
+        checkresults = self.graphite_check.statuscheckresult_set.all()
+        self.assertEqual(len(checkresults), 5)
+        self.assertEqual(self.graphite_check.calculated_status,
+                         Service.CALCULATED_PASSING_STATUS)
+        # As should this - failing but 1 failure allowed
+        # (in test data, one data series is entirely below 9 and one goes above)
+        self.graphite_check.value = '9.0'
+        self.graphite_check.allowed_num_failures = 1
+        self.graphite_check.save()
+        self.graphite_check.run()
+        checkresults = self.graphite_check.statuscheckresult_set.all()
+        self.assertEqual(len(checkresults), 6)
+        self.assertEqual(self.graphite_check.calculated_status,
+                         Service.CALCULATED_PASSING_STATUS,
+                         list(checkresults)[-1].error)
+        # And it will fail if we don't allow failures
+        self.graphite_check.allowed_num_failures = 0
+        self.graphite_check.save()
+        self.graphite_check.run()
+        checkresults = self.graphite_check.statuscheckresult_set.all()
+        self.assertEqual(len(checkresults), 7)
+        self.assertEqual(self.graphite_check.calculated_status,
+                         Service.CALCULATED_FAILING_STATUS)
 
     @patch('cabot.cabotapp.jenkins.requests.get', fake_jenkins_response)
     def test_jenkins_run(self):
@@ -480,7 +507,7 @@ class TestAPI(LocalTestCase):
                     'check_type': u'>',
                     'value': u'9.0',
                     'expected_num_hosts': 0,
-                    'expected_num_metrics': 0,
+                    'allowed_num_failures': 0,
                     'id': 1,
                     'calculated_status': u'passing',
                 },
@@ -566,7 +593,7 @@ class TestAPI(LocalTestCase):
                     'check_type': u'<',
                     'value': u'2',
                     'expected_num_hosts': 0,
-                    'expected_num_metrics': 0,
+                    'allowed_num_failures': 0,
                     'id': 5,
                     'calculated_status': u'passing',
                 },
