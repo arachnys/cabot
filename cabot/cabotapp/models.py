@@ -794,8 +794,12 @@ class StatusCheckResult(models.Model):
 
     @property
     def took(self):
+        """
+        Time taken by check in ms
+        """
         try:
-            return (self.time_complete - self.time).microseconds / 1000
+            diff = (self.time_complete - self.time).microseconds
+            return (diff.microseconds + (diff.seconds + diff.days * 24 * 3600) * 10**6) / 1000
         except:
             return None
 
