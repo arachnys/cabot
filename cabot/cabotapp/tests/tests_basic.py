@@ -258,6 +258,8 @@ class TestCheckRun(LocalTestCase):
         self.assertFalse(self.graphite_check.last_result().succeeded)
         self.assertEqual(self.graphite_check.calculated_status,
                          Service.CALCULATED_FAILING_STATUS)
+        # Test results timing
+        self.assertGreater(list(checkresults)[-1].took, 0.0)
 
     @patch('cabot.cabotapp.jenkins.requests.get', fake_jenkins_response)
     def test_jenkins_run(self):
