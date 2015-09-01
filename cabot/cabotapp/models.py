@@ -619,7 +619,7 @@ class GraphiteStatusCheck(StatusCheck):
                     if failed:
                         failure_value = s['max']
                 elif self.check_type == '==':
-                    failed = float(self.value) in s['all_values']
+                    failed = float(self.value) in s['values']
                     if failed:
                         failure_value = float(self.value)
                 else:
