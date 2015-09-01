@@ -112,6 +112,13 @@ def fake_graphite_response(*args, **kwargs):
     return resp
 
 
+def fake_empty_graphite_response(*args, **kwargs):
+    resp = Mock()
+    resp.json = json.loads(get_content('graphite_null_response.json'))
+    resp.status_code = 200
+    return resp
+
+
 def fake_jenkins_response(*args, **kwargs):
     resp = Mock()
     resp.json = json.loads(get_content('jenkins_response.json'))
@@ -230,6 +237,25 @@ class TestCheckRun(LocalTestCase):
         self.graphite_check.run()
         checkresults = self.graphite_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 7)
+        self.assertEqual(self.graphite_check.calculated_status,
+                         Service.CALCULATED_FAILING_STATUS)
+
+    @patch('cabot.cabotapp.graphite.requests.get', fake_empty_graphite_response)
+    def test_graphite_empty_run(self):
+        checkresults = self.graphite_check.statuscheckresult_set.all()
+        self.assertEqual(len(checkresults), 2)
+        self.graphite_check.run()
+        checkresults = self.graphite_check.statuscheckresult_set.all()
+        self.assertEqual(len(checkresults), 3)
+        self.assertTrue(self.graphite_check.last_result().succeeded)
+        self.assertEqual(self.graphite_check.calculated_status,
+                         Service.CALCULATED_PASSING_STATUS)
+        self.graphite_check.expected_num_hosts = 1
+        self.graphite_check.save()
+        self.graphite_check.run()
+        checkresults = self.graphite_check.statuscheckresult_set.all()
+        self.assertEqual(len(checkresults), 4)
+        self.assertFalse(self.graphite_check.last_result().succeeded)
         self.assertEqual(self.graphite_check.calculated_status,
                          Service.CALCULATED_FAILING_STATUS)
 

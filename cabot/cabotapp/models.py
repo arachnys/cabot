@@ -595,10 +595,10 @@ class GraphiteStatusCheck(StatusCheck):
     def _run(self):
         result = StatusCheckResult(check=self)
 
+        failures = []
         graphite_output = parse_metric(self.metric, mins_to_check=self.frequency)
         if graphite_output['num_series_with_data'] > 0:
             result.average_value = graphite_output['average_value']
-            failures = []
             failed = False
             for s in graphite_output['series']:
                 failure_value = None
@@ -629,7 +629,6 @@ class GraphiteStatusCheck(StatusCheck):
                 if failure_value:
                     failures.append(failure_value)
 
-        if graphite_output['num_series_with_data'] < self.expected_num_hosts:
             failed = True
         allowed_num_failures = self.allowed_num_failures or 0
         # If there are more than expected failures
@@ -637,6 +636,8 @@ class GraphiteStatusCheck(StatusCheck):
             result.succeeded = False
         else:
             if graphite_output['error']:
+                result.succeeded = False
+            if graphite_output['num_series_with_data'] < self.expected_num_hosts:
                 result.succeeded = False
             else:
                 result.succeeded = True
