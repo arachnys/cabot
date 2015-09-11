@@ -626,7 +626,7 @@ class GraphiteStatusCheck(StatusCheck):
                     raise Exception(u'Check type %s not supported' %
                                     self.check_type)
 
-                if failure_value:
+                if not failure_value is None:
                     failures.append(failure_value)
 
             failed = True
