@@ -782,6 +782,9 @@ class StatusCheckResult(models.Model):
     # Jenkins specific
     job_number = models.PositiveIntegerField(null=True)
 
+    class Meta:
+        ordering = ['-time_complete']
+
     def __unicode__(self):
         return '%s: %s @%s' % (self.status, self.check.name, self.time)
 

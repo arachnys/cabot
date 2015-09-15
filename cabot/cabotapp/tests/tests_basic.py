@@ -276,8 +276,8 @@ class TestCheckRun(LocalTestCase):
         checkresults = self.graphite_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 3)
         self.assertTrue(self.graphite_check.last_result().succeeded)
+        print 'Time taken by checkresults: %s' % [c.took for c in checkresults]
         self.assertGreater(list(checkresults)[-1].took, 0.0)
-        
 
     @patch('cabot.cabotapp.jenkins.requests.get', fake_jenkins_response)
     def test_jenkins_run(self):
