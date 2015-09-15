@@ -17,6 +17,7 @@ from datetime import timedelta, date, datetime
 import json
 import os
 import base64
+import time
 from mock import Mock, patch
 
 from cabot.cabotapp.models import (
@@ -114,6 +115,14 @@ def fake_graphite_response(*args, **kwargs):
 
 def fake_empty_graphite_response(*args, **kwargs):
     resp = Mock()
+    resp.json = json.loads(get_content('graphite_null_response.json'))
+    resp.status_code = 200
+    return resp
+
+
+def fake_slow_graphite_response(*args, **kwargs):
+    resp = Mock()
+    time.sleep(0.1)
     resp.json = json.loads(get_content('graphite_null_response.json'))
     resp.status_code = 200
     return resp
@@ -258,8 +267,17 @@ class TestCheckRun(LocalTestCase):
         self.assertFalse(self.graphite_check.last_result().succeeded)
         self.assertEqual(self.graphite_check.calculated_status,
                          Service.CALCULATED_FAILING_STATUS)
-        # Test results timing
+
+    @patch('cabot.cabotapp.graphite.requests.get', fake_slow_graphite_response)
+    def test_graphite_timing(self):
+        checkresults = self.graphite_check.statuscheckresult_set.all()
+        self.assertEqual(len(checkresults), 2)
+        self.graphite_check.run()
+        checkresults = self.graphite_check.statuscheckresult_set.all()
+        self.assertEqual(len(checkresults), 3)
+        self.assertTrue(self.graphite_check.last_result().succeeded)
         self.assertGreater(list(checkresults)[-1].took, 0.0)
+        
 
     @patch('cabot.cabotapp.jenkins.requests.get', fake_jenkins_response)
     def test_jenkins_run(self):
