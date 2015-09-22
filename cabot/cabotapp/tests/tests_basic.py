@@ -23,7 +23,7 @@ from mock import Mock, patch
 from cabot.cabotapp.models import (
     GraphiteStatusCheck, JenkinsStatusCheck,
     HttpStatusCheck, ICMPStatusCheck, Service, Instance,
-    StatusCheckResult, UserProfile)
+    StatusCheckResult, UserProfile, minimize_targets)
 from cabot.cabotapp.views import StatusCheckReportForm
 from cabot.cabotapp.alert import send_alert
 from cabot.cabotapp.graphite import parse_metric
@@ -868,3 +868,42 @@ class TestAlerts(LocalTestCase):
         self.service.alert()
         self.assertEqual(fake_send_alert.call_count, 1)
         fake_send_alert.assert_called_with(self.service, duty_officers=[])
+
+
+class TestMinimizeTargets(LocalTestCase):
+    def test_null(self):
+        result = minimize_targets([])
+        self.assertEqual(result, [])
+
+    def test_all_same(self):
+        result = minimize_targets(["a", "a"])
+        self.assertEqual(result, ["a", "a"])
+
+    def test_all_different(self):
+        result = minimize_targets(["a", "b"])
+        self.assertEqual(result, ["a", "b"])
+
+    def test_same_prefix(self):
+        result = minimize_targets(["prefix.a", "prefix.b"])
+        self.assertEqual(result, ["a", "b"])
+
+        result = minimize_targets(["prefix.second.a", "prefix.second.b"])
+        self.assertEqual(result, ["a", "b"])
+
+    def test_same_suffix(self):
+        result = minimize_targets(["a.suffix", "b.suffix"])
+        self.assertEqual(result, ["a", "b"])
+
+        result = minimize_targets(["a.suffix.suffix", "b.suffix.suffix"])
+        self.assertEqual(result, ["a", "b"])
+
+        result = minimize_targets(["a.b.suffix.suffix", "b.c.suffix.suffix"])
+        self.assertEqual(result, ["a.b", "b.c"])
+
+    def test_same_prefix_and_suffix(self):
+        result = minimize_targets(["prefix.a.suffix", "prefix.b.suffix"])
+        self.assertEqual(result, ["a", "b"])
+
+        result = minimize_targets(["prefix.prefix.a.suffix.suffix",
+                                   "prefix.prefix.b.suffix.suffix",])
+        self.assertEqual(result, ["a", "b"])
