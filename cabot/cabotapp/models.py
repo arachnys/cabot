@@ -629,7 +629,6 @@ class GraphiteStatusCheck(StatusCheck):
                 if not failure_value is None:
                     failures.append(failure_value)
 
-            failed = True
         allowed_num_failures = self.allowed_num_failures or 0
         # If there are more than expected failures
         if len(failures) - self.allowed_num_failures > 0:

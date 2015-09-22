@@ -26,6 +26,7 @@ from cabot.cabotapp.models import (
     StatusCheckResult, UserProfile)
 from cabot.cabotapp.views import StatusCheckReportForm
 from cabot.cabotapp.alert import send_alert
+from cabot.cabotapp.graphite import parse_metric
 
 
 def get_content(fname):
@@ -109,6 +110,13 @@ class LocalTestCase(APITestCase):
 def fake_graphite_response(*args, **kwargs):
     resp = Mock()
     resp.json = json.loads(get_content('graphite_response.json'))
+    resp.status_code = 200
+    return resp
+
+
+def fake_graphite_series_response(*args, **kwargs):
+    resp = Mock()
+    resp.json = json.loads(get_content('graphite_avg_response.json'))
     resp.status_code = 200
     return resp
 
@@ -248,6 +256,13 @@ class TestCheckRun(LocalTestCase):
         self.assertEqual(len(checkresults), 7)
         self.assertEqual(self.graphite_check.calculated_status,
                          Service.CALCULATED_FAILING_STATUS)
+
+    @patch('cabot.cabotapp.graphite.requests.get', fake_graphite_series_response)
+    def test_graphite_series_run(self):
+        jsn = parse_metric('fake.pattern')
+        self.assertEqual(jsn['average_value'], 59.86)
+        self.assertEqual(jsn['series'][0]['max'], 151.0)
+        self.assertEqual(jsn['series'][0]['min'], 0.1)
 
     @patch('cabot.cabotapp.graphite.requests.get', fake_empty_graphite_response)
     def test_graphite_empty_run(self):
