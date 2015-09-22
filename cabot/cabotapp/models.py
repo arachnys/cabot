@@ -465,8 +465,8 @@ class StatusCheck(PolymorphicModel):
             result.succeeded = False
         except Exception as e:
             result = StatusCheckResult(check=self)
-            logger.error("Error performing check: %s" % (e,))
-            result.error = u'Error in performing check: %s' % (e,)
+            logger.error(u"Error performing check: %s" % (e.message,))
+            result.error = u'Error in performing check: %s' % (e.message,)
             result.succeeded = False
         finish = timezone.now()
         result.time = start
@@ -683,7 +683,7 @@ class HttpStatusCheck(StatusCheck):
                 },
             )
         except requests.RequestException as e:
-            result.error = u'Request error occurred: %s' % (e,)
+            result.error = u'Request error occurred: %s' % (e.message,)
             result.succeeded = False
         else:
             if self.status_code and resp.status_code != int(self.status_code):
@@ -732,7 +732,7 @@ class JenkinsStatusCheck(StatusCheck):
             # If something else goes wrong, we will *not* fail - otherwise
             # a lot of services seem to fail all at once.
             # Ugly to do it here but...
-            result.error = u'Error fetching from Jenkins - %s' % e
+            result.error = u'Error fetching from Jenkins - %s' % e.message
             result.succeeded = True
             return result
 

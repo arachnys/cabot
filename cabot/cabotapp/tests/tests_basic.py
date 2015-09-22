@@ -109,21 +109,21 @@ class LocalTestCase(APITestCase):
 
 def fake_graphite_response(*args, **kwargs):
     resp = Mock()
-    resp.json = json.loads(get_content('graphite_response.json'))
+    resp.json = lambda: json.loads(get_content('graphite_response.json'))
     resp.status_code = 200
     return resp
 
 
 def fake_graphite_series_response(*args, **kwargs):
     resp = Mock()
-    resp.json = json.loads(get_content('graphite_avg_response.json'))
+    resp.json = lambda: json.loads(get_content('graphite_avg_response.json'))
     resp.status_code = 200
     return resp
 
 
 def fake_empty_graphite_response(*args, **kwargs):
     resp = Mock()
-    resp.json = json.loads(get_content('graphite_null_response.json'))
+    resp.json = lambda: json.loads(get_content('graphite_null_response.json'))
     resp.status_code = 200
     return resp
 
@@ -131,21 +131,21 @@ def fake_empty_graphite_response(*args, **kwargs):
 def fake_slow_graphite_response(*args, **kwargs):
     resp = Mock()
     time.sleep(0.1)
-    resp.json = json.loads(get_content('graphite_null_response.json'))
+    resp.json = lambda: json.loads(get_content('graphite_null_response.json'))
     resp.status_code = 200
     return resp
 
 
 def fake_jenkins_response(*args, **kwargs):
     resp = Mock()
-    resp.json = json.loads(get_content('jenkins_response.json'))
+    resp.json = lambda: json.loads(get_content('jenkins_response.json'))
     resp.status_code = 200
     return resp
 
 
 def jenkins_blocked_response(*args, **kwargs):
     resp = Mock()
-    resp.json = json.loads(get_content('jenkins_blocked_response.json'))
+    resp.json = lambda: json.loads(get_content('jenkins_blocked_response.json'))
     resp.status_code = 200
     return resp
 

@@ -19,7 +19,7 @@ def get_data(target_pattern):
         }
     )
     resp.raise_for_status()
-    return resp.json
+    return resp.json()
 
 
 def get_matching_metrics(pattern):
@@ -35,7 +35,7 @@ def get_matching_metrics(pattern):
         }
     )
     resp.raise_for_status()
-    return resp.json
+    return resp.json()
 
 
 def get_all_metrics(limit=None):

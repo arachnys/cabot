@@ -20,7 +20,7 @@ def get_job_status(jobname):
     }
     endpoint = settings.JENKINS_API + 'job/%s/api/json' % jobname
     resp = requests.get(endpoint, auth=auth, verify=True)
-    status = resp.json
+    status = resp.json()
     ret['status_code'] = resp.status_code
     ret['job_number'] = status['lastBuild'].get('number', None)
     if status['color'].startswith('blue'):
