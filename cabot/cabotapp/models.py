@@ -11,6 +11,7 @@ from .jenkins import get_job_status
 from .alert import (send_alert, AlertPlugin, AlertPluginUserData, update_alert_plugins)
 from .calendar import get_events
 from .graphite import parse_metric
+from .graphite import get_data
 from .tasks import update_service, update_instance
 from datetime import datetime, timedelta
 from django.utils import timezone
@@ -389,6 +390,11 @@ class StatusCheck(PolymorphicModel):
         null=True,
         help_text='The minimum number of data series (hosts) you expect to see.',
     )
+    allowed_num_failures = models.IntegerField(
+        default=0,
+        null=True,
+        help_text='The maximum number of data series (metrics) you expect to fail. For example, you might be OK with 2 out of 3 webservers having OK load (1 failing), but not 1 out of 3 (2 failing).',
+    )
 
     # HTTP checks
     endpoint = models.TextField(
@@ -459,7 +465,8 @@ class StatusCheck(PolymorphicModel):
             result.succeeded = False
         except Exception as e:
             result = StatusCheckResult(check=self)
-            result.error = u'Error in performing check: %s' % (e,)
+            logger.error(u"Error performing check: %s" % (e.message,))
+            result.error = u'Error in performing check: %s' % (e.message,)
             result.succeeded = False
         finish = timezone.now()
         result.time = start
@@ -552,80 +559,100 @@ class GraphiteStatusCheck(StatusCheck):
     def check_category(self):
         return "Metric check"
 
-    def format_error_message(self, failure_value, actual_hosts):
+    def format_error_message(self, failure_value, actual_hosts, actual_failures):
         """
         A summary of why the check is failing for inclusion in short alert messages
         Returns something like:
         "5.0 > 4 | 1/2 hosts"
         """
+        if isinstance(failure_value, (list, tuple)):
+            failure_value = ', '.join([u'%0.1f' % v for v in failure_value])
+        else:
+            failure_value = u'%0.1f' % failure_value
         hosts_string = u''
+        failures_string = u''
         if self.expected_num_hosts > 0:
             hosts_string = u' | %s/%s hosts' % (actual_hosts,
                                                 self.expected_num_hosts)
             if self.expected_num_hosts > actual_hosts:
                 return u'Hosts missing%s' % hosts_string
+        if self.allowed_num_failures and actual_failures:
+            failures_string = u' | %s/%s series failing (%s allowed)' % (
+                actual_failures,
+                actual_hosts,
+                self.allowed_num_failures,
+            )
         if failure_value is None:
             return "Failed to get metric from Graphite"
-        return u"%0.1f %s %0.1f%s" % (
+        return u"%s %s %0.1f%s%s" % (
             failure_value,
             self.check_type,
             float(self.value),
-            hosts_string
+            hosts_string,
+            failures_string,
         )
 
     def _run(self):
-        series = parse_metric(self.metric, mins_to_check=self.frequency)
-        failure_value = None
-        if series['error']:
-            failed = True
+        result = StatusCheckResult(check=self)
+
+        failures = []
+        graphite_output = parse_metric(self.metric, mins_to_check=self.frequency)
+        if graphite_output['num_series_with_data'] > 0:
+            result.average_value = graphite_output['average_value']
+            failed = False
+            for s in graphite_output['series']:
+                failure_value = None
+                if self.check_type == '<':
+                    failed = float(s['min']) < float(self.value)
+                    if failed:
+                        failure_value = s['min']
+                elif self.check_type == '<=':
+                    failed = float(s['min']) <= float(self.value)
+                    if failed:
+                        failure_value = s['min']
+                elif self.check_type == '>':
+                    failed = float(s['max']) > float(self.value)
+                    if failed:
+                        failure_value = s['max']
+                elif self.check_type == '>=':
+                    failed = float(s['max']) >= float(self.value)
+                    if failed:
+                        failure_value = s['max']
+                elif self.check_type == '==':
+                    failed = float(self.value) in s['values']
+                    if failed:
+                        failure_value = float(self.value)
+                else:
+                    raise Exception(u'Check type %s not supported' %
+                                    self.check_type)
+
+                if not failure_value is None:
+                    failures.append(failure_value)
+
+        allowed_num_failures = self.allowed_num_failures or 0
+        # If there are more than expected failures
+        if len(failures) - self.allowed_num_failures > 0:
+            result.succeeded = False
         else:
-            failed = None
-
-        result = StatusCheckResult(
-            check=self,
-        )
-        if series['num_series_with_data'] > 0:
-            result.average_value = series['average_value']
-            if self.check_type == '<':
-                failed = float(series['min']) < float(self.value)
-                if failed:
-                    failure_value = series['min']
-            elif self.check_type == '<=':
-                failed = float(series['min']) <= float(self.value)
-                if failed:
-                    failure_value = series['min']
-            elif self.check_type == '>':
-                failed = float(series['max']) > float(self.value)
-                if failed:
-                    failure_value = series['max']
-            elif self.check_type == '>=':
-                failed = float(series['max']) >= float(self.value)
-                if failed:
-                    failure_value = series['max']
-            elif self.check_type == '==':
-                failed = float(self.value) in series['all_values']
-                if failed:
-                    failure_value = float(self.value)
+            if graphite_output['error']:
+                result.succeeded = False
+            if graphite_output['num_series_with_data'] < self.expected_num_hosts:
+                result.succeeded = False
             else:
-                raise Exception(u'Check type %s not supported' %
-                                self.check_type)
-
-        if series['num_series_with_data'] < self.expected_num_hosts:
-            failed = True
+                result.succeeded = True
 
         try:
-            result.raw_data = json.dumps(series['raw'])
+            result.raw_data = json.dumps(graphite_output['raw'])
         except:
-            result.raw_data = series['raw']
-        result.succeeded = not failed
+            result.raw_data = graphite_output['raw']
+
         if not result.succeeded:
             result.error = self.format_error_message(
-                failure_value,
-                series['num_series_with_data'],
+                failures,
+                graphite_output['num_series_with_data'],
+                len(failures),
             )
 
-        result.actual_hosts = series['num_series_with_data']
-        result.failure_value = failure_value
         return result
 
 
@@ -640,23 +667,23 @@ class HttpStatusCheck(StatusCheck):
 
     def _run(self):
         result = StatusCheckResult(check=self)
-        auth = (self.username, self.password)
+
+        auth = None
+        if self.username or self.password:
+            auth = (self.username, self.password)
+
         try:
-            if self.username or self.password:
-                resp = requests.get(
-                    self.endpoint,
-                    timeout=self.timeout,
-                    verify=self.verify_ssl_certificate,
-                    auth=auth
-                )
-            else:
-                resp = requests.get(
-                    self.endpoint,
-                    timeout=self.timeout,
-                    verify=self.verify_ssl_certificate,
-                )
+            resp = requests.get(
+                self.endpoint,
+                timeout=self.timeout,
+                verify=self.verify_ssl_certificate,
+                auth=auth,
+                headers={
+                    "User-Agent": settings.HTTP_USER_AGENT,
+                },
+            )
         except requests.RequestException as e:
-            result.error = u'Request error occurred: %s' % (e,)
+            result.error = u'Request error occurred: %s' % (e.message,)
             result.succeeded = False
         else:
             if self.status_code and resp.status_code != int(self.status_code):
@@ -705,7 +732,7 @@ class JenkinsStatusCheck(StatusCheck):
             # If something else goes wrong, we will *not* fail - otherwise
             # a lot of services seem to fail all at once.
             # Ugly to do it here but...
-            result.error = u'Error fetching from Jenkins - %s' % e
+            result.error = u'Error fetching from Jenkins - %s' % e.message
             result.succeeded = True
             return result
 
@@ -754,6 +781,9 @@ class StatusCheckResult(models.Model):
     # Jenkins specific
     job_number = models.PositiveIntegerField(null=True)
 
+    class Meta:
+        ordering = ['-time_complete']
+
     def __unicode__(self):
         return '%s: %s @%s' % (self.status, self.check.name, self.time)
 
@@ -766,8 +796,12 @@ class StatusCheckResult(models.Model):
 
     @property
     def took(self):
+        """
+        Time taken by check in ms
+        """
         try:
-            return (self.time_complete - self.time).microseconds / 1000
+            diff = self.time_complete - self.time
+            return (diff.microseconds + (diff.seconds + diff.days * 24 * 3600) * 10**6) / 1000
         except:
             return None
 

@@ -1,3 +1,8 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Load local config overrides
+local_config = File.file?("local_config.yml") ? YAML.load(File.read("local_config.yml")) : {}
 
 Vagrant::configure("2") do |config|
   # All Vagrant configuration is done here. The most common configuration
@@ -5,15 +10,23 @@ Vagrant::configure("2") do |config|
   # please see the online documentation at vagrantup.com.
 
   # Every Vagrant virtual environment requires a box to build off of.
-  config.vm.box = "precise64"
+  config.vm.box = local_config["box"] || "hashicorp/precise64"
 
-  config.vm.provider "virtualbox" do |v|
-    v.customize ["modifyvm", :id, "--memory", "1024", "--cpus", "1"]
+  # Virtualbox
+  config.vm.provider "virtualbox" do |vb|
+    vb.customize [
+      "modifyvm", :id,
+      "--memory", local_config['ram'] || "1024",
+      "--cpus", local_config['cpu'] || 1,
+      "--ioapic", "on",
+    ]
   end
 
-  # The url from where the 'config.vm.box' box will be fetched if it
-  # doesn't already exist on the user's system.
-  config.vm.box_url = "http://files.vagrantup.com/precise64.box"
+  #vmware_fusion
+  config.vm.provider "vmware_fusion" do |v|
+    v.vmx["memsize"] = local_config['ram'] || "1024"
+    v.vmx["numvcpus"] = local_config['cpu'] || 1
+  end
 
   # Boot with a GUI so you can see the screen. (Default is headless)
   # config.vm.boot_mode = :gui

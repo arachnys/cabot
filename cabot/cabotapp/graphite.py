@@ -15,11 +15,11 @@ def get_data(target_pattern):
         params={
             'target': target_pattern,
             'format': 'json',
-            'from': graphite_from
+            'from': graphite_from,
         }
     )
     resp.raise_for_status()
-    return resp.json
+    return resp.json()
 
 
 def get_matching_metrics(pattern):
@@ -35,7 +35,7 @@ def get_matching_metrics(pattern):
         }
     )
     resp.raise_for_status()
-    return resp.json
+    return resp.json()
 
 
 def get_all_metrics(limit=None):
@@ -65,8 +65,8 @@ def parse_metric(metric, mins_to_check=5):
         'num_series_with_data': 0,
         'num_series_no_data': 0,
         'error': None,
-        'all_values': [],
-        'raw': ''
+        'raw': '',
+        'series': [],
     }
     try:
         data = get_data(metric)
@@ -77,17 +77,20 @@ def parse_metric(metric, mins_to_check=5):
         return ret
     all_values = []
     for target in data:
-        values = [float(t[0])
-                  for t in target['datapoints'][-mins_to_check:] if t[0] is not None]
-        if values:
+        series = {'values': [
+            float(t[0]) for t in target['datapoints'][-mins_to_check:] if t[0] is not None]}
+        all_values.extend(series['values'])
+        if series['values']:
             ret['num_series_with_data'] += 1
+            series['max'] = max(series['values'])
+            series['min'] = min(series['values'])
+            series['average_value'] = sum(series['values']) / len(series['values'])
         else:
             ret['num_series_no_data'] += 1
-        all_values.extend(values)
+        ret['series'].append(series)
     if all_values:
-        ret['max'] = max(all_values)
-        ret['min'] = min(all_values)
         ret['average_value'] = sum(all_values) / len(all_values)
     ret['all_values'] = all_values
     ret['raw'] = data
     return ret
+

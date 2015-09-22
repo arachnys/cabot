@@ -246,4 +246,11 @@ REST_FRAMEWORK = {
     ]
 }
 
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+)
+AUTH_LDAP = os.environ.get('AUTH_LDAP', 'false')
 
+if AUTH_LDAP.lower() == "true":
+    from settings_ldap import *
+    AUTHENTICATION_BACKENDS += tuple(['django_auth_ldap.backend.LDAPBackend'])

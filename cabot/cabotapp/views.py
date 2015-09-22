@@ -115,6 +115,105 @@ class SymmetricalForm(forms.ModelForm):
         return instance
 
 
+class GraphiteStatusCheckForm(StatusCheckForm):
+
+    class Meta:
+        model = GraphiteStatusCheck
+        fields = (
+            'name',
+            'metric',
+            'check_type',
+            'value',
+            'frequency',
+            'active',
+            'importance',
+            'expected_num_hosts',
+            'allowed_num_failures',
+            'debounce',
+        )
+        widgets = dict(**base_widgets)
+        widgets.update({
+            'value': forms.TextInput(attrs={
+                'style': 'width: 100px',
+                'placeholder': 'threshold value',
+            }),
+            'metric': forms.TextInput(attrs={
+                'style': 'width: 100%',
+                'placeholder': 'graphite metric key'
+            }),
+            'check_type': forms.Select(attrs={
+                'data-rel': 'chosen',
+            })
+        })
+
+
+class ICMPStatusCheckForm(StatusCheckForm):
+
+    class Meta:
+        model = ICMPStatusCheck
+        fields = (
+            'name',
+            'frequency',
+            'importance',
+            'active',
+            'debounce',
+        )
+        widgets = dict(**base_widgets)
+
+
+class HttpStatusCheckForm(StatusCheckForm):
+
+    class Meta:
+        model = HttpStatusCheck
+        fields = (
+            'name',
+            'endpoint',
+            'username',
+            'password',
+            'text_match',
+            'status_code',
+            'timeout',
+            'verify_ssl_certificate',
+            'frequency',
+            'importance',
+            'active',
+            'debounce',
+        )
+        widgets = dict(**base_widgets)
+        widgets.update({
+            'endpoint': forms.TextInput(attrs={
+                'style': 'width: 100%',
+                'placeholder': 'https://www.arachnys.com',
+            }),
+            'username': forms.TextInput(attrs={
+                'style': 'width: 30%',
+            }),
+            'password': forms.TextInput(attrs={
+                'style': 'width: 30%',
+            }),
+            'text_match': forms.TextInput(attrs={
+                'style': 'width: 100%',
+                'placeholder': '[Aa]rachnys\s+[Rr]ules',
+            }),
+            'status_code': forms.TextInput(attrs={
+                'style': 'width: 20%',
+                'placeholder': '200',
+            }),
+        })
+
+
+class JenkinsStatusCheckForm(StatusCheckForm):
+
+    class Meta:
+        model = JenkinsStatusCheck
+        fields = (
+            'name',
+            'importance',
+            'debounce',
+            'max_queued_build_time',
+        )
+        widgets = dict(**base_widgets)
+
 
 class InstanceForm(SymmetricalForm):
 
@@ -153,7 +252,12 @@ class InstanceForm(SymmetricalForm):
                 'data-rel': 'chosen',
                 'style': 'width: 70%',
             }),
+            'alerts': forms.SelectMultiple(attrs={
+                'data-rel': 'chosen',
+                'style': 'width: 70%',
+            }),
             'users_to_notify': forms.CheckboxSelectMultiple(),
+            'hackpad_id': forms.TextInput(attrs={'style': 'width:30%;'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -408,7 +512,7 @@ def get_object_form(model_type):
 class GeneralSettingsForm(forms.Form):
     first_name = forms.CharField(label='First name', max_length=30, required=False)
     last_name  = forms.CharField(label='Last name', max_length=30, required=False)
-    email_address = forms.CharField(label='Email Address', max_length=30, required=False)
+    email_address = forms.CharField(label='Email Address', max_length=75, required=False) #We use 75 and not the 254 because Django 1.6.8 only supports 75. See commit message for details.
     enabled = forms.BooleanField(label='Enabled', required=False)
 
 class InstanceListView(LoginRequiredMixin, ListView):

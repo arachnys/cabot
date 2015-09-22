@@ -51,18 +51,34 @@ packages=(
   'build-essential'
   'redis-server'
   'libpq-dev'
-  'rubygems'
   'libxml2-dev'
   'libxslt-dev'
   'nodejs'
   'npm'
-  'postgresql-9.1'
+  'postgresql'
   'nginx'
   'htop'
+  'libsasl2-dev'
+  'libldap2-dev'
 )
 
 sudo apt-get update
 sudo apt-get install --quiet --assume-yes ${packages[*]}
+
+# install ruby if it's not installed
+if ! which ruby; then
+  sudo apt-get install -y ruby1.9.3
+fi
+
+# install rubygems if it's not included in ruby
+if ! which gem; then
+  sudo apt-get install -y rubygems
+fi
+
+# symlink node to nodejs for 14.04 compatibility
+if ! which node && which nodejs; then
+  sudo ln -s `which nodejs` /usr/bin/node
+fi
 set +e
 sudo pip install -U pip # upgrade pip
 set -e
@@ -156,7 +172,7 @@ server {
 #   }
 
 #   location /static/ {
-#     alias $DEPLOY_PATH/static/;
+#     alias /home/ubuntu/cabot/static/;
 #   }
 # }
 EOF
