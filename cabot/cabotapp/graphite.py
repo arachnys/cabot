@@ -85,9 +85,9 @@ def parse_metric(metric, mins_to_check=5):
             series['max'] = max(series['values'])
             series['min'] = min(series['values'])
             series['average_value'] = sum(series['values']) / len(series['values'])
+            ret['series'].append(series)
         else:
             ret['num_series_no_data'] += 1
-        ret['series'].append(series)
     if all_values:
         ret['average_value'] = sum(all_values) / len(all_values)
     ret['all_values'] = all_values
