@@ -11,6 +11,18 @@
     <div class="col-xs-4 text-right"><h2><span class="label label-{% if service.overall_status == service.PASSING_STATUS %}success{% else %}danger{% endif %}">{{ service.overall_status|lower|capfirst }}</span> <span class="label label-{% if service.alerts_enabled %}success{% else %}warning{% endif %}">{% if service.alerts_enabled %}Alerts enabled{%else %}Alerts disabled{% endif %}</span></h2></div>
     <div class="col-xs-2 text-right"><h2><a href="{% url "update-service" service.id %}"><i class="glyphicon glyphicon-edit"></i></a></h2></div>
   </div>
+  {% if service.overall_status != service.PASSING_STATUS %}
+  {% if service.unexpired_acknowledgement %}
+  <div class="col-xs-12 alert alert-primary">
+    <i class="glyphicon glyphicon-pause"></i> {{ service.unexpired_acknowledgement.user.email }} acknowledged an alert against this service at {{ service.unexpired_acknowledgement.time }} - alerts are currently paused. The acknowledgement will expire at {{ service.unexpired_acknowledgement.expires }}.
+  </div>
+  {% else %}
+  <div class="col-xs-12 alert alert-primary">
+    <a class="btn btn-primary" href="{% url 'acknowledge-alert' pk=service.id %}"><i class=""></i>Acknowledge alert</a>
+    By acknowledging this failure you will pause alerts temporarily.
+  </div>
+  {% endif %}
+  {% endif %}
 </div>
 <hr>
 <div class="row">

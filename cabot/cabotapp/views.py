@@ -51,13 +51,11 @@ def subscriptions(request):
     })
     return HttpResponse(t.render(c))
 
-
 @login_required
 def run_status_check(request, pk):
     """Runs a specific check"""
     _run_status_check(check_or_id=pk)
     return HttpResponseRedirect(reverse('check', kwargs={'pk': pk}))
-
 
 def duplicate_icmp_check(request, pk):
     pc = StatusCheck.objects.get(pk=pk)
@@ -666,6 +664,14 @@ class InstanceCreateView(LoginRequiredMixin, CreateView):
 
         return initial
 
+
+@login_required
+def acknowledge_alert(request, service_id):
+    service = Service.objects.get(pk=service_id)
+    service.acknowledge_alert(user=request.user)
+    return HttpResponseRedirect(reverse('service', kwargs={'pk': pk}))
+
+
 class ServiceCreateView(LoginRequiredMixin, CreateView):
     model = Service
     form_class = ServiceForm
@@ -674,12 +680,14 @@ class ServiceCreateView(LoginRequiredMixin, CreateView):
     def get_success_url(self):
         return reverse('service', kwargs={'pk': self.object.id})
 
+
 class InstanceUpdateView(LoginRequiredMixin, UpdateView):
     model = Instance
     form_class = InstanceForm
 
     def get_success_url(self):
         return reverse('instance', kwargs={'pk': self.object.id})
+
 
 class ServiceUpdateView(LoginRequiredMixin, UpdateView):
     model = Service

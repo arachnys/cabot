@@ -48,8 +48,20 @@ def send_alert(service, duty_officers=None):
     for alert in service.alerts.all():
         try:
             alert.send_alert(service, users, duty_officers)
-        except Exception:
-            logging.exception('Could not sent ' + alert.name + ' alert')
+        except Exception as e:
+            logging.exception('Could not send %s alert: %s' % (alert.name, e))
+
+def send_alert_update(service, duty_officers=None):
+    users = service.users_to_notify.filter(is_active=True)
+    for alert in service.alerts.all():
+        if hasattr(alert, 'send_alert_update'):
+            try:
+                alert.send_alert_update(service, users, duty_officers)
+            except Exception as e:
+                logger.exception('Could not send %s alert update: %s' % (alert.name, e))
+        else:
+            logger.warning('No send_alert_update method present for %s' % alert.name)
+
 
 def update_alert_plugins():
     for plugin_subclass in AlertPlugin.__subclasses__():

@@ -170,7 +170,6 @@ def throws_timeout(*args, **kwargs):
 
 class TestCheckRun(LocalTestCase):
 
-
     def test_calculate_service_status(self):
         self.assertEqual(self.graphite_check.calculated_status,
                          Service.CALCULATED_PASSING_STATUS)
@@ -207,6 +206,31 @@ class TestCheckRun(LocalTestCase):
                          Service.CALCULATED_PASSING_STATUS)
         self.service.update_status()
         self.assertEqual(self.service.overall_status, Service.PASSING_STATUS)
+
+    @patch('cabot.cabotapp.models.send_alert')
+    @patch('cabot.cabotapp.models.send_alert_update')
+    def test_alert_acknowledgement(self, fake_send_alert_update, fake_send_alert):
+        self.assertEqual(self.service.overall_status, Service.PASSING_STATUS)
+        self.most_recent_result.succeeded = False
+        self.most_recent_result.save()
+        self.graphite_check.last_run = timezone.now()
+        self.graphite_check.save()
+        self.assertEqual(self.graphite_check.calculated_status,
+                         Service.CALCULATED_FAILING_STATUS)
+        self.service.update_status()
+        fake_send_alert.assert_called_with(self.service, duty_officers=[])
+
+        fake_send_alert.reset_mock()
+        self.service.last_alert_sent = timezone.now() - timedelta(minutes=30)
+        self.service.update_status()
+        fake_send_alert.assert_called_with(self.service, duty_officers=[])
+
+        fake_send_alert.reset_mock()
+        self.service.acknowledge_alert(user=self.user)
+        self.service.last_alert_sent = timezone.now() - timedelta(minutes=30)
+        self.service.update_status()
+        self.assertEqual(self.service.unexpired_acknowledgement().user, self.user)
+        fake_send_alert_update.assert_called_with(self.service, duty_officers=[])
 
     @patch('cabot.cabotapp.graphite.requests.get', fake_graphite_response)
     def test_graphite_run(self):

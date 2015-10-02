@@ -8,7 +8,13 @@ from django.contrib.auth.models import User
 from celery.exceptions import SoftTimeLimitExceeded
 
 from .jenkins import get_job_status
-from .alert import (send_alert, AlertPlugin, AlertPluginUserData, update_alert_plugins)
+from .alert import (
+    send_alert,
+    send_alert_update,
+    AlertPlugin,
+    AlertPluginUserData,
+    update_alert_plugins
+)
 from .calendar import get_events
 from .graphite import parse_metric
 from .graphite import get_data
@@ -178,9 +184,28 @@ class CheckGroupMixin(models.Model):
             # We don't count "back to normal" as an alert
             self.last_alert_sent = None
         self.save()
-        self.snapshot.did_send_alert = True
-        self.snapshot.save()
-        send_alert(self, duty_officers=get_duty_officers())
+        if self.unexpired_acknowledgement():
+            send_alert_update(self, duty_officers=get_duty_officers())
+        else:
+            self.snapshot.did_send_alert = True
+            self.snapshot.save()
+            send_alert(self, duty_officers=get_duty_officers())
+
+    def acknowledge_alert(self, user):
+        acknowledgement = AlertAcknowledgement.objects.create(
+            user=user,
+            time=timezone.now(),
+            service=self,
+        )
+
+    def unexpired_acknowledgement(self):
+        unexpired_acknowledgements = self.alertacknowledgement_set.all().filter(
+            time__gte=timezone.now()-timedelta(minutes=settings.ACKNOWLEDGEMENT_EXPIRY),
+        ).order_by('-time')
+        try:
+            return unexpired_acknowledgements[0]
+        except:
+            return None
 
     @property
     def recent_snapshots(self):
@@ -220,6 +245,7 @@ class CheckGroupMixin(models.Model):
 
     def all_failing_checks(self):
         return self.active_status_checks().exclude(calculated_status=self.CALCULATED_PASSING_STATUS)
+
 
 class Service(CheckGroupMixin):
 
@@ -308,6 +334,7 @@ class Instance(CheckGroupMixin):
         self.icmp_status_checks().delete()
         return super(Instance, self).delete(*args, **kwargs)
 
+
 class Snapshot(models.Model):
 
     class Meta:
@@ -320,17 +347,20 @@ class Snapshot(models.Model):
     overall_status = models.TextField(default=Service.PASSING_STATUS)
     did_send_alert = models.IntegerField(default=False)
 
+
 class ServiceStatusSnapshot(Snapshot):
     service = models.ForeignKey(Service, related_name='snapshots')
 
     def __unicode__(self):
         return u"%s: %s" % (self.service.name, self.overall_status)
 
+
 class InstanceStatusSnapshot(Snapshot):
     instance = models.ForeignKey(Instance, related_name='snapshots')
 
     def __unicode__(self):
         return u"%s: %s" % (self.instance.name, self.overall_status)
+
 
 class StatusCheck(PolymorphicModel):
 
@@ -522,6 +552,7 @@ class StatusCheck(PolymorphicModel):
         for instance in instances:
             update_instance.delay(instance.id)
 
+
 class ICMPStatusCheck(StatusCheck):
 
     class Meta(StatusCheck.Meta):
@@ -702,6 +733,7 @@ class HttpStatusCheck(StatusCheck):
                 result.succeeded = True
         return result
 
+
 class JenkinsStatusCheck(StatusCheck):
 
     class Meta(StatusCheck.Meta):
@@ -819,6 +851,18 @@ class StatusCheckResult(models.Model):
         return super(StatusCheckResult, self).save(*args, **kwargs)
 
 
+class AlertAcknowledgement(models.Model):
+
+    time = models.DateTimeField()
+    user = models.ForeignKey(User)
+    service = models.ForeignKey(Service)
+
+    def unexpired(self):
+        return self.expires() > timezone.now()
+
+    def expires(self):
+        return self.time + timedelta(minutes=settings.ACKNOWLEDGEMENT_EXPIRY)
+
 class UserProfile(models.Model):
     user = models.OneToOneField(User, related_name='profile')
 
@@ -844,6 +888,7 @@ class UserProfile(models.Model):
     mobile_number = models.CharField(max_length=20, blank=True, default='')
     hipchat_alias = models.CharField(max_length=50, blank=True, default='')
     fallback_alert_user = models.BooleanField(default=False)
+
 
 class Shift(models.Model):
     start = models.DateTimeField()
