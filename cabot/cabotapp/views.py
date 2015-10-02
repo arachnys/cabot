@@ -666,9 +666,16 @@ class InstanceCreateView(LoginRequiredMixin, CreateView):
 
 
 @login_required
-def acknowledge_alert(request, service_id):
-    service = Service.objects.get(pk=service_id)
+def acknowledge_alert(request, pk):
+    service = Service.objects.get(pk=pk)
     service.acknowledge_alert(user=request.user)
+    return HttpResponseRedirect(reverse('service', kwargs={'pk': pk}))
+
+
+@login_required
+def remove_acknowledgement(request, pk):
+    service = Service.objects.get(pk=pk)
+    service.remove_acknowledgement(user=request.user)
     return HttpResponseRedirect(reverse('service', kwargs={'pk': pk}))
 
 

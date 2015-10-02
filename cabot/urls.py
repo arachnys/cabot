@@ -3,7 +3,7 @@ from django.conf import settings
 from cabot.cabotapp.views import (
     run_status_check, graphite_api_data, checks_run_recently,
     duplicate_icmp_check, duplicate_graphite_check, duplicate_http_check, duplicate_jenkins_check,
-    duplicate_instance, acknowledge_alert,
+    duplicate_instance, acknowledge_alert, remove_acknowledgement,
     GraphiteCheckCreateView, GraphiteCheckUpdateView,
     HttpCheckCreateView, HttpCheckUpdateView,
     ICMPCheckCreateView, ICMPCheckUpdateView,
@@ -59,6 +59,8 @@ urlpatterns = patterns('',
              view=ServiceDetailView.as_view(), name='service'),
      url(r'^service/acknowledge_alert/(?P<pk>\d+)/',
              view=acknowledge_alert, name='acknowledge-alert'),
+     url(r'^service/remove_acknowledgement/(?P<pk>\d+)/',
+             view=remove_acknowledgement, name='remove-acknowledgement'),
 
      url(r'^instances/', view=InstanceListView.as_view(),
              name='instances'),

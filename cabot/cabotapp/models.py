@@ -191,19 +191,31 @@ class CheckGroupMixin(models.Model):
             self.snapshot.save()
             send_alert(self, duty_officers=get_duty_officers())
 
+    def unexpired_acknowledgements(self):
+        acknowledgements = self.alertacknowledgement_set.all().filter(
+            time__gte=timezone.now()-timedelta(minutes=settings.ACKNOWLEDGEMENT_EXPIRY),
+            cancelled_time__isnull=True,
+        ).order_by('-time')
+        return acknowledgements
+
     def acknowledge_alert(self, user):
+        if self.unexpired_acknowledgements(): # Don't allow users to jump on each other
+            return None
         acknowledgement = AlertAcknowledgement.objects.create(
             user=user,
             time=timezone.now(),
             service=self,
         )
 
+    def remove_acknowledgement(self, user):
+        self.unexpired_acknowledgements().update(
+            cancelled_time=timezone.now(),
+            cancelled_user=user,
+        )
+
     def unexpired_acknowledgement(self):
-        unexpired_acknowledgements = self.alertacknowledgement_set.all().filter(
-            time__gte=timezone.now()-timedelta(minutes=settings.ACKNOWLEDGEMENT_EXPIRY),
-        ).order_by('-time')
         try:
-            return unexpired_acknowledgements[0]
+            return self.unexpired_acknowledgements()[0]
         except:
             return None
 
@@ -856,6 +868,13 @@ class AlertAcknowledgement(models.Model):
     time = models.DateTimeField()
     user = models.ForeignKey(User)
     service = models.ForeignKey(Service)
+    cancelled_time = models.DateTimeField(null=True, blank=True)
+    cancelled_user = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        related_name='cancelleduser_set'
+    )
 
     def unexpired(self):
         return self.expires() > timezone.now()
