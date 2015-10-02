@@ -17,3 +17,4 @@ celerybeat-schedule
 conf/*.env
 dist/
 local_config.yml
+build/
