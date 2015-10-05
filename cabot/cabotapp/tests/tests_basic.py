@@ -280,6 +280,8 @@ class TestCheckRun(LocalTestCase):
         self.assertEqual(len(checkresults), 7)
         self.assertEqual(self.graphite_check.calculated_status,
                          Service.CALCULATED_FAILING_STATUS)
+        result = checkresults.order_by('-time')[0]
+        self.assertEqual(result.error, u'PROD: 9.16092 > 9.0')
 
     @patch('cabot.cabotapp.graphite.requests.get', fake_graphite_series_response)
     def test_graphite_series_run(self):
