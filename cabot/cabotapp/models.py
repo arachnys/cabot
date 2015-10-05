@@ -27,6 +27,7 @@ import re
 import time
 import os
 import subprocess
+import itertools
 
 import requests
 from celery.utils.log import get_task_logger
@@ -593,6 +594,27 @@ class ICMPStatusCheck(StatusCheck):
         return result
 
 
+def minimize_targets(targets):
+    split = [target.split(".") for target in targets]
+
+    prefix_nodes_in_common = 0
+    for i, nodes in enumerate(itertools.izip(*split)):
+        if any(node != nodes[0] for node in nodes):
+            prefix_nodes_in_common = i
+            break
+    split = [nodes[prefix_nodes_in_common:] for nodes in split]
+
+    suffix_nodes_in_common = 0
+    for i, nodes in enumerate(reversed(zip(*split))):
+        if any(node != nodes[0] for node in nodes):
+            suffix_nodes_in_common = i
+            break
+    if suffix_nodes_in_common:
+        split = [nodes[:-suffix_nodes_in_common] for nodes in split]
+
+    return [".".join(nodes) for nodes in split]
+
+
 class GraphiteStatusCheck(StatusCheck):
 
     class Meta(StatusCheck.Meta):
@@ -602,98 +624,80 @@ class GraphiteStatusCheck(StatusCheck):
     def check_category(self):
         return "Metric check"
 
-    def format_error_message(self, failure_value, actual_hosts, actual_failures):
-        """
-        A summary of why the check is failing for inclusion in short alert messages
-        Returns something like:
-        "5.0 > 4 | 1/2 hosts"
-        """
-        if isinstance(failure_value, (list, tuple)):
-            failure_value = ', '.join([u'%0.1f' % v for v in failure_value])
+    def format_error_message(self, failures, actual_hosts, hosts_by_target):
+        if actual_hosts < self.expected_num_hosts:
+            return "Hosts missing | %d/%d hosts" % (
+                actual_hosts, self.expected_num_hosts)
+        elif actual_hosts > 1:
+            threshold = float(self.value)
+            failures_by_host = ["%s: %s %s %0.1f" % (
+                hosts_by_target[target], value, self.check_type, threshold)
+                for target, value in failures]
+            return ", ".join(failures_by_host)
         else:
-            failure_value = u'%0.1f' % failure_value
-        hosts_string = u''
-        failures_string = u''
-        if self.expected_num_hosts > 0:
-            hosts_string = u' | %s/%s hosts' % (actual_hosts,
-                                                self.expected_num_hosts)
-            if self.expected_num_hosts > actual_hosts:
-                return u'Hosts missing%s' % hosts_string
-        if self.allowed_num_failures and actual_failures:
-            failures_string = u' | %s/%s series failing (%s allowed)' % (
-                actual_failures,
-                actual_hosts,
-                self.allowed_num_failures,
-            )
-        if failure_value is None:
-            return "Failed to get metric from Graphite"
-        return u"%s %s %0.1f%s%s" % (
-            failure_value,
-            self.check_type,
-            float(self.value),
-            hosts_string,
-            failures_string,
-        )
+            target, value = failures[0]
+            return "%s %s %0.1f" % (value, self.check_type, float(self.value))
 
     def _run(self):
         result = StatusCheckResult(check=self)
 
         failures = []
         graphite_output = parse_metric(self.metric, mins_to_check=self.frequency)
-        if graphite_output['num_series_with_data'] > 0:
-            result.average_value = graphite_output['average_value']
-            failed = False
-            for s in graphite_output['series']:
-                failure_value = None
-                if self.check_type == '<':
-                    failed = float(s['min']) < float(self.value)
-                    if failed:
-                        failure_value = s['min']
-                elif self.check_type == '<=':
-                    failed = float(s['min']) <= float(self.value)
-                    if failed:
-                        failure_value = s['min']
-                elif self.check_type == '>':
-                    failed = float(s['max']) > float(self.value)
-                    if failed:
-                        failure_value = s['max']
-                elif self.check_type == '>=':
-                    failed = float(s['max']) >= float(self.value)
-                    if failed:
-                        failure_value = s['max']
-                elif self.check_type == '==':
-                    failed = float(self.value) in s['values']
-                    if failed:
-                        failure_value = float(self.value)
-                else:
-                    raise Exception(u'Check type %s not supported' %
-                                    self.check_type)
-
-                if not failure_value is None:
-                    failures.append(failure_value)
-
-        allowed_num_failures = self.allowed_num_failures or 0
-        # If there are more than expected failures
-        if len(failures) - self.allowed_num_failures > 0:
-            result.succeeded = False
-        else:
-            if graphite_output['error']:
-                result.succeeded = False
-            if graphite_output['num_series_with_data'] < self.expected_num_hosts:
-                result.succeeded = False
-            else:
-                result.succeeded = True
 
         try:
             result.raw_data = json.dumps(graphite_output['raw'])
         except:
             result.raw_data = graphite_output['raw']
 
+        if graphite_output["error"]:
+            result.succeeded = False
+            result.error = graphite_output["error"]
+            return result
+
+        if graphite_output['num_series_with_data'] > 0:
+            result.average_value = graphite_output['average_value']
+            for s in graphite_output['series']:
+                if not s["values"]:
+                    continue
+                failure_value = None
+                if self.check_type == '<':
+                    if float(s['min']) < float(self.value):
+                        failure_value = s['min']
+                elif self.check_type == '<=':
+                    if float(s['min']) <= float(self.value):
+                        failure_value = s['min']
+                elif self.check_type == '>':
+                    if float(s['max']) > float(self.value):
+                        failure_value = s['max']
+                elif self.check_type == '>=':
+                    if float(s['max']) >= float(self.value):
+                        failure_value = s['max']
+                elif self.check_type == '==':
+                    if float(self.value) in s['values']:
+                        failure_value = float(self.value)
+                else:
+                    raise Exception(u'Check type %s not supported' %
+                                    self.check_type)
+
+                if not failure_value is None:
+                    failures.append((s["target"], failure_value))
+
+        if len(failures) > self.allowed_num_failures:
+            result.succeeded = False
+        elif graphite_output['num_series_with_data'] < self.expected_num_hosts:
+            result.succeeded = False
+        else:
+            result.succeeded = True
+
         if not result.succeeded:
+            targets = [s["target"] for s in graphite_output["series"]]
+            hosts = minimize_targets(targets)
+            hosts_by_target = dict(zip(targets, hosts))
+
             result.error = self.format_error_message(
                 failures,
                 graphite_output['num_series_with_data'],
-                len(failures),
+                hosts_by_target,
             )
 
         return result
