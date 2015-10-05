@@ -17,7 +17,7 @@ There are a number of things on our to-do list:
 *   Improved user provisioning
 *   Better tests!
 
-If you have any questions about roadmap or plans, please contact us or [file an issue](https://github.com/arachnys/cabot/issues/new) on GitHub.
+If you have any questions about roadmap or plans, please [file an issue](https://github.com/arachnys/cabot/issues/new) on GitHub.
 
 ### Bugs
 
