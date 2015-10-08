@@ -199,6 +199,7 @@ class HttpStatusCheckForm(StatusCheckForm):
         fields = (
             'name',
             'endpoint',
+            'host',
             'username',
             'password',
             'text_match',
@@ -215,6 +216,10 @@ class HttpStatusCheckForm(StatusCheckForm):
             'endpoint': forms.TextInput(attrs={
                 'style': 'width: 100%',
                 'placeholder': 'https://www.arachnys.com',
+            }),
+            'host': forms.TextInput(attrs={
+                'style': 'width: 100%',
+                'placeholder': 'other.arachnys.com',
             }),
             'username': forms.TextInput(attrs={
                 'style': 'width: 30%',
