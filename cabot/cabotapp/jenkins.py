@@ -23,7 +23,7 @@ def get_job_status(jobname):
     status = resp.json()
     ret['status_code'] = resp.status_code
     ret['job_number'] = status['lastBuild'].get('number', None)
-    if status['color'].startswith('blue'):
+    if status['color'].startswith('blue') or status['color'].startswith('green'): # Jenkins uses "blue" for successful; Hudson uses "green"
         ret['active'] = True
         ret['succeeded'] = True
     elif status['color'] == 'disabled':
