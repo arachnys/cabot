@@ -13,6 +13,7 @@
           <th>Overall</th>
           <th>Active checks</th>
           <th>Disabled checks</th>
+          <th>Acknowledgment</th>
           <th></th>
         </tr>
       </thead>
@@ -30,6 +31,23 @@
           </td>
           <td>
             <span class="label label-{% if service.inactive_status_checks.all.count > 0 %}warning{% else %}default{% endif %}">{{ service.inactive_status_checks.all.count }}</span>
+          </td>
+          <td>
+        {% if service.overall_status != service.PASSING_STATUS %}
+  <div class="col-xs-12 alert alert-warning">
+    <div class="row">
+    {% if service.unexpired_acknowledgement %}
+      <div class="col-xs-4">
+        <a href="{% url 'remove-acknowledgement' pk=service.id %}" class="btn btn-xs btn-warning btn-block"><i class="glyphicon glyphicon-play"></i> Re-enable alerts</a>
+      </div>
+    {% else %}
+      <div class="col-xs-4">
+        <a class="btn btn-success btn-block btn-xs" href="{% url 'acknowledge-alert' pk=service.id %}"><i class="glyphicon glyphicon-pause"></i> Acknowledge alert</a>
+      </div>
+    {% endif %}
+    </div>
+  </div>
+  {% endif %}
           </td>
           <td class="text-right">
             <a class="btn btn-xs" href="{% url "update-service" pk=service.id %}" role="button">
