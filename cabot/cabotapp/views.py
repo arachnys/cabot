@@ -30,6 +30,13 @@ import requests
 import json
 import re
 
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
+from utils import Paginator2
+from django.shortcuts import render, redirect, get_object_or_404
+from django.template.response import TemplateResponse
+from forms import HostSearchForm
+
+
 
 class LoginRequiredMixin(object):
 
@@ -583,6 +590,46 @@ class InstanceListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         return Instance.objects.all().order_by('name').prefetch_related('status_checks')
+
+
+class InstanceSearchView(LoginRequiredMixin, ListView):
+    model = Instance
+    context_object_name = 'instances'
+    template_name = 'cabotapp/instance_list.html'
+    form = HostSearchForm
+
+    def get(self, request, name=None):
+        data = Instance.objects.filter(name__icontains=name).order_by('name')
+        if data:
+            paginator = Paginator2(data, 20)
+            page = request.GET.get('page')
+
+            try:
+                records = paginator.page(page)
+            except PageNotAnInteger:
+                records = paginator.page(1)
+            except EmptyPage:
+                records = paginator.page(paginator.num_pages)
+
+            return render(request, self.template_name, {'instances': records, 'form': self.form})
+        else:
+            return redirect('instances')
+
+
+def SearchViewFBV(request, name=None):
+    if request.method == 'GET':
+        form = HostSearchForm(request.GET)
+        if form.is_valid():
+            name = form.cleaned_data['name']
+            try:
+                instance = Instance.objects.get(name=name)
+                return redirect('instance', pk=instance.pk)
+            except Instance.DoesNotExist:
+                return redirect('instances_search', name=name)
+        else:
+            return redirect('instances')
+    else:
+        return redirect("instances")
 
 
 class ServiceListView(LoginRequiredMixin, ListView):
