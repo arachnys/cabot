@@ -36,7 +36,7 @@ def _setup_venv():
 	    sudo('chown -R ubuntu:ubuntu %s'%VENV_DIR)
 
 def upgrade_celery():
-    sudo("source %s/bin/activate ; sudo pip install celery --upgrade"%VENV_DIR)
+    sudo("source %s/bin/activate && pip install celery --upgrade"%VENV_DIR)
 
 
 def install_requirements(deploy_path=DEPLOY_PATH):
