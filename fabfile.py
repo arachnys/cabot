@@ -31,6 +31,12 @@ def _setup_venv():
     with settings(warn_only=True):
         if sudo('test -d %s' % VENV_DIR).failed:
             sudo('virtualenv %s' % VENV_DIR)
+	output=run("find . -not -user ubuntu |wc -l")
+	if int(output)>0:
+	    sudo('chown -R ubuntu:ubuntu %s'%VENV_DIR)
+
+def upgrade_celery():
+    sudo("source %s/bin/activate ; sudo pip install celery --upgrade"%VENV_DIR)
 
 
 def install_requirements(deploy_path=DEPLOY_PATH):
@@ -131,6 +137,7 @@ def deploy(deploy_version=None):
         _setup_venv()
         create_database()
         install_requirements(deploy_path)
+	upgrade_celery()
         run_migrations(deploy_path)
         collect_static(deploy_path)
         # This may cause a bit of downtime
