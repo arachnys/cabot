@@ -140,6 +140,9 @@ urlpatterns = patterns('',
 
      url(r'^admin/', include(admin.site.urls)),
 
+     # for the password reset views
+     url('^', include('django.contrib.auth.urls')),
+
      # Comment below line to disable browsable rest api
      url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 
