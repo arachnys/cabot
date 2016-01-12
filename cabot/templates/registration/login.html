@@ -1,4 +1,8 @@
 {% extends 'base.html' %}
+{% block head %}
+<meta name="google-signin-client_id" content="{{GOOGLE_OAUTH2_CLIENT_ID}}">
+<script src="https://apis.google.com/js/platform.js" async defer></script>
+{% endblock %}
 
 {% block content %}
 <div class="row">
@@ -20,4 +24,6 @@
     </div>
   </form>
 </form>
+<a href="/login/google-oauth2/">Login with google</a>
+<div class="g-signin2" data-onsuccess="onSignIn"></div>
 {% endblock %}

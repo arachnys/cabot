@@ -6,6 +6,8 @@
   <title>{% block title %}Cabot by Arachnys{% endblock title %}</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% block head %}
+  {% endblock head %}
   {% load compress %}
   {% compress css %}
   <link href="{{ STATIC_URL }}bootstrap/css/bootstrap.css" rel="stylesheet">

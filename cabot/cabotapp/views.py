@@ -771,3 +771,20 @@ def graphite_api_data(request):
             return jsonify({'status': 'error', 'message': str(e)})
         matching_metrics = {'metrics': matching_metrics}
     return jsonify({'status': 'ok', 'data': data, 'matchingMetrics': matching_metrics})
+
+if settings.AUTH_GOOGLE:
+    from social_auth.exceptions import AuthFailed
+    from social_auth.views import complete
+    class AuthComplete(View):
+        def get(self, request, *args, **kwargs):
+            backend = kwargs.pop('backend')
+            try:
+                return complete(request, backend, *args, **kwargs)
+            except AuthFailed:
+                messages.error(request, "Your Google Apps domain isn't authorized for this app")
+                return HttpResponseRedirect(reverse('login'))
+
+
+    class LoginError(View):
+        def get(self, request, *args, **kwargs):
+            return HttpResponse(status=401)
