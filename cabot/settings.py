@@ -259,7 +259,7 @@ AUTH_GOOGLE = os.environ.get('AUTH_GOOGLE', 'false')
 if AUTH_GOOGLE.lower() == "true":
     GOOGLE_OAUTH2_CLIENT_ID = os.environ.get('AUTH_GOOGLE_OAUTH2_CLIENT_ID')
     GOOGLE_OAUTH2_CLIENT_SECRET = os.environ.get('AUTH_GOOGLE_OAUTH2_CLIENT_SECRET')
-    GOOGLE_WHITE_LISTED_DOMAINS = os.environ.get('AUTH_GOOGLE_WHITE_LISTED_DOMAINS')
+    GOOGLE_WHITE_LISTED_DOMAINS = [os.environ.get('AUTH_GOOGLE_WHITE_LISTED_DOMAINS')]
     INSTALLED_APPS += ('social_auth',)
     SOCIAL_AUTH_USER_MODEL = 'auth.User'
     AUTHENTICATION_BACKENDS += tuple(['social_auth.backends.google.GoogleOAuth2Backend'])
