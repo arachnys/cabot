@@ -6,11 +6,10 @@
   <title>{% block title %}Cabot by Arachnys{% endblock title %}</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  {% block head %}
-  {% endblock head %}
   {% load compress %}
   {% compress css %}
   <link href="{{ STATIC_URL }}bootstrap/css/bootstrap.css" rel="stylesheet">
+  <link href="{{ STATIC_URL }}bootstrap/css/bootstrap-social.css" rel="stylesheet">
   <link id="chosen-css" href="{{ STATIC_URL }}theme/css/chosen.css" rel="stylesheet">
   <link href="{{ STATIC_URL }}bootstrap/css/dashboard.css" rel="stylesheet">
   <link href="{{ STATIC_URL }}theme/css/jquery-ui-1.8.21.custom.css" type="text/css" rel="stylesheet">

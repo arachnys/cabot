@@ -423,7 +423,7 @@ class CheckCreateView(LoginRequiredMixin, CreateView):
             return reverse('service', kwargs={'pk': self.request.GET.get('service')})
         if self.request.GET.get('instance'):
             return reverse('instance', kwargs={'pk': self.request.GET.get('instance')})
-        return reverse('checks')  
+        return reverse('checks')
 
 
 class CheckUpdateView(LoginRequiredMixin, UpdateView):
@@ -783,7 +783,6 @@ if settings.AUTH_GOOGLE:
             except AuthFailed:
                 messages.error(request, "Your Google Apps domain isn't authorized for this app")
                 return HttpResponseRedirect(reverse('login'))
-
 
     class LoginError(View):
         def get(self, request, *args, **kwargs):

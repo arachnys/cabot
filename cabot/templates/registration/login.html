@@ -1,9 +1,4 @@
 {% extends 'base.html' %}
-{% block head %}
-<meta name="google-signin-client_id" content="{{GOOGLE_OAUTH2_CLIENT_ID}}">
-<script src="https://apis.google.com/js/platform.js" async defer></script>
-{% endblock %}
-
 {% block content %}
 <div class="row">
   <div class="col-xs-12">
@@ -23,7 +18,12 @@
       </div>
     </div>
   </form>
+  <div class="col-xs-4 col-xs-offset-2">
+    <form action=/login/google-oauth2/ method = get>
+        <button type="submit" class="btn btn-block btn-social btn-google">
+          <span class="fa fa-google-plus"></span> Sign in with Google+
+        </button>
+    </form>
+  </div>
 </form>
-<a href="/login/google-oauth2/">Login with google</a>
-<div class="g-signin2" data-onsuccess="onSignIn"></div>
 {% endblock %}

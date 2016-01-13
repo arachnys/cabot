@@ -129,18 +129,7 @@ INSTALLED_APPS = (
     'rest_framework',
 )
 
-TEMPLATE_CONTEXT_PROCESSORS = (
-    "django.contrib.auth.context_processors.auth",
-    "django.core.context_processors.debug",
-    "django.core.context_processors.i18n",
-    "django.core.context_processors.media",
-    "django.core.context_processors.static",
-    "django.core.context_processors.tz",
-    "django.contrib.messages.context_processors.messages"
-)
-
 LOGIN_REDIRECT_URL = '/services/'
-
 
 # Load additional apps from configuration file
 CABOT_PLUGINS_ENABLED_PARSED = []
@@ -263,7 +252,6 @@ if AUTH_GOOGLE.lower() == "true":
     INSTALLED_APPS += ('social_auth',)
     SOCIAL_AUTH_USER_MODEL = 'auth.User'
     AUTHENTICATION_BACKENDS += tuple(['social_auth.backends.google.GoogleOAuth2Backend'])
-    TEMPLATE_CONTEXT_PROCESSORS += ('cabot.cabotapp.context_processors.google_clientid',)
 
 
 AUTH_LDAP = os.environ.get('AUTH_LDAP', 'false')
