@@ -406,6 +406,7 @@ class StatusCheck(PolymorphicModel):
     fill_empty = models.IntegerField(
         default=None,
         null=True,
+        blank=True,
         help_text='Fill the sequence with this value, if required.'
     )
 
