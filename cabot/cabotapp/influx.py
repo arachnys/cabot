@@ -30,6 +30,7 @@ def _get_influxdb_client(influxdb_dsn=settings.INFLUXDB_DSN,
 def get_data(pattern, selector='value',
              where_clause=None,
              group_by=None,
+             fill_empty=None,
              time_delta=settings.INFLUXDB_FROM,
              limit=settings.INFLUXDB_LIMIT,
              fetchall=False):
@@ -45,13 +46,23 @@ def get_data(pattern, selector='value',
     * group_by - can be specified as
                  'time(10s)'
                  'time(60m), host'
+
+    * fill_empty - can be Null, or an integer value
     '''
+
+    if fill_empty is not None:
+        fill_str = 'fill(%d)' % fill_empty
+    else:
+        fill_str = ''
 
     if group_by is None:
         group_by = ''
 
     if group_by:
         group_by = 'group by %s' % group_by
+    else:
+        # Fill is allowed only with a 'group by' clause
+        fill_str = ''
 
     if where_clause:
         where_str = 'where %s' % where_clause
@@ -76,8 +87,9 @@ def get_data(pattern, selector='value',
         pattern = '.*%s.*' % (pattern)
 
     data = defaultdict(list)
-    query = 'select %s from /%s/ %s %s %s order asc' % \
-        (selector, pattern, group_by, where_str, limit_str)
+    query = 'select %s from /%s/ %s %s %s %s order asc' % \
+        (selector, pattern, group_by, fill_str, where_str, limit_str)
+
 
     logging.debug('Make influxdb query %s' % query)
 
@@ -140,6 +152,7 @@ def get_all_metrics(limit=None):
 def parse_metric(metric,
                  selector='value',
                  group_by=None,
+                 fill_empty=None,
                  where_clause=None,
                  time_delta=settings.INFLUXDB_FROM):
     '''

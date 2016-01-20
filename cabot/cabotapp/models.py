@@ -403,6 +403,12 @@ class StatusCheck(PolymorphicModel):
                   '"time(2m), host" etc.',
     )
 
+    fill_empty = models.IntegerField(
+        default=None,
+        null=True,
+        help_text='Fill the sequence with this value, if required.'
+    )
+
     where_clause = models.CharField(
         max_length=256,
         null=False,
@@ -657,6 +663,7 @@ class GraphiteStatusCheck(StatusCheck):
         series = parse_metric(self.metric,
                               selector=self.metric_selector,
                               group_by=self.group_by,
+                              fill_empty=self.fill_empty,
                               where_clause=self.where_clause,
                               time_delta=self.interval * 6)
 
