@@ -174,6 +174,7 @@ def parse_metric(metric,
         data = get_data(metric,
                         selector=selector,
                         group_by=group_by,
+                        fill_empty=fill_empty,
                         where_clause=where_clause,
                         time_delta=time_delta,
                         limit=None)
