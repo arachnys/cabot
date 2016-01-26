@@ -900,7 +900,7 @@ class JenkinsStatusCheck(StatusCheck):
             # a lot of services seem to fail all at once.
             # Ugly to do it here but...
             result.error = u'Error fetching from Jenkins - %s' % e
-            result.succeeded = True
+            result.succeeded = False
             return result
 
         if not active:
