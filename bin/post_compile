@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+[[ -n $BIN_DIR ]] && source $BIN_DIR/utils
+
+heroku-install-package() {
+  local package=$1
+
+  set +e
+  /app/.heroku/python/bin/pip install $package --exists-action=w --src=./.heroku/src --disable-pip-version-check --no-cache-dir | cleanup | log-output | indent
+  PIP_STATUS="${PIPESTATUS[0]}"
+  set -e
+
+  if [[ ! $PIP_STATUS -eq 0 ]]; then
+    echo
+    show-warnings
+    exit 1
+  fi
+}
+
+main() {
+  if [[ ! -n $DYNO ]] || [[ ! -n $CABOT_PLUGINS_ENABLED ]]; then
+    return
+  fi
+
+  for package in $(echo $CABOT_PLUGINS_ENABLED | tr "," "\n") ; do
+    heroku-install-package $package
+  done
+}
+
+main "$@"

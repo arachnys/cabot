@@ -9,5 +9,8 @@
   "addons": [
     "heroku-postgresql:hobby-dev",
     "heroku-redis:hobby-dev"
-  ]
+  ],
+  "env": {
+    "CABOT_PLUGINS_ENABLED": "cabot_alert_hipchat,cabot_alert_twilio,cabot_alert_email"
+  }
 }
