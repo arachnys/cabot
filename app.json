@@ -41,6 +41,11 @@
       "description": "Backend url for querying graphite metrics. Remember the trailing slash",
       "value": "",
       "required": false
+    },
+    "WWW_HTTP_HOST": {
+      "description": "Web url of cabot to use for notifications, sans scheme",
+      "value": "",
+      "required": true
     }
   }
 }
