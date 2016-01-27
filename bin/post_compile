@@ -73,6 +73,7 @@ main() {
   heroku-install-coffee-script
 
   /app/.heroku/python/bin/python manage.py compress
+  cp -rfp $BUILD_DIR/static/CACHE $BUILD_DIR/cabot/static/CACHE
 }
 
 main "$@"

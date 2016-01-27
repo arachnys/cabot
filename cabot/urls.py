@@ -143,11 +143,14 @@ urlpatterns = patterns('',
 
      url(r'^admin/', include(admin.site.urls)),
 
+     # for serving static assets using django
+     url(r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STATIC_ROOT,}),
+
      # Comment below line to disable browsable rest api
      url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 
      url(r'^api/', include(rest_urls.router.urls)),
-     )
+    )
 
 def append_plugin_urls():
     """
