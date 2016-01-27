@@ -72,8 +72,6 @@ main() {
   heroku-install-less
   heroku-install-coffee-script
 
-  echo $PATH
-
   /app/.heroku/python/bin/python manage.py compress
 }
 
