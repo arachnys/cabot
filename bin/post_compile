@@ -21,7 +21,7 @@ heroku-install-package() {
 heroku-install-nodejs() {
   puts-step "Installing nodejs"
 
-  local NODE_VERSION=0.8.12
+  local NODE_VERSION=4.2.6
   local NODE_BASENAME=node-v${NODE_VERSION}-linux-x64
   local NODE_ARCHIVE="http://nodejs.org/dist/v${NODE_VERSION}/${NODE_BASENAME}.tar.gz"
 
