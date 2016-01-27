@@ -24,6 +24,8 @@ main() {
   for package in $(echo $CABOT_PLUGINS_ENABLED | tr "," "\n") ; do
     heroku-install-package $package
   done
+
+  /app/.heroku/python/bin/python manage.py compress
 }
 
 main "$@"

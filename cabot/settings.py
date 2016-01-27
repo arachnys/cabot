@@ -155,7 +155,7 @@ EMAIL_HOST_PASSWORD = os.environ.get('SES_PASS', '')
 EMAIL_BACKEND = os.environ.get('SES_BACKEND', 'django_smtp_ssl.SSLEmailBackend')
 EMAIL_USE_TLS = os.environ.get('SES_USE_TLS', 0)
 
-COMPRESS_OFFLINE = not DEBUG
+COMPRESS_OFFLINE = os.getenv('COMPRESS_OFFLINE', not DEBUG)
 
 COMPRESS_URL = '%s/static/' % URL_PREFIX
 
