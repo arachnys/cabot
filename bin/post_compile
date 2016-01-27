@@ -64,6 +64,8 @@ main() {
   heroku-install-nodejs
   heroku-install-less
 
+  echo $PATH
+
   /app/.heroku/python/bin/python manage.py compress
 }
 
