@@ -1,0 +1,13 @@
+{
+  "name": "Cabot",
+  "description": "Self-hosted, easily-deployable monitoring and alerts service - like a lightweight PagerDuty",
+  "keywords": [
+    "monitoring",
+    "alerting",
+    "graphite"
+  ],
+  "addons": [
+    "heroku-postgresql:hobby-dev",
+    "heroku-redis:hobby-dev"
+  ]
+}
