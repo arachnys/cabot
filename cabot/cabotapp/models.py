@@ -896,6 +896,7 @@ class JenkinsStatusCheck(StatusCheck):
                 # Will fall through to next block
                 raise Exception(u'returned %s' % status['status_code'])
         except Exception as e:
+            logger.exception(e)
             # If something else goes wrong, we will *not* fail - otherwise
             # a lot of services seem to fail all at once.
             # Ugly to do it here but...
