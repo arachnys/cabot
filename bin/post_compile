@@ -30,17 +30,17 @@ heroku-install-nodejs() {
   rm -rf $tempdir
   mkdir -p $tempdir
 
-  pushd $tempdir
+  pushd $tempdir > /dev/null
   curl -s -L -o tmp-nodejs.tar.gz $NODE_ARCHIVE
   tar -zxvf tmp-nodejs.tar.gz > /dev/null
   rm tmp-nodejs.tar.gz
-  popd
+  popd > /dev/null
 
-  mkdir -v -p $BUILD_DIR/.heroku/vendor
-  pushd $BUILD_DIR/.heroku/vendor
+  mkdir -p $BUILD_DIR/.heroku/vendor
+  pushd $BUILD_DIR/.heroku/vendor > /dev/null
   rm -rf node
   mv $tempdir/$NODE_BASENAME node
-  popd
+  popd > /dev/null
 
   ln -s -f ../../vendor/node/bin/node .heroku/python/bin/node
   ln -s -f ../../vendor/node/bin/node-waf .heroku/python/bin/node-waf
