@@ -2,6 +2,7 @@
 set -eo pipefail
 [[ -n $BIN_DIR ]] && source $BIN_DIR/utils
 
+
 heroku-install-package() {
   local package=$1
   puts-step "Installing cabot plugin $package"
@@ -45,6 +46,7 @@ heroku-install-nodejs() {
   ln -s -f ../../vendor/node/bin/node .heroku/python/bin/node
   ln -s -f ../../vendor/node/bin/node-waf .heroku/python/bin/node-waf
   ln -s -f ../../vendor/node/bin/npm .heroku/python/bin/npm
+  export PATH=$PATH:/app/.heroku/vendor/node/bin
 }
 
 heroku-install-less() {
