@@ -6,11 +6,18 @@
     "alerting",
     "graphite"
   ],
+  "website": "http://cabotapp.com/",
+  "repository": "https://github.com/arachnys/cabot",
+  "logo": "https://raw.githubusercontent.com/arachnys/cabot/master/cabot/static/arachnys/img/icon_96x96.png",
   "addons": [
     "heroku-postgresql:hobby-dev",
     "heroku-redis:hobby-dev"
   ],
   "env": {
-    "CABOT_PLUGINS_ENABLED": "cabot_alert_hipchat,cabot_alert_twilio,cabot_alert_email"
+    "CABOT_PLUGINS_ENABLED": {
+      "description": "Comma-separated list of cabot plugins to enable.",
+      "value": "cabot_alert_hipchat,cabot_alert_twilio,cabot_alert_email",
+      "required": true
+    }
   }
 }
