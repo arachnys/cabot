@@ -54,6 +54,11 @@ heroku-install-less() {
   npm install -g less
 }
 
+heroku-install-coffee-script() {
+  puts-step "Installing coffee-script"
+  npm install -g coffee-script
+}
+
 main() {
   if [[ ! -n $DYNO ]] || [[ ! -n $CABOT_PLUGINS_ENABLED ]]; then
     return
@@ -65,6 +70,7 @@ main() {
 
   heroku-install-nodejs
   heroku-install-less
+  heroku-install-coffee-script
 
   echo $PATH
 
