@@ -219,7 +219,7 @@ class HttpStatusCheckForm(StatusCheckForm):
             'username': forms.TextInput(attrs={
                 'style': 'width: 30%',
             }),
-            'password': forms.TextInput(attrs={
+            'password': forms.PasswordInput(attrs={
                 'style': 'width: 30%',
             }),
             'text_match': forms.TextInput(attrs={
