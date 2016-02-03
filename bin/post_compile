@@ -2,13 +2,20 @@
 set -eo pipefail
 [[ -n $BIN_DIR ]] && source $BIN_DIR/utils
 
+NODE_VERSION=4.2.6
+NODE_PATH=".heroku/vendor/node-${NODE_VERSION}"
 
 heroku-install-package() {
   local package=$1
+  local pip_package=$(echo "$package" | sed 's/_/-/g')
+
   puts-step "Installing cabot plugin $package"
+  if .heroku/python/bin/pip freeze | grep "$pip_package" > /dev/null ; then
+    return
+  fi
 
   set +e
-  /app/.heroku/python/bin/pip install $package --exists-action=w --src=./.heroku/src --disable-pip-version-check --no-cache-dir | cleanup | log-output | indent
+  .heroku/python/bin/pip install $package --exists-action=w --src=./.heroku/src --disable-pip-version-check --no-cache-dir | cleanup | log-output | indent
   PIP_STATUS="${PIPESTATUS[0]}"
   set -e
 
@@ -19,14 +26,17 @@ heroku-install-package() {
   fi
 }
 
+
 heroku-install-nodejs() {
   puts-step "Installing nodejs"
 
-  local NODE_VERSION=4.2.6
   local NODE_BASENAME=node-v${NODE_VERSION}-linux-x64
   local NODE_ARCHIVE="http://nodejs.org/dist/v${NODE_VERSION}/${NODE_BASENAME}.tar.gz"
 
-  # make a temp directory
+  if [[ -d "$NODE_PATH" ]]; then
+    return
+  fi
+
   tempdir="$( mktemp -t node_XXXX )"
   rm -rf $tempdir
   mkdir -p $tempdir
@@ -37,43 +47,53 @@ heroku-install-nodejs() {
   rm tmp-nodejs.tar.gz
   popd > /dev/null
 
-  mkdir -p $BUILD_DIR/.heroku/vendor
-  pushd $BUILD_DIR/.heroku/vendor > /dev/null
-  rm -rf node
-  mv $tempdir/$NODE_BASENAME node
+  mkdir -p .heroku/vendor
+  pushd .heroku/vendor > /dev/null
+  rm -rf node-*
+  mv $tempdir/$NODE_BASENAME "node-${NODE_VERSION}"
   popd > /dev/null
-
-  ln -s -f ../../vendor/node/bin/node .heroku/python/bin/node
-  ln -s -f ../../vendor/node/bin/node-waf .heroku/python/bin/node-waf
-  ln -s -f ../../vendor/node/bin/npm .heroku/python/bin/npm
-  export PATH=$PATH:/app/.heroku/vendor/node/bin
 }
 
 heroku-install-less() {
   puts-step "Installing less"
-  npm install -g less
+  if [[ ! -f $NODE_PATH/bin/lessc ]]; then
+    $NODE_PATH/bin/npm install -g less | indent
+  fi
 }
 
 heroku-install-coffee-script() {
   puts-step "Installing coffee-script"
-  npm install -g coffee-script
+  if [[ ! -f $NODE_PATH/bin/coffee ]]; then
+    $NODE_PATH/bin/npm install -g coffee-script | indent
+  fi
 }
 
-main() {
-  if [[ ! -n $DYNO ]] || [[ ! -n $CABOT_PLUGINS_ENABLED ]]; then
+heroku-install-cabot-plugins() {
+  if [[ ! -n $CABOT_PLUGINS_ENABLED ]]; then
     return
   fi
 
   for package in $(echo $CABOT_PLUGINS_ENABLED | tr "," "\n") ; do
     heroku-install-package $package
   done
+}
+
+heroku-compress-assets() {
+  puts-step "Compressing assets"
+  PATH=$PATH:/app/$NODE_PATH/bin .heroku/python/bin/python manage.py compress | indent
+}
+
+
+main() {
+  if [[ ! -n $DYNO ]]; then
+    return
+  fi
 
   heroku-install-nodejs
   heroku-install-less
   heroku-install-coffee-script
-
-  /app/.heroku/python/bin/python manage.py compress
-  cp -rfp $BUILD_DIR/static/CACHE $BUILD_DIR/cabot/static/CACHE
+  heroku-install-cabot-plugins
+  heroku-compress-assets
 }
 
 main "$@"
