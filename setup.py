@@ -13,7 +13,10 @@ with open(requirements_file) as f:
 plugins = env['CABOT_PLUGINS_ENABLED'].split(',') if 'CABOT_PLUGINS_ENABLED' in env else ["cabot_alert_hipchat", "cabot_alert_twilio", "cabot_alert_email"]
 
 if env.get('AUTH_LDAP', 'false').lower() == 'true':
-    requirements += ['django-auth-ldap==1.2.6']
+    requirements += [
+        'django-auth-ldap==1.2.6',
+        'python-ldap==2.4.25',
+    ]
 
 
 setup(
