@@ -1,0 +1,22 @@
+web:
+  env_file:
+   - conf/production.env
+  build: .
+  command: gunicorn cabot.wsgi:application --config gunicorn.conf
+  ports:
+   - "5000:5000"
+  links:
+   - redis
+   - db
+worker:
+  env_file:
+   - conf/production.env
+  build: .
+  command: celery worker -B -A cabot --loglevel=INFO --concurrency=16 -Ofair
+  links:
+   - redis
+   - db
+redis:
+  image: redis
+db:
+  image: postgres
