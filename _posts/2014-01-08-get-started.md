@@ -26,6 +26,8 @@ order: 1
     # Create DB tables and apply migrations
     $ foreman start
     # run webserver and celery tasks using Django dev server
+    # You can access the cabot deployment at http://localhost:5001/
+
 
 #### Running OSX?
 
