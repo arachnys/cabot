@@ -293,7 +293,7 @@ class InstanceForm(SymmetricalForm):
     def __init__(self, *args, **kwargs):
         ret = super(InstanceForm, self).__init__(*args, **kwargs)
         self.fields['users_to_notify'].queryset = User.objects.filter(
-            is_active=True)
+            is_active=True).order_by('first_name', 'last_name')
         return ret
 
 
@@ -334,7 +334,7 @@ class ServiceForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         ret = super(ServiceForm, self).__init__(*args, **kwargs)
         self.fields['users_to_notify'].queryset = User.objects.filter(
-            is_active=True)
+            is_active=True).order_by('first_name', 'last_name')
         return ret
 
     def clean_hackpad_id(self):
