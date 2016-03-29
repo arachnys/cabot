@@ -1,5 +1,4 @@
 from django.db import models
-from django.db.models.signals import post_save
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from polymorphic import PolymorphicModel
@@ -914,11 +913,6 @@ class UserProfile(models.Model):
     hipchat_alias = models.CharField(max_length=50, blank=True, default='')
     fallback_alert_user = models.BooleanField(default=False)
 
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        UserProfile.objects.create(user=instance)
-
-post_save.connect(create_user_profile, sender=User)
 
 class Shift(models.Model):
     start = models.DateTimeField()
