@@ -140,8 +140,12 @@ class CheckGroupMixin(models.Model):
     hackpad_id = models.TextField(
         null=True,
         blank=True,
-        verbose_name='Recovery instructions',
+        verbose_name='Embedded recovery instructions',
         help_text='Gist, Hackpad or Refheap js embed with recovery instructions e.g. https://you.hackpad.com/some_document.js'
+    )
+    runbook_link = models.TextField(
+        blank=True,
+        help_text='Link to the service runbook on your wiki.'
     )
 
 
