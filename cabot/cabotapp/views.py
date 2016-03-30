@@ -269,7 +269,7 @@ class InstanceForm(SymmetricalForm):
             'service_set',
         )
         widgets = {
-            'name': forms.TextInput(attrs={'style': 'width: 30%;'}),
+            'name': forms.TextInput(attrs={'style': 'width: 70%;'}),
             'address': forms.TextInput(attrs={'style': 'width: 70%;'}),
             'status_checks': forms.SelectMultiple(attrs={
                 'data-rel': 'chosen',
@@ -284,7 +284,6 @@ class InstanceForm(SymmetricalForm):
                 'style': 'width: 70%',
             }),
             'users_to_notify': forms.CheckboxSelectMultiple(),
-            'hackpad_id': forms.TextInput(attrs={'style': 'width:30%;'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -307,9 +306,10 @@ class ServiceForm(forms.ModelForm):
             'alerts',
             'alerts_enabled',
             'hackpad_id',
+            'runbook_link'
         )
         widgets = {
-            'name': forms.TextInput(attrs={'style': 'width: 30%;'}),
+            'name': forms.TextInput(attrs={'style': 'width: 70%;'}),
             'url': forms.TextInput(attrs={'style': 'width: 70%;'}),
             'status_checks': forms.SelectMultiple(attrs={
                 'data-rel': 'chosen',
@@ -324,7 +324,8 @@ class ServiceForm(forms.ModelForm):
                 'style': 'width: 70%',
             }),
             'users_to_notify': forms.CheckboxSelectMultiple(),
-            'hackpad_id': forms.TextInput(attrs={'style': 'width:30%;'}),
+            'hackpad_id': forms.TextInput(attrs={'style': 'width:70%;'}),
+            'runbook_link': forms.TextInput(attrs={'style': 'width:70%;'}),
         }
 
     def __init__(self, *args, **kwargs):
