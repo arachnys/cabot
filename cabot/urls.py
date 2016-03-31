@@ -30,6 +30,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 urlpatterns = patterns('',
+     # for the password reset views
+     url('^', include('django.contrib.auth.urls')),
+
      url(r'^$', view=RedirectView.as_view(url='services/', permanent=False),
              name='dashboard'),
      url(r'^subscriptions/', view=subscriptions,
@@ -139,9 +142,6 @@ urlpatterns = patterns('',
                 ), name='update-alert-user-data'),
 
      url(r'^admin/', include(admin.site.urls)),
-
-     # for the password reset views
-     url('^', include('django.contrib.auth.urls')),
 
      # Comment below line to disable browsable rest api
      url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
