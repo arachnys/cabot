@@ -31,7 +31,11 @@
 {% load compress %}
 {{ block.super }}
 <script type="text/javascript">
-window.DATA = {{ result.raw_data|safe }};
+try {
+  window.DATA = JSON.parse("{{ result.raw_data|escapejs }}");
+} catch (e) {
+  window.DATA = {};
+}
 </script>
 {% compress js %}
 <script type="text/javascript" src="{{ STATIC_URL }}arachnys/js/raphael.js"></script>
