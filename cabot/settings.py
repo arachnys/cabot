@@ -2,6 +2,7 @@ import os
 import dj_database_url
 import re
 from django.conf import settings
+from django.core.urlresolvers import reverse_lazy
 from cabot.celeryconfig import *
 from cabot.cabot_config import *
 
@@ -20,6 +21,8 @@ DATABASES = {'default': dj_database_url.parse(os.environ["DATABASE_URL"])}
 
 if not DEBUG:
     DATABASES['default']['OPTIONS'] = {'autocommit': True}
+
+LOGIN_URL = reverse_lazy('login')
 
 USE_TZ = True
 
