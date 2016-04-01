@@ -165,3 +165,8 @@ def append_plugin_urls():
                 )
 
 append_plugin_urls()
+
+if settings.URL_PREFIX.strip('/'):
+    urlpatterns = patterns('',
+        ('^%s/' % settings.URL_PREFIX.strip('/'), include(urlpatterns))
+    )
