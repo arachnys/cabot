@@ -343,6 +343,15 @@ class ServiceForm(forms.ModelForm):
                 return value
         raise ValidationError('Please specify a valid JS snippet link')
 
+    def clean_runbook_link(self):
+        value = self.cleaned_data['runbook_link']
+        if not value:
+            return ''
+        try:
+            URLValidator()(value)
+            return value
+        except ValidationError:
+            raise ValidationError('Please specify a valid runbook link')
 
 class StatusCheckReportForm(forms.Form):
     service = forms.ModelChoiceField(
