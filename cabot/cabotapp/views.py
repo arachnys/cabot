@@ -19,6 +19,7 @@ from django.utils import timezone
 from django.utils.timezone import utc
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ValidationError
+from django.core.validators import URLValidator
 
 from cabot.cabotapp import alert
 from models import AlertPluginUserData
@@ -347,6 +348,15 @@ class ServiceForm(forms.ModelForm):
                 return value
         raise ValidationError('Please specify a valid JS snippet link')
 
+    def clean_runbook_link(self):
+        value = self.cleaned_data['runbook_link']
+        if not value:
+            return ''
+        try:
+            URLValidator()(value)
+            return value
+        except ValidationError:
+            raise ValidationError('Please specify a valid runbook link')
 
 class StatusCheckReportForm(forms.Form):
     service = forms.ModelChoiceField(
