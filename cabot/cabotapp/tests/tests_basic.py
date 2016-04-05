@@ -23,7 +23,7 @@ from mock import Mock, patch
 from cabot.cabotapp.models import (
     GraphiteStatusCheck, JenkinsStatusCheck,
     HttpStatusCheck, ICMPStatusCheck, Service, Instance,
-    StatusCheckResult, minimize_targets)
+    StatusCheckResult, UserProfile, minimize_targets)
 from cabot.cabotapp.views import StatusCheckReportForm
 from cabot.cabotapp.alert import send_alert
 from cabot.cabotapp.graphite import parse_metric
@@ -877,8 +877,10 @@ class TestAlerts(LocalTestCase):
     def setUp(self):
         super(TestAlerts, self).setUp()
 
-        self.user.profile.hipchat_alias = "test_user_hipchat_alias"
-        self.user.profile.save()
+        self.user_profile = UserProfile.objects.create(
+            user = self.user,
+            hipchat_alias = "test_user_hipchat_alias",)
+        self.user_profile.save()
 
         self.service.users_to_notify.add(self.user)
         self.service.update_status()
