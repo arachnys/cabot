@@ -145,8 +145,6 @@ if settings.EXPOSE_USER_API:
         arg_model=models.UserProfile,
         arg_fields=(
             'user',
-            'mobile_number',
-            'hipchat_alias',
             'fallback_alert_user',
         ),
     ))
