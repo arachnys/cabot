@@ -64,6 +64,8 @@ These settings are required for [Jenkins checks](jenkins-checks.html).
 
 You must set these correctly if you want Cabot to be able to send alerts to your Hipchat room.
 
+*   `HIPCHAT_URL`
+    * Hipchat API URL. Set to `https://api.hipchat.com/v1/rooms/message` for ondemand hipchat.
 *   `HIPCHAT_ALERT_ROOM`
     *   numeric ID of the Hipchat room you want alerts sent to, e.g. `14256`
 *   `HIPCHAT_API_KEY`
