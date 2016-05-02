@@ -92,17 +92,10 @@
 </div>
 <hr>
 
-{% include 'cabotapp/_statuscheck_list.html' with checks=service.graphite_status_checks.all service=service checks_type="Graphite" %}
+{% for check_plugin in all_check_plugins %}
+{% print_status_checks check_owner=service check_plugin=check_plugin %}
+{% endfor %}
 
-<hr>
-
-{% include 'cabotapp/_statuscheck_list.html' with checks=service.http_status_checks.all service=service checks_type="Http" %}
-
-<hr>
-
-{% include 'cabotapp/_statuscheck_list.html' with checks=service.jenkins_status_checks.all service=service checks_type="Jenkins" %}
-
-<hr>
 
 <div class="row">
   <div class="col-xs-12">

@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 from os import environ as env
 
 # pull in active plugins
-plugins = env['CABOT_PLUGINS_ENABLED'].split(',') if 'CABOT_PLUGINS_ENABLED' in env else ["cabot_alert_hipchat", "cabot_alert_twilio", "cabot_alert_email"]
+plugins = []#env['CABOT_PLUGINS_ENABLED'].split(',') if 'CABOT_PLUGINS_ENABLED' in env else ["cabot_alert_hipchat", "cabot_alert_twilio", "cabot_alert_email"]
 
 setup(
     name='cabot',
@@ -16,10 +16,9 @@ setup(
     url='http://cabotapp.com',
     license='MIT',
     install_requires=[
-        'Django==1.6.8',
-        'Markdown==2.5',
+        'Django==1.9.5',
+        'Markdown==2.6.6',
         'PyJWT==0.1.2',
-        'South==1.0',
         'amqp==1.4.9',
         'anyjson==0.3.3',
         'argparse==1.2.1',
@@ -27,17 +26,16 @@ setup(
         'celery==3.1.23',
         'distribute==0.6.24',
         'dj-database-url==0.2.2',
-        'django-appconf==0.6',
-        'django-celery==3.1.1',
-        'django-celery-with-redis==3.0',
-        'django-compressor==1.4',
-        'django-filter==0.7',
-        'django-jsonify==0.2.1',
-        'django-mptt==0.6.0',
-        'django-polymorphic==0.5.6',
+        'django-appconf==1.0.2',
+        'django-compressor==2.0',
+        'django-filter==0.13.0',
+        'django-jsonify==0.3.0',
+        'django-mptt==0.8.3',
+        'django-polymorphic==0.9.1',
         'django-redis==1.4.5',
         'django-smtp-ssl==1.0',
-        'djangorestframework==2.4.2',
+        'django-braces==1.8.1',
+        'djangorestframework==3.3.3',
         'gunicorn==18.0',
         'gevent==1.0.1',
         'hiredis==0.1.1',
@@ -55,6 +53,7 @@ setup(
         'wsgiref==0.1.2',
         'python-dateutil==2.1',
         'django-auth-ldap==1.2.6',
+	'django-picklefield==0.3.2',
     ] + plugins,
     packages=find_packages(),
     include_package_data=True,

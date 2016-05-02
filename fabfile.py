@@ -37,20 +37,26 @@ def install_requirements(deploy_path=DEPLOY_PATH):
     sudo("foreman run -e conf/{env}.env {venv}/bin/pip install --editable {path} --exists-action=w".format(
         env=env.deploy_version, venv=VENV_DIR, path=deploy_path))
 
+    plst = [
+        'git+git://github.com/cabotapp/cabot-alert-hipchat.git',
+        'git+git://github.com/bonniejools/cabot-alert-twilio.git',
+        'git+git://github.com/cabotapp/cabot-alert-email.git',
+        'git+git://github.com/cabotapp/cabot-check-graphite.git',
+        'git+git://github.com/cabotapp/cabot-check-icmp.git',
+        'git+git://github.com/cabotapp/cabot-check-http.git',
+        'git+git://github.com/cabotapp/cabot-check-jenkins.git',
+        ]
+
+    for package in plst:
+        sudo("foreman run -e conf/{env}.env {venv}/bin/pip install {package} --upgrade".format(
+            env=env.deploy_version, venv=VENV_DIR, path=deploy_path, package=package))
+
 
 def run_migrations(deploy_path=DEPLOY_PATH):
     with cd(deploy_path):
         with prefix("source {venv}/bin/activate".format(venv=VENV_DIR)):
             sudo(
-                "foreman run -e conf/{env}.env python manage.py syncdb".format(env=env.deploy_version))
-            sudo(
-                "foreman run -e conf/{env}.env python manage.py migrate cabotapp --noinput".format(env=env.deploy_version))
-            # Wrap in failure for legacy reasons
-            # https://github.com/celery/django-celery/issues/149
-            print "You can ignore an error message regarding 'relation \"celery_taskmeta\" already exists'"
-            with settings(warn_only=True):
-                sudo(
-                    "foreman run -e conf/{env}.env python manage.py migrate djcelery --noinput".format(env=env.deploy_version))
+                "foreman run -e conf/{env}.env python manage.py migrate --noinput".format(env=env.deploy_version))
 
 
 def collect_static(deploy_path=DEPLOY_PATH):

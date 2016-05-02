@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row sortable ui-sortable">
+  <div class="col-xs-12" data-original-title="">
+    <div class="col-xs-1"><h2><i class="fa fa-cogs"></i></h2></div>
+    <div class="col-xs-10"><h2><span class="break"></span>Plugins</h2></div>
+  </div>
+  <div class="col-xs-12">
+    <table class="table bootstrap-datatable datatable">
+          <thead>
+            <tr>
+    {% if not pluginmodel_list %}
+            <div class="col-xs-11 col-xs-offset-1">
+            <hr></hr>
+                No plugins installed.
+            </div>
+            </tr>
+    {% else %}
+              <th>Name</th>
+              <th>Version</th>
+              <th>Usage</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for plugin in pluginmodel_list %}
+          {% if plugin.plugin_class %}
+            <tr class="enabled">
+              <td>
+                  <a href="{% url 'plugin' plugin.id %}"><i class="{{ plugin.font_icon }}"></i> &nbsp{{ plugin.full_name }}</a>
+              </td>
+              <td>
+                  {{ plugin.version }}
+              </td>
+              <td>
+                  <span class="label label-success">{{ plugin.usage }}</span>
+              </td>
+            </tr>
+          {% else %}
+           <tr>
+               <td><i class="fa fa-exclamation-circle"></i> No Plugin class could be found for {{ plugin.slug }}</td>
+               <td></td>
+               <td></td>
+           </tr>
+          {% endif %}
+          {% endfor %}
+          </tbody>
+    {% endif %}
+        </table>
+  </div>
+</div>
+{% endblock content %}
+
+{% block js %}
+{% load compress %}
+{{ block.super }}
+{% compress js %}
+<script type="text/coffeescript">
+
+</script>
+{% endcompress %}
+{% endblock js %}
+

@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row sortable ui-sortable">
+  <div class="col-xs-12" data-original-title="">
+      <div class="col-xs-1"><h2><i class="{{ plugin.font_icon }}"></i></h2></div>
+    <div class="col-xs-10"><h2><span class="break"></span>{{ plugin.full_name }}</h2></div>
+  </div>
+  <div class="col-xs-12">
+    <table class="table">
+          <thead>
+            <th class="col-md-6">Properties</th>
+            <th class="col-md-6"></th>
+          </thead>
+          <tbody>
+            <tr class="enabled">
+              <td>Install date</td>
+              <td>{{ plugin.timestamp_installed }}</td>
+            </tr>
+            <tr class="enabled">
+              <td>Version</td>
+              <td>{{ plugin.version }}</td>
+            </tr>
+            <tr class="enabled">
+              <td>Author</td>
+              <td>{{ plugin.author }}</td>
+            </tr>
+
+          </tbody>
+        </table>
+
+        {% if plugin.plugin_variables %}
+        <table class="table">
+          <thead>
+            <th class="col-xs-6">Plugin variables</th>
+            <th class="col-xs-6"></th>
+          </thead>
+          <tbody>
+            {% for key, value in plugin.plugin_variables.items %}
+            <tr>
+                <td><code>{{ key }}</code></td>
+                <td>{{ value }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% endif %}
+
+        {% load extra %}
+
+        {% if isAlertPlugin %}
+        <!-- Test Plugin Form -->
+        <div class="col-md-12">
+            <div class="panel panel-warning">
+                <div class="panel-heading">Test {{ plugin.full_name }}</div>
+              <div class="panel-body">
+                <form class="form-horizontal" action="" method="post" role="form">
+                {% include "cabotapp/_base_form.html" %}
+                  <div class="col-xs-12">
+                    <div class="form-group">
+                      <div class="col-xs-6 col-xs-offset-2">
+                        <button type="submit" class="btn btn-primary">Send alert</button>
+                        <a href="{% url "plugins" %}" class="btn">Back to plugins</a>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+                </div>
+              </div>
+            </div>
+        {% endif %}
+  </div>
+</div>
+{% endblock content %}
+
+{% block js %}
+{% load compress %}
+{{ block.super }}
+{% compress js %}
+<script type="text/coffeescript">
+
+</script>
+{% endcompress %}
+{% endblock js %}
+

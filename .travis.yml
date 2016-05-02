@@ -26,7 +26,7 @@ before_script:
  - cp conf/development.env.example conf/development.env
  - cp conf/production.env.example  conf/production.env
  - . venv/bin/activate
- - foreman run python manage.py syncdb --migrate --noinput
+ - foreman run python manage.py migrate --noinput
 
 # tests
 script:

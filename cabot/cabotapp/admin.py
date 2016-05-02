@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (UserProfile, Service, Shift,
     ServiceStatusSnapshot, StatusCheck, StatusCheckResult,
-    Instance, AlertAcknowledgement)
+    Instance, AlertAcknowledgement, StatusCheckVariable)
 from .alert  import AlertPluginUserData, AlertPlugin
 
 admin.site.register(UserProfile)
@@ -14,3 +14,4 @@ admin.site.register(Instance)
 admin.site.register(AlertPlugin)
 admin.site.register(AlertPluginUserData)
 admin.site.register(AlertAcknowledgement)
+admin.site.register(StatusCheckVariable)

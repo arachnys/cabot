@@ -14,7 +14,7 @@
     <table class="table table-bordered bootstrap-datatable datatable">
       <thead>
         <tr>
-          <th></th>
+          <th>Service name</th>
           {% for user in users %}
           <th>
             {% if user.email %}{{ user.email }}{% else %}{{ user.username }}{% endif %}
@@ -29,7 +29,7 @@
             </span>
             {% endif %}
             {% endif %}
-            <a href="{% url "user-profile" pk=user.id %}" class="btn btn-xs">
+            <a href="{% url "update-user" pk=user.id %}" class="btn btn-xs">
               <i class="glyphicon glyphicon-edit"></i>
             </a>
           </th>

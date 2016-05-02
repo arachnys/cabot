@@ -3,16 +3,52 @@
 {% block content %}
 <div class="container-fluid">
   <div class="row">
-    <div class="col-sm-3 col-md-2 sidebar">
-      <ul class="nav nav-sidebar">
-          <li><a href="General">General</a></li>
-        {% for alert in alert_preferences %}
-          <li><a href="{{ alert.title }}">{{ alert.title }}</a></li>
+
+    <!-- Dropdown for mobiles -->
+    <div class="col-md-12 visible-sm" style="padding-top: 2em;">
+        <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" style="width: 100%; margin-bottom: 1em;">
+                Settings
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" style="width: 100%;">
+                    <li><a href="{% url 'update-user' user.id %}">General</a></li>
+                {% for alert in alert_plugins %}
+                    <li><a href="{% url 'update-user-userdata' user.id alert.id %}">{{ alert.name }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-md-3 nav">
+      <ul class="list-unstyled user-options">
+          <li><i class="fa fa-cog"></i> <a href="{% url 'update-user' user.id %}">General</a></li>
+        <hr>
+        {% for alert in alert_plugins %}
+        <li><i class="{{ alert.font_icon }}"></i> <a href="{% url 'update-user-userdata' user.id alert.id %}">{{ alert.name }}</a></li>
         {% endfor %}
       </ul>
     </div>
-    <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-      <h1 class="page-header">User Profile</h1>
+<script>
+function defer(method) {
+	if (window.jQuery)
+		method();
+	else
+		setTimeout(function() { defer(method) }, 50);
+}
+defer(function () {
+    $('ul.user-options li a').each(function() {
+	if ($(this).attr("href") == window.location.pathname){
+	    $(this).parent().addClass('active')
+	}
+    });
+});
+</script>
+
+    <!-- Form -->
+    <div class="col-md-9">
+     <h1 class="page-header">{{ form_title }}</h1>
       <form class="form-horizontal" action="" method="post" role="form">
         {% csrf_token %}
         {% for field in form %}

@@ -11,10 +11,11 @@ cabot/static/CACHE
 .DS_Store
 celerybeat-schedule
 *.pyc
-*.swp
+*.sw?
 *.orig
 .vagrant
 conf/*.env
 dist/
 local_config.yml
 build/
+plugin_dev/

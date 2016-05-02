@@ -5,7 +5,6 @@ from django.core.mail import send_mail
 from django.core.urlresolvers import reverse
 from django.template import Context, Template
 from django.db import models
-from django.db.models import get_models
 
 from twilio.rest import TwilioRestClient
 from twilio import twiml
@@ -14,7 +13,7 @@ import requests
 import logging
 import re
 
-from polymorphic import PolymorphicModel
+from polymorphic.models import PolymorphicModel
 
 logger = logging.getLogger(__name__)
 
@@ -43,13 +42,6 @@ class AlertPluginUserData(PolymorphicModel):
     def __unicode__(self):
         return u'%s' % (self.title)
 
-def send_alert(service, duty_officers=None):
-    users = service.users_to_notify.filter(is_active=True)
-    for alert in service.alerts.all():
-        try:
-            alert.send_alert(service, users, duty_officers)
-        except Exception as e:
-            logging.exception('Could not send %s alert: %s' % (alert.name, e))
 
 def send_alert_update(service, duty_officers=None):
     users = service.users_to_notify.filter(is_active=True)

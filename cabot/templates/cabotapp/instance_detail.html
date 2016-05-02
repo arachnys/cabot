@@ -38,10 +38,9 @@
       <div class="col-xs-3"><h5><span class="break"></span>Alert types</h5></div>
       <div class="col-xs-8">
         <h5>
-        {% if instance.email_alert %}<i class="fa fa-envelope"></i> Email{% endif %}
-        {% if instance.hipchat_alert %}<i class="fa fa-comment"></i> Hipchat{% endif %}
-        {% if instance.sms_alert %}<i class="fa fa-mobile"></i> SMS{% endif %}
-        {% if instance.telephone_alert %}<i class="fa fa-phone"></i> Telephone{% endif %}
+            {% for alert in instance.alerts.objects.all %}
+                <i class="{{ alert.font_icon }}"></i> {{ alert.name }}
+            {% endfor %}
         </h5>
       </div>
     </div>
@@ -67,19 +66,10 @@
 
 <hr>
 
-{% include 'cabotapp/_statuscheck_list.html' with checks=instance.graphite_status_checks.all instance=instance checks_type="Graphite" %}
-
-<hr>
-
-{% include 'cabotapp/_statuscheck_list.html' with checks=instance.http_status_checks.all instance=instance checks_type="Http" %}
-
-<hr>
-
-{% include 'cabotapp/_statuscheck_list.html' with checks=instance.jenkins_status_checks.all instance=instance checks_type="Jenkins" %}
-
-<hr>
-
-{% include 'cabotapp/_statuscheck_list.html' with checks=instance.icmp_status_checks.all instance=instance checks_type="ICMP" %}
+{% load extra %}
+{% for check_plugin in all_check_plugins %}
+{% print_status_checks check_owner=instance check_plugin=check_plugin %}
+{% endfor %}
 
 <hr>
 
