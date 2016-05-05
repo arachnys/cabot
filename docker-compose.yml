@@ -10,17 +10,20 @@ web:
   links:
    - redis
    - db
+
 worker:
   env_file:
    - conf/development.env
   build: .
-  command: celery worker -B -A cabot --loglevel=INFO --concurrency=16 -Ofair
+  command: python manage.py celery worker -B -A cabot --loglevel=DEBUG --concurrency=16 -Ofair
   volumes:
    - .:/code
   links:
    - redis
    - db
+
 redis:
   image: redis
+
 db:
   image: postgres
