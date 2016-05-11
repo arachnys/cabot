@@ -1,32 +1,29 @@
 # -*- coding: utf-8 -*-
 
-import requests
-from django.conf import settings
-from django.utils import timezone
-from django.core.urlresolvers import reverse
-from django.test import TestCase
-from django.contrib.auth.models import User
-from django.test.client import Client
-from django.contrib.auth.models import Permission
-from rest_framework import status, HTTP_HEADER_ENCODING
-from rest_framework.test import APITestCase
-from rest_framework.reverse import reverse as api_reverse
-from twilio import rest
-from django.core import mail
-from datetime import timedelta, date, datetime
-import json
-import os
 import base64
+import json
 import time
-from mock import Mock, patch
+from datetime import timedelta, date
 
+import os
+import requests
+from cabot.cabotapp.graphite import parse_metric
 from cabot.cabotapp.models import (
     GraphiteStatusCheck, JenkinsStatusCheck,
     HttpStatusCheck, ICMPStatusCheck, Service, Instance,
     StatusCheckResult, UserProfile, minimize_targets)
 from cabot.cabotapp.views import StatusCheckReportForm
-from cabot.cabotapp.alert import send_alert
-from cabot.cabotapp.graphite import parse_metric
+from django.contrib.auth.models import Permission
+from django.contrib.auth.models import User
+from django.core import mail
+from django.core.urlresolvers import reverse
+from django.test.client import Client
+from django.utils import timezone
+from mock import Mock, patch
+from rest_framework import status, HTTP_HEADER_ENCODING
+from rest_framework.reverse import reverse as api_reverse
+from rest_framework.test import APITestCase
+from twilio import rest
 
 
 def get_content(fname):

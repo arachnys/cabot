@@ -1,10 +1,9 @@
-from os import environ as env
-
-from django.conf import settings
-import requests
 from datetime import datetime
-from django.utils import timezone
+
+import requests
 from celery.utils.log import get_task_logger
+from django.conf import settings
+from django.utils import timezone
 
 logger = get_task_logger(__name__)
 
