@@ -119,7 +119,6 @@ INSTALLED_APPS = (
     'compressor',
     'polymorphic',
     'djcelery',
-    'mptt',
     'jsonify',
     'cabot.cabotapp',
     'rest_framework',
