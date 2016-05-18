@@ -243,3 +243,5 @@ AUTH_LDAP = os.environ.get('AUTH_LDAP', 'false')
 if AUTH_LDAP.lower() == "true":
     from settings_ldap import *
     AUTHENTICATION_BACKENDS += tuple(['django_auth_ldap.backend.LDAPBackend'])
+
+EXPOSE_USER_API = os.environ.get('EXPOSE_USER_API', False)
