@@ -54,9 +54,14 @@ $(document).ready ->
       if $('#id_metric').is(':focus')
         $('#id_metric').autocomplete("search", $('#id_metric').val())
 
+previousTerm = undefined
+
 updateGraphiteData = () ->
-  $('#graphite_data_container').text 'Getting data'
   m = $('#id_metric').val()
+  if !m or previousTerm == m
+    return
+  previousTerm = m
+  $('#graphite_data_container').text 'Getting data'
   $.ajax
     url: GRAPHITE_ENDPOINT
     data:
