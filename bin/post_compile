@@ -4,6 +4,7 @@ set -eo pipefail
 
 NODE_VERSION=4.2.6
 NODE_PATH="/app/.heroku/vendor/node-${NODE_VERSION}"
+PYTHON_PATH="/app/.heroku/python"
 
 if ! type cleanup > /dev/null; then
     alias cleanup=/bin/cat
@@ -26,12 +27,12 @@ heroku-install-package() {
   local pip_package=$(echo "$package" | sed 's/_/-/g')
 
   puts-step "Installing cabot plugin $package"
-  if .heroku/python/bin/pip freeze | grep "$pip_package" > /dev/null ; then
+  if $PYTHON_PATH/bin/pip freeze | grep "$pip_package" > /dev/null ; then
     return
   fi
 
   set +e
-  .heroku/python/bin/pip install $package --exists-action=w --src=./.heroku/src --disable-pip-version-check --no-cache-dir | cleanup | log-output | indent
+  $PYTHON_PATH/bin/pip install $package --exists-action=w --src=./.heroku/src --disable-pip-version-check --no-cache-dir | cleanup | log-output | indent
   PIP_STATUS="${PIPESTATUS[0]}"
   set -e
 
@@ -96,7 +97,7 @@ heroku-install-cabot-plugins() {
 
 heroku-compress-assets() {
   puts-step "Compressing assets"
-  PATH=$PATH:$NODE_PATH/bin .heroku/python/bin/python manage.py compress --force | indent
+  PATH=$PATH:$NODE_PATH/bin $PYTHON_PATH/bin/python manage.py compress --force | indent
 }
 
 
