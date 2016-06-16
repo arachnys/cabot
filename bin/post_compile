@@ -5,6 +5,22 @@ set -eo pipefail
 NODE_VERSION=4.2.6
 NODE_PATH=".heroku/vendor/node-${NODE_VERSION}"
 
+if ! type cleanup > /dev/null; then
+    alias cleanup=/bin/cat
+fi
+
+if ! type log-output > /dev/null; then
+    alias log-output=/bin/cat
+fi
+
+if ! type indent > /dev/null; then
+    alias indent=/bin/cat
+fi
+
+if ! type put-step > /dev/null; then
+    alias put-step=/bin/echo
+fi
+
 heroku-install-package() {
   local package=$1
   local pip_package=$(echo "$package" | sed 's/_/-/g')
