@@ -3,7 +3,7 @@ set -eo pipefail
 [[ -n $BIN_DIR ]] && source $BIN_DIR/utils
 
 NODE_VERSION=4.2.6
-NODE_PATH=".heroku/vendor/node-${NODE_VERSION}"
+NODE_PATH="/app/.heroku/vendor/node-${NODE_VERSION}"
 
 if ! type cleanup > /dev/null; then
     alias cleanup=/bin/cat
@@ -96,7 +96,7 @@ heroku-install-cabot-plugins() {
 
 heroku-compress-assets() {
   puts-step "Compressing assets"
-  PATH=$PATH:/app/$NODE_PATH/bin .heroku/python/bin/python manage.py compress --force | indent
+  PATH=$PATH:$NODE_PATH/bin .heroku/python/bin/python manage.py compress --force | indent
 }
 
 
