@@ -7,9 +7,12 @@ class Command(BaseCommand):
     help = 'Automatically create superuser based on environment variables.'
 
     def handle(self, *args, **options):
-        email = os.getenv('CABOT_ADMIN_EMAIL')
-        username = os.getenv('CABOT_ADMIN_USERNAME')
-        password = os.getenv('CABOT_ADMIN_PASSWORD')
+        email = os.getenv('CABOT_ADMIN_EMAIL', None)
+        username = os.getenv('CABOT_ADMIN_USERNAME', None)
+        password = os.getenv('CABOT_ADMIN_PASSWORD', None)
+
+        if not email or not username or not password:
+            return
 
         u = User(username=username, email=email)
         u.set_password(password)
