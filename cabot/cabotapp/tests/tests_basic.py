@@ -14,9 +14,7 @@ from rest_framework.reverse import reverse as api_reverse
 from twilio import rest
 from django.core import mail
 from datetime import timedelta, date, datetime
-import json
 import os
-import base64
 import time
 from mock import Mock, patch
 from logging import getLogger
@@ -26,6 +24,7 @@ from cabot.cabotapp.models import Service, Instance, StatusCheckResult, UserProf
 from cabot.cabotapp.views import StatusCheckReportForm
 from cabot.plugins.models import StatusCheckPluginModel, AlertPluginModel, StatusCheckPlugin, AlertPlugin
 from .dummy_plugin import plugin as dummy_plugin
+
 
 def get_content(fname):
     path = os.path.join(os.path.dirname(__file__), 'fixtures/%s' % fname)

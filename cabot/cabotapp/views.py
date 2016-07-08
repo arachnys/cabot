@@ -1,8 +1,12 @@
-from django.template import RequestContext, loader
+import json
+import re
 from datetime import datetime, timedelta, date
+from itertools import groupby, dropwhile, izip_longest
+
+import requests
+from cabot.cabotapp import alert
 from dateutil.relativedelta import relativedelta
-from django.http import HttpResponse, HttpResponseRedirect
-from django.core.urlresolvers import reverse_lazy
+from django import forms
 from django.conf import settings
 from models import (StatusCheck, StatusCheckResult, UserProfile, Service,
     Instance, Shift, get_duty_officers, StatusCheckVariable)
@@ -13,7 +17,13 @@ from django.views.generic import (
     DetailView, CreateView, UpdateView, ListView, DeleteView, TemplateView, FormView, View)
 from django import forms
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+from django.core.urlresolvers import reverse
+from django.core.urlresolvers import reverse_lazy
+from django.http import HttpResponse, HttpResponseRedirect
+from django.template import RequestContext, loader
 from django.utils import timezone
+from django.utils.decorators import method_decorator
 from django.utils.timezone import utc
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ValidationError
@@ -45,6 +55,7 @@ def subscriptions(request):
     })
     return HttpResponse(t.render(c))
 
+
 @login_required
 def run_status_check(request, pk):
     """Runs a specific check"""
@@ -60,7 +71,6 @@ def duplicate_check(request, pk):
     check = StatusCheck.objects.get(pk=pk)
     new_check = check.duplicate(check.instance_set.all(), check.service_set.all())
     return HttpResponseRedirect(reverse('update-check', kwargs={'pk': new_check}))
-
 class StatusCheckResultDetailView(LoginRequiredMixin, DetailView):
     model = StatusCheckResult
     context_object_name = 'result'
@@ -87,6 +97,7 @@ class SymmetricalForm(forms.ModelForm):
             self.save_m2m()
         return instance
 
+
 base_widgets = {
     'name': forms.TextInput(attrs={
         'style': 'width:30%',
@@ -96,7 +107,6 @@ base_widgets = {
 
 
 class InstanceForm(SymmetricalForm):
-
     symmetrical_fields = ('service_set',)
     service_set = forms.ModelMultipleChoiceField(
         queryset=Service.objects.all(),
@@ -109,7 +119,6 @@ class InstanceForm(SymmetricalForm):
             },
         )
     )
-
 
     class Meta:
         model = Instance
@@ -148,7 +157,6 @@ class InstanceForm(SymmetricalForm):
 
 
 class ServiceForm(forms.ModelForm):
-
     class Meta:
         model = Service
         template_name = 'service_form.html'
@@ -290,7 +298,7 @@ class StatusCheckDetailView(LoginRequiredMixin, DetailView):
     template_name = 'cabotapp/statuscheck_detail.html'
 
     def render_to_response(self, context, *args, **kwargs):
-        if context == None:
+        if context is None:
             context = {}
         context['checkresults'] = self.object.statuscheckresult_set.order_by(
             '-time_complete')[:100]
@@ -357,7 +365,6 @@ class UpdateUserAlertPluginDataView(LoginRequiredMixin, View):
 
 
 class InstanceListView(LoginRequiredMixin, ListView):
-
     model = Instance
     context_object_name = 'instances'
 
@@ -371,6 +378,7 @@ class ServiceListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         return Service.objects.all().order_by('name').prefetch_related('status_checks')
+
 
 class InstanceDetailView(LoginRequiredMixin, DetailView):
     model = Instance
@@ -386,6 +394,7 @@ class InstanceDetailView(LoginRequiredMixin, DetailView):
             'date_to': date_from + relativedelta(months=1) - relativedelta(days=1)
         })
         return context
+
 
 class ServiceDetailView(LoginRequiredMixin, DetailView):
     model = Service

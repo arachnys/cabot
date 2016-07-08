@@ -15,3 +15,4 @@ admin.site.register(AlertPlugin)
 admin.site.register(AlertPluginUserData)
 admin.site.register(AlertAcknowledgement)
 admin.site.register(StatusCheckVariable)
+

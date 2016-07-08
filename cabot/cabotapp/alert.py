@@ -11,7 +11,6 @@ from twilio import twiml
 
 import requests
 import logging
-import re
 
 from polymorphic.models import PolymorphicModel
 
@@ -31,6 +30,7 @@ class AlertPlugin(PolymorphicModel):
         Implement a send_alert function here that shall be called.
         """
         return True
+
 
 class AlertPluginUserData(PolymorphicModel):
     title = models.CharField(max_length=30, editable=False)

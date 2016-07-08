@@ -19,3 +19,5 @@ dist/
 local_config.yml
 build/
 plugin_dev/
+.idea
+

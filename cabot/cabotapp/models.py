@@ -1,6 +1,16 @@
-from django.db import models
+import itertools
+import json
+import re
+import subprocess
+import time
+from datetime import timedelta
+
+import requests
+from celery.exceptions import SoftTimeLimitExceeded
+from celery.utils.log import get_task_logger
 from django.conf import settings
 from polymorphic.models import PolymorphicModel
+from django.db import models
 from django.db.models import F
 from django.db.models import signals
 from django.dispatch import receiver
@@ -9,9 +19,10 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 from django.template.loader import render_to_string
 from celery.exceptions import SoftTimeLimitExceeded
+
 from .alert import (
     send_alert_update,
-)
+    )
 from .calendar import get_events
 from .tasks import update_service, update_instance
 from datetime import datetime, timedelta
@@ -40,6 +51,7 @@ CHECK_TYPES = (
     ('==', 'Equal to'),
 )
 
+
 def serialize_recent_results(recent_results):
     if not recent_results:
         return ''
@@ -49,6 +61,7 @@ def serialize_recent_results(recent_results):
             return '1'
         else:
             return '-1'
+
     vals = [result_to_value(r) for r in recent_results]
     vals.reverse()
     return ','.join(vals)
@@ -133,9 +146,9 @@ class CheckGroupMixin(models.Model):
         null=True,
         blank=True,
         verbose_name='Recovery instructions',
-        help_text='Gist, Hackpad or Refheap js embed with recovery instructions e.g. https://you.hackpad.com/some_document.js'
+        help_text='Gist, Hackpad or Refheap js embed with recovery instructions e.g. '
+                  'https://you.hackpad.com/some_document.js'
     )
-
 
     def __unicode__(self):
         return self.name
@@ -166,10 +179,12 @@ class CheckGroupMixin(models.Model):
         if self.overall_status != self.PASSING_STATUS:
             # Don't alert every time
             if self.overall_status == self.WARNING_STATUS:
-                if self.last_alert_sent and (timezone.now() - timedelta(minutes=settings.NOTIFICATION_INTERVAL)) < self.last_alert_sent:
+                if self.last_alert_sent and (
+                    timezone.now() - timedelta(minutes=settings.NOTIFICATION_INTERVAL)) < self.last_alert_sent:
                     return
             elif self.overall_status in (self.CRITICAL_STATUS, self.ERROR_STATUS):
-                if self.last_alert_sent and (timezone.now() - timedelta(minutes=settings.ALERT_INTERVAL)) < self.last_alert_sent:
+                if self.last_alert_sent and (
+                    timezone.now() - timedelta(minutes=settings.ALERT_INTERVAL)) < self.last_alert_sent:
                     return
             self.last_alert_sent = timezone.now()
         else:
@@ -191,13 +206,13 @@ class CheckGroupMixin(models.Model):
 
     def unexpired_acknowledgements(self):
         acknowledgements = self.alertacknowledgement_set.all().filter(
-            time__gte=timezone.now()-timedelta(minutes=settings.ACKNOWLEDGEMENT_EXPIRY),
+            time__gte=timezone.now() - timedelta(minutes=settings.ACKNOWLEDGEMENT_EXPIRY),
             cancelled_time__isnull=True,
         ).order_by('-time')
         return acknowledgements
 
     def acknowledge_alert(self, user):
-        if self.unexpired_acknowledgements(): # Don't allow users to jump on each other
+        if self.unexpired_acknowledgements():  # Don't allow users to jump on each other
             return None
         acknowledgement = AlertAcknowledgement.objects.create(
             user=user,
@@ -240,7 +255,6 @@ class CheckGroupMixin(models.Model):
 
 
 class Service(CheckGroupMixin):
-
     def update_status(self):
         self.old_overall_status = self.overall_status
         # Only active checks feed into our calculation
@@ -259,6 +273,7 @@ class Service(CheckGroupMixin):
         self.save()
         if not (self.overall_status == Service.PASSING_STATUS and self.old_overall_status == Service.PASSING_STATUS):
             self.alert()
+
     instances = models.ManyToManyField(
         'Instance',
         blank=True,
@@ -286,8 +301,6 @@ class Service(CheckGroupMixin):
 
 
 class Instance(CheckGroupMixin):
-
-
     def duplicate(self):
         checks = self.status_checks.all()
         new_instance = self
@@ -335,7 +348,6 @@ class Instance(CheckGroupMixin):
 
 
 class Snapshot(models.Model):
-
     class Meta:
         abstract = True
 
@@ -393,7 +405,9 @@ class StatusCheck(models.Model):
         max_length=30,
         choices=Service.IMPORTANCES,
         default=Service.ERROR_STATUS,
-        help_text='Severity level of a failure. Critical alerts are for failures you want to wake you up at 2am, Errors are things you can sleep through but need to fix in the morning, and warnings for less important things.'
+        help_text='Severity level of a failure. Critical alerts are for failures you want to wake you up at 2am, '
+                  'Errors are things you can sleep through but need to fix in the morning, and warnings for less '
+                  'important things.'
     )
     frequency = models.IntegerField(
         default=5,
@@ -402,7 +416,8 @@ class StatusCheck(models.Model):
     debounce = models.IntegerField(
         default=0,
         null=True,
-        help_text='Number of successive failures permitted before check will be marked as failed. Default is 0, i.e. fail on first failure.'
+        help_text='Number of successive failures permitted before check will be marked as failed. Default is 0, '
+                  'i.e. fail on first failure.'
     )
     created_by = models.ForeignKey(User, null=True)
     calculated_status = models.CharField(
@@ -581,7 +596,6 @@ class StatusCheck(models.Model):
 
 
 class StatusCheckResult(models.Model):
-
     """
     We use the same StatusCheckResult model for all check types,
     because really they are not so very different.
@@ -620,7 +634,7 @@ class StatusCheckResult(models.Model):
         """
         try:
             diff = self.time_complete - self.time
-            return (diff.microseconds + (diff.seconds + diff.days * 24 * 3600) * 10**6) / 1000
+            return (diff.microseconds + (diff.seconds + diff.days * 24 * 3600) * 10 ** 6) / 1000
         except:
             return None
 
@@ -639,7 +653,6 @@ class StatusCheckResult(models.Model):
 
 
 class AlertAcknowledgement(models.Model):
-
     time = models.DateTimeField()
     user = models.ForeignKey(User)
     service = models.ForeignKey(Service)
@@ -656,6 +669,7 @@ class AlertAcknowledgement(models.Model):
 
     def expires(self):
         return self.time + timedelta(minutes=settings.ACKNOWLEDGEMENT_EXPIRY)
+
 
 @receiver(signals.post_init, sender=User)
 def patch_user(sender, instance, **kwargs):
