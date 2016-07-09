@@ -38,8 +38,8 @@
       <div class="col-xs-3"><h5><span class="break"></span>Alert types</h5></div>
       <div class="col-xs-8">
         <h5>
-            {% for alert in instance.alerts.objects.all %}
-                <i class="{{ alert.font_icon }}"></i> {{ alert.name }}
+            {% for alert in instance.alerts.all %}
+              <span class="label label-{% if instance.alerts_enabled %}success{% else %}warning{% endif %}">{{ alert.plugin_class.name }}</span>
             {% endfor %}
         </h5>
       </div>

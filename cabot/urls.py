@@ -130,7 +130,7 @@ urlpatterns = patterns('',
     #
     url(r'^user/(?P<pk>\d+)/General/',
             view=UpdateUserView.as_view(), name='update-user'),
-    url(r'^user/(?P<user_pk>\d+)/plugin/(?P<alert_plugin_pk>\d)',
+    url(r'^user/(?P<pk>\d+)/plugin/(?P<alert_plugin_pk>\d+)',
                view=UpdateUserAlertPluginDataView.as_view(
                ), name='update-user-userdata'),
     url(r'^subscriptions/', view=subscriptions,

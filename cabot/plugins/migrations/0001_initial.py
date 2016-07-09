@@ -35,6 +35,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'abstract': False,
+                'ordering': 'slug',
             },
         ),
         migrations.CreateModel(
@@ -56,6 +57,15 @@ class Migration(migrations.Migration):
                 'abstract': False,
             },
             bases=('plugins.pluginmodel',),
+        ),
+        migrations.CreateModel(
+            name='FailedImport',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('plugin_name', models.CharField(max_length=256)),
+                ('error_message', models.CharField(max_length=1024, null=True)),
+                ('timestamp_installed', models.DateTimeField(auto_now_add=True)),
+            ],
         ),
         migrations.AddField(
             model_name='pluginmodel',

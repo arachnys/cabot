@@ -392,7 +392,7 @@ class StatusCheck(models.Model):
     check_plugin = models.ForeignKey(
         'plugins.StatusCheckPluginModel',
         related_name='status_check',
-        editable=False
+        null=True,
 	)
 
     # Common attributes to all

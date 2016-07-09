@@ -24,7 +24,6 @@ setup(
         'argparse==1.2.1',
         'billiard==3.3.0.23',
         'celery==3.1.23',
-        'distribute==0.7.3',
         'dj-database-url==0.2.2',
         'django-appconf==1.0.2',
         'django-compressor==2.0',

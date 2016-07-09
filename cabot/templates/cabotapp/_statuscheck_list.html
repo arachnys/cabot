@@ -10,7 +10,7 @@
         <a href="{{ check_plugin.get_absolute_create_url }}" title="Add new {{check_plugin.full_name}}"><i class="glyphicon glyphicon-plus"></i><i class="{{ check_plugin.font_icon }}"></i></a>
         {% else %}
         {% for i_check_plugin in all_check_plugins %}
-        <a href="{{ i_check_plugin.get_absolute_create_url }}"><i class="glyphicon glyphicon-plus" title="Add new {{ i_check_plugin.full_name }}"></i><i class="{{ i_check_plugin.font_icon }}" title="Add new metric check"></i></a>
+        <a href="{{ i_check_plugin.get_absolute_create_url }}"><i class="glyphicon glyphicon-plus" title="Add new {{ i_check_plugin.full_name }}"></i><i class="{{ i_check_plugin.font_icon }}" title="Add new {{ i_check_plugin.full_name }}"></i></a>
         {% endfor %}
         {% endif %}
       </h3>

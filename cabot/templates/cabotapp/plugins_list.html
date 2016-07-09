@@ -18,28 +18,27 @@
             </tr>
     {% else %}
               <th>Name</th>
+              <th>Slug</th>
               <th>Version</th>
-              <th>Usage</th>
             </tr>
           </thead>
           <tbody>
           {% for plugin in pluginmodel_list %}
-          {% if plugin.plugin_class %}
+          {% if plugin.plugin_class.plugin_model %}
             <tr class="enabled">
               <td>
                   <a href="{% url 'plugin' plugin.id %}"><i class="{{ plugin.font_icon }}"></i> &nbsp{{ plugin.full_name }}</a>
               </td>
               <td>
-                  {{ plugin.version }}
+                  {{ plugin.slug }}
               </td>
               <td>
-                  <span class="label label-success">{{ plugin.usage }}</span>
+                  {{ plugin.version }}
               </td>
             </tr>
           {% else %}
            <tr>
                <td><i class="fa fa-exclamation-circle"></i> No Plugin class could be found for {{ plugin.slug }}</td>
-               <td></td>
                <td></td>
            </tr>
           {% endif %}
@@ -49,6 +48,34 @@
         </table>
   </div>
 </div>
+
+{% if failed_imports %}
+<div class="row sortable ui-sortable">
+  <div class="col-xs-12" data-original-title="">
+    <div class="col-xs-1"><h2><i class="fa fa-cogs"></i></h2></div>
+    <div class="col-xs-10"><h2><span class="break"></span>Failed Imports</h2></div>
+  </div>
+  <div class="col-xs-12">
+    <table class="table bootstrap-datatable datatable">
+          <thead>
+            <tr>
+              <th>Plugin Name</th>
+              <th>Error Message</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for import in failed_imports %}
+           <tr>
+               <td>{{ import.plugin_name }}</td>
+               <td>{{ import.error_message }}</td>
+           </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+  </div>
+</div>
+{% endif %}
+
 {% endblock content %}
 
 {% block js %}

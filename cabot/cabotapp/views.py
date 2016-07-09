@@ -28,7 +28,7 @@ from django.utils.timezone import utc
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ValidationError
 
-from cabot.plugins.models import PluginModel, AlertPluginModel, StatusCheckPluginModel, AlertPluginUserData
+from cabot.plugins.models import PluginModel, AlertPluginModel, StatusCheckPluginModel, AlertPluginUserData, FailedImport
 from django.forms.models import (inlineformset_factory, modelformset_factory)
 from django import shortcuts
 from braces.views import LoginRequiredMixin, SuperuserRequiredMixin
@@ -315,39 +315,41 @@ class UpdateUserView(LoginRequiredMixin, UpdateView):
     # Add the list of plugins to the template context to display in the sidebar
     def get_context_data(self, **kwargs):
         context = super(UpdateUserView, self).get_context_data(**kwargs)
-        alert_plugins = [p for p in AlertPluginModel.objects.all() if p.plugin_class.user_config_form]
+        alert_plugins = [p for p in AlertPluginModel.objects.all() if p.plugin_class and p.plugin_class.user_config_form]
         context['alert_plugins'] = alert_plugins
         context['form_title'] = 'User Profile'
+        context['user_being_updated'] = self.object
 
         return context
 
     def get_success_url(self):
-        return reverse('update-user', kwargs={'pk': self.request.user.pk})
+        return reverse('update-user', kwargs={'pk': self.kwargs['pk']})
 
 
 class UpdateUserAlertPluginDataView(LoginRequiredMixin, View):
     template = loader.get_template('cabotapp/alertpluginuserdata_form.html')
 
-    def get(self, request, user_pk, alert_plugin_pk):
-        user = User.objects.get(pk=user_pk)
+    def get(self, request, pk, alert_plugin_pk):
+        user = User.objects.get(pk=pk)
         plugin = AlertPluginModel.objects.get(pk=alert_plugin_pk)
         initial = {}
         for ud in AlertPluginUserData.objects.filter(user=user, plugin=plugin):
             initial[ud.key] = ud.value
         
         form = plugin.plugin_class.user_config_form(initial=initial)
-        alert_plugins = [p for p in AlertPluginModel.objects.all() if p.plugin_class.user_config_form]
+        alert_plugins = [p for p in AlertPluginModel.objects.all() if p.plugin_class and p.plugin_class.user_config_form]
 
         c = RequestContext(request, {
             'form': form,
             'alert_plugins': alert_plugins,
-            'form_title': plugin.name + ' Settings'
+            'form_title': plugin.name + ' Settings',
+            'user_being_updated': user,
         })
 
         return HttpResponse(self.template.render(c))
 
-    def post(self, request, user_pk, alert_plugin_pk):
-        user = User.objects.get(pk=user_pk)
+    def post(self, request, pk, alert_plugin_pk):
+        user = User.objects.get(pk=pk)
         plugin = PluginModel.objects.get(pk=alert_plugin_pk)
 
         form = plugin.plugin_class.user_config_form(request.POST)
@@ -361,7 +363,7 @@ class UpdateUserAlertPluginDataView(LoginRequiredMixin, View):
                 ud.value = form.cleaned_data[key]
                 ud.save()
 
-        return HttpResponseRedirect(reverse('update-user-userdata', kwargs={'user_pk': user_pk, 'alert_plugin_pk': alert_plugin_pk}))
+        return HttpResponseRedirect(reverse('update-user-userdata', kwargs={'pk': pk, 'alert_plugin_pk': alert_plugin_pk}))
 
 
 class InstanceListView(LoginRequiredMixin, ListView):
@@ -419,11 +421,8 @@ class InstanceCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         ret = super(InstanceCreateView, self).form_valid(form)
-        if self.object.status_checks.filter(check_plugin__slug = 'cabot_check_icmp').exists():
-            try:
-                self.generate_default_ping_check(self.object)
-            except:
-                pass
+        if StatusCheckPluginModel.objects.filter(slug='cabot_check_icmp').exists():
+            self.generate_default_ping_check(self.object)
         return ret
 
     def generate_default_ping_check(self, obj):
@@ -530,6 +529,11 @@ class StatusCheckReportView(LoginRequiredMixin, TemplateView):
 class PluginListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
     model = PluginModel
     template_name = 'cabotapp/plugins_list.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(PluginListView, self).get_context_data(**kwargs)
+        context['failed_imports'] = FailedImport.objects.all()
+        return context
 
 class TestAlertPluginForm(forms.Form):
     service = forms.ModelChoiceField(

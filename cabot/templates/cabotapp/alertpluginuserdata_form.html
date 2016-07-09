@@ -12,9 +12,9 @@
                 <span class="caret"></span>
             </button>
             <ul class="dropdown-menu" style="width: 100%;">
-                    <li><a href="{% url 'update-user' user.id %}">General</a></li>
+                    <li><a href="{% url 'update-user' user_being_updated.pk %}">General</a></li>
                 {% for alert in alert_plugins %}
-                    <li><a href="{% url 'update-user-userdata' user.id alert.id %}">{{ alert.name }}</a></li>
+                    <li><a href="{% url 'update-user-userdata' user_being_updated.pk alert.id %}">{{ alert.name }}</a></li>
                 {% endfor %}
             </ul>
         </div>
@@ -23,10 +23,10 @@
     <!-- Sidebar -->
     <div class="col-md-3 nav">
       <ul class="list-unstyled user-options">
-          <li><i class="fa fa-cog"></i> <a href="{% url 'update-user' user.id %}">General</a></li>
+          <li><i class="fa fa-cog"></i> <a href="{% url 'update-user' user_being_updated.pk %}">General</a></li>
         <hr>
         {% for alert in alert_plugins %}
-        <li><i class="{{ alert.font_icon }}"></i> <a href="{% url 'update-user-userdata' user.id alert.id %}">{{ alert.name }}</a></li>
+        <li><i class="{{ alert.font_icon }}"></i> <a href="{% url 'update-user-userdata' user_being_updated.pk alert.id %}">{{ alert.name }}</a></li>
         {% endfor %}
       </ul>
     </div>

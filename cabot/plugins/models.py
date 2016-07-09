@@ -37,14 +37,6 @@ class Plugin(object):
 
     plugin_variables = []
     
-    def send_alert(self, service, users, duty_officers):
-        """Implement a send_alert function here that shall be called."""
-        return True
-
-    def send_alert_update(self, service, users, duty_officers):
-        """Implement a send_alert function here that shall be called."""
-        return True
-
     @property
     def plugin_model(self):
         """Returns the plugin model for the plugin"""
@@ -56,7 +48,7 @@ class Plugin(object):
 
 class AlertPlugin(Plugin):
     # A Django form to handle user settings
-    user_config_form = None
+    user_config_form = forms.Form
     # The datastore model
 
     @property
@@ -65,10 +57,21 @@ class AlertPlugin(Plugin):
             if p.slug == self.slug:
                 return p
         return None
+    
+    def send_alert(self, service, users, duty_officers):
+        """Implement a send_alert function here that shall be called."""
+        raise NotImplementedError('{} has not implemented send_alert'.format(self.plugin_model().name))
+
+    def send_alert_update(self, service, users, duty_officers):
+        """Implement a send_alert function here that shall be called."""
+        raise NotImplementedError('{} has not implemented send_alert_update'.format(self.plugin_model().name))
+
 
 class StatusCheckPlugin(Plugin):
     config_form = forms.Form
     
+    def run(self):
+        raise NotImplementedError('{} has not implemented run()'.format(self.plugin_model().name))
     @property
     def plugin_model(self):
         for p in StatusCheckPluginModel.objects.all():
@@ -83,12 +86,42 @@ class StatusCheckPlugin(Plugin):
         """
         return ""
 
+# A catch-all plugin class to stand in for plugin models with no plugin class
+# installed.
+class OrphanedPlugin(object):
+    name = "Orphaned Plugin"
+    slug = ""
+    font_icon = "fa fa-exclamation-triangle"
+    version = ""
+    user_config_form = forms.Form
+    config_form = forms.Form
+    author = ""
+    plugin_variables = []
+
+    def send_alert(self, service, users, duty_officers):
+        return False
+    def send_alert_update(self, service, users, duty_officers):
+        return False
+    def run(self, check, result):
+        result.succeeded = False
+        result.error = "This check has auto failed because the plugin " + \
+        "implementing the check is not available. Make sure that plugin " + \
+        "is in your production.env and is shown to be installed in the " + \
+        "plugins page."
+        return result
+    def description(self, status_check):
+        return "WARNING! The associated plugin is not available"
+
+
 class PluginModel(PolymorphicModel):
     "Model to represent the Plugin in the database"
 
+    class Meta:
+        ordering = ['slug']
+
     slug = models.CharField(max_length=256, unique=True)
     timestamp_installed = models.DateTimeField(auto_now_add=True)
-    
+
     # The class used by the plugins to register this model
 
     def form_fields_iter(self):
@@ -140,7 +173,7 @@ class AlertPluginModel(PluginModel):
         for p in AlertPlugin.__subclasses__():
             if p.slug == self.slug:
                 return p()
-        return None
+        return OrphanedPlugin()
 
     @property
     def full_name(self):
@@ -163,7 +196,7 @@ class StatusCheckPluginModel(PluginModel):
         for p in StatusCheckPlugin.__subclasses__():
             if p.slug == self.slug:
                 return p()
-        return None
+        return OrphanedPlugin()
 
     @property
     def get_absolute_create_url(self):
@@ -180,4 +213,10 @@ class StatusCheckPluginModel(PluginModel):
         return StatusCheck.objects.all().count()
     def description(self, check):
         return self.plugin_class.description(check)
+
+
+class FailedImport(models.Model):
+    plugin_name = models.CharField(max_length=256)
+    error_message = models.CharField(max_length=1024, null=True)
+    timestamp_installed = models.DateTimeField(auto_now_add=True)
 

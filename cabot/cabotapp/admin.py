@@ -11,8 +11,6 @@ admin.site.register(ServiceStatusSnapshot)
 admin.site.register(StatusCheck)
 admin.site.register(StatusCheckResult)
 admin.site.register(Instance)
-admin.site.register(AlertPlugin)
-admin.site.register(AlertPluginUserData)
 admin.site.register(AlertAcknowledgement)
 admin.site.register(StatusCheckVariable)
 
