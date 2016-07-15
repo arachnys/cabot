@@ -16,6 +16,9 @@ ADMINS = (
 
 MANAGERS = ADMINS
 
+if os.environ.get('CABOT_FROM_EMAIL'):
+    DEFAULT_FROM_EMAIL = os.environ['CABOT_FROM_EMAIL']
+
 DATABASES = {'default': dj_database_url.parse(os.environ["DATABASE_URL"])}
 
 if not DEBUG:
