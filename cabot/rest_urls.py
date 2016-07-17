@@ -1,4 +1,5 @@
 from django.db import models as model_fields
+from django.conf import settings
 from django.conf.urls import url, include
 from django.contrib.auth import models as django_models
 from polymorphic import PolymorphicModel
@@ -124,33 +125,30 @@ router.register(r'jenkins_checks', create_viewset(
     ),
 ))
 
-'''
-Omitting user API, could expose/allow modifying dangerous fields.
+# User API is off by default, could expose/allow modifying dangerous fields
+if settings.EXPOSE_USER_API:
+    router.register(r'users', create_viewset(
+        arg_model=django_models.User,
+        arg_fields=(
+            'password',
+            'is_active',
+            'groups',
+            #'user_permissions', # Doesn't work, removing for now
+            'username',
+            'first_name',
+            'last_name',
+            'email',
+        ),
+    ))
 
-router.register(r'users', create_viewset(
-    arg_model=django_models.User,
-    arg_fields=(
-        'password',
-        'is_active',
-        'groups',
-        #'user_permissions', # Doesn't work, removing for now
-        'username',
-        'first_name',
-        'last_name',
-        'email',
-    ),
-))
+    router.register(r'user_profiles', create_viewset(
+        arg_model=models.UserProfile,
+        arg_fields=(
+            'user',
+            'fallback_alert_user',
+        ),
+    ))
 
-router.register(r'user_profiles', create_viewset(
-    arg_model=models.UserProfile,
-    arg_fields=(
-        'user',
-        'mobile_number',
-        'hipchat_alias',
-        'fallback_alert_user',
-    ),
-))
-'''
 
 router.register(r'shifts', create_viewset(
     arg_model=models.Shift,

@@ -1,5 +1,6 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
+require 'yaml'
 
 # Load local config overrides
 local_config = File.file?("local_config.yml") ? YAML.load(File.read("local_config.yml")) : {}

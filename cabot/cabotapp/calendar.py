@@ -1,7 +1,6 @@
-
-from django.conf import settings
-from icalendar import Calendar, Event
 import requests
+from django.conf import settings
+from icalendar import Calendar
 
 
 def get_calendar_data():
