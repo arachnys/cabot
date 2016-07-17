@@ -1,10 +1,20 @@
+from os import environ as env
+
+from django.conf import settings
+from django.core.mail import send_mail
+from django.core.urlresolvers import reverse
+from django.template import Context, Template
+from django.db import models
+
+from twilio.rest import TwilioRestClient
+from twilio import twiml
+
+import requests
 import logging
 
-from django.db import models
-from polymorphic import PolymorphicModel
+from polymorphic.models import PolymorphicModel
 
 logger = logging.getLogger(__name__)
-
 
 class AlertPlugin(PolymorphicModel):
     title = models.CharField(max_length=30, unique=True, editable=False)
@@ -31,15 +41,6 @@ class AlertPluginUserData(PolymorphicModel):
 
     def __unicode__(self):
         return u'%s' % (self.title)
-
-
-def send_alert(service, duty_officers=None):
-    users = service.users_to_notify.filter(is_active=True)
-    for alert in service.alerts.all():
-        try:
-            alert.send_alert(service, users, duty_officers)
-        except Exception as e:
-            logging.exception('Could not send %s alert: %s' % (alert.name, e))
 
 
 def send_alert_update(service, duty_officers=None):

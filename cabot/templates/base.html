@@ -62,18 +62,9 @@
                   <a href="{% url "create-instance" %}"><i class="fa fa-desktop"></i> Instance</a>
                 </li>
                 <li class="divider"></li>
-                <li>
-                  <a href="{% url "create-graphite-check" %}?service={{ service.id }}&instance={{ instance.id }}" class=""><i class="glyphicon glyphicon-signal" title="Add new metric check"></i> Graphite check</a>
-                </li>
-                <li>
-                  <a href="{% url "create-http-check" %}?service={{ service.id }}&instance={{ instance.id }}" class="" title="Add new Http check"><i class="glyphicon glyphicon-arrow-up"></i> Http check</a>
-                </li>
-                <li>
-                  <a href="{% url "create-jenkins-check" %}?service={{ service.id }}&instance={{ instance.id }}" class="" title="Add new Jenkins check"><i class="glyphicon glyphicon-ok"></i> Jenkins check</a>
-                </li>
-                <li>
-                  <a href="{% url "create-icmp-check" %}?service={{ service.id }}&instance={{ instance.id }}" class="" title="Add new ICMP check"><i class="glyphicon glyphicon-transfer"></i> ICMP check</a>
-                </li>
+                {% for check_plugin in all_check_plugins %}
+                <li><a href="{{ check_plugin.get_absolute_create_url }}"><i class="{{ check_plugin.font_icon }}"></i> {{ check_plugin.full_name }}</a></li>
+                {% endfor %}
               </ul>
             </li>
           </ul>
@@ -90,17 +81,37 @@
             <a class="dropdown-toggle" data-toggle="dropdown" href="#" id="download">{{ user.username }} <span class="caret"></span></a>
             <ul class="dropdown-menu" aria-labelledby="admin">
               <li>
-                <a href="/admin/auth/user/add/"><i class="glyphicon glyphicon-user"></i> Add user</a>
+                <a href="/admin/auth/user/add/"><i class="glyphicon glyphicon-plus"></i> Add user</a>
+              </li>
+              <li>
+                  <a href="{% url 'update-user' user.id %}"><i class="glyphicon glyphicon-user"></i> Edit user profile</a>
               </li>
               <li class="divider"></li>
               <li>
                 <a href="/admin/"><i class="glyphicon glyphicon-lock"></i> Django admin</a>
               </li>
+              {% if user.is_superuser %}
+              <li>
+                <a href="/plugins/"><i class="fa fa-cogs"></i> Plugins</a>
+              </li>
+              {% endif %}
               <li class="divider"></li>
               <li>
                 <a href="/accounts/logout/"><i class="glyphicon glyphicon-log-out"></i> Log out</a>
               </li>
             </ul>
+              <script>
+                // Remove active class from navbar dropdown
+                function defer(method) {
+                    if (window.jQuery)
+                        method();
+                    else
+                        setTimeout(function() { defer(method) }, 50);
+                }
+                defer(function() {
+                    $('ul.dropdown-menu li.active').removeClass('active');
+                });
+              </script>
           </li>
           {% endif %}
         </ul>

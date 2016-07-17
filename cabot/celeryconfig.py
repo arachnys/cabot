@@ -3,7 +3,6 @@ from datetime import timedelta
 
 BROKER_URL = os.environ['CELERY_BROKER_URL']
 CELERY_IMPORTS = ('cabot.cabotapp.tasks', )
-CELERYBEAT_SCHEDULER = "djcelery.schedulers.DatabaseScheduler"
 CELERY_TASK_SERIALIZER = "json"
 CELERY_ACCEPT_CONTENT = ['json', 'msgpack', 'yaml']
 CELERYD_TASK_SOFT_TIME_LIMIT = 120

@@ -1,0 +1,1 @@
+foreman run ./manage.py test cabot cabot_alert_hipchat cabot_alert_twilio cabot_alert_email cabot_check_icmp cabot_check_jenkins cabot_check_http cabot_check_graphite

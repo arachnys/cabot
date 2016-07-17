@@ -1,4 +1,4 @@
-import os
+import os, sys
 import dj_database_url
 import re
 from django.conf import settings
@@ -8,7 +8,8 @@ from cabot.cabot_config import *
 settings_dir = os.path.dirname(__file__)
 PROJECT_ROOT = os.path.abspath(settings_dir)
 
-TEMPLATE_DEBUG = DEBUG = os.environ.get("DEBUG", False)
+DEBUG = os.environ.get("DEBUG", False)
+TEST = len(sys.argv) > 1 and sys.argv[1] == 'test' # Whether we're running in test mode
 
 ADMINS = (
     ('Admin', os.environ.get('ADMIN_EMAIL', 'name@example.com')),
@@ -20,9 +21,6 @@ if os.environ.get('CABOT_FROM_EMAIL'):
     DEFAULT_FROM_EMAIL = os.environ['CABOT_FROM_EMAIL']
 
 DATABASES = {'default': dj_database_url.parse(os.environ["DATABASE_URL"])}
-
-if not DEBUG:
-    DATABASES['default']['OPTIONS'] = {'autocommit': True}
 
 USE_TZ = True
 
@@ -88,10 +86,28 @@ SECRET_KEY = os.environ.get(
     'DJANGO_SECRET_KEY', '2FL6ORhHwr5eX34pP9mMugnIOd3jzVuT45f7w430Mt5PnEwbcJgma0q8zUXNZ68A')
 
 # List of callables that know how to import templates from various sources.
-TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
-)
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [os.path.join(PROJECT_ROOT, 'templates')],
+        'APP_DIRS': True,
+        
+        'OPTIONS': {
+            'context_processors': [
+                "django.contrib.auth.context_processors.auth",
+                "django.template.context_processors.debug",
+                "django.template.context_processors.i18n",
+                "django.template.context_processors.media",
+                "django.template.context_processors.static",
+                "django.template.context_processors.tz",
+                "django.contrib.messages.context_processors.messages",
+                "cabot.plugins.context_processors.check_plugins"
+            ],
+            'debug': DEBUG
+        }
+    }
+]
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
@@ -102,10 +118,6 @@ MIDDLEWARE_CLASSES = (
 )
 
 ROOT_URLCONF = 'cabot.urls'
-
-TEMPLATE_DIRS = (
-    os.path.join(PROJECT_ROOT, 'templates'),
-)
 
 INSTALLED_APPS = (
     'django.contrib.auth',
@@ -118,23 +130,26 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
-    'south',
     'compressor',
     'polymorphic',
-    'djcelery',
     'jsonify',
     'cabot.cabotapp',
+    'cabot.plugins',
     'rest_framework',
 )
 
 # Load additional apps from configuration file
 CABOT_PLUGINS_ENABLED_PARSED = []
 for plugin in CABOT_PLUGINS_ENABLED.split(","):
-    # Hack to clean up if versions of plugins specified
+    # Skip if empty string.
+    if not plugin:
+        continue
+
+    # Remove plugin versions if they're specified
     exploded = re.split(r'[<>=]+', plugin)
     CABOT_PLUGINS_ENABLED_PARSED.append(exploded[0])
 
-INSTALLED_APPS += tuple(CABOT_PLUGINS_ENABLED_PARSED)
+#INSTALLED_APPS += tuple(CABOT_PLUGINS_ENABLED_PARSED)
 
 COMPRESS_PRECOMPILERS = (
     ('text/coffeescript', 'coffee --compile --stdio'),
@@ -179,7 +194,7 @@ LOGGING = {
     'handlers': {
         'null': {
             'level': 'DEBUG',
-            'class': 'django.utils.log.NullHandler',
+            'class': 'logging.NullHandler',
         },
         'console': {
             'level': 'DEBUG',

@@ -96,6 +96,7 @@ DID_FAIL=$?
 set -e
 if [[ DID_FAIL -eq 1 ]] ; then # if line not found
   echo 'requirepass yourredispassword' | sudo tee -a /etc/redis/redis.conf
+  sudo service redis-server restart
 fi
 
 # Install nginx

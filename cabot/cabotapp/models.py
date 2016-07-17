@@ -9,20 +9,35 @@ import requests
 from celery.exceptions import SoftTimeLimitExceeded
 from celery.utils.log import get_task_logger
 from django.conf import settings
-from django.contrib.auth.models import User
+from polymorphic.models import PolymorphicModel
 from django.db import models
-from django.utils import timezone
-from polymorphic import PolymorphicModel
+from django.db.models import F
+from django.db.models import signals
+from django.dispatch import receiver
+from django.core.urlresolvers import reverse
+from django.core.exceptions import ValidationError
+from django.contrib.auth.models import User
+from django.template.loader import render_to_string
+from celery.exceptions import SoftTimeLimitExceeded
 
 from .alert import (
-    send_alert,
     send_alert_update,
-    AlertPluginUserData
-)
+    )
 from .calendar import get_events
-from .graphite import parse_metric
-from .jenkins import get_job_status
 from .tasks import update_service, update_instance
+from datetime import datetime, timedelta
+from django.utils import timezone
+from picklefield.fields import PickledObjectField
+
+import json
+import re
+import time
+import os
+import subprocess
+import itertools
+
+import requests
+from celery.utils.log import get_task_logger
 
 RAW_DATA_LIMIT = 5000
 
@@ -70,6 +85,11 @@ def calculate_debounced_passing(recent_results, debounce=0):
 
 
 class CheckGroupMixin(models.Model):
+    """
+    Base model for Services and Instances. It handles the StatusChecks
+    associated with them.
+    """
+
     class Meta:
         abstract = True
 
@@ -114,20 +134,12 @@ class CheckGroupMixin(models.Model):
         null=True,
         blank=True,
     )
-
     alerts = models.ManyToManyField(
-        'AlertPlugin',
+        'plugins.AlertPluginModel',
         blank=True,
         help_text='Alerts channels through which you wish to be notified'
     )
 
-    email_alert = models.BooleanField(default=False)
-    hipchat_alert = models.BooleanField(default=True)
-    sms_alert = models.BooleanField(default=False)
-    telephone_alert = models.BooleanField(
-        default=False,
-        help_text='Must be enabled, and check importance set to Critical, to receive telephone alerts.',
-    )
     overall_status = models.TextField(default=PASSING_STATUS)
     old_overall_status = models.TextField(default=PASSING_STATUS)
     hackpad_id = models.TextField(
@@ -184,7 +196,13 @@ class CheckGroupMixin(models.Model):
         else:
             self.snapshot.did_send_alert = True
             self.snapshot.save()
-            send_alert(self, duty_officers=get_duty_officers())
+
+	    users = self.users_to_notify.filter(is_active=True)
+	    for alert in self.alerts.all():
+		try:
+		    alert.send_alert(self, users, get_duty_officers())
+		except Exception as e:
+		    logger.exception('Could not send %s alert: %s' % (alert.name, e))
 
     def unexpired_acknowledgements(self):
         acknowledgements = self.alertacknowledgement_set.all().filter(
@@ -222,24 +240,6 @@ class CheckGroupMixin(models.Model):
         for s in snapshots:
             s['time'] = time.mktime(s['time'].timetuple())
         return snapshots
-
-    def graphite_status_checks(self):
-        return self.status_checks.filter(polymorphic_ctype__model='graphitestatuscheck')
-
-    def http_status_checks(self):
-        return self.status_checks.filter(polymorphic_ctype__model='httpstatuscheck')
-
-    def jenkins_status_checks(self):
-        return self.status_checks.filter(polymorphic_ctype__model='jenkinsstatuscheck')
-
-    def active_graphite_status_checks(self):
-        return self.graphite_status_checks().filter(active=True)
-
-    def active_http_status_checks(self):
-        return self.http_status_checks().filter(active=True)
-
-    def active_jenkins_status_checks(self):
-        return self.jenkins_status_checks().filter(active=True)
 
     def active_status_checks(self):
         return self.status_checks.filter(active=True)
@@ -287,6 +287,17 @@ class Service(CheckGroupMixin):
 
     class Meta:
         ordering = ['name']
+    
+    def get_status_message(self, include_checks_failing=True):
+        template_name = 'cabotapp/service_status_message.html'
+        message = render_to_string(template_name,
+                {
+                    'service': self,
+                    'include_checks_failing': include_checks_failing,
+                    'scheme': settings.WWW_SCHEME,
+                    'host': settings.WWW_HTTP_HOST
+                })
+        return message.rstrip() # Return and remove trailing whitespace
 
 
 class Instance(CheckGroupMixin):
@@ -329,15 +340,11 @@ class Instance(CheckGroupMixin):
         help_text="Address (IP/Hostname) of service."
     )
 
-    def icmp_status_checks(self):
-        return self.status_checks.filter(polymorphic_ctype__model='icmpstatuscheck')
-
-    def active_icmp_status_checks(self):
-        return self.icmp_status_checks().filter(active=True)
-
     def delete(self, *args, **kwargs):
-        self.icmp_status_checks().delete()
         return super(Instance, self).delete(*args, **kwargs)
+
+    def get_absolute_url(self):
+        return reverse('instance', args=[self.pk])
 
 
 class Snapshot(models.Model):
@@ -366,16 +373,27 @@ class InstanceStatusSnapshot(Snapshot):
         return u"%s: %s" % (self.instance.name, self.overall_status)
 
 
-class StatusCheck(PolymorphicModel):
-    """
-    Base class for polymorphic models. We're going to use
-    proxy models for inheriting because it makes life much simpler,
-    but this allows us to stick different methods etc on subclasses.
+class StatusCheckVariable(models.Model):
+    status_check = models.ForeignKey('StatusCheck')
+    key = models.CharField(max_length=128)
+    value = PickledObjectField(null=True)
 
-    You can work out what (sub)class a model is an instance of by accessing `instance.polymorphic_ctype.model`
+    def __unicode__(self):
+        return '{}: {}'.format(self.key, self.value)
 
-    We are using django-polymorphic for polymorphism
-    """
+    class Meta:
+        unique_together = ('status_check', 'key')
+
+
+class StatusCheck(models.Model):
+
+    # Each StatusCheck object must be attacked to plugin which is used to
+    # run the check and to define the configuration form.
+    check_plugin = models.ForeignKey(
+        'plugins.StatusCheckPluginModel',
+        related_name='status_check',
+        null=True,
+	)
 
     # Common attributes to all
     name = models.TextField()
@@ -407,75 +425,6 @@ class StatusCheck(PolymorphicModel):
     last_run = models.DateTimeField(null=True)
     cached_health = models.TextField(editable=False, null=True)
 
-    # Graphite checks
-    metric = models.TextField(
-        null=True,
-        help_text='fully.qualified.name of the Graphite metric you want to watch. This can be any valid Graphite '
-                  'expression, including wildcards, multiple hosts, etc.',
-    )
-    check_type = models.CharField(
-        choices=CHECK_TYPES,
-        max_length=100,
-        null=True,
-    )
-    value = models.TextField(
-        null=True,
-        help_text='If this expression evaluates to true, the check will fail (possibly triggering an alert).',
-    )
-    expected_num_hosts = models.IntegerField(
-        default=0,
-        null=True,
-        help_text='The minimum number of data series (hosts) you expect to see.',
-    )
-    allowed_num_failures = models.IntegerField(
-        default=0,
-        null=True,
-        help_text='The maximum number of data series (metrics) you expect to fail. For example, you might be OK with '
-                  '2 out of 3 webservers having OK load (1 failing), but not 1 out of 3 (2 failing).',
-    )
-
-    # HTTP checks
-    endpoint = models.TextField(
-        null=True,
-        help_text='HTTP(S) endpoint to poll.',
-    )
-    username = models.TextField(
-        blank=True,
-        null=True,
-        help_text='Basic auth username.',
-    )
-    password = models.TextField(
-        blank=True,
-        null=True,
-        help_text='Basic auth password.',
-    )
-    text_match = models.TextField(
-        blank=True,
-        null=True,
-        help_text='Regex to match against source of page.',
-    )
-    status_code = models.TextField(
-        default=200,
-        null=True,
-        help_text='Status code expected from endpoint.'
-    )
-    timeout = models.IntegerField(
-        default=30,
-        null=True,
-        help_text='Time out after this many seconds.',
-    )
-    verify_ssl_certificate = models.BooleanField(
-        default=True,
-        help_text='Set to false to allow not try to verify ssl certificates (default True)',
-    )
-
-    # Jenkins checks
-    max_queued_build_time = models.IntegerField(
-        null=True,
-        blank=True,
-        help_text='Alert if build queued for more than this many minutes.',
-    )
-
     class Meta(PolymorphicModel.Meta):
         ordering = ['name']
 
@@ -485,24 +434,57 @@ class StatusCheck(PolymorphicModel):
     def recent_results(self):
         # Not great to use id but we are getting lockups, possibly because of something to do with index
         # on time_complete
-        return StatusCheckResult.objects.filter(check=self).order_by('-id').defer('raw_data')[:10]
+        return StatusCheckResult.objects.filter(status_check=self).order_by('-id').defer('raw_data')[:10]
+
+    def set_variable(self, key, value):
+        variable, created = StatusCheckVariable.objects.get_or_create(status_check=self, key=key)
+        variable.value = value
+        variable.save()
+        return variable.value
+
+    def get_variable(self, key):
+        # First try and get the value, then the default and finally None.
+        try:
+            return StatusCheckVariable.objects.get(status_check=self, key=key).value
+        except:
+            try:
+                return self.check_plugin.plugin_class.config_form().fields[key].initial
+            except:
+                return None
+
+    def get_absolute_url(self):
+        return reverse('check', args=[self.pk])
+
+    def get_absolute_update_url(self):
+        return reverse('update-check', args=[self.pk])
+
+    def get_absolute_duplicate_url(self):
+        return reverse('duplicate-check', args=[self.pk])
+
+    def get_absolute_run_url(self):
+        return reverse('run-check', args=[self.pk])
 
     def last_result(self):
         try:
-            return StatusCheckResult.objects.filter(check=self).order_by('-id').defer('raw_data')[0]
+            return StatusCheckResult.objects.filter(
+                    status_check=self).order_by('-id').defer('raw_data')[0]
         except:
             return None
 
     def run(self):
         start = timezone.now()
+        result = StatusCheckResult(status_check=self)
+        result = self.check_plugin.plugin_class.run(self, result)
         try:
-            result = self._run()
+            result = StatusCheckResult(status_check=self)
+            result = self.check_plugin.plugin_class.run(self, result)
         except SoftTimeLimitExceeded as e:
-            result = StatusCheckResult(check=self)
-            result.error = u'Error in performing check: Celery soft time limit exceeded'
+            result = StatusCheckResult(status_check=self)
+            result.error = u'Error in performing check: ' + \
+                            'Celery soft time limit exceeded'
             result.succeeded = False
         except Exception as e:
-            result = StatusCheckResult(check=self)
+            result = StatusCheckResult(status_check=self)
             logger.error(u"Error performing check: %s" % (e.message,))
             result.error = u'Error in performing check: %s' % (e.message,)
             result.succeeded = False
@@ -512,14 +494,45 @@ class StatusCheck(PolymorphicModel):
         result.save()
         self.last_run = finish
         self.save()
+        return result
 
-    def _run(self):
-        """
-        Implement on subclasses. Should return a `CheckResult` instance.
-        """
-        raise NotImplementedError('Subclasses should implement')
+    def get_distinct_field_names(self, check_plugin=None):
+        if check_plugin is None:
+            check_plugin = self.check_plugin
+        return check_plugin.plugin_class.config_form().fields
+
+    def __init__(self, *args, **kwargs):
+
+        # Any custom config variables that are passed to __init__ are
+        # added added as attributes to the status check. This will only
+        # happen on StatusCheck creation.
+        check_plugin = kwargs.get('check_plugin', None)
+        if check_plugin:
+            for field_name in self.get_distinct_field_names(check_plugin=check_plugin):
+                field_val = kwargs.pop(field_name, None)
+                if field_val:
+                    # Set the variable if it passed
+                    setattr(self, field_name, field_val)
+                else:
+                    # Otherwise get initial value
+                    try:
+                        initial_val = check_plugin.plugin_class.config_form().fields[field_name].initial
+                        setattr(self, field_name, initial_val)
+                    except:
+                        setattr(self, field_name, None)
+
+        ret = super(StatusCheck, self).__init__(*args, **kwargs)
+
+        # Fetch 
+        if self.pk and self.check_plugin:
+            for field in self.get_distinct_field_names():
+                setattr(self, field, self.get_variable(field))
+
+        return ret
 
     def save(self, *args, **kwargs):
+
+        # Update calculated status
         if self.last_run:
             recent_results = list(self.recent_results())
             if calculate_debounced_passing(recent_results, self.debounce):
@@ -538,9 +551,26 @@ class StatusCheck(PolymorphicModel):
         ret = super(StatusCheck, self).save(*args, **kwargs)
         self.update_related_services()
         self.update_related_instances()
+        
+        #
+        # Save custom variables
+        #
+        field_names = self.get_distinct_field_names()
+        field_dict = {}
+        for field in self.get_distinct_field_names():
+            field_dict[field] = getattr(self, field)
+        # Field validation
+        form = self.check_plugin.plugin_class.config_form(field_dict)
+        if not form.is_valid():
+            raise ValidationError('{} did not validate: {}'.format(self.name, form.errors))
+        for key, value in form.cleaned_data.items():
+            self.set_variable(key, value)
+
         return ret
 
     def duplicate(self, inst_set=(), serv_set=()):
+        self_pk = self.pk
+
         new_check = self
         new_check.pk = None
         new_check.id = None
@@ -548,6 +578,7 @@ class StatusCheck(PolymorphicModel):
         new_check.save()
         for linked in list(inst_set) + list(serv_set):
             linked.status_checks.add(new_check)
+
         return new_check.pk
 
     def update_related_services(self):
@@ -560,247 +591,8 @@ class StatusCheck(PolymorphicModel):
         for instance in instances:
             update_instance.delay(instance.id)
 
-
-class ICMPStatusCheck(StatusCheck):
-    class Meta(StatusCheck.Meta):
-        proxy = True
-
-    @property
-    def check_category(self):
-        return "ICMP/Ping Check"
-
-    def _run(self):
-        result = StatusCheckResult(check=self)
-        instances = self.instance_set.all()
-        target = self.instance_set.get().address
-
-        # We need to read both STDOUT and STDERR because ping can write to both, depending on the kind of error.
-        # Thanks a lot, ping.
-        ping_process = subprocess.Popen("ping -c 1 " + target, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                        shell=True)
-        response = ping_process.wait()
-
-        if response == 0:
-            result.succeeded = True
-        else:
-            output = ping_process.stdout.read()
-            result.succeeded = False
-            result.error = output
-
-        return result
-
-
-def minimize_targets(targets):
-    split = [target.split(".") for target in targets]
-
-    prefix_nodes_in_common = 0
-    for i, nodes in enumerate(itertools.izip(*split)):
-        if any(node != nodes[0] for node in nodes):
-            prefix_nodes_in_common = i
-            break
-    split = [nodes[prefix_nodes_in_common:] for nodes in split]
-
-    suffix_nodes_in_common = 0
-    for i, nodes in enumerate(reversed(zip(*split))):
-        if any(node != nodes[0] for node in nodes):
-            suffix_nodes_in_common = i
-            break
-    if suffix_nodes_in_common:
-        split = [nodes[:-suffix_nodes_in_common] for nodes in split]
-
-    return [".".join(nodes) for nodes in split]
-
-
-class GraphiteStatusCheck(StatusCheck):
-    class Meta(StatusCheck.Meta):
-        proxy = True
-
-    @property
-    def check_category(self):
-        return "Metric check"
-
-    def format_error_message(self, failures, actual_hosts, hosts_by_target):
-        if actual_hosts < self.expected_num_hosts:
-            return "Hosts missing | %d/%d hosts" % (
-                actual_hosts, self.expected_num_hosts)
-        elif actual_hosts > 1:
-            threshold = float(self.value)
-            failures_by_host = ["%s: %s %s %0.1f" % (
-                hosts_by_target[target], value, self.check_type, threshold)
-                                for target, value in failures]
-            return ", ".join(failures_by_host)
-        else:
-            target, value = failures[0]
-            return "%s %s %0.1f" % (value, self.check_type, float(self.value))
-
-    def _run(self):
-        result = StatusCheckResult(check=self)
-
-        failures = []
-        graphite_output = parse_metric(self.metric, mins_to_check=self.frequency)
-
-        try:
-            result.raw_data = json.dumps(graphite_output['raw'])
-        except:
-            result.raw_data = graphite_output['raw']
-
-        if graphite_output["error"]:
-            result.succeeded = False
-            result.error = graphite_output["error"]
-            return result
-
-        if graphite_output['num_series_with_data'] > 0:
-            result.average_value = graphite_output['average_value']
-            for s in graphite_output['series']:
-                if not s["values"]:
-                    continue
-                failure_value = None
-                if self.check_type == '<':
-                    if float(s['min']) < float(self.value):
-                        failure_value = s['min']
-                elif self.check_type == '<=':
-                    if float(s['min']) <= float(self.value):
-                        failure_value = s['min']
-                elif self.check_type == '>':
-                    if float(s['max']) > float(self.value):
-                        failure_value = s['max']
-                elif self.check_type == '>=':
-                    if float(s['max']) >= float(self.value):
-                        failure_value = s['max']
-                elif self.check_type == '==':
-                    if float(self.value) in s['values']:
-                        failure_value = float(self.value)
-                else:
-                    raise Exception(u'Check type %s not supported' %
-                                    self.check_type)
-
-                if not failure_value is None:
-                    failures.append((s["target"], failure_value))
-
-        if len(failures) > self.allowed_num_failures:
-            result.succeeded = False
-        elif graphite_output['num_series_with_data'] < self.expected_num_hosts:
-            result.succeeded = False
-        else:
-            result.succeeded = True
-
-        if not result.succeeded:
-            targets = [s["target"] for s in graphite_output["series"]]
-            hosts = minimize_targets(targets)
-            hosts_by_target = dict(zip(targets, hosts))
-
-            result.error = self.format_error_message(
-                failures,
-                graphite_output['num_series_with_data'],
-                hosts_by_target,
-            )
-
-        return result
-
-
-class HttpStatusCheck(StatusCheck):
-    class Meta(StatusCheck.Meta):
-        proxy = True
-
-    @property
-    def check_category(self):
-        return "HTTP check"
-
-    def _run(self):
-        result = StatusCheckResult(check=self)
-
-        auth = None
-        if self.username or self.password:
-            auth = (self.username, self.password)
-
-        try:
-            resp = requests.get(
-                self.endpoint,
-                timeout=self.timeout,
-                verify=self.verify_ssl_certificate,
-                auth=auth,
-                headers={
-                    "User-Agent": settings.HTTP_USER_AGENT,
-                },
-            )
-        except requests.RequestException as e:
-            result.error = u'Request error occurred: %s' % (e.message,)
-            result.succeeded = False
-        else:
-            if self.status_code and resp.status_code != int(self.status_code):
-                result.error = u'Wrong code: got %s (expected %s)' % (
-                    resp.status_code, int(self.status_code))
-                result.succeeded = False
-                result.raw_data = resp.content
-            elif self.text_match:
-                if not re.search(self.text_match, resp.content):
-                    result.error = u'Failed to find match regex /%s/ in response body' % self.text_match
-                    result.raw_data = resp.content
-                    result.succeeded = False
-                else:
-                    result.succeeded = True
-            else:
-                result.succeeded = True
-        return result
-
-
-class JenkinsStatusCheck(StatusCheck):
-    class Meta(StatusCheck.Meta):
-        proxy = True
-
-    @property
-    def check_category(self):
-        return "Jenkins check"
-
-    @property
-    def failing_short_status(self):
-        return 'Job failing on Jenkins'
-
-    def _run(self):
-        result = StatusCheckResult(check=self)
-        try:
-            status = get_job_status(self.name)
-            active = status['active']
-            result.job_number = status['job_number']
-            if status['status_code'] == 404:
-                result.error = u'Job %s not found on Jenkins' % self.name
-                result.succeeded = False
-                return result
-            elif status['status_code'] > 400:
-                # Will fall through to next block
-                raise Exception(u'returned %s' % status['status_code'])
-        except Exception as e:
-            # If something else goes wrong, we will *not* fail - otherwise
-            # a lot of services seem to fail all at once.
-            # Ugly to do it here but...
-            result.error = u'Error fetching from Jenkins - %s' % e.message
-            result.succeeded = True
-            return result
-
-        if not active:
-            # We will fail if the job has been disabled
-            result.error = u'Job "%s" disabled on Jenkins' % self.name
-            result.succeeded = False
-        else:
-            if self.max_queued_build_time and status['blocked_build_time']:
-                if status['blocked_build_time'] > self.max_queued_build_time * 60:
-                    result.succeeded = False
-                    result.error = u'Job "%s" has blocked build waiting for %ss (> %sm)' % (
-                        self.name,
-                        int(status['blocked_build_time']),
-                        self.max_queued_build_time,
-                    )
-                else:
-                    result.succeeded = status['succeeded']
-            else:
-                result.succeeded = status['succeeded']
-            if not status['succeeded']:
-                if result.error:
-                    result.error += u'; Job "%s" failing on Jenkins' % self.name
-                else:
-                    result.error = u'Job "%s" failing on Jenkins' % self.name
-                result.raw_data = status
-        return result
+    def description(self):
+        return self.check_plugin.plugin_class.description(self)
 
 
 class StatusCheckResult(models.Model):
@@ -811,7 +603,7 @@ class StatusCheckResult(models.Model):
     Checks don't have to use all the fields, so most should be
     nullable
     """
-    check = models.ForeignKey(StatusCheck)
+    status_check = models.ForeignKey(StatusCheck)
     time = models.DateTimeField(null=False, db_index=True)
     time_complete = models.DateTimeField(null=True, db_index=True)
     raw_data = models.TextField(null=True)
@@ -823,10 +615,10 @@ class StatusCheckResult(models.Model):
 
     class Meta:
         ordering = ['-time_complete']
-        index_together = (('check', 'time_complete'),)
+        index_together = (('status_check', 'time_complete'),)
 
     def __unicode__(self):
-        return '%s: %s @%s' % (self.status, self.check.name, self.time)
+        return '%s: %s @%s' % (self.status, self.status_check.name, self.time)
 
     @property
     def status(self):
@@ -879,13 +671,59 @@ class AlertAcknowledgement(models.Model):
         return self.time + timedelta(minutes=settings.ACKNOWLEDGEMENT_EXPIRY)
 
 
+@receiver(signals.post_init, sender=User)
+def patch_user(sender, instance, **kwargs):
+    from cabot.plugins.models import AlertPluginModel, AlertPluginUserData
+    plugins = [p for p in AlertPluginModel.objects.all() if p.plugin_class and p.plugin_class.user_config_form]
+
+    for plugin in plugins:
+
+        class UserSettingsObj(object):
+
+            def __init__(cls, plugin=plugin, instance=instance):
+                cls.plugin = plugin
+                cls.instance = instance
+
+            def __getattr__(cls, key):
+                if not key in cls.plugin.plugin_class.user_config_form().fields:
+                    raise AttributeError('{} has no user variable {}'.format(cls.plugin.full_name, key))
+                try:
+                    return AlertPluginUserData.objects.get(
+                        plugin = cls.plugin,
+                        user = cls.instance,
+                        key = key
+                        ).value
+                except:
+                    return ''
+
+            def __setattr__(cls, key, item):
+                if key in ['plugin', 'instance']:
+                    return super(UserSettingsObj, cls).__setattr__(key, item)
+                
+                if not key in cls.plugin.plugin_class.user_config_form().fields:
+                    raise AttributeError('{} has no user variable {}.'.format(cls.plugin.full_name, key))
+                var, created = AlertPluginUserData.objects.get_or_create(
+                        plugin = cls.plugin,
+                        user = cls.instance,
+                        key = key,
+                    )
+                var.value = item
+                var.save()
+                return var.value
+        
+
+        dict_name = '{}_settings'.format(plugin.slug)
+        User.add_to_class(dict_name, UserSettingsObj())
+
+#
+# DEPRECATED
+# Use StatusCheckUserData to store data
+#
 class UserProfile(models.Model):
     user = models.OneToOneField(User, related_name='profile')
 
     def user_data(self):
-        for user_data_subclass in AlertPluginUserData.__subclasses__():
-            user_data = user_data_subclass.objects.get_or_create(user=self, title=user_data_subclass.name)
-        return AlertPluginUserData.objects.filter(user=self)
+        return {}
 
     def __unicode__(self):
         return 'User profile: %s' % self.user.username

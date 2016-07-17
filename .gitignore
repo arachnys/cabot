@@ -1,5 +1,5 @@
 .dotcloud/*
-dev.db
+*.db
 venv/*
 backups/*
 static/CACHE/*
@@ -10,13 +10,15 @@ cabot/static/CACHE
 .env
 .DS_Store
 celerybeat-schedule
+celerybeat.pid
 *.pyc
-*.swp
+*.sw?
 *.orig
 .vagrant
 conf/*.env
 dist/
 local_config.yml
 build/
-
+plugin_dev/
 .idea
+

@@ -8,7 +8,14 @@ from cabot.cabotapp import alert
 from dateutil.relativedelta import relativedelta
 from django import forms
 from django.conf import settings
+from models import (StatusCheck, StatusCheckResult, UserProfile, Service,
+    Instance, Shift, get_duty_officers, StatusCheckVariable)
+from tasks import run_status_check as _run_status_check
 from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
+from django.views.generic import (
+    DetailView, CreateView, UpdateView, ListView, DeleteView, TemplateView, FormView, View)
+from django import forms
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
@@ -18,20 +25,21 @@ from django.template import RequestContext, loader
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.timezone import utc
-from django.views.generic import (
-    DetailView, CreateView, UpdateView, ListView, DeleteView, TemplateView, View)
-from models import AlertPluginUserData
-from models import (
-    StatusCheck, GraphiteStatusCheck, JenkinsStatusCheck, HttpStatusCheck, ICMPStatusCheck,
-    StatusCheckResult, UserProfile, Service, Instance, Shift, get_duty_officers)
-from tasks import run_status_check as _run_status_check
-from .graphite import get_data, get_matching_metrics
+from django.core.urlresolvers import reverse
+from django.core.exceptions import ValidationError
 
+from cabot.plugins.models import PluginModel, AlertPluginModel, StatusCheckPluginModel, AlertPluginUserData, FailedImport
+from django.forms.models import (inlineformset_factory, modelformset_factory)
+from django import shortcuts
+from braces.views import LoginRequiredMixin, SuperuserRequiredMixin
 
-class LoginRequiredMixin(object):
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(LoginRequiredMixin, self).dispatch(*args, **kwargs)
+from itertools import groupby, dropwhile, izip_longest
+import requests
+import json
+import re
+
+from logging import getLogger
+logger = getLogger(__name__)
 
 
 @login_required
@@ -54,37 +62,15 @@ def run_status_check(request, pk):
     _run_status_check(check_or_id=pk)
     return HttpResponseRedirect(reverse('check', kwargs={'pk': pk}))
 
-
-def duplicate_icmp_check(request, pk):
-    pc = StatusCheck.objects.get(pk=pk)
-    npk = pc.duplicate()
-    return HttpResponseRedirect(reverse('update-icmp-check', kwargs={'pk': npk}))
-
-
 def duplicate_instance(request, pk):
     instance = Instance.objects.get(pk=pk)
     new_instance = instance.duplicate()
     return HttpResponseRedirect(reverse('update-instance', kwargs={'pk': new_instance}))
 
-
-def duplicate_http_check(request, pk):
-    pc = StatusCheck.objects.get(pk=pk)
-    npk = pc.duplicate()
-    return HttpResponseRedirect(reverse('update-http-check', kwargs={'pk': npk}))
-
-
-def duplicate_graphite_check(request, pk):
-    pc = StatusCheck.objects.get(pk=pk)
-    npk = pc.duplicate()
-    return HttpResponseRedirect(reverse('update-graphite-check', kwargs={'pk': npk}))
-
-
-def duplicate_jenkins_check(request, pk):
-    pc = StatusCheck.objects.get(pk=pk)
-    npk = pc.duplicate()
-    return HttpResponseRedirect(reverse('update-jenkins-check', kwargs={'pk': npk}))
-
-
+def duplicate_check(request, pk):
+    check = StatusCheck.objects.get(pk=pk)
+    new_check = check.duplicate(check.instance_set.all(), check.service_set.all())
+    return HttpResponseRedirect(reverse('update-check', kwargs={'pk': new_check}))
 class StatusCheckResultDetailView(LoginRequiredMixin, DetailView):
     model = StatusCheckResult
     context_object_name = 'result'
@@ -118,130 +104,6 @@ base_widgets = {
     }),
     'importance': forms.RadioSelect(),
 }
-
-
-class StatusCheckForm(SymmetricalForm):
-    symmetrical_fields = ('service_set', 'instance_set')
-
-    service_set = forms.ModelMultipleChoiceField(
-        queryset=Service.objects.all(),
-        required=False,
-        help_text='Link to service(s).',
-        widget=forms.SelectMultiple(
-            attrs={
-                'data-rel': 'chosen',
-                'style': 'width: 70%',
-            },
-        )
-    )
-
-    instance_set = forms.ModelMultipleChoiceField(
-        queryset=Instance.objects.all(),
-        required=False,
-        help_text='Link to instance(s).',
-        widget=forms.SelectMultiple(
-            attrs={
-                'data-rel': 'chosen',
-                'style': 'width: 70%',
-            },
-        )
-    )
-
-
-class GraphiteStatusCheckForm(StatusCheckForm):
-    class Meta:
-        model = GraphiteStatusCheck
-        fields = (
-            'name',
-            'metric',
-            'check_type',
-            'value',
-            'frequency',
-            'active',
-            'importance',
-            'expected_num_hosts',
-            'allowed_num_failures',
-            'debounce',
-        )
-        widgets = dict(**base_widgets)
-        widgets.update({
-            'value': forms.TextInput(attrs={
-                'style': 'width: 100px',
-                'placeholder': 'threshold value',
-            }),
-            'metric': forms.TextInput(attrs={
-                'style': 'width: 100%',
-                'placeholder': 'graphite metric key'
-            }),
-            'check_type': forms.Select(attrs={
-                'data-rel': 'chosen',
-            })
-        })
-
-
-class ICMPStatusCheckForm(StatusCheckForm):
-    class Meta:
-        model = ICMPStatusCheck
-        fields = (
-            'name',
-            'frequency',
-            'importance',
-            'active',
-            'debounce',
-        )
-        widgets = dict(**base_widgets)
-
-
-class HttpStatusCheckForm(StatusCheckForm):
-    class Meta:
-        model = HttpStatusCheck
-        fields = (
-            'name',
-            'endpoint',
-            'username',
-            'password',
-            'text_match',
-            'status_code',
-            'timeout',
-            'verify_ssl_certificate',
-            'frequency',
-            'importance',
-            'active',
-            'debounce',
-        )
-        widgets = dict(**base_widgets)
-        widgets.update({
-            'endpoint': forms.TextInput(attrs={
-                'style': 'width: 100%',
-                'placeholder': 'https://www.arachnys.com',
-            }),
-            'username': forms.TextInput(attrs={
-                'style': 'width: 30%',
-            }),
-            'password': forms.PasswordInput(attrs={
-                'style': 'width: 30%',
-            }),
-            'text_match': forms.TextInput(attrs={
-                'style': 'width: 100%',
-                'placeholder': '[Aa]rachnys\s+[Rr]ules',
-            }),
-            'status_code': forms.TextInput(attrs={
-                'style': 'width: 20%',
-                'placeholder': '200',
-            }),
-        })
-
-
-class JenkinsStatusCheckForm(StatusCheckForm):
-    class Meta:
-        model = JenkinsStatusCheck
-        fields = (
-            'name',
-            'importance',
-            'debounce',
-            'max_queued_build_time',
-        )
-        widgets = dict(**base_widgets)
 
 
 class InstanceForm(SymmetricalForm):
@@ -379,103 +241,41 @@ class StatusCheckReportForm(forms.Form):
                 check.success_rate = results.filter(succeeded=True).count() / float(len(results)) * 100
         return checks
 
-
-class CheckCreateView(LoginRequiredMixin, CreateView):
+class StatusCheckViewMixin(LoginRequiredMixin):
     template_name = 'cabotapp/statuscheck_form.html'
+    model = StatusCheck
+
+    # Merge the forms. CheckConfigForm has special methods for handling this.
+    def get_form_class(self):
+        from .forms import StatusCheckForm
+        class FormClass(StatusCheckForm, self.get_status_check_plugin().config_form):
+            pass
+        return FormClass
+
+    def get_status_check_plugin(self):
+        plugin_pk = self.request.GET['type']
+        return StatusCheckPluginModel.objects.get(pk=plugin_pk)
 
     def form_valid(self, form):
-        form.instance.created_by = self.request.user
-        return super(CheckCreateView, self).form_valid(form)
+        instance = form.save(commit=False)
+        instance.check_plugin = self.get_status_check_plugin()
+        instance.save()
+        form.save_m2m()
+        return super(StatusCheckViewMixin, self).form_valid(form)
+    
+    def get_context_data(self, **kwargs):
+        context = super(StatusCheckViewMixin, self).get_context_data(**kwargs)
+        context['check_plugin'] = self.get_status_check_plugin()
+        return context
 
-    def get_initial(self):
-        if self.initial:
-            initial = self.initial
-        else:
-            initial = {}
-        metric = self.request.GET.get('metric')
-        if metric:
-            initial['metric'] = metric
-        service_id = self.request.GET.get('service')
-        instance_id = self.request.GET.get('instance')
-
-        if service_id:
-            try:
-                service = Service.objects.get(id=service_id)
-                initial['service_set'] = [service]
-            except Service.DoesNotExist:
-                pass
-
-        if instance_id:
-            try:
-                instance = Instance.objects.get(id=instance_id)
-                initial['instance_set'] = [instance]
-            except Instance.DoesNotExist:
-                pass
-
-        return initial
-
-    def get_success_url(self):
-        if self.request.GET.get('service'):
-            return reverse('service', kwargs={'pk': self.request.GET.get('service')})
-        if self.request.GET.get('instance'):
-            return reverse('instance', kwargs={'pk': self.request.GET.get('instance')})
-        return reverse('checks')
+class StatusCheckCreateView(StatusCheckViewMixin, CreateView):
+    pass
 
 
-class CheckUpdateView(LoginRequiredMixin, UpdateView):
-    template_name = 'cabotapp/statuscheck_form.html'
-
-    def get_success_url(self):
-        return reverse('check', kwargs={'pk': self.object.id})
-
-
-class ICMPCheckCreateView(CheckCreateView):
-    model = ICMPStatusCheck
-    form_class = ICMPStatusCheckForm
-
-
-class ICMPCheckUpdateView(CheckUpdateView):
-    model = ICMPStatusCheck
-    form_class = ICMPStatusCheckForm
-
-
-class GraphiteCheckUpdateView(CheckUpdateView):
-    model = GraphiteStatusCheck
-    form_class = GraphiteStatusCheckForm
-
-
-class GraphiteCheckCreateView(CheckCreateView):
-    model = GraphiteStatusCheck
-    form_class = GraphiteStatusCheckForm
-
-
-class HttpCheckCreateView(CheckCreateView):
-    model = HttpStatusCheck
-    form_class = HttpStatusCheckForm
-
-
-class HttpCheckUpdateView(CheckUpdateView):
-    model = HttpStatusCheck
-    form_class = HttpStatusCheckForm
-
-
-class JenkinsCheckCreateView(CheckCreateView):
-    model = JenkinsStatusCheck
-    form_class = JenkinsStatusCheckForm
-
-    def form_valid(self, form):
-        form.instance.frequency = 1
-        return super(JenkinsCheckCreateView, self).form_valid(form)
-
-
-class JenkinsCheckUpdateView(CheckUpdateView):
-    model = JenkinsStatusCheck
-    form_class = JenkinsStatusCheckForm
-
-    def form_valid(self, form):
-        form.instance.frequency = 1
-        return super(JenkinsCheckUpdateView, self).form_valid(form)
-
+class StatusCheckUpdateView(StatusCheckViewMixin, UpdateView):
+    def get_status_check_plugin(self):
+        instance = StatusCheck.objects.get(pk=self.kwargs['pk'])
+        return instance.check_plugin
 
 class StatusCheckListView(LoginRequiredMixin, ListView):
     model = StatusCheck
@@ -504,85 +304,66 @@ class StatusCheckDetailView(LoginRequiredMixin, DetailView):
             '-time_complete')[:100]
         return super(StatusCheckDetailView, self).render_to_response(context, *args, **kwargs)
 
+class UpdateUserView(LoginRequiredMixin, UpdateView):
+    model = User
+    fields = ['first_name', 'last_name', 'email', 'is_active']
+    template_name = 'cabotapp/alertpluginuserdata_form.html'
 
-class UserProfileUpdateView(LoginRequiredMixin, View):
-    model = AlertPluginUserData
+    def get_object(self):
+        return User.objects.get(pk=self.kwargs['pk'])
 
-    def get(self, *args, **kwargs):
-        return HttpResponseRedirect(reverse('update-alert-user-data', args=(self.kwargs['pk'], u'General')))
+    # Add the list of plugins to the template context to display in the sidebar
+    def get_context_data(self, **kwargs):
+        context = super(UpdateUserView, self).get_context_data(**kwargs)
+        alert_plugins = [p for p in AlertPluginModel.objects.all() if p.plugin_class and p.plugin_class.user_config_form]
+        context['alert_plugins'] = alert_plugins
+        context['form_title'] = 'User Profile'
+        context['user_being_updated'] = self.object
+
+        return context
+
+    def get_success_url(self):
+        return reverse('update-user', kwargs={'pk': self.kwargs['pk']})
 
 
-class UserProfileUpdateAlert(LoginRequiredMixin, View):
+class UpdateUserAlertPluginDataView(LoginRequiredMixin, View):
     template = loader.get_template('cabotapp/alertpluginuserdata_form.html')
-    model = AlertPluginUserData
 
-    def get(self, request, pk, alerttype):
-        try:
-            profile = UserProfile.objects.get(user=pk)
-        except UserProfile.DoesNotExist:
-            user = User.objects.get(id=pk)
-            profile = UserProfile(user=user)
-            profile.save()
-
-        profile.user_data()
-
-        if alerttype == u'General':
-            form = GeneralSettingsForm(initial={
-                'first_name': profile.user.first_name,
-                'last_name': profile.user.last_name,
-                'email_address': profile.user.email,
-                'enabled': profile.user.is_active,
-            })
-        else:
-            plugin_userdata = self.model.objects.get(title=alerttype, user=profile)
-            form_model = get_object_form(type(plugin_userdata))
-            form = form_model(instance=plugin_userdata)
+    def get(self, request, pk, alert_plugin_pk):
+        user = User.objects.get(pk=pk)
+        plugin = AlertPluginModel.objects.get(pk=alert_plugin_pk)
+        initial = {}
+        for ud in AlertPluginUserData.objects.filter(user=user, plugin=plugin):
+            initial[ud.key] = ud.value
+        
+        form = plugin.plugin_class.user_config_form(initial=initial)
+        alert_plugins = [p for p in AlertPluginModel.objects.all() if p.plugin_class and p.plugin_class.user_config_form]
 
         c = RequestContext(request, {
             'form': form,
-            'alert_preferences': profile.user_data(),
+            'alert_plugins': alert_plugins,
+            'form_title': plugin.name + ' Settings',
+            'user_being_updated': user,
         })
+
         return HttpResponse(self.template.render(c))
 
-    def post(self, request, pk, alerttype):
-        profile = UserProfile.objects.get(user=pk)
-        if alerttype == u'General':
-            form = GeneralSettingsForm(request.POST)
-            if form.is_valid():
-                profile.user.first_name = form.cleaned_data['first_name']
-                profile.user.last_name = form.cleaned_data['last_name']
-                profile.user.is_active = form.cleaned_data['enabled']
-                profile.user.email = form.cleaned_data['email_address']
-                profile.user.save()
-                return HttpResponseRedirect(reverse('update-alert-user-data', args=(self.kwargs['pk'], alerttype)))
+    def post(self, request, pk, alert_plugin_pk):
+        user = User.objects.get(pk=pk)
+        plugin = PluginModel.objects.get(pk=alert_plugin_pk)
 
-        else:
-            plugin_userdata = self.model.objects.get(title=alerttype, user=profile)
-            form_model = get_object_form(type(plugin_userdata))
-            form = form_model(request.POST, instance=plugin_userdata)
-            form.save()
-            if form.is_valid():
-                return HttpResponseRedirect(reverse('update-alert-user-data', args=(self.kwargs['pk'], alerttype)))
+        form = plugin.plugin_class.user_config_form(request.POST)
 
+        if form.is_valid():
+            for key in form.cleaned_data:
+                ud, created = AlertPluginUserData.objects.get_or_create(
+                        user=user,
+                        plugin=plugin,
+                        key=key)
+                ud.value = form.cleaned_data[key]
+                ud.save()
 
-def get_object_form(model_type):
-    class AlertPreferencesForm(forms.ModelForm):
-        class Meta:
-            model = model_type
-
-        def is_valid(self):
-            return True
-
-    return AlertPreferencesForm
-
-
-class GeneralSettingsForm(forms.Form):
-    first_name = forms.CharField(label='First name', max_length=30, required=False)
-    last_name = forms.CharField(label='Last name', max_length=30, required=False)
-    email_address = forms.CharField(label='Email Address', max_length=75,
-                                    required=False)  # We use 75 and not the 254 because Django 1.6.8 only supports
-    # 75. See commit message for details.
-    enabled = forms.BooleanField(label='Enabled', required=False)
+        return HttpResponseRedirect(reverse('update-user-userdata', kwargs={'pk': pk, 'alert_plugin_pk': alert_plugin_pk}))
 
 
 class InstanceListView(LoginRequiredMixin, ListView):
@@ -640,23 +421,23 @@ class InstanceCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         ret = super(InstanceCreateView, self).form_valid(form)
-        if self.object.status_checks.filter(polymorphic_ctype__model='icmpstatuscheck').count() == 0:
+        if StatusCheckPluginModel.objects.filter(slug='cabot_check_icmp').exists():
             self.generate_default_ping_check(self.object)
         return ret
 
     def generate_default_ping_check(self, obj):
-        pc = ICMPStatusCheck(
-            name="Default Ping Check for %s" % obj.name,
-            frequency=5,
-            importance=Service.ERROR_STATUS,
-            debounce=0,
-            created_by=None,
-        )
-        pc.save()
-        obj.status_checks.add(pc)
+        icmp_check_plugin = StatusCheckPluginModel.objects.get(slug='cabot_check_icmp')
 
-    def get_success_url(self):
-        return reverse('instance', kwargs={'pk': self.object.id})
+        new_check = StatusCheck.objects.create(
+            name = 'Default Ping Check for {}'.format(obj.name),
+            check_plugin = icmp_check_plugin,
+            frequency = 5,
+            importance = Service.ERROR_STATUS,
+            debounce = 0,
+            created_by = None
+            )
+
+        obj.status_checks.add(new_check)
 
     def get_initial(self):
         if self.initial:
@@ -692,8 +473,6 @@ def remove_acknowledgement(request, pk):
 class ServiceCreateView(LoginRequiredMixin, CreateView):
     model = Service
     form_class = ServiceForm
-
-    alert.update_alert_plugins()
 
     def get_success_url(self):
         return reverse('service', kwargs={'pk': self.object.id})
@@ -747,6 +526,55 @@ class StatusCheckReportView(LoginRequiredMixin, TemplateView):
         if form.is_valid():
             return {'checks': form.get_report(), 'service': form.cleaned_data['service']}
 
+class PluginListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
+    model = PluginModel
+    template_name = 'cabotapp/plugins_list.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(PluginListView, self).get_context_data(**kwargs)
+        context['failed_imports'] = FailedImport.objects.all()
+        return context
+
+class TestAlertPluginForm(forms.Form):
+    service = forms.ModelChoiceField(
+        queryset=Service.objects.all(),
+        required=True,
+    )
+    users = forms.ModelMultipleChoiceField(
+        queryset=User.objects.all(),
+        required=True,
+        widget=forms.SelectMultiple(
+            attrs={
+                'data-rel': 'chosen',
+                'style': 'width: 70%',
+            },
+        )
+    )
+
+
+class PluginDetailView(LoginRequiredMixin, SuperuserRequiredMixin, DetailView):
+    model = PluginModel
+    context_object_name = 'plugin'
+    template_name = 'cabotapp/plugins_detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(PluginDetailView, self).get_context_data(**kwargs)
+        context['form'] = TestAlertPluginForm()
+        context['isAlertPlugin'] = isinstance(self.object, AlertPluginModel)
+        context['isStatusCheckPlugin'] = isinstance(self.object, StatusCheckPluginModel)
+        return context
+
+    def post(self, request, pk):
+        form = TestAlertPluginForm(request.POST)
+        if form.is_valid():
+            plugin = AlertPluginModel.objects.get(pk=pk)
+            plugin.send_alert(
+                service=form.cleaned_data['service'],
+                users=form.cleaned_data['users'],
+                duty_officers=[]
+                )
+        return HttpResponseRedirect(reverse('plugin', kwargs={'pk': pk}))
+
 
 # Misc JSON api and other stuff
 
@@ -765,20 +593,3 @@ def checks_run_recently(request):
 def jsonify(d):
     return HttpResponse(json.dumps(d), content_type='application/json')
 
-
-@login_required
-def graphite_api_data(request):
-    metric = request.GET.get('metric')
-    data = None
-    matching_metrics = None
-    try:
-        data = get_data(metric)
-    except requests.exceptions.RequestException, e:
-        pass
-    if not data:
-        try:
-            matching_metrics = get_matching_metrics(metric)
-        except requests.exceptions.RequestException, e:
-            return jsonify({'status': 'error', 'message': str(e)})
-        matching_metrics = {'metrics': matching_metrics}
-    return jsonify({'status': 'ok', 'data': data, 'matchingMetrics': matching_metrics})
