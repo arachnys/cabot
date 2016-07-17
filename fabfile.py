@@ -29,8 +29,10 @@ def _ensure_dirs():
 
 def _setup_venv():
     with settings(warn_only=True):
-        if sudo('test -d %s' % VENV_DIR).failed:
-            sudo('virtualenv %s' % VENV_DIR)
+        venv_doesnt_exist = sudo('test -d %s' % VENV_DIR).failed
+    if venv_doesnt_exist:
+        # without --setuptools, you get `pkg_resources not found` error
+        sudo('virtualenv --setuptools %s' % VENV_DIR, user='ubuntu')
 
 
 def install_requirements(deploy_path=DEPLOY_PATH):
@@ -42,7 +44,7 @@ def run_migrations(deploy_path=DEPLOY_PATH):
     with cd(deploy_path):
         with prefix("source {venv}/bin/activate".format(venv=VENV_DIR)):
             sudo(
-                "foreman run -e conf/{env}.env python manage.py syncdb".format(env=env.deploy_version))
+                "foreman run -e conf/{env}.env python manage.py syncdb --noinput".format(env=env.deploy_version))
             sudo(
                 "foreman run -e conf/{env}.env python manage.py migrate cabotapp --noinput".format(env=env.deploy_version))
             # Wrap in failure for legacy reasons
@@ -51,6 +53,25 @@ def run_migrations(deploy_path=DEPLOY_PATH):
             with settings(warn_only=True):
                 sudo(
                     "foreman run -e conf/{env}.env python manage.py migrate djcelery --noinput".format(env=env.deploy_version))
+
+
+def create_user(username, password, email):
+    """ creates a django user on the cabot server.  existing users
+        are clobbered so this also functions as a crude password reset.
+    """
+    code = (
+        """username='{username}';"""
+        """password='{password}';"""
+        """email='{email}';"""
+        """from django.contrib.auth.models import User;"""
+        """User.objects.filter(username=username).delete();"""
+        """User.objects.create_superuser(username, email, password);""")
+    code = code.format(username=username, password=password, email=email)
+    shell_cmd = "foreman run -e conf/production.env python manage.py shell"
+    with prefix("source ~ubuntu/venv/bin/activate"):
+        with cd("~ubuntu/cabot"):
+            sudo('printf "{0}"|{1}'.format(code, shell_cmd))
+
 
 
 def collect_static(deploy_path=DEPLOY_PATH):
@@ -82,8 +103,9 @@ def production():
 
 def restart():
     with settings(warn_only=True):
-        if sudo('restart cabot').failed:
-            sudo('start cabot')
+        restart_failed = sudo('restart cabot').failed
+    if restart_failed:
+        sudo('start cabot')
 
 
 def stop():
@@ -123,6 +145,7 @@ def deploy(deploy_version=None):
     rsync_project(
         remote_dir=deploy_path,
         local_dir='./',
+        ssh_opts='-o StrictHostKeyChecking=no',
         exclude=['.git', 'backups', 'venv',
                  'static/CACHE', '.vagrant', '*.pyc', 'dev.db'],
     )
