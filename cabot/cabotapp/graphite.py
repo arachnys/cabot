@@ -10,13 +10,19 @@ graphite_from = settings.GRAPHITE_FROM
 auth = (user, password)
 
 
-def get_data(target_pattern):
+def get_data(target_pattern, mins_to_check=None):
+
+    if mins_to_check:
+        _from = '-%dminute' % mins_to_check
+    else:
+        _from = graphite_from
+
     resp = requests.get(
         graphite_api + 'render', auth=auth,
         params={
             'target': target_pattern,
             'format': 'json',
-            'from': graphite_from,
+            'from': _from,
         }
     )
     resp.raise_for_status()
@@ -72,7 +78,7 @@ def parse_metric(metric, mins_to_check=5, utcnow=None):
         'series': [],
     }
     try:
-        data = get_data(metric)
+        data = get_data(metric, mins_to_check)
     except requests.exceptions.RequestException, e:
         ret['error'] = 'Error getting data from Graphite: %s' % e
         ret['raw'] = ret['error']
