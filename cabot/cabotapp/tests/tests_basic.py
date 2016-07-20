@@ -242,6 +242,7 @@ class TestCheckRun(LocalTestCase):
     def test_graphite_run(self):
         checkresults = self.graphite_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 2)
+        self.graphite_check.utcnow = 1387818601 # see graphite_response.json for this magic timestamp
         self.graphite_check.run()
         checkresults = self.graphite_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 3)
@@ -291,8 +292,8 @@ class TestCheckRun(LocalTestCase):
 
     @patch('cabot.cabotapp.graphite.requests.get', fake_graphite_series_response)
     def test_graphite_series_run(self):
-        jsn = parse_metric('fake.pattern')
-        self.assertEqual(jsn['average_value'], 59.86)
+        jsn = parse_metric('fake.pattern', utcnow=1387818601)
+        self.assertLess(abs(jsn['average_value']-53.26), 0.1)
         self.assertEqual(jsn['series'][0]['max'], 151.0)
         self.assertEqual(jsn['series'][0]['min'], 0.1)
 

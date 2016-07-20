@@ -612,6 +612,7 @@ def minimize_targets(targets):
 
 
 class GraphiteStatusCheck(StatusCheck):
+
     class Meta(StatusCheck.Meta):
         proxy = True
 
@@ -634,10 +635,12 @@ class GraphiteStatusCheck(StatusCheck):
             return "%s %s %0.1f" % (value, self.check_type, float(self.value))
 
     def _run(self):
+        if not hasattr(self, 'utcnow'):
+            self.utcnow = None
         result = StatusCheckResult(check=self)
 
         failures = []
-        graphite_output = parse_metric(self.metric, mins_to_check=self.frequency)
+        graphite_output = parse_metric(self.metric, mins_to_check=self.frequency, utcnow=self.utcnow)
 
         try:
             result.raw_data = json.dumps(graphite_output['raw'])

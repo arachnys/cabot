@@ -1,6 +1,7 @@
 from django.conf import settings
 import requests
 import logging
+import time
 
 graphite_api = settings.GRAPHITE_API
 user = settings.GRAPHITE_USER
@@ -52,7 +53,7 @@ def get_all_metrics(limit=None):
     return metrics
 
 
-def parse_metric(metric, mins_to_check=5):
+def parse_metric(metric, mins_to_check=5, utcnow=None):
     """
     Returns dict with:
     - num_series_with_data: Number of series with data
@@ -61,6 +62,8 @@ def parse_metric(metric, mins_to_check=5):
     - min
     - average_value
     """
+    if utcnow is None:
+        utcnow = time.time()
     ret = {
         'num_series_with_data': 0,
         'num_series_no_data': 0,
@@ -78,7 +81,7 @@ def parse_metric(metric, mins_to_check=5):
     all_values = []
     for target in data:
         series = {'values': [
-            float(t[0]) for t in target['datapoints'][-mins_to_check:] if t[0] is not None]}
+            float(t[0]) for t in target['datapoints'] if validate_datapoint(t, mins_to_check, utcnow)]}
         series["target"] = target["target"]
         all_values.extend(series['values'])
         if series['values']:
@@ -94,4 +97,15 @@ def parse_metric(metric, mins_to_check=5):
     ret['all_values'] = all_values
     ret['raw'] = data
     return ret
+
+def validate_datapoint(datapoint, mins_to_check, utcnow):
+    val, timestamp = datapoint
+    secs_to_check = 60 * mins_to_check
+    if val is None:
+        return False
+    if timestamp > (utcnow - secs_to_check):
+        return True
+    else:
+        return False
+
 
