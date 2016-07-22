@@ -26,7 +26,7 @@ baseurl: ''
 permalink: none
 
 # Syntax highlighting
-pygments: true
+highlighter: rouge
 
 # Since these are pages, it doesn't really matter
 future: true
