@@ -35,7 +35,7 @@ future: true
 exclude: ['bin', 'README.md']
 
 # Use the redcarpet Markdown renderer
-markdown: redcarpet
+markdown: kramdown
 redcarpet:
     extensions: [
         'no_intra_emphasis',
