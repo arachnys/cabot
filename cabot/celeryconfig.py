@@ -2,6 +2,8 @@ import os
 from datetime import timedelta
 
 BROKER_URL = os.environ['CELERY_BROKER_URL']
+# Set environment variable if you want to run tests without a redis instance
+CELERY_ALWAYS_EAGER = os.environ.get('CELERY_ALWAYS_EAGER', False)
 CELERY_IMPORTS = ('cabot.cabotapp.tasks', )
 CELERYBEAT_SCHEDULER = "djcelery.schedulers.DatabaseScheduler"
 CELERY_TASK_SERIALIZER = "json"

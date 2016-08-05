@@ -1,13 +1,9 @@
-import os
-import os.path
-import sys
-import random
 import logging
+import random
 
 from celery import Celery
 from celery._state import set_default_app
 from celery.task import task
-
 from django.conf import settings
 from django.utils import timezone
 
@@ -39,7 +35,7 @@ def run_status_check(check_or_id):
 @task(ignore_result=True)
 def run_all_checks():
     from .models import StatusCheck
-    from datetime import timedelta, datetime
+    from datetime import timedelta
     checks = StatusCheck.objects.all()
     seconds = range(60)
     for check in checks:

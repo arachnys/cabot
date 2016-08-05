@@ -1,8 +1,8 @@
 from django.contrib import admin
 from .models import (UserProfile, Service, Shift,
-    ServiceStatusSnapshot, StatusCheck, StatusCheckResult,
-    Instance, AlertAcknowledgement)
-from .alert  import AlertPluginUserData, AlertPlugin
+                     ServiceStatusSnapshot, StatusCheck, StatusCheckResult,
+                     Instance, AlertAcknowledgement)
+from .alert import AlertPluginUserData, AlertPlugin
 
 admin.site.register(UserProfile)
 admin.site.register(Shift)
