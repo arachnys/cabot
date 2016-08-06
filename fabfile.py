@@ -83,7 +83,7 @@ def production():
     """
     Select production instance(s)
     """
-    env.hosts = ['cabot.arachnys.com']
+    env.hosts = ['cabot.iron.io']
 
 
 def restart():
