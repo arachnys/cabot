@@ -16,6 +16,9 @@ ADMINS = (
 
 MANAGERS = ADMINS
 
+if os.environ.get('CABOT_FROM_EMAIL'):
+    DEFAULT_FROM_EMAIL = os.environ['CABOT_FROM_EMAIL']
+
 DATABASES = {'default': dj_database_url.parse(os.environ["DATABASE_URL"])}
 
 if not DEBUG:
@@ -123,7 +126,6 @@ INSTALLED_APPS = (
     'compressor',
     'polymorphic',
     'djcelery',
-    'mptt',
     'jsonify',
     'cabot.cabotapp',
     'rest_framework',
@@ -152,6 +154,7 @@ EMAIL_PORT = int(os.environ.get('SES_PORT', 25))
 EMAIL_HOST_USER = os.environ.get('SES_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('SES_PASS', '')
 EMAIL_BACKEND = os.environ.get('SES_BACKEND', 'django_smtp_ssl.SSLEmailBackend')
+EMAIL_USE_TLS = os.environ.get('SES_USE_TLS', 0)
 
 COMPRESS_OFFLINE = not DEBUG
 
@@ -259,3 +262,5 @@ AUTH_LDAP = os.environ.get('AUTH_LDAP', 'false')
 if AUTH_LDAP.lower() == "true":
     from settings_ldap import *
     AUTHENTICATION_BACKENDS += tuple(['django_auth_ldap.backend.LDAPBackend'])
+
+EXPOSE_USER_API = os.environ.get('EXPOSE_USER_API', False)
