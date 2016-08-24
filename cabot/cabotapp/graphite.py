@@ -60,14 +60,6 @@ def get_all_metrics(limit=None):
 
 
 def parse_metric(metric, mins_to_check=5, utcnow=None):
-    """
-    Returns dict with:
-    - num_series_with_data: Number of series with data
-    - num_series_no_data: Number of total series
-    - max
-    - min
-    - average_value
-    """
     if utcnow is None:
         utcnow = time.time()
     ret = {
