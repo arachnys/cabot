@@ -644,7 +644,7 @@ class GraphiteStatusCheck(StatusCheck):
         last_result = self.last_result()
         if last_result:
             last_result_started = last_result.time
-            time_to_check = max(self.frequency, ((timezone.now() - last_result_started).total_seconds() / 60))
+            time_to_check = max(self.frequency, ((timezone.now() - last_result_started).total_seconds() / 60) + 1)
         else:
             time_to_check = self.frequency
 
