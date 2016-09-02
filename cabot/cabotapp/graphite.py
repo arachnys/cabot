@@ -1,6 +1,7 @@
 from django.conf import settings
 import requests
 import logging
+import time
 
 graphite_api = settings.GRAPHITE_API
 user = settings.GRAPHITE_USER
@@ -9,13 +10,19 @@ graphite_from = settings.GRAPHITE_FROM
 auth = (user, password)
 
 
-def get_data(target_pattern):
+def get_data(target_pattern, mins_to_check=None):
+
+    if mins_to_check:
+        _from = '-%dminute' % mins_to_check
+    else:
+        _from = graphite_from
+
     resp = requests.get(
         graphite_api + 'render', auth=auth,
         params={
             'target': target_pattern,
             'format': 'json',
-            'from': graphite_from,
+            'from': _from,
         }
     )
     resp.raise_for_status()
@@ -52,15 +59,9 @@ def get_all_metrics(limit=None):
     return metrics
 
 
-def parse_metric(metric, mins_to_check=5):
-    """
-    Returns dict with:
-    - num_series_with_data: Number of series with data
-    - num_series_no_data: Number of total series
-    - max
-    - min
-    - average_value
-    """
+def parse_metric(metric, mins_to_check=5, utcnow=None):
+    if utcnow is None:
+        utcnow = time.time()
     ret = {
         'num_series_with_data': 0,
         'num_series_no_data': 0,
@@ -69,7 +70,7 @@ def parse_metric(metric, mins_to_check=5):
         'series': [],
     }
     try:
-        data = get_data(metric)
+        data = get_data(metric, mins_to_check)
     except requests.exceptions.RequestException, e:
         ret['error'] = 'Error getting data from Graphite: %s' % e
         ret['raw'] = ret['error']
@@ -78,7 +79,7 @@ def parse_metric(metric, mins_to_check=5):
     all_values = []
     for target in data:
         series = {'values': [
-            float(t[0]) for t in target['datapoints'][-mins_to_check:] if t[0] is not None]}
+            float(t[0]) for t in target['datapoints'] if validate_datapoint(t, mins_to_check, utcnow)]}
         series["target"] = target["target"]
         all_values.extend(series['values'])
         if series['values']:
@@ -94,4 +95,15 @@ def parse_metric(metric, mins_to_check=5):
     ret['all_values'] = all_values
     ret['raw'] = data
     return ret
+
+def validate_datapoint(datapoint, mins_to_check, utcnow):
+    val, timestamp = datapoint
+    secs_to_check = 60 * mins_to_check
+    if val is None:
+        return False
+    if timestamp > (utcnow - secs_to_check):
+        return True
+    else:
+        return False
+
 

@@ -12,12 +12,14 @@ from cabot.cabotapp.models import (
     GraphiteStatusCheck, JenkinsStatusCheck,
     HttpStatusCheck, ICMPStatusCheck, Service, Instance,
     StatusCheckResult, UserProfile, minimize_targets)
+from cabot.cabotapp.calendar import get_events
 from cabot.cabotapp.views import StatusCheckReportForm
 from django.contrib.auth.models import Permission
 from django.contrib.auth.models import User
 from django.core import mail
 from django.core.urlresolvers import reverse
 from django.test.client import Client
+from django.test.utils import override_settings
 from django.utils import timezone
 from mock import Mock, patch
 from rest_framework import status, HTTP_HEADER_ENCODING
@@ -161,6 +163,13 @@ def fake_http_404_response(*args, **kwargs):
     return resp
 
 
+def fake_gcal_response(*args, **kwargs):
+    resp = Mock()
+    resp.content = get_content('gcal_response.ics')
+    resp.status_code = 200
+    return resp
+
+
 def throws_timeout(*args, **kwargs):
     raise requests.RequestException(u'фиктивная ошибка innit')
 
@@ -233,6 +242,7 @@ class TestCheckRun(LocalTestCase):
     def test_graphite_run(self):
         checkresults = self.graphite_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 2)
+        self.graphite_check.utcnow = 1387818601 # see graphite_response.json for this magic timestamp
         self.graphite_check.run()
         checkresults = self.graphite_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 3)
@@ -282,8 +292,8 @@ class TestCheckRun(LocalTestCase):
 
     @patch('cabot.cabotapp.graphite.requests.get', fake_graphite_series_response)
     def test_graphite_series_run(self):
-        jsn = parse_metric('fake.pattern')
-        self.assertEqual(jsn['average_value'], 59.86)
+        jsn = parse_metric('fake.pattern', utcnow=1387818601)
+        self.assertLess(abs(jsn['average_value']-53.26), 0.1)
         self.assertEqual(jsn['series'][0]['max'], 151.0)
         self.assertEqual(jsn['series'][0]['min'], 0.1)
 
@@ -415,6 +425,13 @@ class TestInstances(LocalTestCase):
         self.assertEqual(len(old.status_checks.all()), 1)
         self.assertNotEqual(new.status_checks.all()[0], old.status_checks.all()[0])
 
+
+class TestDutyRota(LocalTestCase):
+
+    @patch('cabot.cabotapp.models.requests.get', fake_gcal_response)
+    def test_duty_rota(self):
+        events = get_events()
+        self.assertEqual(events[0]['summary'], 'troels')
 
 class TestWebInterface(LocalTestCase):
 
