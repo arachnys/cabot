@@ -16,4 +16,4 @@ before_script:
 
 script:
  - docker-compose build
- - docker-compose run web test python manage.py test cabot
+ - docker-compose run web python manage.py test cabot
