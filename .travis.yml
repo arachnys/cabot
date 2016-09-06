@@ -13,7 +13,6 @@ before_install:
 # setup databases
 before_script:
  - cp conf/development.env.example conf/development.env
- - foreman run python manage.py syncdb --migrate --noinput
 
 script:
  - docker-compose build
