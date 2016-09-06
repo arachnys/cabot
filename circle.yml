@@ -4,6 +4,7 @@ machine:
 
 dependencies:
   pre:
+    - sudo apt-get install python-dev
     - sudo pip install --upgrade docker-compose==1.8.0
 
 test:
