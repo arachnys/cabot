@@ -1,0 +1,19 @@
+machine:
+  pre:
+    - curl -sSL https://s3.amazonaws.com/circle-downloads/install-circleci-docker.sh | bash -s -- 1.10.0
+  services:
+    - docker
+
+dependencies:
+  override:
+    - sudo apt-get install python-dev
+    - sudo pip install --upgrade docker-compose==1.8.0
+
+test:
+  pre:
+    - cp conf/development.env.example conf/development.env
+    - docker-compose build
+    - docker-compose up -d
+    - sleep 20
+  override:
+    - docker-compose run web python manage.py test cabot

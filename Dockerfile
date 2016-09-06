@@ -22,10 +22,14 @@ RUN ln -s `which nodejs` /usr/bin/node
 
 COPY requirements.txt ./requirements.txt
 
+RUN pip install --upgrade pip
+
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY requirements-plugins.txt ./requirements-plugins.txt
 RUN pip install --no-cache-dir -r requirements-plugins.txt
+
+RUN pip install ipdb
 
 
 ADD . /code/
