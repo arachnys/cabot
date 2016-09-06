@@ -1,33 +1,20 @@
-language: python
-
-python:
- - "2.7"
-
+sudo: required
 services:
- - redis-server
+ - docker
 
-# install deps
-install:
- - sudo apt-get update
- - sudo apt-get install -y python-software-properties
- - sudo apt-get install gcc python-dev git python-pip libpq-dev npm rubygems
- -
- - sudo npm install -g coffee-script less@1.3 --registry http://registry.npmjs.org/
- - gem install foreman
- - 
- - sudo pip install virtualenv
- - sudo virtualenv venv
- - sudo ./venv/bin/pip install --upgrade setuptools
- - CABOT_PLUGINS_ENABLED=cabot_alert_hipchat,cabot_alert_twilio,cabot_alert_email
- - sudo ./venv/bin/pip install --timeout=30 --exists-action=w -e . --no-use-wheel
+env:
+  COMPOSE_VERSION: 1.8.0
+
+before_install:
+ - curl -L https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
+ - chmod +x docker-compose
+ - sudo mv docker-compose /usr/local/bin
 
 # setup databases
 before_script:
  - cp conf/development.env.example conf/development.env
- - cp conf/production.env.example  conf/production.env
- - . venv/bin/activate
  - foreman run python manage.py syncdb --migrate --noinput
 
-# tests
 script:
- - foreman run python manage.py test cabot
+ - docker-compose build
+ - docker-compose run web test python manage.py test cabot
