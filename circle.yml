@@ -1,0 +1,13 @@
+machine:
+  services:
+    - docker
+
+dependencies:
+  pre:
+    - sudo pip install --upgrade docker-compose==1.8.0
+
+test:
+  pre:
+    - docker-compose build
+  override:
+    - docker-compose run web python manage.py test cabot
