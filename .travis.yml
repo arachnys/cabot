@@ -15,6 +15,7 @@ before_script:
  - cp conf/development.env.example conf/development.env
  - docker-compose build
  - docker-compose up -d
+ - sleep 20
 
 script:
  - docker-compose run web python manage.py test cabot
