@@ -536,11 +536,11 @@ class TestAPI(LocalTestCase):
                     'name': u'Service',
                     'users_to_notify': [],
                     'alerts_enabled': True,
-                    'status_checks': [1, 2, 3],
+                    'status_checks': [5, 6, 7],
                     'alerts': [],
                     'hackpad_id': None,
                     'instances': [],
-                    'id': 1,
+                    'id': 2,
                     'url': u'',
                     'overall_status': u'PASSING'
                 },
@@ -550,11 +550,11 @@ class TestAPI(LocalTestCase):
                     'name': u'Hello',
                     'users_to_notify': [],
                     'alerts_enabled': True,
-                    'status_checks': [4],
+                    'status_checks': [8],
                     'alerts': [],
                     'hackpad_id': None,
                     'address': u'192.168.0.1',
-                    'id': 1,
+                    'id': 2,
                     'overall_status': u'PASSING'
                 },
             ],
@@ -565,7 +565,7 @@ class TestAPI(LocalTestCase):
                     'importance': u'ERROR',
                     'frequency': 5,
                     'debounce': 0,
-                    'id': 1,
+                    'id': 5,
                     'calculated_status': u'passing',
                 },
                 {
@@ -574,7 +574,7 @@ class TestAPI(LocalTestCase):
                     'importance': u'ERROR',
                     'frequency': 5,
                     'debounce': 0,
-                    'id': 2,
+                    'id': 6,
                     'calculated_status': u'passing',
                 },
                 {
@@ -583,7 +583,7 @@ class TestAPI(LocalTestCase):
                     'importance': u'CRITICAL',
                     'frequency': 5,
                     'debounce': 0,
-                    'id': 3,
+                    'id': 7,
                     'calculated_status': u'passing',
                 },
                 {
@@ -592,7 +592,7 @@ class TestAPI(LocalTestCase):
                     'importance': u'ERROR',
                     'frequency': 5,
                     'debounce': 0,
-                    'id': 4,
+                    'id': 8,
                     'calculated_status': u'passing',
                 },
             ],
@@ -608,7 +608,7 @@ class TestAPI(LocalTestCase):
                     'value': u'9.0',
                     'expected_num_hosts': 0,
                     'allowed_num_failures': 0,
-                    'id': 1,
+                    'id': 5,
                     'calculated_status': u'passing',
                 },
             ],
@@ -626,7 +626,7 @@ class TestAPI(LocalTestCase):
                     'status_code': u'200',
                     'timeout': 10,
                     'verify_ssl_certificate': True,
-                    'id': 3,
+                    'id': 7,
                     'calculated_status': u'passing',
                 },
             ],
@@ -638,7 +638,7 @@ class TestAPI(LocalTestCase):
                     'frequency': 5,
                     'debounce': 0,
                     'max_queued_build_time': 10,
-                    'id': 2,
+                    'id': 6,
                     'calculated_status': u'passing',
                 },
             ],
@@ -649,7 +649,7 @@ class TestAPI(LocalTestCase):
                     'importance': u'ERROR',
                     'frequency': 5,
                     'debounce': 0,
-                    'id': 4,
+                    'id': 8,
                     'calculated_status': u'passing',
                 },
             ],
@@ -768,7 +768,7 @@ class TestAPI(LocalTestCase):
     def test_posts(self):
         for model, items in self.post_data.items():
             for item in items:
-                # hackpad_id and other null text fields omitted on create 
+                # hackpad_id and other null text fields omitted on create
                 # for now due to rest_framework bug:
                 # https://github.com/tomchristie/django-rest-framework/issues/1879
                 # Update: This has been fixed in master:
@@ -786,7 +786,7 @@ class TestAPI(LocalTestCase):
                         item[field] = None
                 self.assertEqual(self.normalize_dict(create_response.data), item)
                 get_response = self.client.get(api_reverse('{}-detail'.format(model), args=[item['id']]),
-                                               format='json', HTTP_AUTHORIZATION=self.basic_auth)                            
+                                               format='json', HTTP_AUTHORIZATION=self.basic_auth)
                 self.assertEqual(self.normalize_dict(get_response.data), item)
 
 class TestAPIFiltering(LocalTestCase):
@@ -901,7 +901,7 @@ class TestAlerts(LocalTestCase):
 
     def test_users_to_notify(self):
         self.assertEqual(self.service.users_to_notify.all().count(), 1)
-        self.assertEqual(self.service.users_to_notify.get(pk=1).username, self.user.username)
+        self.assertEqual(self.service.users_to_notify.get().username, self.user.username)
 
     @patch('cabot.cabotapp.models.send_alert')
     def test_alert(self, fake_send_alert):
