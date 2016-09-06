@@ -9,6 +9,7 @@ dependencies:
 
 test:
   pre:
+    - cp conf/development.env.example conf/development.env
     - docker-compose build
   override:
     - docker-compose run web python manage.py test cabot
