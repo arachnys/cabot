@@ -13,5 +13,6 @@ test:
   pre:
     - cp conf/development.env.example conf/development.env
     - docker-compose build
+    - docker-compose up -d
   override:
     - docker-compose run web python manage.py test cabot

@@ -13,7 +13,8 @@ before_install:
 # setup databases
 before_script:
  - cp conf/development.env.example conf/development.env
+ - docker-compose build
+ - docker-compose up -d
 
 script:
- - docker-compose build
  - docker-compose run web python manage.py test cabot
