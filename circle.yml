@@ -3,7 +3,7 @@ machine:
     - docker
 
 dependencies:
-  pre:
+  override:
     - sudo apt-get install python-dev
     - sudo pip install --upgrade docker-compose==1.8.0
 
