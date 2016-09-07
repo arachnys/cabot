@@ -165,3 +165,15 @@ def append_plugin_urls():
                 )
 
 append_plugin_urls()
+def append_google_sso_urls():
+    from cabot.cabotapp.views import AuthComplete, LoginError
+    global urlpatterns
+    urlpatterns += patterns(
+			url(r'^complete/(?P<backend>[^/]+)/$', AuthComplete.as_view()),
+			url(r'^login-error/$', LoginError.as_view()),
+			url(r'', include('social_auth.urls')),
+			)
+
+if settings.AUTH_GOOGLE:
+    append_google_sso_urls()
+

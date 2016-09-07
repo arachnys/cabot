@@ -101,36 +101,13 @@ fi
 # Install nginx
 set -o pipefail
 
+sudo openssl dhparam -dsaparam -out /etc/ssl/private/dhparam.key 4096
+
 sudo apt-get install --quiet --assume-yes nginx
 
 # Remove default ubuntu nginx configuration
 sudo rm -f /etc/nginx/sites-enabled/default
 
-# Generate self-signed ssl certs
-# http://wiki.nginx.org/HttpSslModule
-sudo mkdir -p /usr/local/nginx
-if [ ! -e /usr/local/nginx/testing.crt ]; then
-  echo 'Generating self-signed certificate'
-  cd /usr/local/nginx
-  sudo openssl genrsa -des3 -passout pass:pass -out testing.key 1024
-  (
-    echo '.'         # Country 2-letter code
-    echo '.'         # State/province name
-    echo '.'         # Locality name
-    echo 'Arachnys'  # Company name
-    echo '.'         # Organizational unit name
-    echo '.'         # Common name
-    echo '.'         # Email address
-    echo ''          # Challenge password
-    echo ''          # Optional company name
-  ) |
-  sudo openssl req -new -key testing.key -passin pass:pass -out testing.csr
-  sudo cp testing.key testing.key.orig
-  sudo openssl rsa -in testing.key.orig -passin pass:pass -out testing.key
-  sudo openssl x509 -req -days 1825 -in testing.csr -signkey testing.key -out testing.crt
-  sudo rm testing.key.orig testing.csr
-  cd -
-fi
 
 # Configure nginx proxy
 echo 'Writing nginx proxy configuration'
@@ -139,42 +116,50 @@ if [ -e /etc/nginx/sites-available/cabot ]; then
 fi
 sudo tee /etc/nginx/sites-available/cabot << EOF
 server {
-  listen 80;
+    listen 80;
+    server_name cabot.iron.io;
+    location /{
+        server_name_in_redirect  off;
+        root /var/www;
+        #try_files \$uri @django;
+        #return 301 https://\$server_name$request_uri;  # enforce https
+    }
+}
+server {
+    listen 443 ssl;
+    ssl on;
+    ssl_certificate /etc/letsencrypt/live/cabot.iron.io/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/cabot.iron.io/privkey.pem;
+    ssl_trusted_certificate /etc/letsencrypt/live/cabot.iron.io/fullchain.pem;
+    ssl_dhparam /etc/ssl/private/dhparam.key;
+    ssl_session_timeout 24h;
+    ssl_session_cache shared:SSL:10m;
+    ssl_stapling on;
+    ssl_stapling_verify on;
+    ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+    ssl_ciphers kEECDH+AES128:kEECDH:kEDH:-3DES:kRSA+AES128:kEDH+3DES:DES-CBC3-SHA:!RC4:!aNULL:!eNULL:!MD5:!EXPORT:!LOW:!SEED:!CAMELLIA:!IDEA:!PSK:!SRP:!SSLv2;
+    ssl_prefer_server_ciphers on;
+    server_name cabot.iron.io;
+    location /{
+        root /var/www;
+        try_files \$uri @django;
 
-  location / {
-    proxy_pass http://localhost:5000/;
+
+#        add_header Strict-Transport-Security "max-age=31536000; includeSubdomains;";
+    }
+
+  location @django{
+    proxy_pass http://localhost:5000;
     proxy_set_header Host \$http_host;
     proxy_set_header X-Real-IP \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_redirect http:// https://;
   }
 
   location /static/ {
     alias /home/ubuntu/cabot/static/;
   }
-
-  # Uncomment line below to force https
-  #return 301 https://\$host\$request_uri;
 }
-
-# Proxy secure traffic to cabot
-# server {
-#   listen 443 ssl;
-#   ssl_certificate /usr/local/nginx/testing.crt;
-#   ssl_certificate_key /usr/local/nginx/testing.pem;
-
-#   location / {
-#     proxy_pass http://localhost:5000/;
-#     proxy_set_header Host \$http_host;
-#     proxy_set_header X-Real-IP \$remote_addr;
-#     proxy_set_header X-Forwarded-Proto https;
-#     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-#     proxy_redirect http:// https://;
-#   }
-
-#   location /static/ {
-#     alias /home/ubuntu/cabot/static/;
-#   }
-# }
 EOF
 
 # Enable cabot configuration and restart nginx

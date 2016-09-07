@@ -26,6 +26,10 @@ if not DEBUG:
 
 USE_TZ = True
 
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SESSION_SERIALIZER = 'django.contrib.sessions.serializers.PickleSerializer'
+
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 
 # Local time zone for this installation. Choices can be found here:
@@ -126,6 +130,8 @@ INSTALLED_APPS = (
     'cabot.cabotapp',
     'rest_framework',
 )
+
+LOGIN_REDIRECT_URL = '/services/'
 
 # Load additional apps from configuration file
 CABOT_PLUGINS_ENABLED_PARSED = []
@@ -241,6 +247,16 @@ REST_FRAMEWORK = {
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
 )
+AUTH_GOOGLE = os.environ.get('AUTH_GOOGLE', 'false')
+if AUTH_GOOGLE.lower() == "true":
+    GOOGLE_OAUTH2_CLIENT_ID = os.environ.get('AUTH_GOOGLE_OAUTH2_CLIENT_ID')
+    GOOGLE_OAUTH2_CLIENT_SECRET = os.environ.get('AUTH_GOOGLE_OAUTH2_CLIENT_SECRET')
+    GOOGLE_WHITE_LISTED_DOMAINS = [os.environ.get('AUTH_GOOGLE_WHITE_LISTED_DOMAINS')]
+    INSTALLED_APPS += ('social_auth',)
+    SOCIAL_AUTH_USER_MODEL = 'auth.User'
+    AUTHENTICATION_BACKENDS += tuple(['social_auth.backends.google.GoogleOAuth2Backend'])
+
+
 AUTH_LDAP = os.environ.get('AUTH_LDAP', 'false')
 
 if AUTH_LDAP.lower() == "true":
