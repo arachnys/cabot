@@ -2,9 +2,6 @@
 
 set -e
 
-echo "foo"
-echo $DEBUG
-
 # first check if we're passing flags, if so
 # prepend with sentry
 if [ "${1:0:1}" = '-' ]; then
