@@ -1,0 +1,7 @@
+#!/bin/sh
+
+python manage.py syncdb --noinput
+python manage.py migrate cabotapp --noinput
+python manage.py migrate djcelery --noinput
+python manage.py collectstatic --noinput
+# python manage.py compress
