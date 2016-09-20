@@ -16,24 +16,20 @@ order: 1
     $ vim conf/development.env
     # Edit settings - add Twilio, Hipchat etc
 
-    $ vagrant up
-    # start Vagrant and provision the virtual machine using bin/provision
+    $ docker-compose build
+    # Build the web and worker services
+    $ docker-compose run --rm web bash bin/build-app
+    # Prepare the application: create DB tables, apply migrations, collect assets
+    $ docker-compose run --rm web python manage.py createsuperuser
+    # Create the first user (as a super-user)
 
-    $ vagrant ssh
-    # log in to provisioned Vagrant box
-    
-    $ foreman run python manage.py syncdb --migrate
-    # Create DB tables and apply migrations
-    $ foreman start
-    # run webserver and celery tasks using Django dev server
-
-#### Running OSX?
-
-If you're on OSX there's a [guide to how to set up your development environment on OSX](https://gist.github.com/jirutka/8636572)contributed by [Jakub Jirutka](https://gist.github.com/jirutka).
+    $ docker-compose up -d
+    # Run webserver and Celery tasks using Django dev server
+    # You can access your dev instance at http://localhost:5001/
 
 ### Running tests
 
-    $ foreman run python manage.py test cabot
+    $ docker-compose run --rm web python manage.py test cabot
 
 Test coverage is currently pretty poor so any contributions are welcome.
 
@@ -41,7 +37,7 @@ Tests can be found in `cabot/cabotapp/tests/`. Currently using `Mock` for mockin
 
 ### Requirements
 
-*   [Vagrant](http://vagrantup.com)
-*   [Virtualbox](https://www.virtualbox.org)
+*   [Docker](https://www.docker.com/)
+*   [docker-compose](https://docs.docker.com/compose/)
 
-There's nothing to stop you developing locally without Vagrant but don't blame us if you get tangled.
+Please refer to the Docker documentation to install it on Mac, Windows or Linux.
