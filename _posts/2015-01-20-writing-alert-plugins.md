@@ -10,7 +10,7 @@ With the release of cabot 0.0.1-dev, Cabot can now be extended through the use o
 
 Before getting started, follow the [development introduction]({% post_url 2014-01-08-get-started %}). Continue when you have set up vagrant and got cabot running locally on your own machine. You should also be up to date on how to [install a plugin]({% post_url 2015-01-20-installing-alert-plugins %}).
 
-You can obtain a ['skeleton' alert plugin](https://github.com/arachnys/cabot-alert-skeleton) which has all the necessary files to get started with cabot plugin development.
+You can obtain a ['skeleton' alert plugin](https://github.com/cabotapp/cabot-alert-skeleton) which has all the necessary files to get started with cabot plugin development.
 
 The cabot plugin architecture is designed to give the full power of django to the developer by getting out of his/her way as much as possible. For this reason it is necessary to understand the basics of how a django application works.
 
