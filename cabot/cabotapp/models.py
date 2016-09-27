@@ -834,7 +834,10 @@ class StatusCheckResult(models.Model):
 
     class Meta:
         ordering = ['-time_complete']
-        index_together = (('check', 'time_complete'),)
+        index_together = (
+            ('check', 'time_complete'),
+            ('check', 'id'),  # used to speed up StatusCheck.last_result
+        )
 
     def __unicode__(self):
         return '%s: %s @%s' % (self.status, self.check.name, self.time)
