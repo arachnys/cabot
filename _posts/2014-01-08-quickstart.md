@@ -39,8 +39,12 @@ Getting started is easy via a VPS on [AWS](https://aws.amazon.com) or [DigitalOc
         # NB using `ubuntu` not `root` as above
         # Will prompt you to create a Django superuser which you'll use to log in via web and create additional users.
 
-6.  Navigate in web browser to `your.server.hostname`, log in as superuser, and create your first `Service`s and `Check`s using the web interface.
+6. Create a user account:
 
-7.  *(Optional) get woken up at 3 a.m. by an automated phone call telling you the server you're monitoring has crashed.*
+    $ fab -H ubuntu@your.server.hostname create_user:"username,password,email"
+
+7.  Navigate in web browser to `your.server.hostname`, log in as superuser, and create your first `Service`s and `Check`s using the web interface.
+
+8.  *(Optional) get woken up at 3 a.m. by an automated phone call telling you the server you're monitoring has crashed.*
 
 Currently provisioning is done by the `bin/setup_dependencies.sh` script.
