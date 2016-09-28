@@ -42,6 +42,9 @@ def _setup_venv():
 def upgrade_celery():
     sudo("source %s/bin/activate && pip install celery --upgrade"%VENV_DIR)
 
+def install_flower():
+    sudo("source %s/bin/activate && pip install flower --upgrade"%VENV_DIR)
+
 
 def install_requirements(deploy_path=DEPLOY_PATH):
     sudo("foreman run -e conf/{env}.env {venv}/bin/pip install --editable {path} --exists-action=w".format(
@@ -162,6 +165,7 @@ def deploy(deploy_version=None):
         _setup_venv()
         create_database()
         install_requirements(deploy_path)
+        install_flower()
 	upgrade_celery()
         run_migrations(deploy_path)
         collect_static(deploy_path)
