@@ -60,6 +60,9 @@ packages=(
   'htop'
   'libsasl2-dev'
   'libldap2-dev'
+  'python-dev'
+  'libffi-dev'
+  'libssl-dev'
 )
 
 sudo apt-get update
