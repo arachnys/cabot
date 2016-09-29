@@ -25,9 +25,9 @@ mock==1.0.1
 psycogreen==1.0
 psycopg2==2.5.1
 pytz==2014.10
-pyOpenSSL
-ndg-httpsclient
-pyasn1
+pyOpenSSL==16.1.0
+ndg-httpsclient==0.4.2
+pyasn1==0.1.9
 requests==2.7.0
 twilio==3.4.1
 wsgiref==0.1.2
