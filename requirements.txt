@@ -2,7 +2,7 @@ Django==1.6.11
 Markdown==2.5
 PyJWT==0.1.2
 South==1.0
-amqp>=1.4.9
+amqp<2.0
 anyjson==0.3.3
 argparse==1.2.1
 celery[redis]==3.1.23
@@ -25,6 +25,9 @@ mock==1.0.1
 psycogreen==1.0
 psycopg2==2.5.1
 pytz==2014.10
+pyOpenSSL==16.1.0
+ndg-httpsclient==0.4.2
+pyasn1==0.1.9
 requests==2.7.0
 twilio==3.4.1
 wsgiref==0.1.2
