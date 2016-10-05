@@ -4,7 +4,7 @@ services:
 
 env:
  global:
-  - AUTH_LDAP=true
+  - AUTH_LDAP=false
   - COMPOSE_VERSION=1.8.0
 
 before_install:
