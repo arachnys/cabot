@@ -2,6 +2,7 @@ import os
 import dj_database_url
 import re
 from django.conf import settings
+from django.core.urlresolvers import reverse_lazy
 from cabot.celeryconfig import *
 from cabot.cabot_config import *
 
@@ -23,6 +24,10 @@ DATABASES = {'default': dj_database_url.parse(os.environ["DATABASE_URL"])}
 
 if not DEBUG:
     DATABASES['default']['OPTIONS'] = {'autocommit': True}
+
+URL_PREFIX = os.environ.get('URL_PREFIX', '/').rstrip("/")
+
+LOGIN_URL = reverse_lazy('login')
 
 USE_TZ = True
 
@@ -58,7 +63,7 @@ MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'media/')
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
 # Examples: "http://media.lawrence.com/media/", "http://example.com/media/"
-MEDIA_URL = '/media/'
+MEDIA_URL = '%s/media/' % URL_PREFIX
 
 # Absolute path to the directory static files should be collected to.
 # Don't put anything in this directory yourself; store your static files
@@ -70,7 +75,7 @@ COMPRESS_ROOT = STATIC_ROOT
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
-STATIC_URL = '/static/'
+STATIC_URL = '%s/static/' % URL_PREFIX
 
 # Additional locations of static files
 STATICFILES_DIRS = [os.path.join(PROJECT_ROOT, 'static')]
@@ -152,7 +157,7 @@ EMAIL_USE_TLS = os.environ.get('SES_USE_TLS', 0)
 
 COMPRESS_OFFLINE = not DEBUG
 
-COMPRESS_URL = '/static/'
+COMPRESS_URL = '%s/static/' % URL_PREFIX
 
 RECOVERY_SNIPPETS_WHITELIST = (
     r'https?://[^.]+\.hackpad\.com/[^./]+\.js',
