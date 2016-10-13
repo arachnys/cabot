@@ -9,6 +9,7 @@ before_install:
  - curl -L https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
  - chmod +x docker-compose
  - sudo mv docker-compose /usr/local/bin
+ - sudo pip install tox
 
 # setup databases
 before_script:
@@ -18,4 +19,5 @@ before_script:
  - sleep 20
 
 script:
+ - tox
  - docker-compose run web python manage.py test cabot
