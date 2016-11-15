@@ -1,0 +1,2 @@
+docker-compose==1.9.0
+flake8>=2.3.0,<3.0.0
