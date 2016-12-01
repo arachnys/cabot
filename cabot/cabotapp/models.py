@@ -936,6 +936,7 @@ class Shift(models.Model):
     end = models.DateTimeField()
     user = models.ForeignKey(User)
     uid = models.TextField()
+    last_modified = models.DateTimeField()
     deleted = models.BooleanField(default=False)
 
     def __unicode__(self):
@@ -979,12 +980,13 @@ def update_shifts():
         e = event['summary'].lower().strip()
         if e in user_lookup:
             user = user_lookup[e]
-            try:
-                s = Shift.objects.get(uid=event['uid'])
-            except Shift.DoesNotExist:
-                s = Shift(uid=event['uid'])
-            s.start = event['start']
-            s.end = event['end']
-            s.user = user
-            s.deleted = False
-            s.save()
+            # Delete any events that have been updated in ical
+            Shift.objects.filter(uid=event['uid'],
+                last_modified__lt=event['last_modified']).delete()
+            Shift.objects.get_or_create(
+                uid=event['uid'],
+                start=event['start'],
+                end=event['end'],
+                last_modified=event['last_modified'],
+                user=user,
+                deleted=False)
