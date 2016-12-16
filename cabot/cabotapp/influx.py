@@ -35,7 +35,7 @@ def get_data(pattern, selector='value',
              limit=settings.INFLUXDB_LIMIT,
              fetchall=False):
     '''
-    Query a metric and it's data from influxdb.
+    Query a metric and its data from influxdb.
     Return the value in a graphite compatible format
 
     * selector - can be specified as
@@ -49,7 +49,6 @@ def get_data(pattern, selector='value',
 
     * fill_empty - can be Null, or an integer value
     '''
-
     if fill_empty is not None:
         fill_str = 'fill(%d)' % fill_empty
     else:
@@ -86,7 +85,6 @@ def get_data(pattern, selector='value',
     if fetchall:
         pattern = '.*%s.*' % (pattern)
 
-    data = defaultdict(list)
     query = 'select %s from /%s/ %s %s %s %s order asc' % \
         (selector, pattern, group_by, fill_str, where_str, limit_str)
 
@@ -96,8 +94,16 @@ def get_data(pattern, selector='value',
     client = _get_influxdb_client()
     resp = client.query(query, chunked=True)
 
-    # Convert the result into a graphite compatible output
-    # This is a hack to get influxdb working well with cabot
+    return _convert_influx_to_graphite(resp)
+
+
+def _convert_influx_to_graphite(resp):
+    """
+    Convert the result from an influx query into a graphite compatible output
+    This is a hack to get influxdb working well with cabot
+    """
+    data = defaultdict(list)
+
     for series in resp:
         name = series['name']
 

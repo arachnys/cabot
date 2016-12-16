@@ -55,6 +55,29 @@ For those who want to contribute:
 *   [Help develop](http://cabotapp.com/dev/get-started.html)
 *   [Contribute code](http://cabotapp.com/dev/contribute-code.html)
 
+## Virtualenvs
+
+To create a virtualenv, run
+
+.. code-block:: console
+
+    tox -e develop
+    . .venv/bin/activate
+
+To rebuild the virtualenv (after changing requirements), use
+
+.. code-block:: console
+
+    tox -re develop 
+
+## Testing
+
+To run all tests (docker-compose and flake8), use
+
+.. code-block:: console
+
+    tox
+
 ## FAQ
 
 ### Why "Cabot"?

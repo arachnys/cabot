@@ -1,9 +1,9 @@
 import os
 import dj_database_url
 import re
-from django.conf import settings
 from cabot.celeryconfig import *
 from cabot.cabot_config import *
+import xmlrunner
 
 settings_dir = os.path.dirname(__file__)
 PROJECT_ROOT = os.path.abspath(settings_dir)
@@ -307,3 +307,7 @@ ROLLBAR = {
 }
 
 CELERYD_HIJACK_ROOT_LOGGER = False
+
+# xml output for tests
+TEST_RUNNER = 'xmlrunner.extra.djangotestrunner.XMLTestRunner'
+TEST_OUTPUT_DIR = './build/docker-compose'
