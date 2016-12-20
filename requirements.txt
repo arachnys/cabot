@@ -21,7 +21,6 @@ gunicorn==18.0
 gevent==1.0.1
 httplib2==0.7.7
 icalendar==3.2
-mock==1.0.1
 psycogreen==1.0
 psycopg2==2.5.1
 pytz==2014.10
