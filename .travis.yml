@@ -20,4 +20,9 @@ before_script:
 
 script:
  - tox
- - docker-compose run web python manage.py test cabot
+ - docker-compose run web bash bin/test_with_coverage
+
+after_success:
+  - pip install codecov
+  - pip install django_coverage_plugin==1.3.1
+  - codecov
