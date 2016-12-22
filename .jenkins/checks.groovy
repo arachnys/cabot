@@ -9,11 +9,7 @@ String script(target) {
   |set -o nounset
   |set -o errexit
   |set -o pipefail
-  |rm -rf static
   |rm -rf .tox # rm old virtualenvs
-  |mkdir static # if we don't make these manually we can't remove them...
-  |mkdir static/CACHE
-  |mkdir static/CACHE/css
   |PY_COLORS=1 tox -e ${target}
   """.stripMargin()
 }
@@ -82,6 +78,12 @@ freeStyleJob('cabot.docker-compose') { job ->
   jobTemplate(job, "Runs tests against Affirm/cabot.git using docker-compose", 'docker-compose').call()
   publishers {
     archiveJunit('build/docker-compose/*.xml')
+    postBuildScripts {
+      steps {
+        shell('sudo chown -R "$(whoami)" "${WORKSPACE}"')
+      }
+      onlyIfBuildSucceeds(false)
+    }
   }
 }
 
@@ -90,7 +92,7 @@ freeStyleJob('cabot.flake8') { job ->
   jobTemplate(job, "Runs tests against Affirm/cabot.git using flake8", 'flake8').call()
   publishers {
     violations {
-      pep8(0, 0, 0, 'build/flake8/flake8.txt')
+      pep8(125, 0, 0, 'build/flake8/flake8.txt')
     }
   }
 }

@@ -17,5 +17,8 @@ build.setDisplayName("${commit[0..9]}@${branch}")
 println "Building commit: ${commit} from branch ${branch} ..."
 
 // schedule jobs in parallel
-println "Scheduling job..."
-build('cabot.docker-compose', GIT_BRANCH: branch, GIT_COMMIT: commit)
+println "Scheduling jobs in parallel ..."
+parallel(
+  { results.add(build('cabot.docker-compose', GIT_BRANCH: branch, GIT_COMMIT: commit)) },
+  { results.add(build('cabot.flake8', GIT_BRANCH: branch, GIT_COMMIT: commit)) }
+)
