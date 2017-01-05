@@ -99,6 +99,4 @@ The name and author are simply meta-data about your plugin. The 'author' field s
 
 The *send_alert* function will be called whenever a service goes into a failing state and every 10 minutes after when it is still failing. The function will also be called when the service recovers and returns to a passing state.
 
-* You can change the time inbetween alert notifications by setting the ALERT_INTERVAL value in your configuration file (normally conf/production.conf).
-
-You will recieve three arguments which you can use to d
+* You can change the time in between alert notifications by setting the ALERT_INTERVAL value in your configuration file (normally conf/production.conf).
