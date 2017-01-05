@@ -7,7 +7,8 @@ date: 2014-01-08 22:49:24
 
 Getting started is easy via a VPS on [AWS](https://aws.amazon.com) or [DigitalOcean](https://www.digitalocean.com) (although Cabot can be hosted anywhere). Cabot is designed for deployment on Ubuntu 12.04 LTS.
 
-###Step by step
+### Step by step
+
 
 1.  Clone:
 
@@ -20,7 +21,7 @@ Getting started is easy via a VPS on [AWS](https://aws.amazon.com) or [DigitalOc
 
         $ cp conf/production.env.example conf/production.env
 
-3.  Spin up a new VPS instance (on e.g. AWS or DigitalOcean) - you can create a new DigitalOcean "droplet" from the command line via [`tugboat`](https://github.com/pearkes/tugboat)
+3.  Spin up a new VPS instance (on e.g. AWS or DigitalOcean) - you can create a new DigitalOcean "droplet" from the command line via [`tugboat`](https://github.com/pearkes/tugboat) (NB tugboat command line arguments seem a little unstable, so if you get an error, you may have to change them)
 
         $ tugboat create cabot --size=2gb --image=ubuntu-12-04-x64 --region=nyc1
         # create a new droplet called `cabot` with 1GB of memory running Ubuntu 12.04 in New York region
@@ -41,7 +42,7 @@ Getting started is easy via a VPS on [AWS](https://aws.amazon.com) or [DigitalOc
 
 6. Create a user account:
 
-    $ fab -H ubuntu@your.server.hostname create_user:"username,password,email"
+        $ fab -H ubuntu@your.server.hostname create_user:"username,password,email"
 
 7.  Navigate in web browser to `your.server.hostname`, log in as superuser, and create your first `Service`s and `Check`s using the web interface.
 

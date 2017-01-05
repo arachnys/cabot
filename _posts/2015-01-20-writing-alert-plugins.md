@@ -8,7 +8,7 @@ order: 2
 
 With the release of cabot 0.0.1-dev, Cabot can now be extended through the use of alert plugins. This allows the user to be alerted of any service outages through any means of communication supported by the installed plugins. This tutorial will guide you through the process of writing a simple Cabot plugin.
 
-Before getting started, follow the [development introduction]({% post_url 2014-01-08-get-started %}). Continue when you have set up vagrant and got cabot running locally on your own machine. You should also be up to date on how to [install a plugin]({% post_url 2015-01-20-installing-alert-plugins %}).
+Before getting started, follow the [development introduction]({% post_url 2014-01-08-get-started %}). Continue when you have set up `docker-compose` and got cabot running locally on your own machine. You should also be up to date on how to [install a plugin]({% post_url 2015-01-20-installing-alert-plugins %}).
 
 You can obtain a ['skeleton' alert plugin](https://github.com/cabotapp/cabot-alert-skeleton) which has all the necessary files to get started with cabot plugin development.
 
@@ -62,6 +62,8 @@ The *AlertPluginUserData* class defines the preferences of a single user. Here i
         favorite_bone = models.CharField(max_length=50, blank=True)
 
 The *name* variable dictates how the plugin will be referenced in the user preferences.
+
+> This section is out of date - Vagrant use is deprecated.
 
 Once you have created your *AlertPluginUserData* subclass, you should test your plugin to make sure that it's working. SSH into your vagrant box then install your plugin:
 
