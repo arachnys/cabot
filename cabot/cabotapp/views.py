@@ -20,11 +20,11 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.timezone import utc
 from django.views.generic import (
-    DetailView, CreateView, UpdateView, ListView, DeleteView, TemplateView, View)
+        DetailView, CreateView, UpdateView, ListView, DeleteView, TemplateView, View)
 from models import AlertPluginUserData
 from models import (
-    StatusCheck, GraphiteStatusCheck, JenkinsStatusCheck, HttpStatusCheck, ICMPStatusCheck,
-    StatusCheckResult, UserProfile, Service, Instance, Shift, get_duty_officers)
+        StatusCheck, GraphiteStatusCheck, JenkinsStatusCheck, HttpStatusCheck, ICMPStatusCheck,
+        StatusCheckResult, UserProfile, Service, Instance, Shift, get_duty_officers)
 from tasks import run_status_check as _run_status_check
 from .graphite import get_data, get_matching_metrics
 
