@@ -36,7 +36,11 @@ GRAPHITE_ENDPOINT = '/graphite/'
 
 $(document).ready ->
   updateGraphiteData()
-  $('#id_metric').on('keyup', updateGraphiteData)
+  $('#id_metric').on('keyup', complete)
+
+  complete = () ->
+      clearTimeout(timer)
+      timer = setTimeout(updateGraphiteData, 1000)
 
   $('#id_metric').autocomplete
     source: (request, response) ->
@@ -54,9 +58,14 @@ $(document).ready ->
       if $('#id_metric').is(':focus')
         $('#id_metric').autocomplete("search", $('#id_metric').val())
 
+previousTerm = undefined
+
 updateGraphiteData = () ->
-  $('#graphite_data_container').text 'Getting data'
   m = $('#id_metric').val()
+  if !m or previousTerm == m
+    return
+  previousTerm = m
+  $('#graphite_data_container').text 'Getting data'
   $.ajax
     url: GRAPHITE_ENDPOINT
     data:
