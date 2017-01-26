@@ -18,9 +18,6 @@ MANAGERS = ADMINS
 
 DATABASES = {'default': dj_database_url.parse(os.environ["DATABASE_URL"])}
 
-if not DEBUG:
-    DATABASES['default']['OPTIONS'] = {'autocommit': True}
-
 USE_TZ = True
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
