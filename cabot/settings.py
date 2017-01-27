@@ -4,6 +4,8 @@ import re
 from cabot.celeryconfig import *
 from cabot.cabot_config import *
 import xmlrunner
+import pymysql
+pymysql.install_as_MySQLdb()
 
 settings_dir = os.path.dirname(__file__)
 PROJECT_ROOT = os.path.abspath(settings_dir)
