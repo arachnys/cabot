@@ -5,7 +5,7 @@ amqp<2.0
 anyjson==0.3.3
 argparse==1.2.1
 celery[redis]==3.1.23
-dj-database-url==0.2.2
+dj-database-url==0.4.2
 django-appconf==0.6
 django-celery==3.1.17
 django-compressor==1.4
