@@ -123,7 +123,6 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
-    'south',
     'compressor',
     'polymorphic',
     'djcelery',
@@ -131,6 +130,8 @@ INSTALLED_APPS = (
     'cabot.cabotapp',
     'rest_framework',
 )
+
+AUTH_USER_MODEL = 'auth.User'
 
 # Load additional apps from configuration file
 CABOT_PLUGINS_ENABLED_PARSED = []

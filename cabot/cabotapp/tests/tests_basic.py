@@ -89,7 +89,7 @@ class LocalTestCase(APITestCase):
             self.graphite_check, self.jenkins_check, self.http_check)
         # failing is second most recent
         self.older_result = StatusCheckResult(
-            check=self.graphite_check,
+            status_check=self.graphite_check,
             time=timezone.now() - timedelta(seconds=60),
             time_complete=timezone.now() - timedelta(seconds=59),
             succeeded=False
@@ -97,7 +97,7 @@ class LocalTestCase(APITestCase):
         self.older_result.save()
         # Passing is most recent
         self.most_recent_result = StatusCheckResult(
-            check=self.graphite_check,
+            status_check=self.graphite_check,
             time=timezone.now() - timedelta(seconds=1),
             time_complete=timezone.now(),
             succeeded=True
