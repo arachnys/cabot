@@ -1,6 +1,6 @@
 Cabot
 =====
-[![Build Status](https://img.shields.io/travis/arachnys/cabot/master.svg)](https://travis-ci.org/arachnys/cabot) [![docs](http://img.shields.io/badge/docs-latest-brightgreen.svg)](http://cabotapp.com/qs/quickstart.html)
+[![Build Status](https://travis-ci.org/arachnys/cabot.svg?branch=master)](https://travis-ci.org/arachnys/cabot) [![docs](http://img.shields.io/badge/docs-latest-brightgreen.svg)](http://cabotapp.com/qs/quickstart.html)
 [![Coverage Status](https://codecov.io/github/arachnys/cabot/coverage.svg?branch=master)](https://codecov.io/github/arachnys/cabot?branch=master)
 [![License](https://img.shields.io/github/license/arachnys/cabot.svg)](https://opensource.org/licenses/MIT)
 
