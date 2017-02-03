@@ -21,6 +21,9 @@ def get_job_status(jobname):
         'blocked_build_time': None,
         'status_code': 200
     }
+    if not settings.JENKINS_API.endswith('/'):
+        settings.JENKINS_API += '/'
+
     endpoint = settings.JENKINS_API + 'job/%s/api/json' % jobname
 
     resp = requests.get(endpoint, auth=auth, verify=True)
