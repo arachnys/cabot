@@ -1,6 +1,6 @@
 language: ruby
 rvm:
-- 2.1
+- 2.2.6
 
 install: gem install jekyll html-proofer
 
