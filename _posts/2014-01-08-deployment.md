@@ -20,9 +20,9 @@ A guide to getting started on DigitalOcean using the `tugboat` CLI is included i
 
 Upgrading to a new version should be as simple as merging in changes from upstream and deploying over the top of your existing install.
 
-The only major gotcha is for those upgrading from any version pre [3872565](https://github.com/arachnys/cabot/commit/38725651445df61eda06b86a6933317153088e4b) to any later version.
+There are 2 exceptions. If upgrading from any version below [0.6.0](https://github.com/arachnys/cabot/tree/0.6.0) you must first upgrade to [0.6.0](https://github.com/arachnys/cabot/tree/0.6.0) as your database must be correctly migrated before the Django 1.7 version change.
 
-Because that commit changed the paths of the celery workers, they will not be shut down properly by new deploys. The best way of upgrading in this case is to:
+If you are upgrading from any version pre [3872565](https://github.com/arachnys/cabot/commit/38725651445df61eda06b86a6933317153088e4b) you need a few additional steps as that commit changed the paths of the celery workers so they will not be shut down properly by new deploys. The best way of upgrading in this case is to:
 
 *   Stop Cabot (`sudo service cabot stop`) - should stop all "old" workers
 *   Deploy (which will start new workers)
