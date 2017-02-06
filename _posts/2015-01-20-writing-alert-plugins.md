@@ -8,7 +8,7 @@ order: 2
 
 With the release of cabot 0.0.1-dev, Cabot can now be extended through the use of alert plugins. This allows the user to be alerted of any service outages through any means of communication supported by the installed plugins. This tutorial will guide you through the process of writing a simple Cabot plugin.
 
-Before getting started, follow the [development introduction]({% post_url 2014-01-08-get-started %}). Continue when you have set up `docker-compose` and got cabot running locally on your own machine. You should also be up to date on how to [install a plugin]({% post_url 2015-01-20-installing-alert-plugins %}).
+Before getting started, follow the [development introduction]({% post_url 2014-01-08-get-started %}). Continue when you have set up `docker-compose` and got cabot running locally on your own machine.
 
 You can obtain a ['skeleton' alert plugin](https://github.com/cabotapp/cabot-alert-skeleton) which has all the necessary files to get started with cabot plugin development.
 
@@ -33,7 +33,7 @@ The root directory contains mostly meta-data, present in almost all python packa
 * **setup.py**: Installation script for the plugin. Fairly standard for a python package. Define your dependencies here.
 * **setup.cfg**: Configuration file for the installation
 
-The plugin code will all be contained inside the *cabot_alert_skeleton* subdirectory. Naturally you can name this however you wish however we suggest sticking to the naming convention *cabot_alert_service* where *service* is the means of communication i.e. email, twitter, hipchat etc. 
+The plugin code will all be contained inside the *cabot_alert_skeleton* subdirectory. Naturally you can name this however you wish however we suggest sticking to the naming convention *cabot_alert_service* where *service* is the means of communication i.e. email, twitter, hipchat etc.
 
 As you would expect from a django application, the *models.py* file contains the models that define the functionality of the plugin.
 
@@ -68,8 +68,6 @@ The *name* variable dictates how the plugin will be referenced in the user prefe
 Once you have created your *AlertPluginUserData* subclass, you should test your plugin to make sure that it's working. SSH into your vagrant box then install your plugin:
 
     $ sudo pip install https+git://github.com/<your_user>/<your_plugin>.git
-
-Follow the instructions from the [plugin installation guide]({% post_url 2015-01-20-installing-alert-plugins %}) in order to get it working. Navigate to *localhost:5001/user/1/profile* and then select your plugin preferences from the sidebar.
 
 ![Skeleton AlertPluginUserData](/images/skeleton-plugin.png)
 
