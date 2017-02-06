@@ -22,8 +22,7 @@ if os.environ.get('CABOT_FROM_EMAIL'):
 
 DATABASES = {'default': dj_database_url.parse(os.environ["DATABASE_URL"])}
 
-if not DEBUG:
-    DATABASES['default']['OPTIONS'] = {'autocommit': True}
+TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
 URL_PREFIX = os.environ.get('URL_PREFIX', '/').rstrip("/")
 
