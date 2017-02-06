@@ -8,7 +8,7 @@ celery[redis]==3.1.23
 dj-database-url==0.4.2
 django-appconf==0.6
 django-celery==3.1.17
-django-compressor==1.4
+django-compressor==1.5
 django-filter==0.13
 django-jsonify==0.3.0
 django-mptt==0.6.0
