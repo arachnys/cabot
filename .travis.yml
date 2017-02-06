@@ -21,6 +21,7 @@ before_script:
 script:
  - tox
  - docker-compose run web bash bin/test_with_coverage
+ - docker-compose run web python manage.py compress --force
 
 after_success:
   - pip install codecov
