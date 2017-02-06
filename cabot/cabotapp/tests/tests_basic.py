@@ -8,12 +8,14 @@ from datetime import timedelta, date
 import os
 import requests
 from cabot.cabotapp.graphite import parse_metric
+from cabot.cabotapp.alert import update_alert_plugins
 from cabot.cabotapp.models import (
     GraphiteStatusCheck, JenkinsStatusCheck,
     HttpStatusCheck, ICMPStatusCheck, Service, Instance,
     StatusCheckResult, minimize_targets)
 from cabot.cabotapp.calendar import get_events
 from cabot.cabotapp.views import StatusCheckReportForm
+from django.conf import settings
 from django.contrib.auth.models import Permission
 from django.contrib.auth.models import User
 from django.core import mail
@@ -89,7 +91,7 @@ class LocalTestCase(APITestCase):
             self.graphite_check, self.jenkins_check, self.http_check)
         # failing is second most recent
         self.older_result = StatusCheckResult(
-            check=self.graphite_check,
+            status_check=self.graphite_check,
             time=timezone.now() - timedelta(seconds=60),
             time_complete=timezone.now() - timedelta(seconds=59),
             succeeded=False
@@ -97,7 +99,7 @@ class LocalTestCase(APITestCase):
         self.older_result.save()
         # Passing is most recent
         self.most_recent_result = StatusCheckResult(
-            check=self.graphite_check,
+            status_check=self.graphite_check,
             time=timezone.now() - timedelta(seconds=1),
             time_complete=timezone.now(),
             succeeded=True
@@ -931,6 +933,16 @@ class TestAlerts(LocalTestCase):
         self.service.alert()
         self.assertEqual(fake_send_alert.call_count, 1)
         fake_send_alert.assert_called_with(self.service, duty_officers=[])
+
+    def test_update_plugins(self):
+        # Test that disabling a plugin is detected by update_alert_plugins
+        plugins = update_alert_plugins()
+        plugin_count = len(plugins)
+        new_apps = [s for s in settings.INSTALLED_APPS if s not in ['cabot_alert_hipchat']]
+
+        with self.settings(INSTALLED_APPS=new_apps):
+            plugins = update_alert_plugins()
+            self.assertEqual(len(plugins), plugin_count - 1)
 
 
 class TestMinimizeTargets(LocalTestCase):
