@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+set -eo pipefail
+[[ -n $BIN_DIR ]] && source $BIN_DIR/utils
+
+NODE_VERSION=4.2.6
+NODE_PATH="/app/.heroku/vendor/node-${NODE_VERSION}"
+PYTHON_PATH="/app/.heroku/python"
+
+if ! type cleanup > /dev/null; then
+    alias cleanup=/bin/cat
+fi
+
+if ! type log-output > /dev/null; then
+    alias log-output=/bin/cat
+fi
+
+if ! type indent > /dev/null; then
+    alias indent=/bin/cat
+fi
+
+if ! type put-step > /dev/null; then
+    alias put-step=/bin/echo
+fi
+
+heroku-install-package() {
+  local package=$1
+  local pip_package=$(echo "$package" | sed 's/_/-/g')
+
+  puts-step "Installing cabot plugin $package"
+  if $PYTHON_PATH/bin/pip freeze | grep "$pip_package" > /dev/null ; then
+    return
+  fi
+
+  set +e
+  $PYTHON_PATH/bin/pip install $package --exists-action=w --src=./.heroku/src --disable-pip-version-check --no-cache-dir | cleanup | log-output | indent
+  PIP_STATUS="${PIPESTATUS[0]}"
+  set -e
+
+  if [[ ! $PIP_STATUS -eq 0 ]]; then
+    echo
+    show-warnings
+    exit 1
+  fi
+}
+
+
+heroku-install-nodejs() {
+  puts-step "Installing nodejs"
+
+  local NODE_BASENAME=node-v${NODE_VERSION}-linux-x64
+  local NODE_ARCHIVE="http://nodejs.org/dist/v${NODE_VERSION}/${NODE_BASENAME}.tar.gz"
+
+  if [[ -d "$NODE_PATH" ]]; then
+    return
+  fi
+
+  tempdir="$( mktemp -t node_XXXX )"
+  rm -rf $tempdir
+  mkdir -p $tempdir
+
+  pushd $tempdir > /dev/null
+  curl -s -L -o tmp-nodejs.tar.gz $NODE_ARCHIVE
+  tar -zxvf tmp-nodejs.tar.gz > /dev/null
+  rm tmp-nodejs.tar.gz
+  popd > /dev/null
+
+  mkdir -p .heroku/vendor
+  pushd .heroku/vendor > /dev/null
+  rm -rf node-*
+  mv $tempdir/$NODE_BASENAME "node-${NODE_VERSION}"
+  popd > /dev/null
+}
+
+heroku-install-less() {
+  puts-step "Installing less"
+  if [[ ! -f $NODE_PATH/bin/lessc ]]; then
+    $NODE_PATH/bin/npm install -g less | indent
+  fi
+}
+
+heroku-install-coffee-script() {
+  puts-step "Installing coffee-script"
+  if [[ ! -f $NODE_PATH/bin/coffee ]]; then
+    $NODE_PATH/bin/npm install -g coffee-script | indent
+  fi
+}
+
+heroku-install-cabot-plugins() {
+  if [[ ! -n $CABOT_PLUGINS_ENABLED ]]; then
+    return
+  fi
+
+  for package in $(echo $CABOT_PLUGINS_ENABLED | tr "," "\n") ; do
+    heroku-install-package $package
+  done
+}
+
+heroku-compress-assets() {
+  puts-step "Compressing assets"
+  PATH=$PATH:$NODE_PATH/bin $PYTHON_PATH/bin/python manage.py compress --force | indent
+}
+
+
+main() {
+  if [[ ! -n $DYNO ]]; then
+    return
+  fi
+
+  heroku-install-nodejs
+  heroku-install-less
+  heroku-install-coffee-script
+  heroku-install-cabot-plugins
+  heroku-compress-assets
+}
+
+main "$@"

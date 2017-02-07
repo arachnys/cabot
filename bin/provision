@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # A provisioning script for installing deps on ubuntu
 
 set -eo pipefail

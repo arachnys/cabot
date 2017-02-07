@@ -155,7 +155,7 @@ EMAIL_HOST_PASSWORD = os.environ.get('SES_PASS', '')
 EMAIL_BACKEND = os.environ.get('SES_BACKEND', 'django_smtp_ssl.SSLEmailBackend')
 EMAIL_USE_TLS = os.environ.get('SES_USE_TLS', 0)
 
-COMPRESS_OFFLINE = not DEBUG
+COMPRESS_OFFLINE = os.getenv('COMPRESS_OFFLINE', not DEBUG)
 
 COMPRESS_URL = '%s/static/' % URL_PREFIX
 
@@ -195,7 +195,7 @@ LOGGING = {
             'level': 'DEBUG',
             'class': 'logging.handlers.RotatingFileHandler',
             'formatter': 'verbose',
-            'filename': os.environ['LOG_FILE'],
+            'filename': os.environ.get('LOG_FILE', '/dev/null'),
             'maxBytes': 1024 * 1024 * 25,  # 25 MB
             'backupCount': 5,
         },

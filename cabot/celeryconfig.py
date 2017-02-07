@@ -1,7 +1,7 @@
 import os
 from datetime import timedelta
 
-BROKER_URL = os.environ['CELERY_BROKER_URL']
+BROKER_URL = os.getenv('CELERY_BROKER_URL', os.getenv('REDIS_URL'))
 # Set environment variable if you want to run tests without a redis instance
 CELERY_ALWAYS_EAGER = os.environ.get('CELERY_ALWAYS_EAGER', False)
 CELERY_IMPORTS = ('cabot.cabotapp.tasks', )

@@ -3,7 +3,9 @@ services:
  - docker
 
 env:
-  COMPOSE_VERSION: 1.8.0
+ global:
+  - AUTH_LDAP=false
+  - COMPOSE_VERSION=1.8.0
 
 before_install:
  - curl -L https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
