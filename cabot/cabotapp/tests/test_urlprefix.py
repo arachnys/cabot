@@ -81,6 +81,6 @@ class URLPrefixTestCase(LocalTestCase):
 
             self.assertIn(reverse('services'), response.content)
 
-            resposnse = self.client.get(reverse('system-status'))
+            response_systemstatus = self.client.get(reverse('system-status'))
 
-            self.assertEqual(response.status_code, before_systemstatus.status_code)
+            self.assertEqual(response_systemstatus.status_code, before_systemstatus.status_code)
