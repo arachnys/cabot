@@ -9,8 +9,8 @@ CELERY_IMPORTS = (
 CELERYBEAT_SCHEDULER = "djcelery.schedulers.DatabaseScheduler"
 CELERY_TASK_SERIALIZER = "json"
 CELERY_ACCEPT_CONTENT = ['json', 'msgpack', 'yaml']
-CELERYD_TASK_SOFT_TIME_LIMIT = 120
-CELERYD_TASK_TIME_LIMIT = 150
+CELERYD_TASK_SOFT_TIME_LIMIT = 60
+CELERYD_TASK_TIME_LIMIT = 70
 
 CELERYBEAT_SCHEDULE = {
     'run-all-checks': {
@@ -27,4 +27,29 @@ CELERYBEAT_SCHEDULE = {
     },
 }
 
+CELERY_ROUTES = {
+    'cabot.cabotapp.tasks.run_all_checks': {
+        'queue': 'checks',
+    },
+    'cabot.cabotapp.tasks.run_status_check': {
+        'queue': 'checks'
+    },
+    'cabot.cabotapp.tasks.update_service': {
+        'queue': 'service'
+    },
+    'cabot.cabotapp.tasks.update_instance': {
+        'queue': 'instance'
+    },
+    'cabot.cabotapp.tasks.update_shifts': {
+        'queue': 'batch'
+    },
+    'cabot.cabotapp.tasks.clean_db': {
+        'queue': 'maintenance'
+    },
+}
+
 CELERY_TIMEZONE = 'UTC'
+
+CELERY_RATE_LIMIT = os.environ.get('CELERY_RATE_LIMIT')
+if CELERY_RATE_LIMIT:
+    CELERY_ANNOTATIONS = {"*": {"rate_limit": CELERY_RATE_LIMIT}}
