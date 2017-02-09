@@ -1,8 +1,9 @@
 master
--------------
+------
 
 * Wait for docker containers to start in docker-entrypoint.sh
 * Update CABOT_PLUGINS_ENABLED to compatible plugin versions
+* Automatically initialise database, assets and superuser on docker container start
 
 Version 0.8.1
 -------------
