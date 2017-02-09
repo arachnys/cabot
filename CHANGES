@@ -1,6 +1,8 @@
 master
 ------
 
+* Build docker image from alpine
+* Refactor docker-compose files
 * Fix db_clean task failing on large results tables
 * Wait for docker containers to start in docker-entrypoint.sh
 * Update CABOT_PLUGINS_ENABLED to compatible plugin versions
