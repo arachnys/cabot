@@ -1,5 +1,6 @@
 import os
 from datetime import timedelta
+from kombu import Queue
 
 BROKER_URL = os.environ['CELERY_BROKER_URL']
 CELERY_IMPORTS = (
@@ -26,6 +27,14 @@ CELERYBEAT_SCHEDULE = {
         'schedule': timedelta(seconds=60*60*24),
     },
 }
+
+CELERY_QUEUES = (
+    Queue('checks'),
+    Queue('service'),
+    Queue('instance'),
+    Queue('batch'),
+    Queue('maintenance'),
+)
 
 CELERY_ROUTES = {
     'cabot.cabotapp.tasks.run_all_checks': {
