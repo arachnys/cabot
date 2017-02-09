@@ -18,7 +18,18 @@ services:
     env_file:
      - conf/development.env
     image: cabot:web
-    command: python manage.py celery worker -B -A cabot --loglevel=DEBUG --concurrency=16 -Ofair
+    command: python manage.py celery worker -A cabot --loglevel=DEBUG --concurrency=16 -Ofair
+    volumes:
+     - .:/code
+    links:
+     - redis
+     - db
+
+  beat:
+    env_file:
+     - conf/development.env
+    image: cabot:web
+    command: python manage.py celery beat -A cabot --loglevel=DEBUG
     volumes:
      - .:/code
     links:
