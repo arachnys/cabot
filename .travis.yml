@@ -15,12 +15,11 @@ before_install:
 before_script:
  - cp conf/development.env.example conf/development.env
  - docker-compose build
- - docker-compose up -d
 
 script:
  - tox
- - docker-compose run web bash bin/test_with_coverage
- - docker-compose run web python manage.py compress --force
+ - docker-compose run --rm web bash bin/test_with_coverage
+ - docker-compose run --rm -e CABOT_SUPERUSER_USERNAME='admin' -e CABOT_SUPERUSER_PASSWORD='pass' web true
 
 after_success:
   - pip install codecov

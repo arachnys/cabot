@@ -25,4 +25,8 @@ function wait_for_database {(
 wait_for_broker
 wait_for_database
 
+if [ -z "$SKIP_INIT" ]; then
+  /code/bin/build-app
+fi
+
 exec "$@"
