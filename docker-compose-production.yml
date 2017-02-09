@@ -1,0 +1,35 @@
+version: '2'
+services:
+  base:
+    extends:
+      file: docker-compose-base.yml
+      service: base
+    env_file:
+        - conf/production.env
+
+  web:
+    extends: base
+    command: gunicorn cabot.wsgi:application --config gunicorn.conf
+    links:
+      - redis
+      - db
+
+  worker:
+    extends: base
+    command: python manage.py celery worker -A cabot --loglevel=DEBUG --concurrency=16 -Ofair
+    links:
+      - redis
+      - db
+
+  beat:
+    extends: base
+    command: python manage.py celery beat -A cabot --loglevel=DEBUG
+    links:
+      - redis
+      - db
+
+  redis:
+    image: redis
+
+  db:
+    image: postgres

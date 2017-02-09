@@ -1,6 +1,5 @@
 #!/bin/bash
 set -e
-set -o allexport
 
 function wait_for_broker {(
   set +e
@@ -20,12 +19,25 @@ function wait_for_database {(
   done
 )}
 
+function wait_for_migrations {(
+  set +e
+  for try in {1..60} ; do
+    python manage.py migrate --list | grep "\[ \]" &> /dev/null || break
+    echo "Waiting for database migrations to be run..."
+    sleep 1
+  done
+)}
+
 
 wait_for_broker
 wait_for_database
 
 if [ -z "$SKIP_INIT" ]; then
   /code/bin/build-app
+fi
+
+if [ -n "$WAIT_FOR_MIGRATIONS" ]; then
+  wait_for_migrations
 fi
 
 exec "$@"

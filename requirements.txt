@@ -15,7 +15,7 @@ django-mptt==0.6.0
 django-polymorphic==0.7.2
 django-smtp-ssl==1.0
 djangorestframework==2.4.8
-gunicorn==18.0
+gunicorn==19.6.0
 gevent==1.0.1
 httplib2==0.7.7
 icalendar==3.2
@@ -30,3 +30,4 @@ twilio==3.4.1
 wsgiref==0.1.2
 python-dateutil==2.1
 django-auth-ldap==1.2.6
+sqlalchemy==1.1.5
