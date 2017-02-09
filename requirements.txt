@@ -13,7 +13,6 @@ django-filter==0.13
 django-jsonify==0.3.0
 django-mptt==0.6.0
 django-polymorphic==0.7.2
-django-redis==1.4.5
 django-smtp-ssl==1.0
 djangorestframework==2.4.8
 gunicorn==18.0
