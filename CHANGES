@@ -1,3 +1,11 @@
+Version 0.8.1
+-------------
+
+* Fix all workers running celery beat
+* Update django-compressor to run on django 1.8
+* Fix typo in url testcase
+* Update wsgi.py to work with django 1.8
+
 Version 0.8.0
 -------------
 
