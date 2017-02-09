@@ -1,3 +1,8 @@
+master
+-------------
+
+* Wait for docker containers to start in docker-entrypoint.sh
+
 Version 0.8.1
 -------------
 
