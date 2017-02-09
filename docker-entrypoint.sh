@@ -1,23 +1,28 @@
 #!/bin/bash
 
 set -e
+set -o allexport
 
-# first check if we're passing flags, if so
-# prepend with sentry
-if [ "${1:0:1}" = '-' ]; then
-	set -- python manage.py "$@"
-fi
+function wait_for_broker {(
+  set +e
+  until python -c "from kombu import Connection; x=Connection('$CELERY_BROKER_URL', timeout=1); x.connect()"
+  do
+    echo 'Waiting for celery broker to respond...'
+    sleep 1
+  done
+)}
 
-case "$1" in
-"web")
-	set -- gunicorn cabot.wsgi:application --config gunicorn.conf
-	;;
-"beatworker")
-    set -- celery worker -B -A cabot --loglevel=INFO --concurrency=16 -Ofair
-    ;;
-"worker")
-    set -- celery worker -A cabot --loglevel=INFO --concurrency=16 -Ofair
-    ;;
-esac
+function wait_for_database {(
+  set +e
+  until python -c "from django.db import connection; connection.connect()"
+  do
+    echo 'Waiting for database to respond...'
+    sleep 1
+  done
+)}
+
+
+wait_for_broker
+wait_for_database
 
 exec "$@"
