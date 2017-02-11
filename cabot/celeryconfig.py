@@ -1,6 +1,6 @@
 import os
 from datetime import timedelta
-from kombu import Queue
+from kombu import Exchange, Queue
 
 BROKER_URL = os.environ['CELERY_BROKER_URL']
 CELERY_IMPORTS = (
@@ -10,8 +10,8 @@ CELERY_IMPORTS = (
 CELERYBEAT_SCHEDULER = "djcelery.schedulers.DatabaseScheduler"
 CELERY_TASK_SERIALIZER = "json"
 CELERY_ACCEPT_CONTENT = ['json', 'msgpack', 'yaml']
-CELERYD_TASK_SOFT_TIME_LIMIT = 60
-CELERYD_TASK_TIME_LIMIT = 70
+CELERYD_TASK_SOFT_TIME_LIMIT = 120
+CELERYD_TASK_TIME_LIMIT = 240
 
 CELERYBEAT_SCHEDULE = {
     'run-all-checks': {
@@ -29,31 +29,37 @@ CELERYBEAT_SCHEDULE = {
 }
 
 CELERY_QUEUES = (
-    Queue('checks'),
-    Queue('service'),
-    Queue('instance'),
-    Queue('batch'),
-    Queue('maintenance'),
+    Queue('checks', Exchange('checks', type='direct'), routing_key='checks'),
+    Queue('service', Exchange('service', type='direct'), routing_key='service'),
+    Queue('instance', Exchange('instance', type='direct'), routing_key='instance'),
+    Queue('batch', Exchange('batch', type='direct'), routing_key='batch'),
+    Queue('maintenance', Exchange('maintenance', type='direct'), routing_key='maintenance'),
 )
 
 CELERY_ROUTES = {
     'cabot.cabotapp.tasks.run_all_checks': {
         'queue': 'checks',
+        'routing_key': 'checks',
     },
     'cabot.cabotapp.tasks.run_status_check': {
-        'queue': 'checks'
+        'queue': 'checks',
+        'routing_key': 'checks',
     },
     'cabot.cabotapp.tasks.update_service': {
-        'queue': 'service'
+        'queue': 'service',
+        'routing_key': 'service',
     },
     'cabot.cabotapp.tasks.update_instance': {
-        'queue': 'instance'
+        'queue': 'instance',
+        'routing_key': 'instance',
     },
     'cabot.cabotapp.tasks.update_shifts': {
-        'queue': 'batch'
+        'queue': 'batch',
+        'routing_key': 'batch',
     },
     'cabot.cabotapp.tasks.clean_db': {
-        'queue': 'maintenance'
+        'queue': 'maintenance',
+        'routing_key': 'maintenance',
     },
 }
 
