@@ -95,17 +95,24 @@ def clean_db(days_to_retain=60, batch_size=10000):
     result_ids = to_discard_results[:batch_size].values_list('id', flat=True)
     snapshot_ids = to_discard_snapshots[:batch_size].values_list('id', flat=True)
 
-    if not result_ids:
+    result_count = result_ids.count()
+    snapshot_count = snapshot_ids.count()
+
+    # id__in throws exception if passed an empty list, so guard against it
+    if result_count > 0:
+        StatusCheckResult.objects.filter(id__in=result_ids).delete()
+        logger.info('Processing %s StatusCheckResult objects' % result_count)
+    else:
         logger.info('Completed deleting StatusCheckResult objects')
-    if not snapshot_ids:
+
+    if snapshot_count > 0:
+        ServiceStatusSnapshot.objects.filter(id__in=snapshot_ids).delete()
+        logger.info('Processing %s ServiceStatusSnapshot objects' % snapshot_count)
+    else:
         logger.info('Completed deleting ServiceStatusSnapshot objects')
-    if (not snapshot_ids) and (not result_ids):
-        return
 
-    logger.info('Processing %s StatusCheckResult objects' % len(result_ids))
-    logger.info('Processing %s ServiceStatusSnapshot objects' % len(snapshot_ids))
-
-    StatusCheckResult.objects.filter(id__in=result_ids).delete()
-    ServiceStatusSnapshot.objects.filter(id__in=snapshot_ids).delete()
-
-    clean_db.apply_async(kwargs={'days_to_retain': days_to_retain}, countdown=3)
+    if result_count < batch_size and snapshot_count < batch_size:
+        logger.info('Completed deleted all old records')
+    else:
+        # Re-queue to cleanup remaining records
+        clean_db.apply_async(kwargs={'days_to_retain': days_to_retain, 'batch_size': batch_size}, countdown=3)
