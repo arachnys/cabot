@@ -80,7 +80,7 @@ def update_shifts():
 
 
 @task(ignore_result=True)
-def clean_db(days_to_retain=60):
+def clean_db(days_to_retain=60, batch_size=10000):
     """
     Clean up database otherwise it gets overwhelmed with StatusCheckResults.
 
@@ -90,10 +90,10 @@ def clean_db(days_to_retain=60):
     from datetime import timedelta
 
     to_discard_results = StatusCheckResult.objects.filter(time_complete__lte=timezone.now() - timedelta(days=days_to_retain))
-    to_discard_snapshots = ServiceStatusSnapshot.objects.filter(time_complete__lte=timezone.now() - timedelta(days=days_to_retain))
+    to_discard_snapshots = ServiceStatusSnapshot.objects.order_by('time').filter(time__lte=timezone.now() - timedelta(days=days_to_retain))
 
-    result_ids = to_discard_results[:10000].values_list('id', flat=True)
-    snapshot_ids = to_discard_snapshots[:10000].values_list('id', flat=True)
+    result_ids = to_discard_results[:batch_size].values_list('id', flat=True)
+    snapshot_ids = to_discard_snapshots[:batch_size].values_list('id', flat=True)
 
     if not result_ids:
         logger.info('Completed deleting StatusCheckResult objects')
