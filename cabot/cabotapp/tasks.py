@@ -89,11 +89,11 @@ def clean_db(days_to_retain=60):
     from .models import StatusCheckResult, ServiceStatusSnapshot
     from datetime import timedelta
 
-    to_discard_results = StatusCheckResult.objects.filter(time__lte=timezone.now()-timedelta(days=days_to_retain))
-    to_discard_snapshots = ServiceStatusSnapshot.objects.filter(time__lte=timezone.now()-timedelta(days=days_to_retain))
+    to_discard_results = StatusCheckResult.objects.filter(time_complete__lte=timezone.now() - timedelta(days=days_to_retain))
+    to_discard_snapshots = ServiceStatusSnapshot.objects.filter(time_complete__lte=timezone.now() - timedelta(days=days_to_retain))
 
-    result_ids = to_discard_results.values_list('id', flat=True)[:100]
-    snapshot_ids = to_discard_snapshots.values_list('id', flat=True)[:100]
+    result_ids = to_discard_results[:10000].values_list('id', flat=True)
+    snapshot_ids = to_discard_snapshots[:10000].values_list('id', flat=True)
 
     if not result_ids:
         logger.info('Completed deleting StatusCheckResult objects')
@@ -109,4 +109,3 @@ def clean_db(days_to_retain=60):
     ServiceStatusSnapshot.objects.filter(id__in=snapshot_ids).delete()
 
     clean_db.apply_async(kwargs={'days_to_retain': days_to_retain}, countdown=3)
-
