@@ -12,9 +12,10 @@ from cabot.cabotapp.alert import update_alert_plugins
 from cabot.cabotapp.models import (
     GraphiteStatusCheck, JenkinsStatusCheck,
     HttpStatusCheck, ICMPStatusCheck, Service, Instance,
-    StatusCheckResult, minimize_targets)
+    StatusCheckResult, minimize_targets, ServiceStatusSnapshot)
 from cabot.cabotapp.calendar import get_events
 from cabot.cabotapp.views import StatusCheckReportForm
+from cabot.cabotapp import tasks
 from django.conf import settings
 from django.contrib.auth.models import Permission
 from django.contrib.auth.models import User
@@ -943,6 +944,51 @@ class TestAlerts(LocalTestCase):
         with self.settings(INSTALLED_APPS=new_apps):
             plugins = update_alert_plugins()
             self.assertEqual(len(plugins), plugin_count - 1)
+
+
+class TestCleanUpTask(LocalTestCase):
+    def setUp(self):
+        super(TestCleanUpTask, self).setUp()
+
+    def test_cleanup_simple(self):
+        initial_results = StatusCheckResult.objects.all().count()
+        initial_snapshots = ServiceStatusSnapshot.objects.all().count()
+
+        ServiceStatusSnapshot(
+            service=self.service,
+            num_checks_active=1,
+            num_checks_passing=1,
+            num_checks_failing=1,
+            overall_status=self.service.overall_status,
+            time=timezone.now() - timedelta(days=61),
+        ).save()
+
+        StatusCheckResult(
+            status_check=self.graphite_check,
+            time=timezone.now() - timedelta(days=61),
+            time_complete=timezone.now() - timedelta(days=61),
+            succeeded=False
+        ).save()
+
+        self.assertEqual(StatusCheckResult.objects.all().count(), initial_results + 1)
+        tasks.clean_db()
+        self.assertEqual(StatusCheckResult.objects.all().count(), initial_results)
+        self.assertEqual(ServiceStatusSnapshot.objects.all().count(), initial_snapshots)
+
+    def test_cleanup_batch(self):
+        initial_results = StatusCheckResult.objects.all().count()
+
+        for i in range(2):
+            StatusCheckResult(
+                status_check=self.graphite_check,
+                time=timezone.now() - timedelta(days=61),
+                time_complete=timezone.now() - timedelta(days=61),
+                succeeded=False
+            ).save()
+
+        self.assertEqual(StatusCheckResult.objects.all().count(), initial_results + 2)
+        tasks.clean_db(batch_size=1)
+        self.assertEqual(StatusCheckResult.objects.all().count(), initial_results + 1)
 
 
 class TestMinimizeTargets(LocalTestCase):

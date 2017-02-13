@@ -1,6 +1,7 @@
 master
 ------
 
+* Fix db_clean task failing on large results tables
 * Wait for docker containers to start in docker-entrypoint.sh
 * Update CABOT_PLUGINS_ENABLED to compatible plugin versions
 * Automatically initialise database, assets and superuser on docker container start
