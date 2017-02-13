@@ -988,7 +988,7 @@ class TestCleanUpTask(LocalTestCase):
 
         self.assertEqual(StatusCheckResult.objects.all().count(), initial_results + 2)
         tasks.clean_db(batch_size=1)
-        self.assertEqual(StatusCheckResult.objects.all().count(), initial_results + 1)
+        self.assertEqual(StatusCheckResult.objects.all().count(), initial_results)
 
 
 class TestMinimizeTargets(LocalTestCase):
