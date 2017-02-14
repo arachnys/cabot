@@ -3,6 +3,7 @@ Markdown==2.5
 PyJWT==1.4.2
 South==1.0
 amqp==1.4.7
+setuptools==32.1.2
 anyjson==0.3.3
 argparse==1.2.1
 billiard==3.3.0.13
