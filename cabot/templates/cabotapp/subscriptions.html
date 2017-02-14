@@ -19,14 +19,18 @@
           <th>
             {% if user.first_name %}{{ user.first_name }}{% elif user.email %}{{ user.email }}{% else %}{{ user.username }}{% endif %}
             {% if user in duty_officers %}
-            <span class="label label-success">
-              On duty
-            </span>
+              {% for schedule in duty_officers|get_item:user %}
+              <span class="label label-success">
+                On duty - {{ schedule }}
+              </span>
+              {% endfor %}
             {% else %}
-            {% if user.profile.fallback_alert_user %}
-            <span class="label label-warning">
-              Fallback duty officer
-            </span>
+            {% if user in fallback_officers %}
+              {% for schedule in fallback_officers|get_item:user %}
+              <span class="label label-warning">
+                Fallback - {{ schedule }}
+              </span>
+              {% endfor %}
             {% endif %}
             {% endif %}
             <a href="{% url "user-profile" pk=user.id %}" class="btn btn-xs">

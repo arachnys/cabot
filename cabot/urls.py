@@ -15,7 +15,8 @@ from cabot.cabotapp.views import (
         StatusCheckDeleteView, StatusCheckListView, StatusCheckDetailView,
         AuthComplete, LoginError,
         StatusCheckResultDetailView, StatusCheckReportView,
-        UserProfileUpdateAlert,
+        UserProfileUpdateAlert, ScheduleCreateView,
+        ScheduleListView, ScheduleUpdateView, ScheduleDeleteView
 )
 
 from cabot.cabotapp.views import (
@@ -117,13 +118,17 @@ urlpatterns = patterns('',
         view=duplicate_jenkins_check, name='duplicate-jenkins-check'),
     url(r'^result/(?P<pk>\d+)/',
         view=StatusCheckResultDetailView.as_view(), name='result'),
-    url(r'^shifts/', view=ShiftListView.as_view(), name='shifts'),
+    url(r'^shifts/(?P<pk>\d+)/', view=ShiftListView.as_view(), name='shifts-detail'),
+    url(r'^shifts/', view=ScheduleListView.as_view(), name='shifts'),
     url(r'^graphite/', view=graphite_api_data, name='graphite-data'),
     url(r'^user/(?P<pk>\d+)/profile/$',
         view=UserProfileUpdateView.as_view(), name='user-profile'),
     url(r'^user/(?P<pk>\d+)/profile/(?P<alerttype>.+)',
         view=UserProfileUpdateAlert.as_view(), name='update-alert-user-data'),
     url(r'^admin/', include(admin.site.urls)),
+    url(r'^schedule/create/', view=ScheduleCreateView.as_view(), name='create-schedule'),
+    url(r'^schedule/update/(?P<pk>\d+)/', view=ScheduleUpdateView.as_view(), name='update-schedule'),
+    url(r'^schedule/delete/(?P<pk>\d+)/', view=ScheduleDeleteView.as_view(), name='delete-schedule'),
 
     # Comment below line to disable browsable rest api
     url(r'^api-auth/',

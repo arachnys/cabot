@@ -4,22 +4,32 @@
 <div class="row">
   <div class="col-xs-12">
     <div class="col-xs-1"><h2><i class="glyphicon glyphicon-time"></i></h2></div>
-    <div class="col-xs-11"><h2><span class="break"></span>Duty rota</h2></div>
+    <div class="col-xs-10"><h2>Duty rota</h2></div>
+    <div class="col-xs-1 text-right">
+      <h2><a href="{% url "create-schedule" %}"><i class="glyphicon glyphicon-plus" title="New rota"></i></a></h2>
+    </div>
   </div>
   <div class="col-xs-12">
+    <div class="col-xs-11"><h2>{{ schedule.name }}</h2></div>
+    <div class="col-xs-1 text-right">
+      <h2><a href="{% url "update-schedule" pk=schedule_id %}"><i class="glyphicon glyphicon-edit" title="Edit rota"></i></a></h2>
+    </div>
     {% if not shifts %}
-      <div class="col-xs-11 col-xs-offset-1">No shifts downloaded</div>
+      <div class="col-xs-11">No user profiles exist for duty officers.</div>
     {% else %}
-    <table class="table table-striped bootstrap-datatable datatable">
-      <thead>
-        <tr>
-          <th>User</th>
-          <th>Shift time</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-      {% for shift in shifts %}
+    <div class="col-xs-11">
+      <h5>Fallback officer:    <a href="{% url "user-profile" pk=schedule.fallback_officer.id %}">{{ schedule.fallback_officer }}</a></h5>
+    </div>
+      <table class="table table-striped bootstrap-datatable datatable">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Shift time</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for shift in shifts %}
         <tr>
           <td>
             <a href="{% url "user-profile" pk=shift.user.id %}">{{ shift.user.username }}</a>
@@ -33,9 +43,9 @@
             </a>
           </td>
         </tr>
-      {% endfor %}
-      </tbody>
-    </table>
+        {% endfor %}
+        </tbody>
+      </table>
     {% endif %}
   </div>
 </div>

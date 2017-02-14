@@ -144,7 +144,6 @@ router.register(r'user_profiles', create_viewset(
         'user',
         'mobile_number',
         'hipchat_alias',
-        'fallback_alert_user',
     ),
 ))
 '''

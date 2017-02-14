@@ -6,7 +6,8 @@ from .models import (
     ServiceStatusSnapshot,
     StatusCheck,
     StatusCheckResult,
-    Instance
+    Instance,
+    Schedule
 )
 from .alert import AlertPluginUserData, AlertPlugin
 
@@ -19,3 +20,4 @@ admin.site.register(StatusCheckResult)
 admin.site.register(Instance)
 admin.site.register(AlertPlugin)
 admin.site.register(AlertPluginUserData)
+admin.site.register(Schedule)

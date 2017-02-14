@@ -76,8 +76,10 @@ def update_instance(instance_or_id):
 
 @task(ignore_result=True)
 def update_shifts():
-    from .models import update_shifts as _update_shifts
-    _update_shifts()
+    from .models import Schedule, update_shifts as _update_shifts
+    schedules = Schedule.objects.all()
+    for schedule in schedules:
+        _update_shifts(schedule)
 
 
 @task(ignore_result=True)

@@ -44,6 +44,19 @@
         </h5>
       </div>
     </div>
+    <div class="col-xs-12">
+      <div class="col-xs-1"><h5><i class="glyphicon glyphicon-time"></i></h5></div>
+      <div class="col-xs-3"><h5><span class="break"></span>Duty rota</h5></div>
+      {% if service.schedules %}
+      <div class="col-xs-8"><h5>
+      {% for schedule in service.schedules.all %}
+      <a href="{% url "shifts-detail" pk=schedule.id %}">{{ schedule }}</a>{% if not forloop.last %}, {% endif %}
+      {% endfor %}
+      </h5></div>
+      {% else %}
+      <div class="col-xs-8"><h5>None</h5></div>
+      {% endif %}
+    </div>
   </div>
   <div class="col-xs-12 col-md-6">
     <div class="col-xs-1"><h3><i class="fa fa-bar-chart-o"></i></h3></div>

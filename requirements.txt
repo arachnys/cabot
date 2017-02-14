@@ -25,7 +25,7 @@ gunicorn==18.0
 gevent==1.0.1
 hiredis==0.1.1
 httplib2==0.7.7
-icalendar==3.2
+icalendar==3.11
 kombu==3.0.30
 mock==1.0.1
 psycogreen==1.0

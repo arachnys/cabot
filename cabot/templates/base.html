@@ -61,6 +61,9 @@
                 <li>
                   <a href="{% url "create-instance" %}"><i class="fa fa-desktop"></i> Instance</a>
                 </li>
+                <li>
+                  <a href="{% url "create-schedule" %}"><i class="glyphicon glyphicon-time"></i> Oncall schedule</a>
+                </li>
                 <li class="divider"></li>
                 <li>
                   <a href="{% url "create-influxdb-check" %}?service={{ service.id }}&instance={{ instance.id }}" class=""><i class="glyphicon glyphicon-signal" title="Add new metric check"></i> InfluxDB check</a>

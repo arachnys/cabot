@@ -15,7 +15,11 @@ from models import (StatusCheck,
                     Service,
                     Instance,
                     Shift,
-                    get_duty_officers)
+                    Schedule,
+                    get_all_duty_officers,
+                    get_single_duty_officer,
+                    get_all_fallback_officers,
+                    update_shifts)
 
 from tasks import run_status_check as _run_status_check
 from django.contrib.auth.decorators import login_required
@@ -32,8 +36,6 @@ from django.core.exceptions import ValidationError
 
 from cabot.cabotapp import alert
 from models import AlertPluginUserData
-from django.forms.models import (inlineformset_factory, modelformset_factory)
-from django import shortcuts
 from django.contrib import messages
 from social.exceptions import AuthFailed
 from social.apps.django_app.views import complete
@@ -42,6 +44,8 @@ from itertools import groupby, dropwhile, izip_longest
 import requests
 import json
 import re
+from icalendar import Calendar
+from django.template.defaulttags import register
 
 
 class LoginRequiredMixin(object):
@@ -60,7 +64,8 @@ def subscriptions(request):
     c = RequestContext(request, {
         'services': services,
         'users': users,
-        'duty_officers': get_duty_officers(),
+        'duty_officers': get_all_duty_officers(),
+        'fallback_officers': get_all_fallback_officers(),
     })
     return HttpResponse(t.render(c))
 
@@ -71,30 +76,36 @@ def run_status_check(request, pk):
     _run_status_check(check_or_id=pk)
     return HttpResponseRedirect(reverse('check', kwargs={'pk': pk}))
 
+
 def duplicate_influxdb_check(request, pk):
     pc = StatusCheck.objects.get(pk=pk)
     npk = pc.duplicate()
     return HttpResponseRedirect(reverse('update-influxdb-check', kwargs={'pk': npk}))
+
 
 def duplicate_icmp_check(request, pk):
     pc = StatusCheck.objects.get(pk=pk)
     npk = pc.duplicate()
     return HttpResponseRedirect(reverse('update-icmp-check', kwargs={'pk': npk}))
 
+
 def duplicate_instance(request, pk):
     instance = Instance.objects.get(pk=pk)
     new_instance = instance.duplicate()
     return HttpResponseRedirect(reverse('update-instance', kwargs={'pk': new_instance}))
+
 
 def duplicate_http_check(request, pk):
     pc = StatusCheck.objects.get(pk=pk)
     npk = pc.duplicate()
     return HttpResponseRedirect(reverse('update-http-check', kwargs={'pk': npk}))
 
+
 def duplicate_graphite_check(request, pk):
     pc = StatusCheck.objects.get(pk=pk)
     npk = pc.duplicate()
     return HttpResponseRedirect(reverse('update-graphite-check', kwargs={'pk': npk}))
+
 
 def duplicate_jenkins_check(request, pk):
     pc = StatusCheck.objects.get(pk=pk)
@@ -137,7 +148,6 @@ base_widgets = {
 
 
 class StatusCheckForm(SymmetricalForm):
-
     symmetrical_fields = ('service_set', 'instance_set')
 
     service_set = forms.ModelMultipleChoiceField(
@@ -166,7 +176,6 @@ class StatusCheckForm(SymmetricalForm):
 
 
 class GraphiteStatusCheckForm(StatusCheckForm):
-
     class Meta:
         model = GraphiteStatusCheck
         fields = (
@@ -203,7 +212,6 @@ class GraphiteStatusCheckForm(StatusCheckForm):
 
 
 class InfluxDBStatusCheckForm(StatusCheckForm):
-
     class Meta:
         model = GraphiteStatusCheck
         fields = (
@@ -240,7 +248,6 @@ class InfluxDBStatusCheckForm(StatusCheckForm):
 
 
 class ICMPStatusCheckForm(StatusCheckForm):
-
     class Meta:
         model = ICMPStatusCheck
         fields = (
@@ -254,7 +261,6 @@ class ICMPStatusCheckForm(StatusCheckForm):
 
 
 class HttpStatusCheckForm(StatusCheckForm):
-
     class Meta:
         model = HttpStatusCheck
         fields = (
@@ -300,7 +306,6 @@ class HttpStatusCheckForm(StatusCheckForm):
 
 
 class JenkinsStatusCheckForm(StatusCheckForm):
-
     class Meta:
         model = JenkinsStatusCheck
         fields = (
@@ -311,8 +316,8 @@ class JenkinsStatusCheckForm(StatusCheckForm):
         )
         widgets = dict(**base_widgets)
 
-class InstanceForm(SymmetricalForm):
 
+class InstanceForm(SymmetricalForm):
     symmetrical_fields = ('service_set',)
     service_set = forms.ModelMultipleChoiceField(
         queryset=Service.objects.all(),
@@ -326,7 +331,6 @@ class InstanceForm(SymmetricalForm):
         )
     )
 
-
     class Meta:
         model = Instance
         template_name = 'instance_form.html'
@@ -334,6 +338,7 @@ class InstanceForm(SymmetricalForm):
             'name',
             'address',
             'users_to_notify',
+            'schedules',
             'status_checks',
             'service_set',
         )
@@ -353,6 +358,7 @@ class InstanceForm(SymmetricalForm):
                 'style': 'width: 70%',
             }),
             'users_to_notify': forms.CheckboxSelectMultiple(),
+            'schedules': forms.CheckboxSelectMultiple(),
             'hackpad_id': forms.TextInput(attrs={'style': 'width:30%;'}),
         }
 
@@ -360,11 +366,11 @@ class InstanceForm(SymmetricalForm):
         ret = super(InstanceForm, self).__init__(*args, **kwargs)
         self.fields['users_to_notify'].queryset = User.objects.filter(
             is_active=True)
+        self.fields['schedules'].queryset = Schedule.objects.all()
         return ret
 
 
 class ServiceForm(forms.ModelForm):
-
     class Meta:
         model = Service
         template_name = 'service_form.html'
@@ -372,6 +378,7 @@ class ServiceForm(forms.ModelForm):
             'name',
             'url',
             'users_to_notify',
+            'schedules',
             'status_checks',
             'instances',
             'alerts',
@@ -394,6 +401,7 @@ class ServiceForm(forms.ModelForm):
                 'style': 'width: 70%',
             }),
             'users_to_notify': forms.CheckboxSelectMultiple(),
+            'schedules': forms.CheckboxSelectMultiple(),
             'hackpad_id': forms.TextInput(attrs={'style': 'width:30%;'}),
         }
 
@@ -401,6 +409,7 @@ class ServiceForm(forms.ModelForm):
         ret = super(ServiceForm, self).__init__(*args, **kwargs)
         self.fields['users_to_notify'].queryset = User.objects.filter(
             is_active=True)
+        self.fields['schedules'].queryset = Schedule.objects.all()
         return ret
 
     def clean_hackpad_id(self):
@@ -411,6 +420,40 @@ class ServiceForm(forms.ModelForm):
             if re.match(pattern, value):
                 return value
         raise ValidationError('Please specify a valid JS snippet link')
+
+
+class ScheduleForm(forms.ModelForm):
+    class Meta:
+        model = Schedule
+        template_name = 'schedule_form.html'
+        fields = (
+            'name',
+            'ical_url',
+            'fallback_officer',
+        )
+        widgets = {
+            'name': forms.TextInput(attrs={'style': 'width: 80%;'}),
+            'ical_url': forms.TextInput(attrs={'style': 'width: 80%;'}),
+            'fallback_officer': forms.Select()
+        }
+
+    def clean_ical_url(self):
+        """
+        Make sure the input ical url data can be parsed.
+        :return: the ical url if valid, otherwise raise an exception
+        """
+        try:
+            ical_url = self.cleaned_data['ical_url']
+            resp = requests.get(ical_url)
+            Calendar.from_ical(resp.content)
+            return ical_url
+        except Exception:
+            raise ValidationError('Invalid ical url {}'.format(self.cleaned_data['ical_url']))
+
+    def __init__(self, *args, **kwargs):
+        return super(ScheduleForm, self).__init__(*args, **kwargs)
+        self.fields['fallback_officer'].queryset = User.objects.filter(is_active=True) \
+            .order_by('username')
 
 
 class StatusCheckReportForm(forms.Form):
@@ -466,7 +509,7 @@ class CheckCreateView(LoginRequiredMixin, CreateView):
         if metric:
             initial['metric'] = metric
         service_id = self.request.GET.get('service')
-	instance_id = self.request.GET.get('instance')
+        instance_id = self.request.GET.get('instance')
 
         if service_id:
             try:
@@ -489,7 +532,7 @@ class CheckCreateView(LoginRequiredMixin, CreateView):
             return reverse('service', kwargs={'pk': self.request.GET.get('service')})
         if self.request.GET.get('instance'):
             return reverse('instance', kwargs={'pk': self.request.GET.get('instance')})
-        return reverse('checks')  
+        return reverse('checks')
 
 
 class CheckUpdateView(LoginRequiredMixin, UpdateView):
@@ -497,6 +540,7 @@ class CheckUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_success_url(self):
         return reverse('check', kwargs={'pk': self.object.id})
+
 
 class ICMPCheckCreateView(CheckCreateView):
     model = ICMPStatusCheck
@@ -507,21 +551,26 @@ class ICMPCheckUpdateView(CheckUpdateView):
     model = ICMPStatusCheck
     form_class = ICMPStatusCheckForm
 
+
 class GraphiteCheckUpdateView(CheckUpdateView):
     model = GraphiteStatusCheck
     form_class = GraphiteStatusCheckForm
+
 
 class GraphiteCheckCreateView(CheckCreateView):
     model = GraphiteStatusCheck
     form_class = GraphiteStatusCheckForm
 
+
 class InfluxDBCheckUpdateView(CheckUpdateView):
     model = InfluxDBStatusCheck
     form_class = InfluxDBStatusCheckForm
 
+
 class InfluxDBCheckCreateView(CheckCreateView):
     model = InfluxDBStatusCheck
     form_class = InfluxDBStatusCheckForm
+
 
 class HttpCheckCreateView(CheckCreateView):
     model = HttpStatusCheck
@@ -572,7 +621,7 @@ class StatusCheckDetailView(LoginRequiredMixin, DetailView):
     template_name = 'cabotapp/statuscheck_detail.html'
 
     def render_to_response(self, context, *args, **kwargs):
-        if context == None:
+        if context is None:
             context = {}
         context['checkresults'] = self.object.statuscheckresult_set.order_by(
             '-time_complete')[:100]
@@ -581,8 +630,10 @@ class StatusCheckDetailView(LoginRequiredMixin, DetailView):
 
 class UserProfileUpdateView(LoginRequiredMixin, View):
     model = AlertPluginUserData
+
     def get(self, *args, **kwargs):
         return HttpResponseRedirect(reverse('update-alert-user-data', args=(self.kwargs['pk'], u'General')))
+
 
 class UserProfileUpdateAlert(LoginRequiredMixin, View):
     template = loader.get_template('cabotapp/alertpluginuserdata_form.html')
@@ -601,10 +652,9 @@ class UserProfileUpdateAlert(LoginRequiredMixin, View):
         if (alerttype == u'General'):
             form = GeneralSettingsForm(initial={
                 'first_name': profile.user.first_name,
-                'last_name' : profile.user.last_name,
-                'email_address' : profile.user.email,
-                'enabled' : profile.user.is_active,
-                'fallback_alert_user': profile.fallback_alert_user,
+                'last_name': profile.user.last_name,
+                'email_address': profile.user.email,
+                'enabled': profile.user.is_active,
                 })
         else:
             plugin_userdata = self.model.objects.get(title=alerttype, user=profile)
@@ -626,7 +676,6 @@ class UserProfileUpdateAlert(LoginRequiredMixin, View):
                 profile.user.last_name = form.cleaned_data['last_name']
                 profile.user.is_active = form.cleaned_data['enabled']
                 profile.user.email = form.cleaned_data['email_address']
-                profile.fallback_alert_user = form.cleaned_data['fallback_alert_user']
                 profile.user.save()
                 profile.save()
                 return HttpResponseRedirect(reverse('update-alert-user-data', args=(self.kwargs['pk'], alerttype)))
@@ -639,23 +688,25 @@ class UserProfileUpdateAlert(LoginRequiredMixin, View):
             if form.is_valid():
                 return HttpResponseRedirect(reverse('update-alert-user-data', args=(self.kwargs['pk'], alerttype)))
 
+
 def get_object_form(model_type):
     class AlertPreferencesForm(forms.ModelForm):
         class Meta:
             model = model_type
+
         def is_valid(self):
             return True
     return AlertPreferencesForm
 
+
 class GeneralSettingsForm(forms.Form):
     first_name = forms.CharField(label='First name', max_length=30, required=False)
-    last_name  = forms.CharField(label='Last name', max_length=30, required=False)
+    last_name = forms.CharField(label='Last name', max_length=30, required=False)
     email_address = forms.CharField(label='Email Address', max_length=30, required=False)
     enabled = forms.BooleanField(label='Enabled', required=False)
-    fallback_alert_user = forms.BooleanField(label='Fallback Duty Officer', required=False)
+
 
 class InstanceListView(LoginRequiredMixin, ListView):
-
     model = Instance
     context_object_name = 'instances'
 
@@ -669,6 +720,7 @@ class ServiceListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         return Service.objects.all().order_by('name').prefetch_related('status_checks')
+
 
 class InstanceDetailView(LoginRequiredMixin, DetailView):
     model = Instance
@@ -684,6 +736,7 @@ class InstanceDetailView(LoginRequiredMixin, DetailView):
             'date_to': date_from + relativedelta(months=1) - relativedelta(days=1)
         })
         return context
+
 
 class ServiceDetailView(LoginRequiredMixin, DetailView):
     model = Service
@@ -742,13 +795,24 @@ class InstanceCreateView(LoginRequiredMixin, CreateView):
 
         return initial
 
+
 class ServiceCreateView(LoginRequiredMixin, CreateView):
     model = Service
     form_class = ServiceForm
 
     alert.update_alert_plugins()
+
     def get_success_url(self):
         return reverse('service', kwargs={'pk': self.object.id})
+
+
+class ScheduleCreateView(LoginRequiredMixin, CreateView):
+    model = Schedule
+    form_class = ScheduleForm
+
+    def get_success_url(self):
+        return reverse('shifts-detail', kwargs={'pk': self.object.id})
+
 
 class InstanceUpdateView(LoginRequiredMixin, UpdateView):
     model = Instance
@@ -756,6 +820,7 @@ class InstanceUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_success_url(self):
         return reverse('instance', kwargs={'pk': self.object.id})
+
 
 class ServiceUpdateView(LoginRequiredMixin, UpdateView):
     model = Service
@@ -765,11 +830,29 @@ class ServiceUpdateView(LoginRequiredMixin, UpdateView):
         return reverse('service', kwargs={'pk': self.object.id})
 
 
+class ScheduleUpdateView(LoginRequiredMixin, UpdateView):
+    model = Schedule
+    form_class = ScheduleForm
+    context_object_name = 'schedules'
+
+    def get_success_url(self):
+        return reverse('shifts-detail', kwargs={'pk': self.object.id})
+
+
 class ServiceDeleteView(LoginRequiredMixin, DeleteView):
     model = Service
     success_url = reverse_lazy('services')
     context_object_name = 'service'
     template_name = 'cabotapp/service_confirm_delete.html'
+
+
+class ScheduleDeleteView(LoginRequiredMixin, DeleteView):
+    model = Schedule
+    form_class = ScheduleForm
+
+    success_url = reverse_lazy('shifts')
+    context_object_name = 'schedule'
+    template_name = 'cabotapp/schedule_confirm_delete.html'
 
 
 class InstanceDeleteView(LoginRequiredMixin, DeleteView):
@@ -779,14 +862,41 @@ class InstanceDeleteView(LoginRequiredMixin, DeleteView):
     template_name = 'cabotapp/instance_confirm_delete.html'
 
 
+class ScheduleListView(LoginRequiredMixin, ListView):
+    model = Schedule
+    context_object_name = 'schedules'
+
+    def get_queryset(self):
+        return Schedule.objects.all().order_by('id')
+
+    def get_context_data(self, **kwargs):
+        """Add current duty officer to list page"""
+        context = super(ScheduleListView, self).get_context_data(**kwargs)
+        duty_officers = {schedule: get_single_duty_officer(schedule) for schedule in Schedule.objects.all()}
+        context['duty_officers'] = {
+            'officers': duty_officers,
+        }
+        return context
+
+
 class ShiftListView(LoginRequiredMixin, ListView):
     model = Shift
     context_object_name = 'shifts'
 
     def get_queryset(self):
+        schedule = Schedule.objects.get(id=self.kwargs['pk'])
+        update_shifts(schedule)
         return Shift.objects.filter(
             end__gt=datetime.utcnow().replace(tzinfo=utc),
-            deleted=False).order_by('start')
+            deleted=False,
+            schedule=schedule).order_by('start')
+
+    def get_context_data(self, **kwargs):
+        context = super(ShiftListView, self).get_context_data(**kwargs)
+
+        context['schedule'] = Schedule.objects.get(id=self.kwargs['pk'])
+        context['schedule_id'] = self.kwargs['pk']
+        return context
 
 
 class StatusCheckReportView(LoginRequiredMixin, TemplateView):
@@ -799,8 +909,6 @@ class StatusCheckReportView(LoginRequiredMixin, TemplateView):
 
 
 # Misc JSON api and other stuff
-
-
 def checks_run_recently(request):
     """
     Checks whether or not stuff is running by looking to see if checks have run in last 10 mins
@@ -856,3 +964,8 @@ class AuthComplete(View):
 class LoginError(View):
     def get(self, request, *args, **kwargs):
         return HttpResponse(status=401)
+
+
+@register.filter
+def get_item(dictionary, key):
+    return dictionary.get(key)

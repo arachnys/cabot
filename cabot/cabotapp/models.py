@@ -6,11 +6,12 @@ from celery.exceptions import SoftTimeLimitExceeded
 
 from .jenkins import get_job_status
 from .alert import (send_alert, AlertPluginUserData)
-from .calendar import get_events
 from .influx import parse_metric
 from .tasks import update_service, update_instance
-from datetime import datetime, timedelta
+from collections import defaultdict
+from datetime import timedelta
 from django.utils import timezone
+from icalendar import Calendar
 
 import json
 import re
@@ -98,6 +99,12 @@ class CheckGroupMixin(models.Model):
         blank=True,
         help_text='Users who should receive alerts.',
     )
+    schedules = models.ManyToManyField(
+        'Schedule',
+        blank=True,
+        null=True,
+        help_text='Oncall schedule to be alerted.'
+    )
     alerts_enabled = models.BooleanField(
         default=True,
         help_text='Alert when this service is not healthy.',
@@ -131,13 +138,12 @@ class CheckGroupMixin(models.Model):
         null=True,
         blank=True,
         verbose_name='Recovery instructions',
-        help_text='Gist, Hackpad or Refheap js embed with recovery instructions e.g. https://you.hackpad.com/some_document.js'
+        help_text='Gist, Hackpad or Refheap js embed with recovery instructions e.g. '
+                  'https://you.hackpad.com/some_document.js'
     )
-
 
     def __unicode__(self):
         return self.name
-
 
     def most_severe(self, check_list):
         failures = [c.importance for c in check_list]
@@ -165,10 +171,12 @@ class CheckGroupMixin(models.Model):
         if self.overall_status != self.PASSING_STATUS:
             # Don't alert every time
             if self.overall_status == self.WARNING_STATUS:
-                if self.last_alert_sent and (timezone.now() - timedelta(minutes=settings.NOTIFICATION_INTERVAL)) < self.last_alert_sent:
+                if self.last_alert_sent and (timezone.now() - timedelta(minutes=settings.NOTIFICATION_INTERVAL)) \
+                        < self.last_alert_sent:
                     return
             elif self.overall_status in (self.CRITICAL_STATUS, self.ERROR_STATUS):
-                if self.last_alert_sent and (timezone.now() - timedelta(minutes=settings.ALERT_INTERVAL)) < self.last_alert_sent:
+                if self.last_alert_sent and (timezone.now() - timedelta(minutes=settings.ALERT_INTERVAL)) \
+                        < self.last_alert_sent:
                     return
             self.last_alert_sent = timezone.now()
         else:
@@ -177,7 +185,8 @@ class CheckGroupMixin(models.Model):
         self.save()
         self.snapshot.did_send_alert = True
         self.snapshot.save()
-        send_alert(self, duty_officers=get_duty_officers())
+        for schedule in self.schedules.all():
+            send_alert(self, duty_officers=get_duty_officers(schedule))
 
     @property
     def recent_snapshots(self):
@@ -218,6 +227,31 @@ class CheckGroupMixin(models.Model):
     def all_failing_checks(self):
         return self.active_status_checks().exclude(calculated_status=self.CALCULATED_PASSING_STATUS)
 
+
+class Schedule(models.Model):
+    name = models.TextField(
+        unique=True,
+        help_text='Display name for the oncall schedule.')
+    ical_url = models.TextField(help_text='ical url of the oncall schedule.')
+    fallback_officer = models.ForeignKey(
+        User,
+        blank=True,
+        null=True,
+        help_text='Fallback officer to alert if the duty officer is unavailable.'
+    )
+
+    def get_calendar_data(self):
+        """
+        Parse icalendar data
+        :return: String containing the calendar data
+        """
+        resp = requests.get(self.ical_url)
+        return Calendar.from_ical(resp.content)
+
+    def __unicode__(self):
+        return self.name
+
+
 class Service(CheckGroupMixin):
 
     def update_status(self):
@@ -238,6 +272,7 @@ class Service(CheckGroupMixin):
         self.save()
         if not (self.overall_status == Service.PASSING_STATUS and self.old_overall_status == Service.PASSING_STATUS):
             self.alert()
+
     instances = models.ManyToManyField(
         'Instance',
         blank=True,
@@ -254,7 +289,6 @@ class Service(CheckGroupMixin):
 
 
 class Instance(CheckGroupMixin):
-
 
     def duplicate(self):
         checks = self.status_checks.all()
@@ -305,6 +339,7 @@ class Instance(CheckGroupMixin):
         self.icmp_status_checks().delete()
         return super(Instance, self).delete(*args, **kwargs)
 
+
 class Snapshot(models.Model):
 
     class Meta:
@@ -317,17 +352,20 @@ class Snapshot(models.Model):
     overall_status = models.TextField(default=Service.PASSING_STATUS)
     did_send_alert = models.IntegerField(default=False)
 
+
 class ServiceStatusSnapshot(Snapshot):
     service = models.ForeignKey(Service, related_name='snapshots')
 
     def __unicode__(self):
         return u"%s: %s" % (self.service.name, self.overall_status)
 
+
 class InstanceStatusSnapshot(Snapshot):
     instance = models.ForeignKey(Instance, related_name='snapshots')
 
     def __unicode__(self):
         return u"%s: %s" % (self.instance.name, self.overall_status)
+
 
 class StatusCheck(PolymorphicModel):
 
@@ -351,7 +389,9 @@ class StatusCheck(PolymorphicModel):
         max_length=30,
         choices=Service.IMPORTANCES,
         default=Service.ERROR_STATUS,
-        help_text='Severity level of a failure. Critical alerts are for failures you want to wake you up at 2am, Errors are things you can sleep through but need to fix in the morning, and warnings for less important things.'
+        help_text='Severity level of a failure. Critical alerts are for failures you want to wake you up at 2am, '
+                  'Errors are things you can sleep through but need to fix in the morning, '
+                  'and warnings for less important things.'
     )
     interval = models.IntegerField(
         default=5,
@@ -364,7 +404,8 @@ class StatusCheck(PolymorphicModel):
     debounce = models.IntegerField(
         default=0,
         null=True,
-        help_text='Number of successive failures permitted before check will be marked as failed. Default is 0, i.e. fail on first failure.'
+        help_text='Number of successive failures permitted before check will be marked as failed. '
+                  'Default is 0, i.e. fail on first failure.'
     )
     created_by = models.ForeignKey(User, null=True)
     calculated_status = models.CharField(
@@ -558,7 +599,7 @@ class StatusCheck(PolymorphicModel):
             self.cached_health = serialize_recent_results(recent_results)
             try:
                 updated = StatusCheck.objects.get(pk=self.pk)
-            except StatusCheck.DoesNotExist as e:
+            except StatusCheck.DoesNotExist:
                 logger.error('Cannot find myself (check %s) in the database, presumably have been deleted' % self.pk)
                 return
         else:
@@ -589,6 +630,7 @@ class StatusCheck(PolymorphicModel):
         for instance in instances:
             update_instance.delay(instance.id)
 
+
 class ICMPStatusCheck(StatusCheck):
 
     class Meta(StatusCheck.Meta):
@@ -603,8 +645,12 @@ class ICMPStatusCheck(StatusCheck):
         instances = self.instance_set.all()
         target = self.instance_set.get().address
 
-        # We need to read both STDOUT and STDERR because ping can write to both, depending on the kind of error. Thanks a lot, ping.
-        ping_process = subprocess.Popen("ping -c 1 " + target, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+        # We need to read both STDOUT and STDERR because ping can write to both, depending on the kind of error.
+        # Thanks a lot, ping.
+        ping_process = subprocess.Popen("ping -c 1 " + target,
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.STDOUT,
+                                        shell=True)
         response = ping_process.wait()
 
         if response == 0:
@@ -646,8 +692,8 @@ class GraphiteStatusCheck(StatusCheck):
                 return u'Hosts missing%s' % hosts_string
         if self.expected_num_metrics > 0:
             metrics_string = u'%s | %s/%s metrics' % (name,
-                                                actual_metrics,
-                                                self.expected_num_metrics)
+                                                      actual_metrics,
+                                                      self.expected_num_metrics)
             if self.expected_num_metrics > actual_metrics:
                 return u'Metrics condition missed for %s' % metrics_string
         if failure_value is None:
@@ -728,7 +774,6 @@ class GraphiteStatusCheck(StatusCheck):
             logger.info("Processing series " + str(json_series))
             for line in json_series:
                 matched_metrics = 0
-                metric_failed = True
 
                 for point in line['datapoints']:
 
@@ -736,8 +781,8 @@ class GraphiteStatusCheck(StatusCheck):
                     time_stamp = point[1]
 
                     if time_stamp <= reference_point:
-                        logger.debug('Point %s is older than ref ts %d' % \
-                            (str(point), reference_point))
+                        logger.debug('Point %s is older than ref ts %d' %
+                                     (str(point), reference_point))
                         continue
 
                     if last_value is not None:
@@ -834,14 +879,14 @@ class HttpStatusCheck(StatusCheck):
 
         try:
             resp = requests.request(
-                method = self.http_method,
-                url = self.endpoint,
-                data = http_body,
-                params = http_params,
-                timeout = self.timeout,
-                verify = self.verify_ssl_certificate,
-                auth = auth,
-                allow_redirects = self.allow_http_redirects
+                method=self.http_method,
+                url=self.endpoint,
+                data=http_body,
+                params=http_params,
+                timeout=self.timeout,
+                verify=self.verify_ssl_certificate,
+                auth=auth,
+                allow_redirects=self.allow_http_redirects
             )
         except requests.RequestException as e:
             result.error = u'Request error occurred: %s' % (e.message,)
@@ -875,6 +920,7 @@ class HttpStatusCheck(StatusCheck):
             result.succeeded = True
 
         return result
+
 
 class JenkinsStatusCheck(StatusCheck):
 
@@ -998,20 +1044,32 @@ class UserProfile(models.Model):
     def __unicode__(self):
         return 'User profile: %s' % self.user.username
 
-    def save(self, *args, **kwargs):
-        # Enforce uniqueness
-        if self.fallback_alert_user:
-            profiles = UserProfile.objects.exclude(id=self.id)
-            profiles.update(fallback_alert_user=False)
-        return super(UserProfile, self).save(*args, **kwargs)
-
     @property
     def prefixed_mobile_number(self):
         return '+%s' % self.mobile_number
 
     mobile_number = models.CharField(max_length=20, blank=True, default='')
     hipchat_alias = models.CharField(max_length=50, blank=True, default='')
-    fallback_alert_user = models.BooleanField(default=False)
+
+
+def get_events(schedule):
+    """
+    Get the events from an ical.
+    :param schedule: The oncall schedule we want events for
+    :return: A list of dicts of event data
+    """
+    events = []
+    for component in schedule.get_calendar_data().walk():
+        if component.name == 'VEVENT':
+            events.append({
+                'start': component.decoded('dtstart'),
+                'end': component.decoded('dtend'),
+                'summary': component.decoded('summary'),
+                'uid': component.decoded('uid'),
+                'attendee': component.decoded('attendee'),
+            })
+    return events
+
 
 class Shift(models.Model):
     start = models.DateTimeField()
@@ -1019,6 +1077,7 @@ class Shift(models.Model):
     user = models.ForeignKey(User)
     uid = models.TextField()
     deleted = models.BooleanField(default=False)
+    schedule = models.ForeignKey('Schedule', default=1)
 
     def __unicode__(self):
         deleted = ''
@@ -1027,34 +1086,83 @@ class Shift(models.Model):
         return "%s: %s to %s%s" % (self.user.username, self.start, self.end, deleted)
 
 
-def get_duty_officers(at_time=None):
-    """Returns a list of duty officers for a given time or now if none given"""
-    duty_officers = []
+def get_duty_officers(schedule, at_time=None):
+    """
+    Return the users on duty for a given schedule and time
+    :param schedule: The oncall schedule we're looking at
+    :param at_time: The time we want to know about
+    :return: List of users who are oncall
+    """
     if not at_time:
         at_time = timezone.now()
     current_shifts = Shift.objects.filter(
         deleted=False,
         start__lt=at_time,
         end__gt=at_time,
+        schedule=schedule,
     )
     if current_shifts:
         duty_officers = [shift.user for shift in current_shifts]
         return duty_officers
     else:
-        try:
-            u = UserProfile.objects.get(fallback_alert_user=True)
-            return [u.user]
-        except UserProfile.DoesNotExist:
-            return []
+        if schedule.fallback_officer:
+            return [schedule.fallback_officer]
+        return []
 
 
-def update_shifts():
-    events = get_events()
+def get_single_duty_officer(schedule, at_time=None):
+    """
+    Return one duty officer who is oncall
+    :param schedule: The oncall schedule
+    :param at_time: The time we want to know about
+    :return: One oncall officer or nothing
+    """
+    officers = get_duty_officers(schedule, at_time)
+    if len(officers) > 0:
+        return officers[0]
+    return ''
+
+
+def get_all_duty_officers(at_time=None):
+    """
+    Find all oncall officers and the schedules they're oncall for
+    :param at_time: The time we want to know about
+    :return: dict of {oncall_officer: schedule}
+    """
+    out = defaultdict(list)
+
+    for schedule in Schedule.objects.all():
+        for user in get_duty_officers(schedule, at_time):
+            out[user].append(schedule)
+
+    return out
+
+def get_all_fallback_officers():
+    """
+    Find all fallback officers and the schedules they're oncall for
+    :param at_time:  The time we want to know about
+    :return: dict of {fallback_officer: schedule}
+    """
+    out = defaultdict(list)
+
+    for schedule in Schedule.objects.all():
+        out[schedule.fallback_officer].append(schedule)
+
+    return out
+
+def update_shifts(schedule):
+    """
+    Update oncall Shifts for a given schedule
+    :param schedule: The oncall schedule
+    :return: none
+    """
+    events = get_events(schedule)
     users = User.objects.filter(is_active=True)
     user_lookup = {}
     for u in users:
         user_lookup[u.username.lower()] = u
-    future_shifts = Shift.objects.filter(start__gt=timezone.now())
+    future_shifts = Shift.objects.filter(start__gt=timezone.now(),
+                                         schedule=schedule)
     future_shifts.update(deleted=True)
 
     for event in events:
@@ -1071,11 +1179,14 @@ def update_shifts():
         if e is not None:
             user = user_lookup[e]
             try:
-                s = Shift.objects.get(uid=event['uid'])
+                s = Shift.objects.get(uid=event['uid'],
+                                      schedule=schedule)
             except Shift.DoesNotExist:
-                s = Shift(uid=event['uid'])
+                s = Shift(uid=event['uid'],
+                          schedule=schedule)
             s.start = event['start']
             s.end = event['end']
             s.user = user
             s.deleted = False
+            s.schedule = schedule
             s.save()
