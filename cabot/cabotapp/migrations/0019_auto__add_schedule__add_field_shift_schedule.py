@@ -11,7 +11,7 @@ class Migration(SchemaMigration):
         # Adding model 'Schedule'
         db.create_table(u'cabotapp_schedule', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('name', self.gf('django.db.models.fields.TextField')(unique=True)),
+            ('name', self.gf('django.db.models.fields.TextField')(unique=True, max_length=50)),
             ('ical_url', self.gf('django.db.models.fields.TextField')()),
             ('fallback_officer', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'], null=True, blank=True)),
         ))
