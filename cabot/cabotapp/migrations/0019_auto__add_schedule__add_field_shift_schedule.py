@@ -11,7 +11,7 @@ class Migration(SchemaMigration):
         # Adding model 'Schedule'
         db.create_table(u'cabotapp_schedule', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('name', self.gf('django.db.models.fields.TextField')(unique=True, max_length=50)),
+            ('name', self.gf('django.db.models.fields.CharField')(unique=True, max_length=50)),
             ('ical_url', self.gf('django.db.models.fields.TextField')()),
             ('fallback_officer', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'], null=True, blank=True)),
         ))
@@ -134,7 +134,7 @@ class Migration(SchemaMigration):
             'fallback_officer': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['auth.User']", 'null': 'True', 'blank': 'True'}),
             'ical_url': ('django.db.models.fields.TextField', [], {}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.TextField', [], {'unique': 'True'})
+            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '50'})
         },
         u'cabotapp.service': {
             'Meta': {'ordering': "['name']", 'object_name': 'Service'},

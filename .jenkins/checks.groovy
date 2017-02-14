@@ -75,7 +75,7 @@ Closure jobTemplate(job, desc, target) {
 
 // generate project for docker-compose tests
 freeStyleJob('cabot.docker-compose') { job ->
-  jobTemplate(job, "Runs tests against Affirm/cabot.git using docker-compose", 'docker-compose').call()
+  jobTemplate(job, "Runs tests against Affirm/cabot.git using docker-compose", 'test-mysql,test-psql').call()
   publishers {
     archiveJunit('build/docker-compose/*.xml')
     postBuildScripts {

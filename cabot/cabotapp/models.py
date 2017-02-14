@@ -229,8 +229,9 @@ class CheckGroupMixin(models.Model):
 
 
 class Schedule(models.Model):
-    name = models.TextField(
+    name = models.CharField(
         unique=True,
+        max_length=50,
         help_text='Display name for the oncall schedule.')
     ical_url = models.TextField(help_text='ical url of the oncall schedule.')
     fallback_officer = models.ForeignKey(

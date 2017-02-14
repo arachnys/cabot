@@ -12,7 +12,8 @@ services:
      - .:/code
     links:
      - redis
-     - db
+     - db_psql
+     - db_mysql
 
   worker:
     env_file:
@@ -23,16 +24,28 @@ services:
      - .:/code
     links:
      - redis
-     - db
+     - db_psql
+     - db_mysql
 
   redis:
     image: redis
 
-  db:
+  db_psql:
     image: postgres
 
-  wait:
+  db_mysql:
+    image: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=test
+
+  wait_psql:
     image: cabot:web
-    command: dockerize -wait tcp://db:5432 -timeout 20s
+    command: dockerize -wait tcp://db_psql:5432 -timeout 20s
     depends_on:
-      - db
+      - db_psql
+
+  wait_mysql:
+    image: cabot:web
+    command: dockerize -wait tcp://root:test@db_mysql:3306 -timeout 60s
+    depends_on:
+      - db_mysql
