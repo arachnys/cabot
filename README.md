@@ -72,7 +72,7 @@ To rebuild the virtualenv (after changing requirements), use
 
 ## Testing
 
-To run all tests (docker-compose and flake8), use
+To run all tests (MySQL, Postgres, and flake8), use
 
 .. code-block:: console
 

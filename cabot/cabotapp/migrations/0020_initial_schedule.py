@@ -15,7 +15,7 @@ class Migration(DataMigration):
             schedule = orm.Schedule.objects.create(
                 name='Main',
                 ical_url=settings.CALENDAR_ICAL_URL,
-                fallback_officer=fallback_officer,
+                fallback_officer=fallback_officer.user,
             )
             schedule.save()
 
