@@ -9,7 +9,7 @@ from cabot.cabot_config import *
 settings_dir = os.path.dirname(__file__)
 PROJECT_ROOT = os.path.abspath(settings_dir)
 
-TEMPLATE_DEBUG = DEBUG = os.environ.get("DEBUG", False)
+DEBUG = os.environ.get("DEBUG", False)
 
 ADMINS = (
     ('Admin', os.environ.get('ADMIN_EMAIL', 'name@example.com')),
@@ -75,6 +75,7 @@ COMPRESS_ROOT = STATIC_ROOT
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
 STATIC_URL = '%s/static/' % URL_PREFIX
+COMPRESS_URL = STATIC_URL
 
 # Additional locations of static files
 STATICFILES_DIRS = [os.path.join(PROJECT_ROOT, 'static')]
@@ -92,24 +93,24 @@ SECRET_KEY = os.environ.get(
     'DJANGO_SECRET_KEY', '2FL6ORhHwr5eX34pP9mMugnIOd3jzVuT45f7w430Mt5PnEwbcJgma0q8zUXNZ68A')
 
 # List of callables that know how to import templates from various sources.
-TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
-)
+TEMPLATES = [{
+    'BACKEND': 'django.template.backends.django.DjangoTemplates',
+    'DIRS': (
+        os.path.join(PROJECT_ROOT, 'templates'),
+    ),
+    'APP_DIRS': True,
+}]
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
 )
 
 ROOT_URLCONF = 'cabot.urls'
-
-TEMPLATE_DIRS = (
-    os.path.join(PROJECT_ROOT, 'templates'),
-)
 
 INSTALLED_APPS = (
     'django.contrib.auth',
@@ -156,8 +157,6 @@ EMAIL_BACKEND = os.environ.get('SES_BACKEND', 'django_smtp_ssl.SSLEmailBackend')
 EMAIL_USE_TLS = os.environ.get('SES_USE_TLS', 0)
 
 COMPRESS_OFFLINE = not DEBUG
-
-COMPRESS_URL = '%s/static/' % URL_PREFIX
 
 RECOVERY_SNIPPETS_WHITELIST = (
     r'https?://[^.]+\.hackpad\.com/[^./]+\.js',

@@ -1,3 +1,4 @@
+{% load static from staticfiles %}
 <!DOCTYPE html>
 <html>
 <head>
@@ -8,17 +9,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   {% load compress %}
   {% compress css %}
-  <link href="{{ STATIC_URL }}bootstrap/css/bootstrap.css" rel="stylesheet">
-  <link id="chosen-css" href="{{ STATIC_URL }}theme/css/chosen.css" rel="stylesheet">
-  <link href="{{ STATIC_URL }}bootstrap/css/dashboard.css" rel="stylesheet">
-  <link href="{{ STATIC_URL }}theme/css/jquery-ui-1.8.21.custom.css" type="text/css" rel="stylesheet">
-  <link href="{{ STATIC_URL }}arachnys/css/base.less" type="text/less" rel="stylesheet">
-  <link rel="stylesheet" href="{{ STATIC_URL }}arachnys/css/morris.css" type="text/css">
-  <link rel="stylesheet" href="{{ STATIC_URL }}arachnys/css/graph.css" type="text/css">
+  <link href="{% static 'bootstrap/css/bootstrap.css' %}" rel="stylesheet">
+  <link id="chosen-css" href="{% static 'theme/css/chosen.css' %}" rel="stylesheet">
+  <link href="{% static 'bootstrap/css/dashboard.css' %}" rel="stylesheet">
+  <link href="{% static 'theme/css/jquery-ui-1.8.21.custom.css' %}" type="text/css" rel="stylesheet">
+  <link href="{% static 'arachnys/css/base.less' %}" type="text/less" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'arachnys/css/morris.css' %}" type="text/css">
+  <link rel="stylesheet" href="{% static 'arachnys/css/graph.css' %}" type="text/css">
   {% endcompress %}
   <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
 
-  <link rel="icon" href="{{ STATIC_URL }}arachnys/img/icon_48x48.png" type="image/png">
+  <link rel="icon" href="{% static 'arachnys/img/icon_48x48.png'%}" type="image/png">
   {% compress js %}
   <script type="text/coffeescript">
   if window.location.host.indexOf('localhost') != -1
@@ -33,7 +34,7 @@
   <div class="navbar navbar-default navbar-fixed-top">
     <div class="container">
       <div class="navbar-header">
-        <a href="{% url "services" %}" class="navbar-brand"><img src="{{ STATIC_URL }}arachnys/img/icon_48x48.png" width='20' height='20' /> Cabot by Arachnys</a>
+        <a href="{% url "services" %}" class="navbar-brand"><img src="{% static 'arachnys/img/icon_48x48.png' %}" width='20' height='20' /> Cabot by Arachnys</a>
         <button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#navbar-main">
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
@@ -127,23 +128,23 @@
   {% block js %}
 
   {% compress js %}
-    <script src="{{ STATIC_URL }}bootstrap/js/jquery-1.10.2.js"></script>
-    <script src="{{ STATIC_URL }}theme/js/jquery-ui.js"></script>
-    <script src="{{ STATIC_URL }}theme/js/jquery.ui.core.js"></script>
-    <script src="{{ STATIC_URL }}theme/js/jquery.ui.position.js"></script>
-    <script src="{{ STATIC_URL }}theme/js/jquery.ui.autocomplete.js"></script>
+    <script src="{% static 'bootstrap/js/jquery-1.10.2.js' %}"></script>
+    <script src="{% static 'theme/js/jquery-ui.js' %}"></script>
+    <script src="{% static 'theme/js/jquery.ui.core.js' %}"></script>
+    <script src="{% static 'theme/js/jquery.ui.position.js' %}"></script>
+    <script src="{% static 'theme/js/jquery.ui.autocomplete.js' %}"></script>
 
-    <script src="{{ STATIC_URL }}bootstrap/js/bootstrap.js"></script>
+    <script src="{% static 'bootstrap/js/bootstrap.js' %}"></script>
 
-    <script src='{{ STATIC_URL }}theme/js/jquery.dataTables.min.js'></script>
+    <script src="{% static 'theme/js/jquery.dataTables.min.js' %}"></script>
 
-    <script src="{{ STATIC_URL }}theme/js/chosen.jquery.js"></script>
+    <script src="{% static 'theme/js/chosen.jquery.js' %}"></script>
 
-    <script src="{{ STATIC_URL }}theme/js/jquery.sparkline.min.js"></script>
+    <script src="{% static 'theme/js/jquery.sparkline.min.js' %}"></script>
 
-    <script src="{{ STATIC_URL }}theme/js/custom.js"></script>
-    <script src="{{ STATIC_URL }}arachnys/js/raphael.js"></script>
-    <script src="{{ STATIC_URL }}arachnys/js/morris.js"></script>
+    <script src="{% static 'theme/js/custom.js' %}"></script>
+    <script src="{% static 'arachnys/js/raphael.js' %}"></script>
+    <script src="{% static 'arachnys/js/morris.js' %}"></script>
     <!-- end: JavaScript-->
     <script type="text/coffeescript">
     $ () ->
