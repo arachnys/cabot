@@ -1,0 +1,9 @@
+version: '2'
+services:
+  test:
+    extends:
+      file: docker-compose-base.yml
+      service: base
+    command: python manage.py test -v2
+    env_file:
+        - conf/test.env

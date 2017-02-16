@@ -18,7 +18,7 @@ before_script:
 
 script:
  - tox
- - docker-compose run --rm web bash bin/test_with_coverage
+ - docker-compose -f docker-compose-test.yml run --rm test bash bin/test_with_coverage -v2
  - docker-compose run --rm -e CABOT_SUPERUSER_USERNAME='admin' -e CABOT_SUPERUSER_PASSWORD='pass' web true
 
 after_success:
