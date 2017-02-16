@@ -7,6 +7,7 @@ Version 0.8.6
 Version 0.8.5
 -------------
 
+* Upgrade to Django 1.9
 * More severe alerts should trigger even if a less severe alert was recently sent
 * Update production.env.example email settings
 * Convert environment vars to boolean nicely
