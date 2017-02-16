@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+{% load static from staticfiles %}
 {% block title %}{{ block.super }} - {{ instance.name }}{% endblock title %}
 
 {% block content %}
@@ -134,9 +134,9 @@
 <script type="text/javascript">
   window.INSTANCE_HISTORY = {{ instance.recent_snapshots|jsonify }}
 </script>
-<script type="text/javascript" src="{{ STATIC_URL }}arachnys/js/d3.js"></script>
+<script type="text/javascript" src="{% static 'arachnys/js/d3.js' %}"></script>
 {% compress js %}
-<script type="text/javascript" src="{{ STATIC_URL }}arachnys/js/rickshaw.js"></script>
+<script type="text/javascript" src="{% static 'arachnys/js/rickshaw.js' %}"></script>
 <script type="text/coffeescript">
 
 $(document).ready ->
@@ -199,7 +199,7 @@ drawRickshaw = (data, labels, events = []) ->
 $(function(){
     $(':input.datepicker').datepicker({
         dateFormat: 'yy-mm-dd',
-        buttonImage: '{{ STATIC_URL }}theme/img/calendar.gif',
+        buttonImage: "{% static 'theme/img/calendar.gif' %}",
         buttonImageOnly: true,
         showOn: 'button'
     });

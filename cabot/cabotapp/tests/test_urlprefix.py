@@ -3,11 +3,12 @@ import sys
 from django.core.urlresolvers import reverse, clear_url_caches
 from django.conf import settings
 from django.test.utils import override_settings
-from django.utils.importlib import import_module
+from importlib import import_module
 
 from rest_framework import status, HTTP_HEADER_ENCODING
 
 from tests_basic import LocalTestCase
+
 
 class override_urlprefix(override_settings):
     def clear_cache(self):
@@ -25,13 +26,13 @@ class override_urlprefix(override_settings):
 
         # Have to turn off the compressor here, can't find a way to reload
         # the COMPRESS_URL into it on the fly
-
         super(override_urlprefix, self).__init__(
-            URL_PREFIX = urlprefix,
-            MEDIA_URL = "%s/media/" % urlprefix,
-            STATIC_URL = "%s/static/" % urlprefix,
-            COMPRESS_URL = "%s/static/" % urlprefix,
-            COMPRESS_ENABLED = False
+            URL_PREFIX=urlprefix,
+            MEDIA_URL="%s/media/" % urlprefix,
+            STATIC_URL="%s/static/" % urlprefix,
+            COMPRESS_URL="%s/static/" % urlprefix,
+            COMPRESS_ENABLED=False,
+            COMPRESS_PRECOMPILERS=()
         )
 
     def __enter__(self):
@@ -41,6 +42,7 @@ class override_urlprefix(override_settings):
     def __exit__(self, exc_type, exc_value, traceback):
         super(override_urlprefix, self).__exit__(exc_type, exc_value, traceback)
         self.clear_cache()
+
 
 class URLPrefixTestCase(LocalTestCase):
     def set_url_prefix(self, prefix):
@@ -67,7 +69,6 @@ class URLPrefixTestCase(LocalTestCase):
 
     def test_query(self):
         prefix = '/test'
-
         self.client.login(username=self.username, password=self.password)
 
         before_services = self.client.get(reverse('services'))
