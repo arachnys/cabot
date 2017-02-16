@@ -10,7 +10,7 @@ from cabot.cabot_config import *
 settings_dir = os.path.dirname(__file__)
 PROJECT_ROOT = os.path.abspath(settings_dir)
 
-TEMPLATE_DEBUG = DEBUG = os.environ.get("DEBUG", False)
+TEMPLATE_DEBUG = DEBUG = os.environ.get('DEBUG', False)
 
 ADMINS = (
     ('Admin', os.environ.get('ADMIN_EMAIL', 'name@example.com')),
@@ -21,11 +21,11 @@ MANAGERS = ADMINS
 if os.environ.get('CABOT_FROM_EMAIL'):
     DEFAULT_FROM_EMAIL = os.environ['CABOT_FROM_EMAIL']
 
-DATABASES = {'default': dj_database_url.parse(os.environ["DATABASE_URL"])}
+DATABASES = {'default': dj_database_url.config()}
 
 TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
-URL_PREFIX = os.environ.get('URL_PREFIX', '/').rstrip("/")
+URL_PREFIX = os.environ.get('URL_PREFIX', '/').rstrip('/')
 
 LOGIN_URL = reverse_lazy('login')
 
