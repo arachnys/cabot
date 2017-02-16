@@ -422,7 +422,21 @@ class ServiceForm(forms.ModelForm):
         raise ValidationError('Please specify a valid JS snippet link')
 
 
-class ScheduleForm(forms.ModelForm):
+class ScheduleForm(SymmetricalForm):
+    symmetrical_fields = ('service_set',)
+
+    service_set = forms.ModelMultipleChoiceField(
+        queryset=Service.objects.all(),
+        required=False,
+        help_text='Link to service(s).',
+        widget=forms.SelectMultiple(
+            attrs={
+                'data-rel': 'chosen',
+                'style': 'width: 70%',
+            },
+        )
+    )
+
     class Meta:
         model = Schedule
         template_name = 'schedule_form.html'
