@@ -7,3 +7,6 @@ services:
     command: python manage.py test -v2
     env_file:
         - conf/test.env
+  sut:
+    image: ubuntu
+    command: "true"
