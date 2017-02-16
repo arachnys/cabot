@@ -22,6 +22,8 @@ function wait_for_database {(
 function wait_for_migrations {(
   set +e
   for try in {1..60} ; do
+    # Kind of ugly but not sure if there's another way to determine if migrations haven't run
+    # migrate --list returns a checkbox list of migrations, empty checkboxes mean they haven't been run
     python manage.py migrate --list | grep "\[ \]" &> /dev/null || break
     echo "Waiting for database migrations to be run..."
     sleep 1
