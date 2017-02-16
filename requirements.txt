@@ -10,9 +10,9 @@ django-compressor==2.1.1
 django-filter==0.13
 django-jsonify==0.3.0
 django-mptt==0.6.0
-django-polymorphic==0.7.2
+django-polymorphic==1.1
 Django>=1.9,<1.10
-djangorestframework==2.4.8
+djangorestframework>=3.4,<3.5
 freezegun==0.3.8
 gevent==1.0.1
 gunicorn==19.6.0

@@ -2,14 +2,15 @@ from django.db import models as model_fields
 from django.conf import settings
 from django.conf.urls import url, include
 from django.contrib.auth import models as django_models
-from polymorphic import PolymorphicModel
+
+from polymorphic.models import PolymorphicModel
 from cabot.cabotapp import models, alert
 from rest_framework import routers, serializers, viewsets, mixins
 import logging
 
 logger = logging.getLogger(__name__)
-
 router = routers.DefaultRouter()
+
 
 def create_viewset(arg_model, arg_fields, arg_read_only_fields=(), no_create=False):
     arg_read_only_fields = ('id',) + arg_read_only_fields

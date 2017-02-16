@@ -13,7 +13,9 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.signals import post_save
 from django.utils import timezone
-from polymorphic import PolymorphicModel
+
+
+from polymorphic.models import PolymorphicModel
 
 from .alert import (
     send_alert,
