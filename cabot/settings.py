@@ -208,7 +208,7 @@ LOGGING = {
             'level': 'DEBUG',
             'class': 'logging.handlers.RotatingFileHandler',
             'formatter': 'verbose',
-            'filename': os.environ['LOG_FILE'],
+            'filename': os.environ.get('LOG_FILE', '/dev/null'),
             'maxBytes': 1024 * 1024 * 25,  # 25 MB
             'backupCount': 5,
         },
