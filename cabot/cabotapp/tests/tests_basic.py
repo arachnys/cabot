@@ -990,6 +990,22 @@ class TestCleanUpTask(LocalTestCase):
         tasks.clean_db(batch_size=1)
         self.assertEqual(StatusCheckResult.objects.all().count(), initial_results)
 
+    def test_cleanup_single_batch(self):
+        with self.settings(CELERY_ALWAYS_EAGER=False):
+            initial_results = StatusCheckResult.objects.all().count()
+
+            for i in range(2):
+                StatusCheckResult(
+                    status_check=self.graphite_check,
+                    time=timezone.now() - timedelta(days=61),
+                    time_complete=timezone.now() - timedelta(days=61),
+                    succeeded=False
+                ).save()
+
+            self.assertEqual(StatusCheckResult.objects.all().count(), initial_results + 2)
+            tasks.clean_db(batch_size=1)
+            self.assertEqual(StatusCheckResult.objects.all().count(), initial_results + 1)
+
 
 class TestMinimizeTargets(LocalTestCase):
     def test_null(self):
