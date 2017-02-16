@@ -19,6 +19,7 @@ println "Building commit: ${commit} from branch ${branch} ..."
 // schedule jobs in parallel
 println "Scheduling jobs in parallel ..."
 parallel(
-  { results.add(build('cabot.docker-compose', GIT_BRANCH: branch, GIT_COMMIT: commit)) },
+  { results.add(build('cabot.test-psql', GIT_BRANCH: branch, GIT_COMMIT: commit)) },
+  { results.add(build('cabot.test-mysql', GIT_BRANCH: branch, GIT_COMMIT: commit)) },
   { results.add(build('cabot.flake8', GIT_BRANCH: branch, GIT_COMMIT: commit)) }
 )
