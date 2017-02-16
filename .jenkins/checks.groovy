@@ -73,11 +73,25 @@ Closure jobTemplate(job, desc, target) {
   return closure
 }
 
-// generate project for docker-compose tests
-freeStyleJob('cabot.docker-compose') { job ->
-  jobTemplate(job, "Runs tests against Affirm/cabot.git using docker-compose", 'docker-compose').call()
+// generate project for tests using postgres
+freeStyleJob('cabot.test-psql') { job ->
+  jobTemplate(job, "Runs tests against Affirm/cabot.git with a Postgres database", 'test-psql').call()
   publishers {
-    archiveJunit('build/docker-compose/*.xml')
+    archiveJunit('build/test-psql/*.xml')
+    postBuildScripts {
+      steps {
+        shell('sudo chown -R "$(whoami)" "${WORKSPACE}"')
+      }
+      onlyIfBuildSucceeds(false)
+    }
+  }
+}
+
+// generate project for tests using mysql
+freeStyleJob('cabot.test-mysql') { job ->
+  jobTemplate(job, "Runs tests against Affirm/cabot.git with a MySQL database", 'test-mysql').call()
+  publishers {
+    archiveJunit('build/test-mysql/*.xml')
     postBuildScripts {
       steps {
         shell('sudo chown -R "$(whoami)" "${WORKSPACE}"')

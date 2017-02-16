@@ -57,6 +57,10 @@ CELERY_ROUTES = {
         'queue': 'batch',
         'routing_key': 'batch',
     },
+    'cabot.cabotapp.tasks.reset_shifts': {
+        'queue': 'batch',
+        'routing_key': 'batch',
+    },
     'cabot.cabotapp.tasks.clean_db': {
         'queue': 'maintenance',
         'routing_key': 'maintenance',

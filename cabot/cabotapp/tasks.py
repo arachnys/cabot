@@ -1,3 +1,4 @@
+from datetime import timedelta
 import random
 import logging
 
@@ -6,7 +7,10 @@ from celery._state import set_default_app
 from celery.task import task
 
 from django.conf import settings
+from django.db import transaction
 from django.utils import timezone
+
+import models
 
 celery = Celery(__name__)
 celery.config_from_object(settings)
@@ -24,9 +28,8 @@ logger = logging.getLogger(__name__)
 
 @task(ignore_result=True)
 def run_status_check(check_or_id):
-    from .models import StatusCheck
-    if not isinstance(check_or_id, StatusCheck):
-        check = StatusCheck.objects.get(id=check_or_id)
+    if not isinstance(check_or_id, models.StatusCheck):
+        check = models.StatusCheck.objects.get(id=check_or_id)
     else:
         check = check_or_id
     # This will call the subclass method
@@ -35,9 +38,7 @@ def run_status_check(check_or_id):
 
 @task(ignore_result=True)
 def run_all_checks():
-    from .models import StatusCheck
-    from datetime import timedelta
-    checks = StatusCheck.objects.filter(active=True).all()
+    checks = models.StatusCheck.objects.filter(active=True).all()
     seconds = range(60)
     for check in checks:
         if check.last_run:
@@ -56,9 +57,8 @@ def update_services(ignore_result=True):
 
 @task(ignore_result=True)
 def update_service(service_or_id):
-    from .models import Service
-    if not isinstance(service_or_id, Service):
-        service = Service.objects.get(id=service_or_id)
+    if not isinstance(service_or_id, models.Service):
+        service = models.Service.objects.get(id=service_or_id)
     else:
         service = service_or_id
     service.update_status()
@@ -66,9 +66,8 @@ def update_service(service_or_id):
 
 @task(ignore_result=True)
 def update_instance(instance_or_id):
-    from .models import Instance
-    if not isinstance(instance_or_id, Instance):
-        instance = Instance.objects.get(id=instance_or_id)
+    if not isinstance(instance_or_id, models.Instance):
+        instance = models.Instance.objects.get(id=instance_or_id)
     else:
         instance = instance_or_id
     instance.update_status()
@@ -76,10 +75,19 @@ def update_instance(instance_or_id):
 
 @task(ignore_result=True)
 def update_shifts():
-    from .models import Schedule, update_shifts as _update_shifts
-    schedules = Schedule.objects.all()
+    schedules = models.Schedule.objects.all()
     for schedule in schedules:
-        _update_shifts(schedule)
+        models.update_shifts(schedule)
+
+
+@task(ignore_result=True)
+def reset_shifts(schedule_id):
+    try:
+        schedule = models.Schedule.objects.get(id=schedule_id)
+        models.delete_shifts(schedule)
+        models.update_shifts(schedule)
+    except Exception as e:
+        logger.exception('Error when resetting shifts: {}'.format(e))
 
 
 @task(ignore_result=True)
@@ -90,12 +98,10 @@ def clean_db(days_to_retain=60):
     To loop over undeleted results, spawn new tasks to make sure
     db connection closed etc
     """
-    from .models import StatusCheckResult, ServiceStatusSnapshot
-    from datetime import timedelta
 
-    to_discard_results = StatusCheckResult.objects.filter(
+    to_discard_results = models.StatusCheckResult.objects.filter(
         time__lte=timezone.now()-timedelta(days=days_to_retain))
-    to_discard_snapshots = ServiceStatusSnapshot.objects.filter(
+    to_discard_snapshots = models.ServiceStatusSnapshot.objects.filter(
         time__lte=timezone.now()-timedelta(days=days_to_retain))
 
     result_ids = to_discard_results.values_list('id', flat=True)[:100]
@@ -112,8 +118,8 @@ def clean_db(days_to_retain=60):
     logger.info('Processing %s ServiceStatusSnapshot objects' %
                 len(snapshot_ids))
 
-    StatusCheckResult.objects.filter(id__in=result_ids).delete()
-    ServiceStatusSnapshot.objects.filter(id__in=snapshot_ids).delete()
+    models.StatusCheckResult.objects.filter(id__in=result_ids).delete()
+    models.ServiceStatusSnapshot.objects.filter(id__in=snapshot_ids).delete()
 
     clean_db.apply_async(kwargs={'days_to_retain': days_to_retain},
                          countdown=3)

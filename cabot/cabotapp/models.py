@@ -229,8 +229,9 @@ class CheckGroupMixin(models.Model):
 
 
 class Schedule(models.Model):
-    name = models.TextField(
+    name = models.CharField(
         unique=True,
+        max_length=50,
         help_text='Display name for the oncall schedule.')
     ical_url = models.TextField(help_text='ical url of the oncall schedule.')
     fallback_officer = models.ForeignKey(
@@ -623,12 +624,12 @@ class StatusCheck(PolymorphicModel):
     def update_related_services(self):
         services = self.service_set.all()
         for service in services:
-            update_service.delay(service.id)
+            update_service.apply_async(args=[service.id])
 
     def update_related_instances(self):
         instances = self.instance_set.all()
         for instance in instances:
-            update_instance.delay(instance.id)
+            update_instance.apply_async(args=[instance.id])
 
 
 class ICMPStatusCheck(StatusCheck):
@@ -1190,3 +1191,14 @@ def update_shifts(schedule):
             s.deleted = False
             s.schedule = schedule
             s.save()
+
+def delete_shifts(schedule):
+    """
+    Delete oncall Shifts for a given schedule
+    :param schedule: the schedule
+    :return none
+    """
+    shifts = Shift.objects.filter(schedule=schedule)
+    for shift in shifts:
+        shift.deleted = True
+        shift.save()

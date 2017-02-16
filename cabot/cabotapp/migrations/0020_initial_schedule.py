@@ -15,7 +15,7 @@ class Migration(DataMigration):
             schedule = orm.Schedule.objects.create(
                 name='Main',
                 ical_url=settings.CALENDAR_ICAL_URL,
-                fallback_officer=fallback_officer,
+                fallback_officer=fallback_officer.user,
             )
             schedule.save()
 
@@ -106,7 +106,7 @@ class Migration(DataMigration):
             'fallback_officer': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['auth.User']", 'null': 'True', 'blank': 'True'}),
             'ical_url': ('django.db.models.fields.TextField', [], {}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.TextField', [], {'unique': 'True'})
+            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '50'})
         },
         u'cabotapp.service': {
             'Meta': {'ordering': "['name']", 'object_name': 'Service'},
