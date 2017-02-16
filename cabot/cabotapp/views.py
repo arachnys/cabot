@@ -809,9 +809,7 @@ class ServiceCreateView(LoginRequiredMixin, CreateView):
 class ScheduleCreateView(LoginRequiredMixin, CreateView):
     model = Schedule
     form_class = ScheduleForm
-
-    def get_success_url(self):
-        return reverse('shifts-detail', kwargs={'pk': self.object.id})
+    success_url = reverse_lazy('shifts')
 
 
 class InstanceUpdateView(LoginRequiredMixin, UpdateView):
@@ -834,9 +832,7 @@ class ScheduleUpdateView(LoginRequiredMixin, UpdateView):
     model = Schedule
     form_class = ScheduleForm
     context_object_name = 'schedules'
-
-    def get_success_url(self):
-        return reverse('shifts-detail', kwargs={'pk': self.object.id})
+    success_url = reverse_lazy('shifts')
 
 
 class ServiceDeleteView(LoginRequiredMixin, DeleteView):
