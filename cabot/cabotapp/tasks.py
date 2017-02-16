@@ -6,6 +6,7 @@ from celery._state import set_default_app
 from celery.task import task
 from django.conf import settings
 from django.utils import timezone
+from datetime import timedelta
 
 celery = Celery(__name__)
 celery.config_from_object(settings)
@@ -87,7 +88,6 @@ def clean_db(days_to_retain=60, batch_size=10000):
     To loop over undeleted results, spawn new tasks to make sure db connection closed etc
     """
     from .models import StatusCheckResult, ServiceStatusSnapshot
-    from datetime import timedelta
 
     to_discard_results = StatusCheckResult.objects.filter(time_complete__lte=timezone.now() - timedelta(days=days_to_retain))
     to_discard_snapshots = ServiceStatusSnapshot.objects.order_by('time').filter(time__lte=timezone.now() - timedelta(days=days_to_retain))
@@ -98,21 +98,12 @@ def clean_db(days_to_retain=60, batch_size=10000):
     result_count = result_ids.count()
     snapshot_count = snapshot_ids.count()
 
-    # id__in throws exception if passed an empty list, so guard against it
-    if result_count > 0:
-        StatusCheckResult.objects.filter(id__in=result_ids).delete()
-        logger.info('Processing %s StatusCheckResult objects' % result_count)
-    else:
-        logger.info('Completed deleting StatusCheckResult objects')
+    StatusCheckResult.objects.filter(id__in=result_ids).delete()
+    ServiceStatusSnapshot.objects.filter(id__in=snapshot_ids).delete()
 
-    if snapshot_count > 0:
-        ServiceStatusSnapshot.objects.filter(id__in=snapshot_ids).delete()
-        logger.info('Processing %s ServiceStatusSnapshot objects' % snapshot_count)
-    else:
-        logger.info('Completed deleting ServiceStatusSnapshot objects')
-
-    if result_count < batch_size and snapshot_count < batch_size:
-        logger.info('Completed deleted all old records')
-    else:
-        # Re-queue to cleanup remaining records
-        clean_db.apply_async(kwargs={'days_to_retain': days_to_retain, 'batch_size': batch_size}, countdown=3)
+    # If we reached the batch size on either we need to re-queue to continue cleaning up.
+    if result_count == batch_size or snapshot_count == batch_size:
+        clean_db.apply_async(kwargs={
+            'days_to_retain': days_to_retain,
+            'batch_size': batch_size},
+            countdown=3)

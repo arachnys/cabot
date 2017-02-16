@@ -1006,6 +1006,41 @@ class TestCleanUpTask(LocalTestCase):
             tasks.clean_db(batch_size=1)
             self.assertEqual(StatusCheckResult.objects.all().count(), initial_results + 1)
 
+    @patch('cabot.cabotapp.tasks.clean_db.apply_async')
+    def test_infinite_cleanup_loop(self, mocked_apply_async):
+        """
+        There is a potential for the cleanup task to constantly call itself
+        if every time it re-runs there is at least 1 new object to clean up
+        (i.e. every 3 seconds for 60 days a new result is recorded). Make sure
+        it only re-calls itself if the whole batch is used.
+        """
+        with self.settings(CELERY_ALWAYS_EAGER=False):
+            initial_results = StatusCheckResult.objects.all().count()
+
+            for i in range(2):
+                StatusCheckResult(
+                    status_check=self.graphite_check,
+                    time=timezone.now() - timedelta(days=61),
+                    time_complete=timezone.now() - timedelta(days=61),
+                    succeeded=False
+                ).save()
+
+            tasks.clean_db(batch_size=2)
+            # If full batch is cleaned it should queue itself again
+            self.assertTrue(mocked_apply_async.called)
+
+            StatusCheckResult(
+                status_check=self.graphite_check,
+                time=timezone.now() - timedelta(days=61),
+                time_complete=timezone.now() - timedelta(days=61),
+                succeeded=False
+            ).save()
+
+            mocked_apply_async.reset_mock()
+            tasks.clean_db(batch_size=2)
+            # This time full batch isn't cleaned (only 1 out of 2) - don't call again
+            self.assertFalse(mocked_apply_async.called)
+
 
 class TestMinimizeTargets(LocalTestCase):
     def test_null(self):
