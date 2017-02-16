@@ -11,7 +11,7 @@ services:
       - CABOT_SUPERUSER_PASSWORD=pass
     command: python manage.py runserver 0.0.0.0:5001
     ports:
-      - "5000:5000"
+      - "5001:5001"
     links:
       - redis
       - db
