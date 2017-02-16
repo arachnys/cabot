@@ -3,6 +3,7 @@ import dj_database_url
 import re
 from django.conf import settings
 from django.core.urlresolvers import reverse_lazy
+from cabot.settings_utils import environ_get_list
 from cabot.celeryconfig import *
 from cabot.cabot_config import *
 
@@ -148,12 +149,17 @@ COMPRESS_PRECOMPILERS = (
     ('text/less', 'lessc {infile} > {outfile}'),
 )
 
-EMAIL_HOST = os.environ.get('SES_HOST', 'localhost')
-EMAIL_PORT = int(os.environ.get('SES_PORT', 25))
-EMAIL_HOST_USER = os.environ.get('SES_USER', '')
-EMAIL_HOST_PASSWORD = os.environ.get('SES_PASS', '')
-EMAIL_BACKEND = os.environ.get('SES_BACKEND', 'django_smtp_ssl.SSLEmailBackend')
-EMAIL_USE_TLS = os.environ.get('SES_USE_TLS', 0)
+# For the email settings we both accept old and new names
+EMAIL_HOST = environ_get_list(['EMAIL_HOST', 'SES_HOST'], 'localhost')
+EMAIL_PORT = int(environ_get_list(['EMAIL_PORT', 'SES_PORT'], 25))
+EMAIL_HOST_USER = environ_get_list(['EMAIL_USER', 'SES_USER'], '')
+EMAIL_HOST_PASSWORD = environ_get_list(['EMAIL_PASSWORD', 'SES_PASS'], '')
+EMAIL_BACKEND = environ_get_list(
+    ['EMAIL_BACKEND', 'SES_BACKEND'],
+    'django.core.mail.backends.smtp.EmailBackend'
+)
+EMAIL_USE_TLS = environ_get_list(['EMAIL_USE_TLS', 'SES_USE_TLS'], 0)
+EMAIL_USE_SSL = environ_get_list(['EMAIL_USE_SSL', 'SES_USE_SSL'], 1)
 
 COMPRESS_OFFLINE = not DEBUG
 
