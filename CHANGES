@@ -1,6 +1,7 @@
 master
 ------
 
+* Remove django-smtp-ssl dependency
 * Build docker image from alpine
 * Refactor docker-compose files
 * Fix db_clean task failing on large results tables
