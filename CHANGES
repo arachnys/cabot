@@ -1,5 +1,5 @@
-master
-------
+Version 0.8.2
+-------------
 
 * Remove django-smtp-ssl dependency
 * Build docker image from alpine

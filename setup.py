@@ -14,7 +14,7 @@ plugins = env['CABOT_PLUGINS_ENABLED'].split(',') if 'CABOT_PLUGINS_ENABLED' in 
 
 setup(
     name='cabot',
-    version='0.8.1',
+    version='0.8.2',
     description="Self-hosted, easily-deployable monitoring and alerts service"
                 " - like a lightweight PagerDuty",
     long_description=open('README.md').read(),
