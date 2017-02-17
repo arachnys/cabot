@@ -1,3 +1,8 @@
+master
+------
+
+* Use whitenoise to serve static files
+
 Version 0.8.3
 -------------
 
