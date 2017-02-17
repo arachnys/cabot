@@ -81,6 +81,9 @@ COMPRESS_URL = STATIC_URL
 # Additional locations of static files
 STATICFILES_DIRS = [os.path.join(PROJECT_ROOT, 'static')]
 
+if not DEBUG:
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 # List of finder classes that know how to find static files in
 # various locations.
 STATICFILES_FINDERS = (
@@ -111,6 +114,7 @@ TEMPLATES = [{
 }]
 
 MIDDLEWARE_CLASSES = (
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -120,7 +124,6 @@ MIDDLEWARE_CLASSES = (
 )
 
 ROOT_URLCONF = 'cabot.urls'
-
 INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
