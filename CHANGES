@@ -1,6 +1,7 @@
 master
 ------
 
+* Fix setup.py packaging
 * Use whitenoise to serve static files
 
 Version 0.8.3
