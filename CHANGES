@@ -1,5 +1,5 @@
-master
-------
+Version 0.8.4
+-------------
 
 * Fix setup.py packaging
 * Use whitenoise to serve static files
