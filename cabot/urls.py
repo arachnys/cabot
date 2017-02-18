@@ -9,7 +9,8 @@ from cabot.cabotapp.views import (
     ICMPCheckCreateView, ICMPCheckUpdateView,
     JenkinsCheckCreateView, JenkinsCheckUpdateView,
     StatusCheckDeleteView, StatusCheckListView, StatusCheckDetailView,
-    StatusCheckResultDetailView, StatusCheckReportView, UserProfileUpdateAlert)
+    StatusCheckResultDetailView, StatusCheckReportView, UserProfileUpdateAlert,
+    SetupView)
 
 from cabot.cabotapp.views import (InstanceListView, InstanceDetailView,
     InstanceUpdateView, InstanceCreateView, InstanceDeleteView,
@@ -17,10 +18,13 @@ from cabot.cabotapp.views import (InstanceListView, InstanceDetailView,
     ServiceUpdateView, ServiceCreateView, ServiceDeleteView,
     UserProfileUpdateView, ShiftListView, subscriptions)
 
+from cabot.cabotapp.utils import cabot_needs_setup
+
 from cabot import rest_urls
 
 from django.contrib import admin
 from django.views.generic.base import RedirectView
+from django.shortcuts import redirect
 from django.contrib.auth.views import login, logout, password_reset, password_reset_done, password_reset_confirm
 admin.autodiscover()
 
@@ -28,6 +32,15 @@ from importlib import import_module
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def first_time_setup_wrapper(func):
+    def wrapper(*args, **kwargs):
+        if cabot_needs_setup():
+            return redirect('first_time_setup')
+        else:
+            return func(*args, **kwargs)
+    return wrapper
 
 urlpatterns = patterns('',
      # for the password reset views
@@ -37,8 +50,9 @@ urlpatterns = patterns('',
              name='dashboard'),
      url(r'^subscriptions/', view=subscriptions,
              name='subscriptions'),
-     url(r'^accounts/login/', view=login, name='login'),
+     url(r'^accounts/login/', view=first_time_setup_wrapper(login), name='login'),
      url(r'^accounts/logout/', view=logout, name='logout'),
+     url(r'^setup/', view=SetupView.as_view(), name='first_time_setup'),
      url(r'^accounts/password-reset/',
              view=password_reset, name='password-reset'),
      url(r'^accounts/password-reset-done/',

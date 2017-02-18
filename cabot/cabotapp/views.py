@@ -5,11 +5,13 @@ from itertools import groupby, dropwhile, izip_longest
 
 import requests
 from cabot.cabotapp import alert
+from cabot.cabotapp.utils import cabot_needs_setup
 from dateutil.relativedelta import relativedelta
 from django import forms
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
 from django.core.urlresolvers import reverse
@@ -21,6 +23,7 @@ from django.utils.decorators import method_decorator
 from django.utils.timezone import utc
 from django.views.generic import (
     DetailView, CreateView, UpdateView, ListView, DeleteView, TemplateView, View)
+from django.shortcuts import redirect
 from models import AlertPluginUserData
 from models import (
     StatusCheck, GraphiteStatusCheck, JenkinsStatusCheck, HttpStatusCheck, ICMPStatusCheck,
@@ -759,6 +762,47 @@ class StatusCheckReportView(LoginRequiredMixin, TemplateView):
         form = StatusCheckReportForm(self.request.GET)
         if form.is_valid():
             return {'checks': form.get_report(), 'service': form.cleaned_data['service']}
+
+
+class SetupForm(forms.Form):
+    username = forms.CharField(label='Username', max_length=100, required=True)
+    email = forms.EmailField(label='Email', max_length=200, required=False)
+    password = forms.CharField(label='Password', required=True, widget=forms.PasswordInput())
+
+
+class SetupView(View):
+    template = loader.get_template('cabotapp/setup.html')
+
+    def get(self, request):
+        if not cabot_needs_setup():
+            return redirect('login')
+
+        form = SetupForm(initial={
+            'username': 'admin',
+        })
+
+        c = RequestContext(request, {
+            'form': form,
+        })
+        return HttpResponse(self.template.render(c))
+
+    def post(self, request):
+        if not cabot_needs_setup():
+            return redirect('login')
+
+        form = SetupForm(request.POST)
+        if form.is_valid():
+            get_user_model().objects.create_superuser(
+                username=form.cleaned_data['username'],
+                email=form.cleaned_data['email'],
+                password=form.cleaned_data['password'],
+            )
+            return redirect('login')
+
+        c = RequestContext(request, {
+            'form': form,
+        })
+        return HttpResponse(self.template.render(c))
 
 
 # Misc JSON api and other stuff

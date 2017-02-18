@@ -6,9 +6,6 @@ services:
       service: base
     env_file:
       - conf/development.env
-    environment:
-      - CABOT_SUPERUSER_USERNAME=admin
-      - CABOT_SUPERUSER_PASSWORD=pass
     command: python manage.py runserver 0.0.0.0:5001
     ports:
       - "5001:5001"
