@@ -3,14 +3,14 @@ import dj_database_url
 import re
 from django.conf import settings
 from django.core.urlresolvers import reverse_lazy
-from cabot.settings_utils import environ_get_list
+from cabot.settings_utils import environ_get_list, force_bool
 from cabot.celeryconfig import *
 from cabot.cabot_config import *
 
 settings_dir = os.path.dirname(__file__)
 PROJECT_ROOT = os.path.abspath(settings_dir)
 
-DEBUG = os.environ.get("DEBUG", False)
+DEBUG = force_bool(os.environ.get('DEBUG', False))
 
 ADMINS = (
     ('Admin', os.environ.get('ADMIN_EMAIL', 'name@example.com')),
@@ -170,8 +170,8 @@ EMAIL_BACKEND = environ_get_list(
     ['EMAIL_BACKEND', 'SES_BACKEND'],
     'django.core.mail.backends.smtp.EmailBackend'
 )
-EMAIL_USE_TLS = environ_get_list(['EMAIL_USE_TLS', 'SES_USE_TLS'], 0)
-EMAIL_USE_SSL = environ_get_list(['EMAIL_USE_SSL', 'SES_USE_SSL'], 1)
+EMAIL_USE_TLS = force_bool(environ_get_list(['EMAIL_USE_TLS', 'SES_USE_TLS'], 0))
+EMAIL_USE_SSL = force_bool(environ_get_list(['EMAIL_USE_SSL', 'SES_USE_SSL'], 1))
 
 COMPRESS_OFFLINE = not DEBUG
 
@@ -263,10 +263,10 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
 )
 
-AUTH_LDAP = os.environ.get('AUTH_LDAP', False)
+AUTH_LDAP = force_bool(os.environ.get('AUTH_LDAP', False))
 
 if AUTH_LDAP:
     from settings_ldap import *
     AUTHENTICATION_BACKENDS += tuple(['django_auth_ldap.backend.LDAPBackend'])
 
-EXPOSE_USER_API = os.environ.get('EXPOSE_USER_API', False)
+EXPOSE_USER_API = force_bool(os.environ.get('EXPOSE_USER_API', False))

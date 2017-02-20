@@ -1,3 +1,8 @@
+master
+------
+
+* Convert environment vars to boolean nicely
+
 Version 0.8.4
 -------------
 
