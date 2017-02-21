@@ -1078,7 +1078,7 @@ class Shift(models.Model):
     user = models.ForeignKey(User)
     uid = models.TextField()
     deleted = models.BooleanField(default=False)
-    schedule = models.ForeignKey('Schedule', default=1)
+    schedule = models.ForeignKey('Schedule')
 
     def __unicode__(self):
         deleted = ''
