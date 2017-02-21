@@ -11,12 +11,18 @@ class Migration(DataMigration):
         """Create an inital schedule with default parameters (for backwards compatibility
            with the single-calendar version"""
         if settings.CALENDAR_ICAL_URL:
-            fallback_officer = orm.UserProfile.objects.get(fallback_alert_user=True)
-            schedule = orm.Schedule.objects.create(
-                name='Main',
-                ical_url=settings.CALENDAR_ICAL_URL,
-                fallback_officer=fallback_officer.user,
-            )
+            try:
+                fallback_officer = orm.UserProfile.objects.get(fallback_alert_user=True)
+                schedule = orm.Schedule.objects.create(
+                    name='Main',
+                    ical_url=settings.CALENDAR_ICAL_URL,
+                    fallback_officer=fallback_officer.user,
+                )
+            except:
+                schedule = orm.Schedule.objects.create(
+                    name='Main',
+                    ical_url=settings.CALENDAR_ICAL_URL,
+                )
             schedule.save()
 
             # Add this as the default schedule to all existing services
