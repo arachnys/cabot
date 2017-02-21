@@ -28,7 +28,7 @@ class Migration(SchemaMigration):
 
         # Adding field 'Shift.schedule'
         db.add_column(u'cabotapp_shift', 'schedule',
-                      self.gf('django.db.models.fields.related.ForeignKey')(default=1, to=orm['cabotapp.Schedule']),
+                      self.gf('django.db.models.fields.related.ForeignKey')(to=orm['cabotapp.Schedule']),
                       keep_default=False)
 
         # Adding M2M table for field schedules on 'Service'
@@ -172,7 +172,7 @@ class Migration(SchemaMigration):
             'deleted': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'end': ('django.db.models.fields.DateTimeField', [], {}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'schedule': ('django.db.models.fields.related.ForeignKey', [], {'default': '1', 'to': u"orm['cabotapp.Schedule']"}),
+            'schedule': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['cabotapp.Schedule']"}),
             'start': ('django.db.models.fields.DateTimeField', [], {}),
             'uid': ('django.db.models.fields.TextField', [], {}),
             'user': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['auth.User']"})

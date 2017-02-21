@@ -11,12 +11,18 @@ class Migration(DataMigration):
         """Create an inital schedule with default parameters (for backwards compatibility
            with the single-calendar version"""
         if settings.CALENDAR_ICAL_URL:
-            fallback_officer = orm.UserProfile.objects.get(fallback_alert_user=True)
-            schedule = orm.Schedule.objects.create(
-                name='Main',
-                ical_url=settings.CALENDAR_ICAL_URL,
-                fallback_officer=fallback_officer.user,
-            )
+            try:
+                fallback_officer = orm.UserProfile.objects.get(fallback_alert_user=True)
+                schedule = orm.Schedule.objects.create(
+                    name='Main',
+                    ical_url=settings.CALENDAR_ICAL_URL,
+                    fallback_officer=fallback_officer.user,
+                )
+            except:
+                schedule = orm.Schedule.objects.create(
+                    name='Main',
+                    ical_url=settings.CALENDAR_ICAL_URL,
+                )
             schedule.save()
 
             # Add this as the default schedule to all existing services
@@ -144,7 +150,7 @@ class Migration(DataMigration):
             'deleted': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'end': ('django.db.models.fields.DateTimeField', [], {}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'schedule': ('django.db.models.fields.related.ForeignKey', [], {'default': '1', 'to': u"orm['cabotapp.Schedule']"}),
+            'schedule': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['cabotapp.Schedule']"}),
             'start': ('django.db.models.fields.DateTimeField', [], {}),
             'uid': ('django.db.models.fields.TextField', [], {}),
             'user': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['auth.User']"})
