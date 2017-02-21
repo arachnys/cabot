@@ -26,11 +26,6 @@ class Migration(SchemaMigration):
         ))
         db.create_unique(m2m_table_name, ['instance_id', 'schedule_id'])
 
-        # Adding field 'Shift.schedule'
-        db.add_column(u'cabotapp_shift', 'schedule',
-                      self.gf('django.db.models.fields.related.ForeignKey')(to=orm['cabotapp.Schedule']),
-                      keep_default=False)
-
         # Adding M2M table for field schedules on 'Service'
         m2m_table_name = db.shorten_name(u'cabotapp_service_schedules')
         db.create_table(m2m_table_name, (
@@ -47,9 +42,6 @@ class Migration(SchemaMigration):
 
         # Removing M2M table for field schedules on 'Instance'
         db.delete_table(db.shorten_name(u'cabotapp_instance_schedules'))
-
-        # Deleting field 'Shift.schedule'
-        db.delete_column(u'cabotapp_shift', 'schedule_id')
 
         # Removing M2M table for field schedules on 'Service'
         db.delete_table(db.shorten_name(u'cabotapp_service_schedules'))
@@ -172,7 +164,6 @@ class Migration(SchemaMigration):
             'deleted': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'end': ('django.db.models.fields.DateTimeField', [], {}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'schedule': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['cabotapp.Schedule']"}),
             'start': ('django.db.models.fields.DateTimeField', [], {}),
             'uid': ('django.db.models.fields.TextField', [], {}),
             'user': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['auth.User']"})
