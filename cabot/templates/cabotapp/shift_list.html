@@ -17,9 +17,13 @@
     {% if not shifts %}
       <div class="col-xs-11">No user profiles exist for duty officers.</div>
     {% else %}
-    <div class="col-xs-11">
-      <h5>Fallback officer:    <a href="{% url "user-profile" pk=schedule.fallback_officer.id %}">{{ schedule.fallback_officer }}</a></h5>
-    </div>
+      <div class="col-xs-11">
+        {% if schedule.fallback_officer %}
+        <h5>Fallback officer:    <a href="{% url "user-profile" pk=schedule.fallback_officer.id %}">{{ schedule.fallback_officer }}</a></h5>
+        {% else %}
+        <h5>Fallback officer:    None</h5>
+        {% endif %}
+      </div>
       <table class="table table-striped bootstrap-datatable datatable">
         <thead>
           <tr>
