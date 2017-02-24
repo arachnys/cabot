@@ -615,6 +615,7 @@ class StatusCheck(PolymorphicModel):
         new_check = self
         new_check.pk = None
         new_check.id = None
+        new_check.name = 'Copy of {}'.format(self.name)
         new_check.last_run = None
         new_check.save()
         for linked in list(inst_set) + list(serv_set):

@@ -77,40 +77,16 @@ def run_status_check(request, pk):
     return HttpResponseRedirect(reverse('check', kwargs={'pk': pk}))
 
 
-def duplicate_influxdb_check(request, pk):
-    pc = StatusCheck.objects.get(pk=pk)
-    npk = pc.duplicate()
-    return HttpResponseRedirect(reverse('update-influxdb-check', kwargs={'pk': npk}))
-
-
-def duplicate_icmp_check(request, pk):
-    pc = StatusCheck.objects.get(pk=pk)
-    npk = pc.duplicate()
-    return HttpResponseRedirect(reverse('update-icmp-check', kwargs={'pk': npk}))
+def duplicate_check(request, pk):
+    check = StatusCheck.objects.get(pk=pk)
+    new_pk = check.duplicate()
+    return HttpResponseRedirect(reverse('check', kwargs={'pk': new_pk}))
 
 
 def duplicate_instance(request, pk):
     instance = Instance.objects.get(pk=pk)
     new_instance = instance.duplicate()
     return HttpResponseRedirect(reverse('update-instance', kwargs={'pk': new_instance}))
-
-
-def duplicate_http_check(request, pk):
-    pc = StatusCheck.objects.get(pk=pk)
-    npk = pc.duplicate()
-    return HttpResponseRedirect(reverse('update-http-check', kwargs={'pk': npk}))
-
-
-def duplicate_graphite_check(request, pk):
-    pc = StatusCheck.objects.get(pk=pk)
-    npk = pc.duplicate()
-    return HttpResponseRedirect(reverse('update-graphite-check', kwargs={'pk': npk}))
-
-
-def duplicate_jenkins_check(request, pk):
-    pc = StatusCheck.objects.get(pk=pk)
-    npk = pc.duplicate()
-    return HttpResponseRedirect(reverse('update-jenkins-check', kwargs={'pk': npk}))
 
 
 class StatusCheckResultDetailView(LoginRequiredMixin, DetailView):

@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import requests
-from django.conf import settings
 from django.utils import timezone
 from django.core.urlresolvers import reverse
-from django.test import TestCase
-from django.contrib.auth.models import User
 from django.test.client import Client
 from django.contrib.auth.models import Permission, User
 from rest_framework import status, HTTP_HEADER_ENCODING
@@ -24,7 +21,7 @@ from cabot.cabotapp.models import (
     JenkinsStatusCheck, HttpStatusCheck, ICMPStatusCheck,
     Service, Schedule, Instance, StatusCheckResult, UserProfile)
 from cabot.cabotapp.views import StatusCheckReportForm
-from cabot.cabotapp.alert import send_alert
+
 
 def get_content(fname):
     path = os.path.join(os.path.dirname(__file__), 'fixtures/%s' % fname)
@@ -328,6 +325,30 @@ class TestCheckRun(LocalTestCase):
         self.assertFalse(self.http_check.last_result().succeeded)
         self.assertEqual(self.http_check.calculated_status,
                          Service.CALCULATED_FAILING_STATUS)
+
+
+class TestStatusCheck(LocalTestCase):
+
+    def test_duplicate_statuscheck(self):
+        """
+        Test that duplicating a statuscheck works and creates a check
+        with the name we expect.
+        """
+        http_checks = HttpStatusCheck.objects.filter(polymorphic_ctype__model='httpstatuscheck')
+        self.assertEqual(len(http_checks), 1)
+
+        self.http_check.duplicate()
+
+        http_checks = HttpStatusCheck.objects.filter(polymorphic_ctype__model='httpstatuscheck')
+        self.assertEqual(len(http_checks), 2)
+
+        new = http_checks.filter(name__icontains='Copy of')[0]
+        old = http_checks.exclude(name__icontains='Copy of')[0]
+
+        # New check should be the same as the old check except for the name
+        self.assertEqual(new.name, 'Copy of {}'.format(old.name))
+        self.assertEqual(new.endpoint, old.endpoint)
+        self.assertEqual(new.status_code, old.status_code)
 
 
 class TestInstances(LocalTestCase):
