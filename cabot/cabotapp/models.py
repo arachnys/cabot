@@ -186,7 +186,8 @@ class CheckGroupMixin(models.Model):
         self.snapshot.did_send_alert = True
         self.snapshot.save()
         for schedule in self.schedules.all():
-            send_alert(self, duty_officers=get_duty_officers(schedule))
+            send_alert(self, duty_officers=get_duty_officers(schedule),
+                       fallback_officers=get_fallback_officers(schedule))
 
     @property
     def recent_snapshots(self):
@@ -1151,6 +1152,17 @@ def get_all_fallback_officers():
         out[schedule.fallback_officer].append(schedule)
 
     return out
+
+
+def get_fallback_officers(schedule):
+    """
+    Find the fallback officer
+    :return: list of the fallback officer (for parity with get_duty_officers())
+    """
+    if schedule.fallback_officer:
+        return [schedule.fallback_officer]
+    return []
+
 
 def update_shifts(schedule):
     """

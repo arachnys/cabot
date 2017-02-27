@@ -11,6 +11,8 @@ class AlertPlugin(PolymorphicModel):
     enabled = models.BooleanField(default=True)
 
     author = None
+    # Plugins use name field
+    name = 'noop'
 
     def __unicode__(self):
         return u'%s' % (self.title)
@@ -33,13 +35,18 @@ class AlertPluginUserData(PolymorphicModel):
         return u'%s' % (self.title)
 
 
-def send_alert(service, duty_officers=None):
+def send_alert(service, duty_officers=None, fallback_officers=None):
     users = service.users_to_notify.filter(is_active=True)
     for alert in service.alerts.all():
         try:
             alert.send_alert(service, users, duty_officers)
-        except Exception:
-            logging.exception('Could not sent ' + alert.name + ' alert')
+        except Exception as e:
+            logging.exception('Could not sent {} alert'.format(alert.name))
+            if fallback_officers:
+                try:
+                    alert.send_alert(service, users, fallback_officers)
+                except Exception as e:
+                    logging.exception('Could not send {} alert to fallback officer'.format(alert.name))
 
 
 def update_alert_plugins():

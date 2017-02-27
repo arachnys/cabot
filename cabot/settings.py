@@ -3,9 +3,12 @@ import dj_database_url
 import re
 from cabot.celeryconfig import *
 from cabot.cabot_config import *
+import logging
+import sys
 import xmlrunner
 import pymysql
 pymysql.install_as_MySQLdb()
+
 
 settings_dir = os.path.dirname(__file__)
 PROJECT_ROOT = os.path.abspath(settings_dir)
@@ -226,6 +229,10 @@ LOGGING = {
         }
     }
 }
+
+# Disable logging for tests
+if len(sys.argv) > 1 and sys.argv[1] == 'test':
+    logging.disable(logging.CRITICAL)
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
