@@ -711,6 +711,11 @@ class ServiceListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         return Service.objects.all().order_by('name').prefetch_related('status_checks')
 
+    def get_context_data(self, **kwargs):
+        context = super(ServiceListView, self).get_context_data(**kwargs)
+        context['service_image'] = settings.SERVICE_IMAGE
+        return context
+
 
 class InstanceDetailView(LoginRequiredMixin, DetailView):
     model = Instance
