@@ -12,6 +12,11 @@
   <div class="col-xs-12">
     {% include 'cabotapp/_service_list.html' %}
   </div>
+  {% if service_image %}
+  <div class="col-xs-12">
+    <iframe src={{ service_image }} style="border: 0" width="800" height="600" frameborder="0" scrolling="no"></iframe>
+  </div>
+  {% endif %}
 </div>
 {% endblock content %}
 
