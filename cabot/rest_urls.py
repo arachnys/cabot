@@ -36,17 +36,12 @@ def create_viewset(arg_model, arg_fields, arg_read_only_fields=(), no_create=Fal
     else:
         viewset_class = viewsets.ModelViewSet
 
-    arg_queryset = None
-    if issubclass(arg_model, PolymorphicModel):
-        arg_queryset = arg_model.objects.instance_of(arg_model)
-    else:
-        arg_queryset = arg_model.objects.all()
-
     class ViewSet(viewset_class):
-        queryset = arg_queryset
+        queryset = arg_model.objects
         serializer_class = Serializer
         ordering = ['id']
         filter_fields = arg_fields
+
     return ViewSet
 
 check_group_mixin_fields = (
