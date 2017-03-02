@@ -23,6 +23,11 @@
   </div>
 </div>
 <hr>
+
+{% if checks_type == "All" %}
+{% include 'cabotapp/statuscheck_search_form.html' %}
+{% endif %}
+
 <div class="row">
   <div class="col-xs-12">
     {% if not checks %}

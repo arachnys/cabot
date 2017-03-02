@@ -1,0 +1,12 @@
+<form name="form1" action="{% url 'checks_info' name=name %}" method="GET" class="form-horizontal">
+{#      {% csrf_token %}#}
+
+    <div class="form-group">
+        <div class="col-sm-5">
+            <input type="text" name="name" class="form-control" id="hostname" placeholder="Pick a check">
+        </div>
+        <div class="span7 text-left">
+            <input class="btn btn-info btn-group-sm" type="submit" name="submit" value="Submit">
+        </div>
+    </div>
+</form>

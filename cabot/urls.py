@@ -15,7 +15,7 @@ from cabot.cabotapp.views import (InstanceListView, InstanceDetailView,
     InstanceUpdateView, InstanceCreateView, InstanceDeleteView,
     ServiceListView, ServiceDetailView,
     ServiceUpdateView, ServiceCreateView, ServiceDeleteView,
-    UserProfileUpdateView, ShiftListView, subscriptions)
+    UserProfileUpdateView, ShiftListView, subscriptions, InstanceSearchView, StatusCheckSearchView)
 
 from cabot import rest_urls
 
@@ -147,6 +147,15 @@ urlpatterns = patterns('',
      url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 
      url(r'^api/', include(rest_urls.router.urls)),
+
+     url(r'^instanceinfo/(?P<name>.*)/', 'cabot.cabotapp.views.SearchViewFBV', name='instance_info'),
+
+     url(r'^instancesearch/(?P<name>.*)/', view=InstanceSearchView.as_view(), name='instances_search'),
+
+     url(r'^checksinfo/(?P<name>.*)/', 'cabot.cabotapp.views.StatusCheckSearchViewFBV', name='checks_info'),
+
+     url(r'^checkssearch/(?P<name>.*)/', view=StatusCheckSearchView.as_view(), name='checks_search'),
+
      )
 
 def append_plugin_urls():
