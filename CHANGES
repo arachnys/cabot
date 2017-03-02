@@ -1,6 +1,7 @@
 master
 ------
 
+* Update production.env.example email settings
 * Convert environment vars to boolean nicely
 
 Version 0.8.4

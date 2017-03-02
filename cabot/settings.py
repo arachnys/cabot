@@ -170,8 +170,8 @@ EMAIL_BACKEND = environ_get_list(
     ['EMAIL_BACKEND', 'SES_BACKEND'],
     'django.core.mail.backends.smtp.EmailBackend'
 )
-EMAIL_USE_TLS = force_bool(environ_get_list(['EMAIL_USE_TLS', 'SES_USE_TLS'], 0))
-EMAIL_USE_SSL = force_bool(environ_get_list(['EMAIL_USE_SSL', 'SES_USE_SSL'], 1))
+EMAIL_USE_TLS = force_bool(environ_get_list(['EMAIL_USE_TLS', 'SES_USE_TLS'], False))
+EMAIL_USE_SSL = force_bool(environ_get_list(['EMAIL_USE_SSL', 'SES_USE_SSL'], not EMAIL_USE_TLS))
 
 COMPRESS_OFFLINE = not DEBUG
 
