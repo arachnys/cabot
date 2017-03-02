@@ -919,6 +919,27 @@ class TestAlerts(LocalTestCase):
     def setUp(self):
         super(TestAlerts, self).setUp()
 
+        self.warning_http_check = HttpStatusCheck.objects.create(
+            name='Http Check',
+            created_by=self.user,
+            importance=Service.WARNING_STATUS,
+            endpoint='http://arachnys.com',
+            timeout=10,
+            status_code='200',
+            text_match=None,
+        )
+        self.error_http_check = HttpStatusCheck.objects.create(
+            name='Http Check',
+            created_by=self.user,
+            importance=Service.ERROR_STATUS,
+            endpoint='http://arachnys.com',
+            timeout=10,
+            status_code='200',
+            text_match=None,
+        )
+        self.service.status_checks.add(self.warning_http_check, self.error_http_check)
+        self.critical_http_check = self.http_check
+
         self.user.profile.hipchat_alias = "test_user_hipchat_alias"
         self.user.profile.save()
 
@@ -934,6 +955,52 @@ class TestAlerts(LocalTestCase):
         self.service.alert()
         self.assertEqual(fake_send_alert.call_count, 1)
         fake_send_alert.assert_called_with(self.service, duty_officers=[])
+
+    def trigger_failing_check(self, check):
+        StatusCheckResult(
+            status_check=check,
+            time=timezone.now() - timedelta(seconds=60),
+            time_complete=timezone.now() - timedelta(seconds=59),
+            succeeded=False
+        ).save()
+        check.last_run = timezone.now()
+        check.save()
+
+    @patch('cabot.cabotapp.models.send_alert')
+    def test_alert_increasing_severity(self, fake_send_alert):
+        self.trigger_failing_check(self.warning_http_check)
+        self.assertEqual(fake_send_alert.call_count, 1)
+
+        self.trigger_failing_check(self.error_http_check)
+        self.assertEqual(fake_send_alert.call_count, 2)
+
+        self.trigger_failing_check(self.critical_http_check)
+        self.assertEqual(fake_send_alert.call_count, 3)
+
+    @patch('cabot.cabotapp.models.send_alert')
+    def test_alert_decreasing_severity(self, fake_send_alert):
+        self.trigger_failing_check(self.critical_http_check)
+        self.assertEqual(fake_send_alert.call_count, 1)
+
+        self.trigger_failing_check(self.error_http_check)
+        self.assertEqual(fake_send_alert.call_count, 1)
+
+        self.trigger_failing_check(self.warning_http_check)
+        self.assertEqual(fake_send_alert.call_count, 1)
+
+    @patch('cabot.cabotapp.models.send_alert')
+    def test_alert_alternating_severity(self, fake_send_alert):
+        self.trigger_failing_check(self.error_http_check)
+        self.assertEqual(fake_send_alert.call_count, 1)
+
+        self.trigger_failing_check(self.warning_http_check)
+        self.assertEqual(fake_send_alert.call_count, 1)
+
+        self.trigger_failing_check(self.error_http_check)
+        self.assertEqual(fake_send_alert.call_count, 1)
+
+        self.trigger_failing_check(self.critical_http_check)
+        self.assertEqual(fake_send_alert.call_count, 2)
 
     def test_update_plugins(self):
         # Test that disabling a plugin is detected by update_alert_plugins

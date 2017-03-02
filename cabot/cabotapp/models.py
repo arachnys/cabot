@@ -176,7 +176,9 @@ class CheckGroupMixin(models.Model):
                     timezone.now() - timedelta(minutes=settings.NOTIFICATION_INTERVAL)) < self.last_alert_sent:
                     return
             elif self.overall_status in (self.CRITICAL_STATUS, self.ERROR_STATUS):
-                if self.last_alert_sent and (
+                more_important = self.old_overall_status == self.WARNING_STATUS or \
+                    (self.old_overall_status == self.ERROR_STATUS and self.overall_status == self.CRITICAL_STATUS)
+                if not more_important and self.last_alert_sent and (
                     timezone.now() - timedelta(minutes=settings.ALERT_INTERVAL)) < self.last_alert_sent:
                     return
             self.last_alert_sent = timezone.now()
