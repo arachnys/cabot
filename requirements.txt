@@ -10,7 +10,7 @@ django-filter==1.0.1
 django-jsonify==0.3.0
 django-mptt==0.6.0
 django-polymorphic==1.1
-Django>=1.9,<1.10
+Django>=1.10,<1.11
 djangorestframework>=3.5,<3.6
 freezegun==0.3.8
 gevent==1.0.1
