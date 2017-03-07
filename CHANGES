@@ -1,5 +1,5 @@
-master
-------
+Version 0.8.5
+-------------
 
 * More severe alerts should trigger even if a less severe alert was recently sent
 * Update production.env.example email settings
