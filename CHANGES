@@ -5,12 +5,15 @@ Version 0.8.5
 * Update production.env.example email settings
 * Convert environment vars to boolean nicely
 
+> Note: You may have to update your settings if they contain invalid boolean values
+
 Version 0.8.4
 -------------
 
 * Fix setup.py packaging
 * Use whitenoise to serve static files
-  Note: You may have to update your webserver settings for static files to work properly
+
+> Note: You may have to update your webserver settings for static files to work properly
 
 Version 0.8.3
 -------------
