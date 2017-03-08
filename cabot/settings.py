@@ -28,6 +28,7 @@ TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 URL_PREFIX = os.environ.get('URL_PREFIX', '/').rstrip('/')
 
 LOGIN_URL = reverse_lazy('login')
+LOGIN_REDIRECT_URL = reverse_lazy('services')
 
 USE_TZ = True
 
