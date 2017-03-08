@@ -802,7 +802,7 @@ class SetupView(View):
         c = RequestContext(request, {
             'form': form,
         })
-        return HttpResponse(self.template.render(c))
+        return HttpResponse(self.template.render(c), status=400)
 
 
 # Misc JSON api and other stuff
