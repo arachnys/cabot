@@ -2,5 +2,4 @@
 set -e
 python manage.py syncdb --noinput
 python manage.py collectstatic --noinput
-python manage.py create_cabot_superuser
 # python manage.py compress
