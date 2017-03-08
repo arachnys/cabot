@@ -2,6 +2,7 @@ master
 ------
 
 * Add first time setup page
+* Remove create_cabot_superuser management command (redundant with first time setup)
 
 Version 0.8.5
 -------------
