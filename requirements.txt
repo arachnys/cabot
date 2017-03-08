@@ -1,4 +1,4 @@
-amqp<2.0
+amqp<3.0,>=2.1.4
 anyjson==0.3.3
 argparse==1.2.1
 celery>=4,<5
