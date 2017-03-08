@@ -24,6 +24,7 @@ from django.core.urlresolvers import reverse
 from django.test.client import Client
 from django.test.utils import override_settings
 from django.utils import timezone
+from freezegun import freeze_time
 from mock import Mock, patch
 from rest_framework import status, HTTP_HEADER_ENCODING
 from rest_framework.reverse import reverse as api_reverse
@@ -225,6 +226,7 @@ class TestCheckRun(LocalTestCase):
 
     @patch('cabot.cabotapp.models.send_alert')
     @patch('cabot.cabotapp.models.send_alert_update')
+    @freeze_time('2017-03-02 10:30:43.714759')
     def test_alert_acknowledgement(self, fake_send_alert_update, fake_send_alert):
         self.assertEqual(self.service.overall_status, Service.PASSING_STATUS)
         self.most_recent_result.succeeded = False
@@ -235,18 +237,28 @@ class TestCheckRun(LocalTestCase):
                          Service.CALCULATED_FAILING_STATUS)
         self.service.update_status()
         fake_send_alert.assert_called_with(self.service, duty_officers=[])
-
         fake_send_alert.reset_mock()
-        self.service.last_alert_sent = timezone.now() - timedelta(minutes=30)
-        self.service.update_status()
-        fake_send_alert.assert_called_with(self.service, duty_officers=[])
 
-        fake_send_alert.reset_mock()
+        with freeze_time(timezone.now() + timedelta(minutes=30)):
+            self.service.update_status()
+            fake_send_alert.assert_called_with(self.service, duty_officers=[])
+            fake_send_alert.reset_mock()
+
         self.service.acknowledge_alert(user=self.user)
-        self.service.last_alert_sent = timezone.now() - timedelta(minutes=30)
         self.service.update_status()
         self.assertEqual(self.service.unexpired_acknowledgement().user, self.user)
-        fake_send_alert_update.assert_called_with(self.service, duty_officers=[])
+        self.assertFalse(fake_send_alert_update.called)
+
+        with freeze_time(timezone.now() + timedelta(minutes=60)):
+            self.service.update_status()
+            self.assertEqual(self.service.unexpired_acknowledgement(), None)
+            fake_send_alert.assert_called_with(self.service, duty_officers=[])
+
+        with freeze_time(timezone.now() + timedelta(minutes=90)):
+            self.service.acknowledge_alert(user=self.user)
+            self.service.update_status()
+            self.assertEqual(self.service.unexpired_acknowledgement().user, self.user)
+            fake_send_alert_update.assert_called_with(self.service, duty_officers=[])
 
     @patch('cabot.cabotapp.graphite.requests.get', fake_graphite_response)
     def test_graphite_run(self):
