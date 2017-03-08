@@ -4,7 +4,6 @@ import re
 from django.conf import settings
 from django.core.urlresolvers import reverse_lazy
 from cabot.settings_utils import environ_get_list, force_bool
-from cabot.celeryconfig import *
 from cabot.cabot_config import *
 
 settings_dir = os.path.dirname(__file__)
@@ -139,7 +138,6 @@ INSTALLED_APPS = (
     # 'django.contrib.admindocs',
     'compressor',
     'polymorphic',
-    'djcelery',
     'jsonify',
     'cabot.cabotapp',
     'rest_framework',
@@ -241,7 +239,7 @@ LOGGING = {
         # Catch All Logger -- Captures any other logging
         '': {
             'handlers': ['console', 'log_file', 'mail_admins'],
-            'level': 'INFO',
+            'level': 'WARNING',
             'propagate': True,
         }
     }

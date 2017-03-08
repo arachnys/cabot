@@ -19,7 +19,7 @@ services:
       service: base
     env_file:
       - conf/development.env
-    command: python manage.py celery worker -A cabot --loglevel=DEBUG --concurrency=16 -Ofair
+    command: celery worker -A cabot --loglevel=DEBUG --concurrency=16 -Ofair
     environment:
       - SKIP_INIT=1
       - WAIT_FOR_MIGRATIONS=1
@@ -33,7 +33,7 @@ services:
       service: base
     env_file:
       - conf/development.env
-    command: python manage.py celery beat -A cabot --loglevel=DEBUG
+    command: celery beat -A cabot --loglevel=DEBUG
     environment:
       - SKIP_INIT=1
       - WAIT_FOR_MIGRATIONS=1

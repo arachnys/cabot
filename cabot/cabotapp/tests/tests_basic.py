@@ -1094,7 +1094,7 @@ class TestCleanUpTask(LocalTestCase):
         self.assertEqual(StatusCheckResult.objects.all().count(), initial_results)
 
     def test_cleanup_single_batch(self):
-        with self.settings(CELERY_ALWAYS_EAGER=False):
+        with patch('cabot.cabotapp.tasks.clean_db.apply_async'):
             initial_results = StatusCheckResult.objects.all().count()
 
             for i in range(2):
