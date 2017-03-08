@@ -7,12 +7,12 @@ django-appconf==1.0.2
 django-auth-ldap==1.2.6
 django-celery==3.1.17
 django-compressor==2.1.1
-django-filter==0.13
+django-filter==1.0.1
 django-jsonify==0.3.0
 django-mptt==0.6.0
-django-polymorphic==0.7.2
-Django>=1.8,<1.9
-djangorestframework==2.4.8
+django-polymorphic==1.1
+Django>=1.9,<1.10
+djangorestframework>=3.5,<3.6
 freezegun==0.3.8
 gevent==1.0.1
 gunicorn==19.6.0

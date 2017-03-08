@@ -13,9 +13,9 @@ before_script:
 script:
  - tox
  - docker-compose -f docker-compose-test.yml run --rm test bash bin/test_with_coverage -v2
- - git checkout $(git describe --abbrev=0 --tags `git describe --abbrev=0 --tags`^)
+ - git checkout $(git describe --abbrev=0 --tags `git describe --tags`^) && docker-compose build web
  - docker-compose run --rm web true
- - git checkout -
+ - git checkout - && docker-compose build web
  - docker-compose run --rm web true
 
 after_success:

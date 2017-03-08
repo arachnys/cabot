@@ -1,7 +1,9 @@
 import logging
 
 from django.db import models
-from polymorphic import PolymorphicModel
+
+
+from polymorphic.models import PolymorphicModel
 
 logger = logging.getLogger(__name__)
 

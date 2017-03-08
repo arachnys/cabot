@@ -2,14 +2,15 @@ from django.db import models as model_fields
 from django.conf import settings
 from django.conf.urls import url, include
 from django.contrib.auth import models as django_models
-from polymorphic import PolymorphicModel
+
+from polymorphic.models import PolymorphicModel
 from cabot.cabotapp import models, alert
 from rest_framework import routers, serializers, viewsets, mixins
 import logging
 
 logger = logging.getLogger(__name__)
-
 router = routers.DefaultRouter()
+
 
 def create_viewset(arg_model, arg_fields, arg_read_only_fields=(), no_create=False):
     arg_read_only_fields = ('id',) + arg_read_only_fields
@@ -35,17 +36,12 @@ def create_viewset(arg_model, arg_fields, arg_read_only_fields=(), no_create=Fal
     else:
         viewset_class = viewsets.ModelViewSet
 
-    arg_queryset = None
-    if issubclass(arg_model, PolymorphicModel):
-        arg_queryset = arg_model.objects.instance_of(arg_model)
-    else:
-        arg_queryset = arg_model.objects.all()
-
     class ViewSet(viewset_class):
-        queryset = arg_queryset
+        queryset = arg_model.objects
         serializer_class = Serializer
         ordering = ['id']
         filter_fields = arg_fields
+
     return ViewSet
 
 check_group_mixin_fields = (
