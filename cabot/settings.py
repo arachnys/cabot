@@ -111,6 +111,7 @@ TEMPLATES = [{
             'django.contrib.auth.context_processors.auth',
             'django.contrib.messages.context_processors.messages',
         ],
+        'debug': force_bool(os.environ.get('TEMPLATE_DEBUG', False))
     },
 }]
 
