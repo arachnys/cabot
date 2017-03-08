@@ -1,24 +1,11 @@
 import logging
 import random
 
-from celery import Celery
-from celery._state import set_default_app
 from celery.task import task
 from django.conf import settings
 from django.utils import timezone
 from datetime import timedelta
 
-celery = Celery(__name__)
-celery.config_from_object(settings)
-
-# Celery should set this app as the default, however the 'celery.current_app'
-# api uses threadlocals, so code running in different threads/greenlets uses
-# the fallback default instead of this app when no app is specified. This
-# causes confusing connection errors when celery tries to connect to a
-# non-existent rabbitmq server. It seems to happen mostly when using the
-# 'celery.canvas' api. To get around this, we use the internal 'celery._state'
-# api to force our app to be the default.
-set_default_app(celery)
 logger = logging.getLogger(__name__)
 
 
