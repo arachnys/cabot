@@ -31,6 +31,11 @@ from rest_framework.reverse import reverse as api_reverse
 from rest_framework.test import APITestCase
 from twilio import rest
 
+# Silence noisy celery logs in tests.
+import logging
+from celery.utils.log import logger as celery_logger
+celery_logger.setLevel(logging.WARNING)
+
 
 def get_content(fname):
     path = os.path.join(os.path.dirname(__file__), 'fixtures/%s' % fname)
