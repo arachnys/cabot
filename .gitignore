@@ -21,3 +21,4 @@ local_config.yml
 build/
 
 .idea
+Pipfile.lock
