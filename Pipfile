@@ -1,0 +1,27 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+
+[packages]
+amqp = ">=2.1.4"
+celery = ">=4,<5"
+Django = ">=1.10,<1.11"
+djangorestframework = ">=3.5,<3.6"
+django_polymorphic = "*"
+django-jsonify = "*"
+django-filter = "*"
+django_compressor = "*"
+django-auth-ldap = "*"
+anyjson = "*"
+dj-database-url = "*"
+freezegun = "*"
+gevent = "*"
+gunicorn = "*"
+icalendar = "*"
+psycopg2 = "*"
+python-dateutil = "*"
+pytz = "*"
+redis = "*"
+requests = "*"
+twilio = "*"
+whitenoise = "*"
