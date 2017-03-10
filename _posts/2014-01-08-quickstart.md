@@ -7,7 +7,7 @@ date: 2014-01-08 22:49:24
 
 Getting started is easy using [docker-compose](https://docs.docker.com/compose/).
 
-You can either set it up behind you're own reverse proxy (e.g. nginx) or use [Caddy](https://caddyserver.com/)
+You can either set it up behind your own reverse proxy (e.g. nginx) or use [Caddy](https://caddyserver.com/)
 
 
 ### Step by step
