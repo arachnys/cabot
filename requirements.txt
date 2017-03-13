@@ -20,10 +20,11 @@ httplib2==0.10.3
 icalendar==3.11.3
 kombu==4.0.2
 packaging==16.8
-psycopg2==2.7
+psycopg2==2.7.1
+pyldap==2.4.28
 pyparsing==2.2.0
+PySocks==1.6.6
 python-dateutil==2.6.0
-python-ldap==2.4.32
 pytz==2016.10
 rcssmin==1.0.6
 redis==2.10.5
