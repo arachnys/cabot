@@ -1,6 +1,7 @@
 master
 ------
 
+* Fix Alert preferences form breaking on django 1.8
 * Add `cabot` executable instead of using python manage.py (for e.g. migrating)
 
 Version 0.9.0
