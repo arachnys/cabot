@@ -1,5 +1,5 @@
-0.8-dev
--------
+Version 0.8.7
+-------------
 
 * Fix Alert preferences form breaking on django 1.8
 
