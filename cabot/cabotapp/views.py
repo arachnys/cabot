@@ -583,6 +583,7 @@ def get_object_form(model_type):
     class AlertPreferencesForm(forms.ModelForm):
         class Meta:
             model = model_type
+            fields = '__all__'
 
         def is_valid(self):
             return True
