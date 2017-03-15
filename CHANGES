@@ -1,6 +1,7 @@
 master
 ------
 
+* Fix rota bug when ical had no timezone
 * Add User Profile settings link to user dropdown
 
 Version 0.9.1

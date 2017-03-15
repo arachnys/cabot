@@ -181,6 +181,13 @@ def fake_recurring_response(*args, **kwargs):
     return resp
 
 
+def fake_recurring_response_notz(*args, **kwargs):
+    resp = Mock()
+    resp.content = get_content('recurring_response_notz.ics')
+    resp.status_code = 200
+    return resp
+
+
 def throws_timeout(*args, **kwargs):
     raise requests.RequestException(u'фиктивная ошибка innit')
 
@@ -457,6 +464,19 @@ class TestDutyRota(LocalTestCase):
 
     @patch('cabot.cabotapp.models.requests.get', fake_recurring_response)
     def test_duty_rota_recurring(self):
+        events = get_events()
+        events.sort(key=lambda ev: ev['start'])
+        curr_summ = events[0]['summary']
+        self.assertTrue(curr_summ == 'foo' or curr_summ == 'bar')
+        for i in range(0, 60):
+            self.assertEqual(events[i]['summary'], curr_summ)
+            if(curr_summ == 'foo'):
+                curr_summ = 'bar'
+            else:
+                curr_summ = 'foo'
+
+    @patch('cabot.cabotapp.models.requests.get', fake_recurring_response_notz)
+    def test_duty_rota_recurring_notz(self):
         events = get_events()
         events.sort(key=lambda ev: ev['start'])
         curr_summ = events[0]['summary']
