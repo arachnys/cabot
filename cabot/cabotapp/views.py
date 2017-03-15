@@ -23,7 +23,7 @@ from django.utils.decorators import method_decorator
 from django.utils.timezone import utc
 from django.views.generic import (
     DetailView, CreateView, UpdateView, ListView, DeleteView, TemplateView, View)
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from models import AlertPluginUserData
 from models import (
     StatusCheck, GraphiteStatusCheck, JenkinsStatusCheck, HttpStatusCheck, ICMPStatusCheck,
@@ -41,15 +41,14 @@ class LoginRequiredMixin(object):
 @login_required
 def subscriptions(request):
     """ Simple list of all checks """
-    t = loader.get_template('cabotapp/subscriptions.html')
     services = Service.objects.all()
     users = User.objects.filter(is_active=True)
-    c = RequestContext(request, {
+
+    return render(request, 'cabotapp/subscriptions.html', {
         'services': services,
         'users': users,
         'duty_officers': get_duty_officers(),
     })
-    return HttpResponse(t.render(c))
 
 
 @login_required
@@ -552,11 +551,10 @@ class UserProfileUpdateAlert(LoginRequiredMixin, View):
             form_model = get_object_form(type(plugin_userdata))
             form = form_model(instance=plugin_userdata)
 
-        c = RequestContext(request, {
+        return render(request, self.template.template.name, {
             'form': form,
             'alert_preferences': profile.user_data(),
         })
-        return HttpResponse(self.template.render(c))
 
     def post(self, request, pk, alerttype):
         profile = UserProfile.objects.get(user=pk)
