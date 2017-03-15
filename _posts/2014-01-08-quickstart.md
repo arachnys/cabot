@@ -5,47 +5,35 @@ category: qs
 date: 2014-01-08 22:49:24
 ---
 
-Getting started is easy via a VPS on [AWS](https://aws.amazon.com) or [DigitalOcean](https://www.digitalocean.com) (although Cabot can be hosted anywhere). Cabot is designed for deployment on Ubuntu 12.04 LTS.
+Getting started is easy using [docker-compose](https://docs.docker.com/compose/).
+
+You can either set it up behind your own reverse proxy (e.g. nginx) or use [Caddy](https://caddyserver.com/)
+
 
 ### Step by step
 
 
-1.  Clone:
+1.  Clone the docker-cabot repo:
 
-        $ git clone git@github.com:arachnys/cabot.git
-        # Clone the repo
-
-        $ cd cabot
+        $ git clone git@github.com:cabotapp/docker-cabot.git
 
 2.  Add your keys for external services to `conf/production.env` using `production.env.example` as a template:
 
         $ cp conf/production.env.example conf/production.env
 
-3.  Spin up a new VPS instance (on e.g. AWS or DigitalOcean) - you can create a new DigitalOcean "droplet" from the command line via [`tugboat`](https://github.com/pearkes/tugboat) (NB tugboat command line arguments seem a little unstable, so if you get an error, you may have to change them)
+3.  (a) Run docker compose with caddy as a reverse proxy:
 
-        $ tugboat create cabot --size=2gb --image=ubuntu-12-04-x64 --region=nyc1
-        # create a new droplet called `cabot` with 1GB of memory running Ubuntu 12.04 in New York region
-        # --image and --size arguments seem to change, see tugboat docs for details
+        $ cp conf/Caddyfile.example conf/Caddyfile
+        $ docker-compose -f docker-compose.yml -f docker-compose-caddy.yml up -d
 
-4.  Provision the newly-created VPS using [Fabric](http://docs.fabfile.org/)
+    (b) OR run just cabot and set up your own reverse proxy (using e.g. nginx, apache or caddy)
 
-        $ fab provision -H root@your.server.hostname
-        # This will:
-        # * install dependencies on the new server
-        # * create a new `ubuntu` user that will be able to connect over SSH (for API compatibility with Amazon's Ubuntu AMIs).
+            $ docker-compose up -d
 
-5.  Deploy to the provisioned server:
+    > Note: The `-d` is to daemonize - making it run in the background.
 
-        $ fab deploy -H ubuntu@your.server.hostname
-        # NB using `ubuntu` not `root` as above
-        # Will prompt you to create a Django superuser which you'll use to log in via web and create additional users.
+4.  That's it! If you go to your server in your browser you should see the first time setup screen
 
-6. Create a user account:
-
-        $ fab -H ubuntu@your.server.hostname create_user:"username,password,email"
-
-7.  Navigate in web browser to `your.server.hostname`, log in as superuser, and create your first `Service`s and `Check`s using the web interface.
-
-8.  *(Optional) get woken up at 3 a.m. by an automated phone call telling you the server you're monitoring has crashed.*
-
-Currently provisioning is done by the `bin/setup_dependencies.sh` script.
+> Note: Without a reverse-proxy by default it will only listen to local requests.
+To make it listen publicly on the internet change '127.0.0.1:5000:5000' to '80:5000'
+in docker-compose.yml
