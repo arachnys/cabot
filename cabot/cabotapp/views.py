@@ -818,6 +818,14 @@ def checks_run_recently(request):
     return HttpResponse('Checks not running')
 
 
+def about(request):
+    """ Very simple about page """
+    from cabot import version
+
+    return render(request, 'cabotapp/about.html', {
+        'cabot_version': version,
+    })
+
 def jsonify(d):
     return HttpResponse(json.dumps(d), content_type='application/json')
 

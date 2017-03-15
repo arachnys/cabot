@@ -566,6 +566,10 @@ class TestWebInterface(LocalTestCase):
         self.assertEqual(len(check.problems), 1)
         self.assertEqual(check.success_rate, 50)
 
+    def test_about_page(self):
+        response = self.client.get(reverse('about-cabot'))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('Version:', response.content)
 
 class TestAPI(LocalTestCase):
     def setUp(self):
