@@ -1,7 +1,7 @@
 from django.conf.urls import patterns, include, url
 from django.conf import settings
 from cabot.cabotapp.views import (
-    run_status_check, graphite_api_data, checks_run_recently,
+    about, run_status_check, graphite_api_data, checks_run_recently,
     duplicate_icmp_check, duplicate_graphite_check, duplicate_http_check, duplicate_jenkins_check,
     duplicate_instance, acknowledge_alert, remove_acknowledgement,
     GraphiteCheckCreateView, GraphiteCheckUpdateView,
@@ -61,6 +61,8 @@ urlpatterns = patterns('',
              view=password_reset_confirm, name='password-reset-confirm'),
      url(r'^status/', view=checks_run_recently,
              name='system-status'),
+     url(r'^about/', view=about,
+        name='about-cabot'),
 
      url(r'^services/', view=ServiceListView.as_view(),
              name='services'),

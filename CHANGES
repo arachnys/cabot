@@ -1,6 +1,7 @@
 master
 ------
 
+* Add /about endpoint
 * Fix rota bug when ical had no timezone
 * Add User Profile settings link to user dropdown
 
