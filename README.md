@@ -31,7 +31,7 @@ Cabot is written in Python and uses [Django](https://www.djangoproject.com/), [B
 
 ## Quickstart
 
-Using Docker: Deploy in 5 minutes or less using [official quickstart guide at cabotapp.com](http://cabotapp.com/qs/quickstart.html). (See also https://github.com/cabotapp/docker-cabot)
+Using Docker: Deploy in 5 minutes or less using [official quickstart guide at cabotapp.com](http://cabotapp.com/qs/quickstart.html). (See also https://hub.docker.com/r/cabotapp/cabot/)
 
 ## How it works
 
