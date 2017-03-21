@@ -780,10 +780,7 @@ class SetupView(View):
             'username': 'admin',
         })
 
-        c = RequestContext(request, {
-            'form': form,
-        })
-        return HttpResponse(self.template.render(c))
+        return HttpResponse(self.template.render({'form': form}, request))
 
     def post(self, request):
         if not cabot_needs_setup():
@@ -798,10 +795,7 @@ class SetupView(View):
             )
             return redirect('login')
 
-        c = RequestContext(request, {
-            'form': form,
-        })
-        return HttpResponse(self.template.render(c), status=400)
+        return HttpResponse(self.template.render({'form': form}, request), status=400)
 
 
 # Misc JSON api and other stuff
