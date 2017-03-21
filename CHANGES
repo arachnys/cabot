@@ -1,6 +1,7 @@
 master
 ------
 
+* Automatically reload plugins after migrating
 * Add cabot_alert_slack as default plugin
 * Upgrade to Django 1.10
 * Upgrade to Celery 4

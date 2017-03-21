@@ -707,7 +707,6 @@ class ServiceCreateView(LoginRequiredMixin, CreateView):
     form_class = ServiceForm
 
     def __init__(self, *args, **kwargs):
-        alert.update_alert_plugins()
         super(ServiceCreateView, self).__init__(*args, **kwargs)
 
     def get_success_url(self):
