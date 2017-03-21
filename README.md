@@ -31,11 +31,7 @@ Cabot is written in Python and uses [Django](https://www.djangoproject.com/), [B
 
 ## Quickstart
 
-Using Fabric/Vagrant: Deploy in 5 minutes or less using [official quickstart guide at cabotapp.com](http://cabotapp.com/qs/quickstart.html).
-
-Using Docker: Deploy in 10 minutes using shoonoise's Docker/Maestro
-setup with instructions:
-[shoonoise/cabot-docker](https://github.com/shoonoise/cabot-docker)
+Using Docker: Deploy in 5 minutes or less using [official quickstart guide at cabotapp.com](http://cabotapp.com/qs/quickstart.html). (See also https://github.com/cabotapp/docker-cabot)
 
 ## How it works
 
