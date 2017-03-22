@@ -22,6 +22,7 @@ httplib2==0.10.3
 icalendar==3.11.3
 itypes==1.1.0
 Jinja2==2.9.5
+jq==0.1.6
 kombu==4.0.2
 Markdown==2.6.8
 MarkupSafe==1.0
