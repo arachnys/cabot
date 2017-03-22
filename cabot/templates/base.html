@@ -69,6 +69,9 @@
                   <a href="{% url "create-http-check" %}?service={{ service.id }}&instance={{ instance.id }}" class="" title="Add new Http check"><i class="glyphicon glyphicon-arrow-up"></i> Http check</a>
                 </li>
                 <li>
+                  <a href="{% url "create-json-check" %}?service={{ service.id }}&instance={{ instance.id }}" class="" title="Add new Http check"><i class="glyphicon glyphicon-th-large"></i>JSON check</a>
+                </li>
+                <li>
                   <a href="{% url "create-jenkins-check" %}?service={{ service.id }}&instance={{ instance.id }}" class="" title="Add new Jenkins check"><i class="glyphicon glyphicon-ok"></i> Jenkins check</a>
                 </li>
                 <li>
