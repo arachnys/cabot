@@ -108,6 +108,19 @@ router.register(r'http_checks', create_viewset(
     ),
 ))
 
+router.register(r'json_checks', create_viewset(
+    arg_model=models.JsonStatusCheck,
+    arg_fields=status_check_fields + (
+        'endpoint',
+        'username',
+        'password',
+        'text_match',
+        'status_code',
+        'timeout',
+        'verify_ssl_certificate',
+    ),
+))
+
 router.register(r'jenkins_checks', create_viewset(
     arg_model=models.JenkinsStatusCheck,
     arg_fields=status_check_fields + (
