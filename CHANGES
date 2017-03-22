@@ -1,3 +1,8 @@
+master
+------
+
+* Add interactive api docs (using djangorestframework 3.6) at /docs
+
 Version 0.10.1
 --------------
 

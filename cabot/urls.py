@@ -21,6 +21,7 @@ from cabot.cabotapp.views import (InstanceListView, InstanceDetailView,
 from cabot.cabotapp.utils import cabot_needs_setup
 
 from cabot import rest_urls
+from rest_framework.documentation import include_docs_urls
 
 from django.contrib import admin
 from django.views.generic.base import RedirectView
@@ -142,6 +143,7 @@ urlpatterns = [
      # Comment below line to disable browsable rest api
      url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
      url(r'^api/', include(rest_urls.router.urls)),
+     url(r'^docs/', include_docs_urls(title="Cabot API", description="An API to create and view Cabot checks and services."))
 ]
 
 def append_plugin_urls():
