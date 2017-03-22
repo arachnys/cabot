@@ -1,6 +1,7 @@
 master
 ------
 
+* Add interactive api docs (using djangorestframework 3.6) at /docs
 * Add feedback notifications when updated profile
 * Automatically reload plugins after migrating
 * Add cabot_alert_slack as default plugin
