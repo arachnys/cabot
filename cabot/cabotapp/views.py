@@ -27,7 +27,7 @@ from django.views.generic import (
 from django.shortcuts import redirect, render
 from models import AlertPluginUserData
 from models import (
-    StatusCheck, GraphiteStatusCheck, JenkinsStatusCheck, HttpStatusCheck, ICMPStatusCheck,
+    StatusCheck, GraphiteStatusCheck, JenkinsStatusCheck, HttpStatusCheck, JsonStatusCheck, ICMPStatusCheck,
     StatusCheckResult, UserProfile, Service, Instance, Shift, get_duty_officers)
 from tasks import run_status_check as _run_status_check
 from .graphite import get_data, get_matching_metrics
@@ -75,6 +75,12 @@ def duplicate_http_check(request, pk):
     pc = StatusCheck.objects.get(pk=pk)
     npk = pc.duplicate()
     return HttpResponseRedirect(reverse('update-http-check', kwargs={'pk': npk}))
+
+
+def duplicate_json_check(request, pk):
+    pc = StatusCheck.objects.get(pk=pk)
+    npk = pc.duplicate()
+    return HttpResponseRedirect(reverse('update-json-check', kwargs={'pk': npk}))
 
 
 def duplicate_graphite_check(request, pk):
@@ -228,6 +234,49 @@ class HttpStatusCheckForm(StatusCheckForm):
             'text_match': forms.TextInput(attrs={
                 'style': 'width: 100%',
                 'placeholder': '[Aa]rachnys\s+[Rr]ules',
+            }),
+            'status_code': forms.TextInput(attrs={
+                'style': 'width: 20%',
+                'placeholder': '200',
+            }),
+        })
+
+
+class JsonStatusCheckForm(StatusCheckForm):
+    class Meta:
+        model = JsonStatusCheck
+        fields = (
+            'name',
+            'endpoint',
+            'username',
+            'password',
+            'text_match',
+            'status_code',
+            'timeout',
+            'verify_ssl_certificate',
+            'frequency',
+            'importance',
+            'active',
+            'debounce',
+        )
+        labels = {
+            'text_match': 'jq query'
+        }
+        widgets = dict(**base_widgets)
+        widgets.update({
+            'endpoint': forms.TextInput(attrs={
+                'style': 'width: 100%',
+                'placeholder': 'https://www.example.com/api/posts.json',
+            }),
+            'username': forms.TextInput(attrs={
+                'style': 'width: 30%',
+            }),
+            'password': forms.PasswordInput(attrs={
+                'style': 'width: 30%',
+            }),
+            'text_match': forms.TextInput(attrs={
+                'style': 'width: 100%',
+                'placeholder': '.[0].attribute',
             }),
             'status_code': forms.TextInput(attrs={
                 'style': 'width: 20%',
@@ -471,6 +520,16 @@ class HttpCheckCreateView(CheckCreateView):
 class HttpCheckUpdateView(CheckUpdateView):
     model = HttpStatusCheck
     form_class = HttpStatusCheckForm
+
+
+class JsonCheckCreateView(CheckCreateView):
+    model = JsonStatusCheck
+    form_class = JsonStatusCheckForm
+
+
+class JsonCheckUpdateView(CheckUpdateView):
+    model = JsonStatusCheck
+    form_class = JsonStatusCheckForm
 
 
 class JenkinsCheckCreateView(CheckCreateView):
