@@ -1,6 +1,7 @@
 master
 ------
 
+* Add feedback notifications when updated profile
 * Automatically reload plugins after migrating
 * Add cabot_alert_slack as default plugin
 * Upgrade to Django 1.10

@@ -1053,6 +1053,26 @@ class TestAlerts(LocalTestCase):
             plugins = update_alert_plugins()
             self.assertEqual(len(plugins), plugin_count - 1)
 
+    def test_update_profile_success(self):
+        url = reverse('update-alert-user-data', kwargs={'pk':self.user.id, 'alerttype': 'General'})
+        self.client.login(username=self.username, password=self.password)
+
+        response = self.client.post(url, follow=True, data={
+            "first_name": "Test Name"
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('alert-success', response.content)
+
+    def test_update_profile_fail(self):
+        url = reverse('update-alert-user-data', kwargs={'pk':self.user.id, 'alerttype': 'General'})
+        self.client.login(username=self.username, password=self.password)
+
+        response = self.client.post(url, follow=True, data={
+            "first_name": "Test Name" * 20  # Name too long
+        })
+
+        self.assertIn('alert-danger', response.content)
 
 class TestCleanUpTask(LocalTestCase):
     def setUp(self):
