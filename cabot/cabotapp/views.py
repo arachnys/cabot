@@ -9,6 +9,7 @@ from cabot.cabotapp.utils import cabot_needs_setup
 from dateutil.relativedelta import relativedelta
 from django import forms
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
@@ -558,6 +559,8 @@ class UserProfileUpdateAlert(LoginRequiredMixin, View):
 
     def post(self, request, pk, alerttype):
         profile = UserProfile.objects.get(user=pk)
+        success = False
+
         if alerttype == u'General':
             form = GeneralSettingsForm(request.POST)
             if form.is_valid():
@@ -566,15 +569,23 @@ class UserProfileUpdateAlert(LoginRequiredMixin, View):
                 profile.user.is_active = form.cleaned_data['enabled']
                 profile.user.email = form.cleaned_data['email_address']
                 profile.user.save()
-                return HttpResponseRedirect(reverse('update-alert-user-data', args=(self.kwargs['pk'], alerttype)))
 
+                success = True
         else:
             plugin_userdata = self.model.objects.get(title=alerttype, user=profile)
             form_model = get_object_form(type(plugin_userdata))
             form = form_model(request.POST, instance=plugin_userdata)
-            form.save()
             if form.is_valid():
-                return HttpResponseRedirect(reverse('update-alert-user-data', args=(self.kwargs['pk'], alerttype)))
+                form.save()
+
+                success = True
+
+        if success:
+            messages.add_message(request, messages.SUCCESS, 'Updated Successfully', extra_tags='success')
+        else:
+            messages.add_message(request, messages.ERROR, 'Error Updating Profile', extra_tags='danger')
+
+        return HttpResponseRedirect(reverse('update-alert-user-data', args=(self.kwargs['pk'], alerttype)))
 
 
 def get_object_form(model_type):

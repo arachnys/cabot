@@ -118,6 +118,16 @@
         <p>You need to have <a href="http://en.wikipedia.org/wiki/JavaScript" target="_blank">JavaScript</a> enabled to use this site.</p>
       </div>
     </noscript>
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissable">
+          <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+          {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
     <div class="row">
     {% block content %}
     {% endblock content %}
