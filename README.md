@@ -4,6 +4,7 @@ Cabot
 [![Coverage Status](https://codecov.io/github/arachnys/cabot/coverage.svg?branch=master)](https://codecov.io/github/arachnys/cabot?branch=master)
 [![Requirements Status](https://requires.io/github/arachnys/cabot/requirements.svg?branch=master)](https://requires.io/github/arachnys/cabot/requirements/?branch=master)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Gitter](https://img.shields.io/gitter/room/arachnys/cabot.svg)](https://gitter.im/arachnys/cabot)
 
 Cabot is a free, open-source, self-hosted infrastructure monitoring platform that provides some of the best features of [PagerDuty](http://www.pagerduty.com), [Server Density](http://www.serverdensity.com), [Pingdom](http://www.pingdom.com) and [Nagios](http://www.nagios.org) without their cost and complexity. (Nagios, I'm mainly looking at you.)
 
