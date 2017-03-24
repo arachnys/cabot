@@ -1,6 +1,7 @@
 Cabot
 =====
 [![Build Status](https://travis-ci.org/arachnys/cabot.svg?branch=master)](https://travis-ci.org/arachnys/cabot) 
+[![PyPI version](https://badge.fury.io/py/cabot.svg)](https://badge.fury.io/py/cabot)
 [![Coverage Status](https://codecov.io/github/arachnys/cabot/coverage.svg?branch=master)](https://codecov.io/github/arachnys/cabot?branch=master)
 [![Requirements Status](https://requires.io/github/arachnys/cabot/requirements.svg?branch=master)](https://requires.io/github/arachnys/cabot/requirements/?branch=master)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
