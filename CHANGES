@@ -1,5 +1,5 @@
-master
-------
+Version 0.10.0
+--------------
 
 * Add feedback notifications when updated profile
 * Automatically reload plugins after migrating
