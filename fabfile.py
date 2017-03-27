@@ -44,7 +44,7 @@ def run_migrations(deploy_path=DEPLOY_PATH):
     with cd(deploy_path):
         with prefix("source {venv}/bin/activate".format(venv=VENV_DIR)):
             sudo(
-                "foreman run -e conf/{env}.env python manage.py syncdb --noinput".format(env=env.deploy_version))
+                "foreman run -e conf/{env}.env python manage.py migrate --noinput".format(env=env.deploy_version))
             sudo(
                 "foreman run -e conf/{env}.env python manage.py migrate cabotapp --noinput".format(env=env.deploy_version))
             sudo(
