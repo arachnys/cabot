@@ -148,7 +148,7 @@ def deploy(deploy_version=None):
         remote_dir=deploy_path,
         local_dir='./',
         ssh_opts='-o StrictHostKeyChecking=no',
-        exclude=['.git', 'backups', 'venv',
+        exclude=['backups', 'venv',
                  'static/CACHE', '.vagrant', '*.pyc', 'dev.db'],
     )
     with cd(deploy_path):
