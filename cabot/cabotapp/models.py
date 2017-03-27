@@ -395,10 +395,6 @@ class StatusCheck(PolymorphicModel):
                   'Errors are things you can sleep through but need to fix in the morning, '
                   'and warnings for less important things.'
     )
-    interval = models.IntegerField(
-        default=5,
-        help_text='Time duration (in minutes) for checking metrics')
-
     frequency = models.IntegerField(
         default=5,
         help_text='Minutes between each check.',
@@ -415,139 +411,6 @@ class StatusCheck(PolymorphicModel):
     last_run = models.DateTimeField(null=True)
     cached_health = models.TextField(editable=False, null=True)
 
-    # Graphite/InfluxDB checks
-    metric = models.TextField(
-        null=True,
-        help_text='fully.qualified.name of the metric you want to watch. '
-                  'This can be any valid expression, including wildcards, '
-                  'multiple hosts, etc.',
-    )
-
-    # InfluxDB specific
-    metric_selector = models.CharField(
-        max_length=50,
-        null=False,
-        default='value',
-        help_text='The selector for the metric. '
-                  'Can be specified as "value", "mean(value)", '
-                  '"percentile(value, 90)" etc.',
-    )
-
-    group_by = models.CharField(
-        max_length=50,
-        null=False,
-        default='',
-        help_text='The "group by" clause for the metric. '
-                  'Can be specified as "time(1m)", '
-                  '"time(2m), host" etc.',
-    )
-
-    fill_empty = models.IntegerField(
-        default=None,
-        null=True,
-        blank=True,
-        help_text='Fill the sequence with this value, if required.'
-    )
-
-    where_clause = models.CharField(
-        max_length=256,
-        null=False,
-        default='',
-        blank=True,
-        help_text='The "where clause" for selecting the metric'
-    )
-
-    check_type = models.CharField(
-        choices=CHECK_TYPES,
-        max_length=100,
-        null=True,
-    )
-    value = models.TextField(
-        null=True,
-        help_text='If this expression evaluates to False, the check will fail (possibly triggering an alert).',
-    )
-    expected_num_hosts = models.IntegerField(
-        default=0,
-        null=True,
-        help_text='The minimum number of data series (hosts) you expect to see.',
-    )
-    expected_num_metrics = models.IntegerField(
-        default=0,
-        null=True,
-        help_text='The minimum number of data series (metrics) you expect to satisfy given condition.',
-    )
-
-    # HTTP checks
-    endpoint = models.TextField(
-        null=True,
-        help_text='HTTP(S) endpoint to poll.',
-    )
-    username = models.TextField(
-        blank=True,
-        null=True,
-        help_text='Basic auth username.',
-    )
-    password = models.TextField(
-        blank=True,
-        null=True,
-        help_text='Basic auth password.',
-    )
-    http_method = models.CharField(
-        null=False,
-        max_length=10,
-        default='GET',
-        choices=(('GET', 'GET'), ('POST', 'POST'), ('HEAD', 'HEAD')),
-        help_text='The method to use for invocation',
-    )
-    http_params = models.TextField(
-        default=None,
-        null=True,
-        blank=True,
-        help_text='Yaml representation of "header: regex" to send as parameters',
-    )
-    http_body = models.TextField(
-        null=True,
-        default=None,
-        blank=True,
-        help_text='Yaml representation of key: value to send as data'
-    )
-    allow_http_redirects = models.BooleanField(
-        default=True,
-        help_text='Indicates if the check should follow an http redirect'
-    )
-    text_match = models.TextField(
-        blank=True,
-        null=True,
-        help_text='Regex to match against source of page.',
-    )
-    header_match = models.TextField(
-        default=None,
-        null=True,
-        blank=True,
-        help_text='Yaml representation of "header: regex" to match in '
-                  'the results',
-    )
-    status_code = models.TextField(
-        default=200,
-        null=True,
-        help_text='Status code expected from endpoint.'
-    )
-    timeout = models.IntegerField(
-        default=30,
-        null=True,
-        help_text='Time out after this many seconds.',
-    )
-    verify_ssl_certificate = models.BooleanField(
-        default=True,
-        help_text='Set to false to allow not try to verify ssl certificates (default True)',
-    )
-
-    # Jenkins checks
-    max_queued_build_time = models.IntegerField(
-        null=True,
-        blank=True,
-        help_text='Alert if build queued for more than this many minutes.',
-    )
 
     class Meta(PolymorphicModel.Meta):
         ordering = ['name']
@@ -636,9 +499,6 @@ class StatusCheck(PolymorphicModel):
 
 class ICMPStatusCheck(StatusCheck):
 
-    class Meta(StatusCheck.Meta):
-        proxy = True
-
     @property
     def check_category(self):
         return "ICMP/Ping Check"
@@ -671,12 +531,68 @@ class GraphiteStatusCheck(StatusCheck):
     Uses influx, not graphite
     """
 
-    class Meta(StatusCheck.Meta):
-        proxy = True
-
     @property
     def check_category(self):
         return "Metric check"
+
+    metric = models.TextField(
+        null=True,
+        help_text='fully.qualified.name of the metric you want to watch. '
+                  'This can be any valid expression, including wildcards, '
+                  'multiple hosts, etc.',
+    )
+    metric_selector = models.CharField(
+        max_length=50,
+        null=False,
+        default='value',
+        help_text='The selector for the metric. '
+                  'Can be specified as "value", "mean(value)", '
+                  '"percentile(value, 90)" etc.',
+    )
+    check_type = models.CharField(
+        choices=CHECK_TYPES,
+        max_length=100,
+        null=True,
+    )
+    value = models.TextField(
+        null=True,
+        help_text='If this expression evaluates to False, the check will fail (possibly triggering an alert).',
+    )
+    group_by = models.CharField(
+        max_length=50,
+        null=False,
+        default='',
+        help_text='The "group by" clause for the metric. '
+                  'Can be specified as "time(1m)", '
+                  '"time(2m), host" etc.',
+    )
+    fill_empty = models.IntegerField(
+        default=None,
+        null=True,
+        blank=True,
+        help_text='Fill the sequence with this value, if required.'
+    )
+    where_clause = models.CharField(
+        max_length=256,
+        null=False,
+        default='',
+        blank=True,
+        help_text='The "where clause" for selecting the metric'
+    )
+    expected_num_hosts = models.IntegerField(
+        default=0,
+        null=True,
+        help_text='The minimum number of data series (hosts) you expect to see.',
+    )
+    expected_num_metrics = models.IntegerField(
+        default=0,
+        null=True,
+        help_text='The minimum number of data series (metrics) you expect to satisfy given condition.',
+    )
+    interval = models.IntegerField(
+        default=5,
+        help_text='Time duration (in minutes) for checking metrics'
+    )
 
     def format_error_message(self, failure_value, actual_hosts,
                              actual_metrics, name):
@@ -845,18 +761,82 @@ class GraphiteStatusCheck(StatusCheck):
 
 
 class InfluxDBStatusCheck(GraphiteStatusCheck):
+    """
+    Duplicate of GraphiteStatusCheck
+    """
     class Meta(GraphiteStatusCheck.Meta):
-        proxy = True
+        pass
 
 
 class HttpStatusCheck(StatusCheck):
 
-    class Meta(StatusCheck.Meta):
-        proxy = True
-
     @property
     def check_category(self):
         return "HTTP check"
+
+    endpoint = models.TextField(
+        null=True,
+        help_text='HTTP(S) endpoint to poll.',
+    )
+    username = models.TextField(
+        blank=True,
+        null=True,
+        help_text='Basic auth username.',
+    )
+    password = models.TextField(
+        blank=True,
+        null=True,
+        help_text='Basic auth password.',
+    )
+    http_method = models.CharField(
+        null=False,
+        max_length=10,
+        default='GET',
+        choices=(('GET', 'GET'), ('POST', 'POST'), ('HEAD', 'HEAD')),
+        help_text='The method to use for invocation',
+    )
+    http_params = models.TextField(
+        default=None,
+        null=True,
+        blank=True,
+        help_text='Yaml representation of "header: regex" to send as parameters',
+    )
+    http_body = models.TextField(
+        null=True,
+        default=None,
+        blank=True,
+        help_text='Yaml representation of key: value to send as data'
+    )
+    allow_http_redirects = models.BooleanField(
+        default=True,
+        help_text='Indicates if the check should follow an http redirect'
+    )
+    text_match = models.TextField(
+        blank=True,
+        null=True,
+        help_text='Regex to match against source of page.',
+    )
+    header_match = models.TextField(
+        default=None,
+        null=True,
+        blank=True,
+        help_text='Yaml representation of "header: regex" to match in '
+                  'the results',
+    )
+    timeout = models.IntegerField(
+        default=30,
+        null=True,
+        help_text='Time out after this many seconds.',
+    )
+    verify_ssl_certificate = models.BooleanField(
+        default=True,
+        help_text='Set to false to allow not try to verify ssl certificates (default True)',
+    )
+    status_code = models.TextField(
+        default=200,
+        null=True,
+        help_text='Status code expected from endpoint.'
+    )
 
     def _run(self):
         result = StatusCheckResult(check=self)
@@ -927,12 +907,15 @@ class HttpStatusCheck(StatusCheck):
 
 class JenkinsStatusCheck(StatusCheck):
 
-    class Meta(StatusCheck.Meta):
-        proxy = True
-
     @property
     def check_category(self):
         return "Jenkins check"
+
+    max_queued_build_time = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text='Alert if build queued for more than this many minutes.',
+    )
 
     @property
     def failing_short_status(self):
