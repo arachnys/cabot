@@ -674,9 +674,15 @@ class UserProfileUpdateAlert(LoginRequiredMixin, View):
             plugin_userdata = self.model.objects.get(title=alerttype, user=profile)
             form_model = get_object_form(type(plugin_userdata))
             form = form_model(request.POST, instance=plugin_userdata)
-            form.save()
-            if form.is_valid():
+            if form.is_valid() and not form.errors:
+                form.save()
                 return HttpResponseRedirect(reverse('update-alert-user-data', args=(self.kwargs['pk'], alerttype)))
+            else:
+                c = RequestContext(request, {
+                    'form': form,
+                    'alert_preferences': profile.user_data,
+                })
+                return HttpResponse(self.template.render(c))
 
 
 def get_object_form(model_type):
@@ -686,6 +692,26 @@ def get_object_form(model_type):
 
         def is_valid(self):
             return True
+
+        def clean_phone_number(self):
+            phone_number = self.cleaned_data['phone_number']
+            if any(not n.isdigit() for n in phone_number):
+                raise ValidationError('Phone number should only contain numbers. '
+                                      'Format: CNNNNNNNNNN, where C is the country code (1 for USA)')
+
+            # 10 digit phone number + 1+ digit country code
+            if len(phone_number) < 11:
+                raise ValidationError('Phone number should include a country code. '
+                                      'Format: CNNNNNNNNNN, where C is the country code (1 for USA)')
+
+            return phone_number
+
+        def clean_hipchat_alias(self):
+            hipchat_alias = self.cleaned_data['hipchat_alias']
+            if hipchat_alias.startswith('@'):
+                raise ValidationError('Do not include leading @ in Hipchat alias')
+            return hipchat_alias
+
     return AlertPreferencesForm
 
 

@@ -15,19 +15,13 @@
       <h1 class="page-header">User Profile</h1>
       <form class="form-horizontal" action="" method="post" role="form">
         {% csrf_token %}
-        {% for field in form %}
-        <div class="form-group">
-          <label class="col-xs-2 control-label">{{ field.label_tag }}</label>
-          <div class="col-xs-10">{{ field }}</div>
-        </div>
-        {% endfor %}
+        {% include "cabotapp/_base_form.html" %}
         <div class="form-group">
           <div class="col-xs-6 col-xs-offset-2">
             <button type="submit" class="btn btn-primary">Submit</button>
             <a href="{% url "dashboard" %}" class="btn">Back to dashboard</a>
           </div>
         </div>
-
       </form>
     </div>
   </div>
