@@ -40,7 +40,7 @@ services:
 
   wait_psql:
     image: cabot:web
-    command: dockerize -wait tcp://db_psql:5432 -timeout 20s
+    command: dockerize -wait tcp://db_psql:5432 -timeout 60s
     depends_on:
       - db_psql
 

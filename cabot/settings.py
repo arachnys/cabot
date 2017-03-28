@@ -320,3 +320,4 @@ SERVICE_IMAGE = os.environ.get('SERVICE_IMAGE', None)
 TEST_RUNNER = 'xmlrunner.extra.djangotestrunner.XMLTestRunner'
 TEST_OUTPUT_DIR = os.environ.get('TEST_OUTPUT_DIR', '.')
 
+DISABLE_LOGIN = os.environ.get('DISABLE_LOGIN', False)

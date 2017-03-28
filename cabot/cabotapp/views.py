@@ -22,7 +22,7 @@ from models import (StatusCheck,
                     update_shifts)
 
 from tasks import run_status_check as _run_status_check
-from django.contrib.auth.decorators import login_required
+from .decorators import cabot_login_required
 from django.utils.decorators import method_decorator
 from django.views.generic import (
     DetailView, CreateView, UpdateView, ListView, DeleteView, TemplateView, FormView, View)
@@ -50,12 +50,12 @@ from django.template.defaulttags import register
 
 class LoginRequiredMixin(object):
 
-    @method_decorator(login_required)
+    @method_decorator(cabot_login_required)
     def dispatch(self, *args, **kwargs):
         return super(LoginRequiredMixin, self).dispatch(*args, **kwargs)
 
 
-@login_required
+@cabot_login_required
 def subscriptions(request):
     """ Simple list of all checks """
     t = loader.get_template('cabotapp/subscriptions.html')
@@ -70,7 +70,7 @@ def subscriptions(request):
     return HttpResponse(t.render(c))
 
 
-@login_required
+@cabot_login_required
 def run_status_check(request, pk):
     """Runs a specific check"""
     _run_status_check(check_or_id=pk)
@@ -941,7 +941,7 @@ def jsonify(d):
     return HttpResponse(json.dumps(d), content_type='application/json')
 
 
-@login_required
+@cabot_login_required
 def graphite_api_data(request):
     metric = request.GET.get('metric')
     data = None
