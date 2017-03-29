@@ -8,14 +8,14 @@ Django==1.10.6
 django-appconf==1.0.2
 django-auth-ldap==1.2.10
 django-compressor==2.1.1
-django-filter==1.0.1
+django-filter==1.0.2
 django-jsonify==0.3.0
 django-polymorphic==1.1
-djangorestframework==3.5.4
+djangorestframework==3.6.2
 freezegun==0.3.8
 gevent==1.2.1
 greenlet==0.4.12
-gunicorn==19.7.0
+gunicorn==19.7.1
 httplib2==0.10.3
 icalendar==3.11.3
 kombu==4.0.2
@@ -23,7 +23,7 @@ packaging==16.8
 psycopg2==2.7.1
 pyldap==2.4.28
 pyparsing==2.2.0
-PySocks==1.6.6
+PySocks==1.6.7
 python-dateutil==2.6.0
 pytz==2016.10
 rcssmin==1.0.6

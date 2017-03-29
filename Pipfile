@@ -5,7 +5,7 @@ verify_ssl = true
 [packages]
 amqp = ">=2.1.4"
 celery = ">=4,<5"
-djangorestframework = ">=3.5,<3.6"
+djangorestframework = "*"
 django-jsonify = "*"
 django-filter = "*"
 django-auth-ldap = "*"
