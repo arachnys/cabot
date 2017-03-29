@@ -1,6 +1,8 @@
 master
 ------
 
+* Update cabot-alert-hipchat plugin to 2.0.0
+  - Uses hipchat api v2
 * Add interactive api docs (using djangorestframework 3.6) at /docs
 
 Version 0.10.1
