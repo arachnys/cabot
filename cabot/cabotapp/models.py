@@ -49,18 +49,18 @@ def serialize_recent_results(recent_results):
     return ','.join(vals)
 
 
-def calculate_debounced_passing(recent_results, debounce=0):
+def get_success_with_retries(recent_results, retries=0):
     """
-    `debounce` is the number of previous failures we need (not including this)
+    `retries` are the number of previous failures we need (not including this)
     to mark a search as passing or failing
     Returns:
-      True if passing given debounce factor
+      True if passing given number of retries
       False if failing
     """
     if not recent_results:
         return True
-    debounce_window = recent_results[:debounce + 1]
-    for r in debounce_window:
+    retry_window = recent_results[:retries + 1]
+    for r in retry_window:
         if r.succeeded:
             return True
     return False
@@ -399,7 +399,7 @@ class StatusCheck(PolymorphicModel):
         default=5,
         help_text='Minutes between each check.',
     )
-    debounce = models.IntegerField(
+    retries = models.IntegerField(
         default=0,
         null=True,
         help_text='Number of successive failures permitted before check will be marked as failed. '
@@ -457,7 +457,7 @@ class StatusCheck(PolymorphicModel):
     def save(self, *args, **kwargs):
         if self.last_run:
             recent_results = list(self.recent_results())
-            if calculate_debounced_passing(recent_results, self.debounce):
+            if get_success_with_retries(recent_results, self.retries):
                 self.calculated_status = Service.CALCULATED_PASSING_STATUS
             else:
                 self.calculated_status = Service.CALCULATED_FAILING_STATUS

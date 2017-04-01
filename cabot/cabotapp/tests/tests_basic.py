@@ -211,8 +211,8 @@ class TestCheckRun(LocalTestCase):
         self.service.update_status()
         self.assertEqual(self.service.overall_status, Service.ERROR_STATUS)
 
-        # Changing debounce will change it up
-        self.graphite_check.debounce = 1
+        # Changing the number of retries will change it up
+        self.graphite_check.retries = 1
         self.graphite_check.save()
         self.assertEqual(self.graphite_check.calculated_status,
                          Service.CALCULATED_PASSING_STATUS)
@@ -504,7 +504,7 @@ class TestAPI(LocalTestCase):
                     'active': True,
                     'importance': u'ERROR',
                     'frequency': 5,
-                    'debounce': 0,
+                    'retries': 0,
                     'id': 5
                 },
                 {
@@ -512,7 +512,7 @@ class TestAPI(LocalTestCase):
                     'active': True,
                     'importance': u'ERROR',
                     'frequency': 5,
-                    'debounce': 0,
+                    'retries': 0,
                     'id': 6
                 },
                 {
@@ -520,7 +520,7 @@ class TestAPI(LocalTestCase):
                     'active': True,
                     'importance': u'CRITICAL',
                     'frequency': 5,
-                    'debounce': 0,
+                    'retries': 0,
                     'id': 7
                 },
                 {
@@ -528,7 +528,7 @@ class TestAPI(LocalTestCase):
                     'active': True,
                     'importance': u'ERROR',
                     'frequency': 5,
-                    'debounce': 0,
+                    'retries': 0,
                     'id': 8
                 },
             ],
@@ -538,7 +538,7 @@ class TestAPI(LocalTestCase):
                     'active': True,
                     'importance': u'ERROR',
                     'frequency': 5,
-                    'debounce': 0,
+                    'retries': 0,
                     'metric': u'stats.fake.value',
                     'check_type': u'<=',
                     'value': u'9.0',
@@ -553,7 +553,7 @@ class TestAPI(LocalTestCase):
                     'active': True,
                     'importance': u'CRITICAL',
                     'frequency': 5,
-                    'debounce': 0,
+                    'retries': 0,
                     'endpoint': u'http://arachnys.com',
                     'username': None,
                     'password': None,
@@ -570,7 +570,7 @@ class TestAPI(LocalTestCase):
                     'active': True,
                     'importance': u'ERROR',
                     'frequency': 5,
-                    'debounce': 0,
+                    'retries': 0,
                     'max_queued_build_time': 10,
                     'id': 6
                 },
@@ -581,7 +581,7 @@ class TestAPI(LocalTestCase):
                     'active': True,
                     'importance': u'ERROR',
                     'frequency': 5,
-                    'debounce': 0,
+                    'retries': 0,
                     'id': 8
                 },
             ],
@@ -618,7 +618,7 @@ class TestAPI(LocalTestCase):
                     'active': True,
                     'importance': u'CRITICAL',
                     'frequency': 5,
-                    'debounce': 0,
+                    'retries': 0,
                     'metric': u'stats.fakeval2',
                     'check_type': u'<',
                     'value': u'2',
@@ -633,7 +633,7 @@ class TestAPI(LocalTestCase):
                     'active': True,
                     'importance': u'ERROR',
                     'frequency': 5,
-                    'debounce': 0,
+                    'retries': 0,
                     'endpoint': u'http://arachnys.com/post_tests',
                     'username': None,
                     'password': None,
@@ -650,7 +650,7 @@ class TestAPI(LocalTestCase):
                     'active': True,
                     'importance': u'CRITICAL',
                     'frequency': 5,
-                    'debounce': 0,
+                    'retries': 0,
                     'max_queued_build_time': 37,
                     'id': 6
                 },
@@ -661,7 +661,7 @@ class TestAPI(LocalTestCase):
                     'active': True,
                     'importance': u'CRITICAL',
                     'frequency': 5,
-                    'debounce': 0,
+                    'retries': 0,
                     'id': 8
                 },
             ],
@@ -731,17 +731,17 @@ class TestAPIFiltering(LocalTestCase):
 
         self.expected_filter_result = JenkinsStatusCheck.objects.create(
             name='Filter test 1',
-            debounce=True,
+            retries=True,
             importance=Service.CRITICAL_STATUS,
         )
         JenkinsStatusCheck.objects.create(
             name='Filter test 2',
-            debounce=True,
+            retries=True,
             importance=Service.WARNING_STATUS,
         )
         JenkinsStatusCheck.objects.create(
             name='Filter test 3',
-            debounce=False,
+            retries=False,
             importance=Service.CRITICAL_STATUS,
         )
 
@@ -772,7 +772,7 @@ class TestAPIFiltering(LocalTestCase):
 
     def test_query(self):
         response = self.client.get(
-            '{}?debounce=1&importance=CRITICAL'.format(
+            '{}?retries=1&importance=CRITICAL'.format(
                 api_reverse('jenkinsstatuscheck-list')
             ),
             format='json',

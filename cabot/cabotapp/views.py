@@ -169,7 +169,7 @@ class GraphiteStatusCheckForm(StatusCheckForm):
             'interval',
             'expected_num_hosts',
             'expected_num_metrics',
-            'debounce',
+            'retries',
         )
         widgets = dict(**base_widgets)
         widgets.update({
@@ -205,7 +205,7 @@ class InfluxDBStatusCheckForm(StatusCheckForm):
             'interval',
             'expected_num_hosts',
             'expected_num_metrics',
-            'debounce',
+            'retries',
         )
         widgets = dict(**base_widgets)
         widgets.update({
@@ -231,7 +231,7 @@ class ICMPStatusCheckForm(StatusCheckForm):
             'frequency',
             'importance',
             'active',
-            'debounce',
+            'retries',
         )
         widgets = dict(**base_widgets)
 
@@ -256,7 +256,7 @@ class HttpStatusCheckForm(StatusCheckForm):
             'frequency',
             'importance',
             'active',
-            'debounce',
+            'retries',
         )
         widgets = dict(**base_widgets)
         widgets.update({
@@ -287,7 +287,7 @@ class JenkinsStatusCheckForm(StatusCheckForm):
         fields = (
             'name',
             'importance',
-            'debounce',
+            'retries',
             'max_queued_build_time',
         )
         widgets = dict(**base_widgets)
@@ -791,7 +791,7 @@ class InstanceCreateView(LoginRequiredMixin, CreateView):
             name="Default Ping Check for %s" % obj.name,
             frequency=5,
             importance=Service.ERROR_STATUS,
-            debounce=0,
+            retries=0,
             created_by=None,
         )
         pc.save()
