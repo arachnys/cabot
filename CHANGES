@@ -1,5 +1,5 @@
-master
-------
+Version 0.10.2
+--------------
 
 * Update cabot-alert-hipchat plugin to 2.0.1
   - Supports Hipchat API v2
