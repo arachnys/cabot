@@ -9,7 +9,10 @@ from pip.req import parse_requirements
 requirements = [str(req.req) for req in parse_requirements('requirements.txt', session=False)]
 requirements_plugins = [str(req.req) for req in parse_requirements('requirements-plugins.txt', session=False)]
 
-VERSION = subprocess.check_output(['git', 'describe', '--tags']).strip()
+try:
+    VERSION = subprocess.check_output(['git', 'describe', '--tags']).strip()
+except subprocess.CalledProcessError:
+    VERSION = '0.dev'
 
 setup(
     name='cabot',

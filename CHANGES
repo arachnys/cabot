@@ -1,6 +1,10 @@
 master
 ------
 
+* Update cabot-alert-hipchat plugin to 2.0.1
+  - Supports Hipchat API v2
+  - If HIPCHAT_URL is set, it will use the old v1 api
+  - Use HIPCHAT_DOMAIN for custom hipchat v2 deployments
 * Add interactive api docs (using djangorestframework 3.6) at /docs
 
 Version 0.10.1
