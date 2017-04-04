@@ -14,7 +14,12 @@ RUN apk add --no-cache \
         musl-dev \
         libffi-dev \
         openldap-dev \
-        bash
+        bash \
+        autoconf \
+        automake \
+        ca-certificates \
+        alpine-sdk \
+        libtool
 
 RUN npm install -g \
         --registry http://registry.npmjs.org/ \

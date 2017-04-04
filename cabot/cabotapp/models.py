@@ -1,5 +1,6 @@
 import itertools
 import json
+from jq import jq
 import re
 import subprocess
 import time
@@ -761,6 +762,66 @@ class HttpStatusCheck(StatusCheck):
                     result.succeeded = True
             else:
                 result.succeeded = True
+        return result
+
+class JsonStatusCheck(StatusCheck):
+    class Meta(StatusCheck.Meta):
+        proxy = True
+
+    @property
+    def check_category(self):
+        return "JSON check"
+
+    def _run(self):
+        result = StatusCheckResult(status_check=self)
+
+        auth = None
+        if self.username or self.password:
+            auth = (self.username, self.password)
+
+        try:
+            resp = requests.get(
+                self.endpoint,
+                timeout=self.timeout,
+                verify=self.verify_ssl_certificate,
+                auth=auth,
+                headers={
+                    "User-Agent": settings.HTTP_USER_AGENT,
+                },
+            )
+        except requests.RequestException as e:
+            result.error = u'Request error occurred: %s' % (e.message,)
+            result.succeeded = False
+            return result
+
+        result.raw_data = resp.content
+        if self.status_code and resp.status_code != int(self.status_code):
+            result.error = u'Wrong code: got %s (expected %s)' % (
+                resp.status_code, int(self.status_code))
+            result.succeeded = False
+            return result
+
+        try:
+            json_content = json.loads(resp.content)
+        except ValueError:
+            result.error = u'Response wasn\'t valid JSON'
+            result.succeeded = False
+            return result
+
+        try:
+            jq_object = jq(self.text_match)
+        except ValueError as e:
+            result.error = u'jq Query error: %s' % e.message
+            result.succeeded = False
+            return result
+
+        jq_result = jq_object.transform(json_content)
+        if not jq_result:
+            result.error = u'jq query returned false value %s' % repr(jq_result)
+            result.succeeded = False
+            return result
+
+        result.succeeded = True
         return result
 
 
