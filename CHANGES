@@ -1,6 +1,8 @@
 master
 ------
 
+* Allow user filter for LDAP to be configured
+  - Set the AUTH_LDAP_USER_FILTER setting to change it (defaults to "(uid=%(user)s)")
 * Update cabot-alert-hipchat plugin to 2.0.2
   - Fixes bug when both HIPCHAT_URL and HIPCHAT_DOMAIN were set
 
