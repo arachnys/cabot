@@ -32,7 +32,7 @@ pyldap==2.4.28
 pyparsing==2.2.0
 PySocks==1.6.7
 python-dateutil==2.6.0
-pytz==2016.10
+pytz==2017.2
 rcssmin==1.0.6
 redis==2.10.5
 requests==2.13.0
