@@ -1,3 +1,9 @@
+master
+------
+
+* Update cabot-alert-hipchat plugin to 2.0.2
+  - Fixes bug when both HIPCHAT_URL and HIPCHAT_DOMAIN were set
+
 Version 0.10.2
 --------------
 
