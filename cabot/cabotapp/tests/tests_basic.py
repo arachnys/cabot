@@ -1043,16 +1043,6 @@ class TestAlerts(LocalTestCase):
         self.trigger_failing_check(self.critical_http_check)
         self.assertEqual(fake_send_alert.call_count, 2)
 
-    def test_update_plugins(self):
-        # Test that disabling a plugin is detected by update_alert_plugins
-        plugins = update_alert_plugins()
-        plugin_count = len(plugins)
-        new_apps = [s for s in settings.INSTALLED_APPS if s not in ['cabot_alert_hipchat']]
-
-        with self.settings(INSTALLED_APPS=new_apps):
-            plugins = update_alert_plugins()
-            self.assertEqual(len(plugins), plugin_count - 1)
-
     def test_update_profile_success(self):
         url = reverse('update-alert-user-data', kwargs={'pk':self.user.id, 'alerttype': 'General'})
         self.client.login(username=self.username, password=self.password)
