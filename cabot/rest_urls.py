@@ -76,7 +76,7 @@ status_check_fields = (
     'active',
     'importance',
     'frequency',
-    'debounce',
+    'retries',
 )
 
 router.register(r'status_checks', create_viewset(

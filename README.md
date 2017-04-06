@@ -117,9 +117,9 @@ Access the Django admin page at https://cabot.yourcompany.com/admin to add/remov
 
 Sorting and filtering can be used by both REST clients and on the browsable API.  All fields visible in the browsable API can be used for filtering and sorting.
 
-Get all `jenkins_checks` with debounce enabled and CRITICAL importance:
+Get all `jenkins_checks` with retries enabled and CRITICAL importance:
 ```
-https://cabot.yourcompany.com/api/jenkins_checks/?debounce=1&importance=CRITICAL
+https://cabot.yourcompany.com/api/jenkins_checks/?retries=1&importance=CRITICAL
 ```
 
 Sort `graphite_checks` by `name` field, ascending:
