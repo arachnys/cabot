@@ -126,6 +126,7 @@ INSTALLED_APPS = (
     'mptt',
     'jsonify',
     'cabot.cabotapp',
+    'cabot.metricsapp',
     'rest_framework',
     'social.apps.django_app.default',
 )

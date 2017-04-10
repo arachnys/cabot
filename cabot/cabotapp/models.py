@@ -411,7 +411,6 @@ class StatusCheck(PolymorphicModel):
     last_run = models.DateTimeField(null=True)
     cached_health = models.TextField(editable=False, null=True)
 
-
     class Meta(PolymorphicModel.Meta):
         ordering = ['name']
 
@@ -1123,6 +1122,7 @@ def get_all_duty_officers(at_time=None):
 
     return out
 
+
 def get_all_fallback_officers():
     """
     Find all fallback officers and the schedules they're oncall for
@@ -1187,6 +1187,7 @@ def update_shifts(schedule):
             s.deleted = False
             s.schedule = schedule
             s.save()
+
 
 def delete_shifts(schedule):
     """
