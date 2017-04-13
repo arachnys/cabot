@@ -11,6 +11,7 @@
   {% compress css %}
   <link href="{% static 'bootstrap/css/bootstrap.css' %}" rel="stylesheet">
   <link id="chosen-css" href="{% static 'theme/css/chosen.css' %}" rel="stylesheet">
+  <link id="chosen-css" href="{% static 'theme/css/bootstrap-chosen.css' %}" rel="stylesheet">
   <link href="{% static 'bootstrap/css/dashboard.css' %}" rel="stylesheet">
   <link href="{% static 'theme/css/jquery-ui-1.8.21.custom.css' %}" type="text/css" rel="stylesheet">
   <link href="{% static 'arachnys/css/base.less' %}" type="text/less" rel="stylesheet">
@@ -94,6 +95,9 @@
               </li>
               <li>
                 <a href="{% url "user-profile" user.id %}"><i class="glyphicon glyphicon-wrench"></i>Profile Settings</a>
+              </li>
+              <li>
+                <a href="{% url "plugin-settings-global" %}"><i class="glyphicon glyphicon-equalizer"></i>Plugin Settings</a>
               </li>
               <li class="divider"></li>
               <li>
