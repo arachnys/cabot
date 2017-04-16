@@ -21,7 +21,7 @@ order: 1
     # Run webserver and Celery tasks using Django dev server
     # You can access your dev instance at http://localhost:5001/
 
-### Running tests
+### Running tests
 
     $ docker-compose run --rm web python manage.py test -v2
 
