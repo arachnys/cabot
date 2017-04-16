@@ -42,7 +42,7 @@
           <td title="{{ check.description }}">
             <a href="{% url "update-service" pk=service.id %}">{{service.name}}</a>
             {% for alert in service.alerts.all %}
-            <span class="label label-{% if service.alerts_enabled %}success{% else %}warning{% endif %}">{{ alert }}</span>
+            <span class="label label-{% if service.alerts_enabled and alert.enabled %}success{% else %}warning{% endif %}">{{ alert }}</span>
             {% endfor %}
           </td>
           {% for user in users %}
