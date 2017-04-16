@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import User
 from django.shortcuts import resolve_url
 from django.test import TestCase
 
@@ -14,7 +13,7 @@ class PluginSettingsTest(TestCase):
     def setUp(self):
         self.username = 'testuser'
         self.password = 'testuserpassword'
-        self.user = User.objects.create(username=self.username)
+        self.user = get_user_model().objects.create(username=self.username)
         self.user.set_password(self.password)
         self.user.save()
         self.client.login(username=self.username, password=self.password)
