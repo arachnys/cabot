@@ -6,7 +6,7 @@ celery==4.0.2
 coreapi==2.3.0
 coreschema==0.0.4
 dj-database-url==0.4.2
-Django==1.11
+Django==1.10.7
 django-appconf==1.0.2
 django-auth-ldap==1.2.10
 django-compressor==2.1.1
