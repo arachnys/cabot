@@ -17,7 +17,8 @@ from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
 from django.core.urlresolvers import reverse
 from django.core.urlresolvers import reverse_lazy
-from django.http import HttpResponse, HttpResponseRedirect
+from django.db import transaction
+from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
 from django.template import RequestContext, loader
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -25,7 +26,7 @@ from django.utils.timezone import utc
 from django.views.generic import (
     DetailView, CreateView, UpdateView, ListView, DeleteView, TemplateView, View)
 from django.shortcuts import redirect, render
-from models import AlertPluginUserData
+from alert import AlertPlugin, AlertPluginUserData
 from models import (
     StatusCheck, GraphiteStatusCheck, JenkinsStatusCheck, HttpStatusCheck, ICMPStatusCheck,
     StatusCheckResult, UserProfile, Service, Instance, Shift, get_duty_officers)
@@ -588,6 +589,61 @@ class UserProfileUpdateAlert(LoginRequiredMixin, View):
         return HttpResponseRedirect(reverse('update-alert-user-data', args=(self.kwargs['pk'], alerttype)))
 
 
+class PluginSettingsView(LoginRequiredMixin, View):
+    template = loader.get_template('cabotapp/plugin_settings_form.html')
+    model = AlertPlugin
+
+    def get(self, request, plugin_name):
+        if plugin_name == u'global':
+            form = CoreSettingsForm()
+            alert_test_form = AlertTestForm()
+        else:
+            plugin = self.model.objects.get(title=plugin_name)
+            form_model = get_object_form(type(plugin))
+            form = form_model(instance=plugin)
+            alert_test_form = AlertTestPluginForm(initial = {
+                'alert_plugin': plugin
+            })
+
+        return render(request, self.template.template.name, {
+            'form': form,
+            'plugins': AlertPlugin.objects.all(),
+            'plugin_name': plugin_name,
+            'alert_test_form': alert_test_form
+        })
+
+
+    def post(self, request, pk, alerttype):
+        profile = UserProfile.objects.get(user=pk)
+        success = False
+
+        if alerttype == u'General':
+            form = GeneralSettingsForm(request.POST)
+            if form.is_valid():
+                profile.user.first_name = form.cleaned_data['first_name']
+                profile.user.last_name = form.cleaned_data['last_name']
+                profile.user.is_active = form.cleaned_data['enabled']
+                profile.user.email = form.cleaned_data['email_address']
+                profile.user.save()
+
+                success = True
+        else:
+            plugin_userdata = self.model.objects.get(title=alerttype, user=profile)
+            form_model = get_object_form(type(plugin_userdata))
+            form = form_model(request.POST, instance=plugin_userdata)
+            if form.is_valid():
+                form.save()
+
+                success = True
+
+        if success:
+            messages.add_message(request, messages.SUCCESS, 'Updated Successfully', extra_tags='success')
+        else:
+            messages.add_message(request, messages.ERROR, 'Error Updating Profile', extra_tags='danger')
+
+        return HttpResponseRedirect(reverse('update-alert-user-data', args=(self.kwargs['pk'], alerttype)))
+
+
 def get_object_form(model_type):
     class AlertPreferencesForm(forms.ModelForm):
         class Meta:
@@ -598,6 +654,103 @@ def get_object_form(model_type):
             return True
 
     return AlertPreferencesForm
+
+
+class AlertTestForm(forms.Form):
+    action = reverse_lazy('alert-test')
+
+    service = forms.ModelChoiceField(
+        queryset=Service.objects.all(),
+        widget=forms.Select(attrs={
+            'data-rel': 'chosen',
+        })
+    )
+
+    STATUS_CHOICES = (
+        (Service.PASSING_STATUS, 'Passing'),
+        (Service.WARNING_STATUS, 'Warning'),
+        (Service.ERROR_STATUS, 'Error'),
+        (Service.CRITICAL_STATUS, 'Critical'),
+    )
+
+    old_status = forms.ChoiceField(
+        choices=STATUS_CHOICES,
+        initial=Service.PASSING_STATUS,
+        widget=forms.Select(attrs={
+            'data-rel': 'chosen',
+        })
+    )
+
+    new_status = forms.ChoiceField(
+        choices=STATUS_CHOICES,
+        initial=Service.ERROR_STATUS,
+        widget=forms.Select(attrs={
+            'data-rel': 'chosen',
+        })
+    )
+
+
+class AlertTestPluginForm(AlertTestForm):
+    action = reverse_lazy('alert-test-plugin')
+
+    service = None
+    alert_plugin = forms.ModelChoiceField(
+        queryset=AlertPlugin.objects.filter(enabled=True),
+        widget=forms.HiddenInput
+    )
+
+
+class AlertTestView(LoginRequiredMixin, View):
+    def post(self, request):
+        form = AlertTestForm(request.POST)
+
+        if form.is_valid():
+            data = form.clean()
+            service = data['service']
+
+            with transaction.atomic():
+                sid = transaction.savepoint()
+                service.update_status()
+
+                service.overall_status = data['new_status']
+                service.old_overall_status = data['old_status']
+                service.alert()
+
+                transaction.savepoint_rollback(sid)
+
+            return JsonResponse({"result": "ok"})
+        return JsonResponse({"result": "error"}, status=400)
+
+
+class AlertTestPluginView(LoginRequiredMixin, View):
+    def post(self, request):
+        form = AlertTestPluginForm(request.POST)
+
+        if form.is_valid():
+            data = form.clean()
+
+            with transaction.atomic():
+                sid = transaction.savepoint()
+
+                service = Service.objects.create(
+                    name='test-alert-service'
+                )
+                service.users_to_notify.add(request.user)
+                service.alerts.add(data['alert_plugin'])
+                service.update_status()
+
+                service.overall_status = data['new_status']
+                service.old_overall_status = data['old_status']
+                service.alert()
+
+                transaction.savepoint_rollback(sid)
+
+            return JsonResponse({"result": "ok"})
+        return JsonResponse({"result": "error"}, status=400)
+
+
+class CoreSettingsForm(forms.Form):
+    pass
 
 
 class GeneralSettingsForm(forms.Form):

@@ -10,7 +10,7 @@ from cabot.cabotapp.views import (
     JenkinsCheckCreateView, JenkinsCheckUpdateView,
     StatusCheckDeleteView, StatusCheckListView, StatusCheckDetailView,
     StatusCheckResultDetailView, StatusCheckReportView, UserProfileUpdateAlert,
-    SetupView)
+    PluginSettingsView, AlertTestView, AlertTestPluginView, SetupView)
 
 from cabot.cabotapp.views import (InstanceListView, InstanceDetailView,
     InstanceUpdateView, InstanceCreateView, InstanceDeleteView,
@@ -137,7 +137,15 @@ urlpatterns = [
         name='graphite-data'),
      url(r'^user/(?P<pk>\d+)/profile/$',
         view=UserProfileUpdateView.as_view(), name='user-profile'),
-     url(r'^user/(?P<pk>\d+)/profile/(?P<alerttype>.+)',
+     url(r'^plugins/$',
+        view=RedirectView.as_view(url='global/', permanent=False), name='plugin-settings-global'),
+     url(r'^alert-test/$',
+        view=AlertTestView.as_view(), name='alert-test'),
+     url(r'^alert-test-plugin/$',
+        view=AlertTestPluginView.as_view(), name='alert-test-plugin'),
+     url(r'^plugins/(?P<plugin_name>.+)/$',
+        view=PluginSettingsView.as_view(), name='plugin-settings'),
+     url(r'^user/(?P<pk>\d+)/profile/(?P<alerttype>.+)/',
         view=UserProfileUpdateAlert.as_view(), name='update-alert-user-data'),
      url(r'^admin/', include(admin.site.urls)),
      # Comment below line to disable browsable rest api
