@@ -20,7 +20,7 @@ To change env variables on a running instance, modify `conf/production.env` loca
 
 See `conf/development.env.example`.
 
-### Settings available
+### Settings available
 
 In order to use all functionality the following settings must be configured in `conf/production.env`. If you use `fab deploy` it will automatically generate an upstart service config including these:
 
