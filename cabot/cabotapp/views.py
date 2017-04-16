@@ -612,36 +612,21 @@ class PluginSettingsView(LoginRequiredMixin, View):
             'alert_test_form': alert_test_form
         })
 
-
-    def post(self, request, pk, alerttype):
-        profile = UserProfile.objects.get(user=pk)
-        success = False
-
-        if alerttype == u'General':
-            form = GeneralSettingsForm(request.POST)
-            if form.is_valid():
-                profile.user.first_name = form.cleaned_data['first_name']
-                profile.user.last_name = form.cleaned_data['last_name']
-                profile.user.is_active = form.cleaned_data['enabled']
-                profile.user.email = form.cleaned_data['email_address']
-                profile.user.save()
-
-                success = True
+    def post(self, request, plugin_name):
+        if plugin_name == u'global':
+            form = CoreSettingsForm(request.POST)
         else:
-            plugin_userdata = self.model.objects.get(title=alerttype, user=profile)
-            form_model = get_object_form(type(plugin_userdata))
-            form = form_model(request.POST, instance=plugin_userdata)
-            if form.is_valid():
-                form.save()
+            plugin = self.model.objects.get(title=plugin_name)
+            form_model = get_object_form(type(plugin))
+            form = form_model(request.POST, instance=plugin)
 
-                success = True
-
-        if success:
+        if form.is_valid():
+            form.save()
             messages.add_message(request, messages.SUCCESS, 'Updated Successfully', extra_tags='success')
         else:
-            messages.add_message(request, messages.ERROR, 'Error Updating Profile', extra_tags='danger')
+            messages.add_message(request, messages.ERROR, 'Error Updating Plugin', extra_tags='danger')
 
-        return HttpResponseRedirect(reverse('update-alert-user-data', args=(self.kwargs['pk'], alerttype)))
+        return HttpResponseRedirect(reverse('plugin-settings', args=(plugin_name,)))
 
 
 def get_object_form(model_type):
