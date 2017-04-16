@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 class AlertPlugin(PolymorphicModel):
-    title = models.CharField(max_length=30, unique=True, editable=False)
+    title = models.CharField(max_length=30, unique=True, blank=False, editable=False)
     enabled = models.BooleanField(default=True)
 
     author = None
