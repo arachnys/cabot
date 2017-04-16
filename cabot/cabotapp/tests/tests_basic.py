@@ -8,7 +8,7 @@ from datetime import timedelta, date
 import os
 import requests
 from cabot.cabotapp.graphite import parse_metric
-from cabot.cabotapp.alert import update_alert_plugins
+from cabot.cabotapp.alert import update_alert_plugins, AlertPlugin
 from cabot.cabotapp.models import (
     GraphiteStatusCheck, JenkinsStatusCheck,
     HttpStatusCheck, ICMPStatusCheck, Service, Instance,
@@ -195,6 +195,13 @@ def fake_recurring_response_notz(*args, **kwargs):
 
 def throws_timeout(*args, **kwargs):
     raise requests.RequestException(u'фиктивная ошибка innit')
+
+
+class TestPolymorphic(LocalTestCase):
+    def test_polymorphic(self):
+        plugin = AlertPlugin.objects.first()
+
+        self.assertIn(type(plugin), AlertPlugin.__subclasses__())
 
 
 class TestCheckRun(LocalTestCase):
