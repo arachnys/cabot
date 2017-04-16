@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-sm-3 col-md-2 sidebar">
+      <ul class="nav nav-sidebar">
+          <li><a href="{% url 'plugin-settings' 'global' %}">Global</a></li>
+        {% for plugin in plugins %}
+          <li><a href="{% url 'plugin-settings' plugin.title %}">{{ plugin.title }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+      <h1 class="page-header">{{ plugin_name|title }} Settings</h1>
+      <form class="form-horizontal" action="" method="post" role="form">
+        {% csrf_token %}
+        {% if plugin_name == 'global' %}
+        <p>There are no global settings yet</p>
+        {% else %}
+        {% for field in form %}
+        <div class="form-group">
+          <label class="col-xs-2 control-label">{{ field.label_tag }}</label>
+          <div class="col-xs-6">{{ field }}</div>
+        </div>
+        {% endfor %}
+        <div class="form-group">
+          <div class="col-xs-6 col-xs-offset-2">
+            <button type="submit" class="btn btn-primary">Submit</button>
+            <a href="{% url "dashboard" %}" class="btn">Back to dashboard</a>
+          </div>
+        </div>
+        {% endif %}
+      </form>
+      <h2 class="page-header">Alert Test</h2>
+      <form class="form-horizontal" action="{{ alert_test_form.action }}" method="post" role="form">
+        {% csrf_token %}
+        {% for field in alert_test_form.hidden_fields %}
+        {{ field }}
+        {% endfor %}
+        {% for field in alert_test_form.visible_fields %}
+        <div class="form-group">
+          <label class="col-xs-2 control-label">{{ field.label_tag }}</label>
+          <div class="col-xs-6">{{ field }}</div>
+        </div>
+        {% endfor %}
+        <div class="form-group">
+          <div class="col-xs-6 col-xs-offset-2">
+            <button type="submit" class="btn btn-primary" id="alert-test-submit" data-loading-text="Sending..." data-error-text="Failed!" data-success-text="Sent!">Submit</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% load compress %}
+{% block js %}
+{{ block.super }}
+{% compress js %}
+<script type="text/coffeescript">
+  $("#alert-test-submit").click ->
+    $form = $(this).closest("form")
+
+    $(this).button("loading")
+
+    $.ajax
+      url: $form[0].action
+      type: "POST"
+      data: $form.serialize()
+      success: =>
+        $(this).button("success")
+      error: =>
+        $(this).button("error")
+
+    return false
+
+</script>
+{% endcompress %}
+{% endblock %}
