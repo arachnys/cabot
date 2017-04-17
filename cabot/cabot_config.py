@@ -5,6 +5,7 @@ GRAPHITE_API = os.environ.get('GRAPHITE_API')
 GRAPHITE_USER = os.environ.get('GRAPHITE_USER')
 GRAPHITE_PASS = os.environ.get('GRAPHITE_PASS')
 GRAPHITE_FROM = os.getenv('GRAPHITE_FROM', '-10minute')
+GRAPHITE_SKIP_SSL_VERIFY = os.environ.get('GRAPHITE_SKIP_SSL_VERIFY',False)
 
 # Credentials for Jenkins server to monitor
 JENKINS_API = os.environ.get('JENKINS_API')

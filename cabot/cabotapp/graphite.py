@@ -8,6 +8,7 @@ user = settings.GRAPHITE_USER
 password = settings.GRAPHITE_PASS
 graphite_from = settings.GRAPHITE_FROM
 auth = (user, password)
+verify = settings.GRAPHITE_SKIP_SSL_VERIFY
 
 
 def get_data(target_pattern, mins_to_check=None):
@@ -18,7 +19,7 @@ def get_data(target_pattern, mins_to_check=None):
         _from = graphite_from
 
     resp = requests.get(
-        graphite_api + 'render', auth=auth,
+        graphite_api + 'render', auth=auth, verify=verify,
         params={
             'target': target_pattern,
             'format': 'json',
