@@ -8,6 +8,7 @@ anyjson==0.3.3
 argparse==1.2.1
 billiard==3.3.0.13
 celery==3.1.7
+certifi==2016.9.26
 dj-database-url==0.2.2
 django-appconf==0.6
 django-celery==3.1.1
@@ -21,6 +22,9 @@ django-redis==1.4.5
 django-smtp-ssl==1.0
 django-yamlfield==1.0.1
 djangorestframework==2.4.2
+# Elasticsearch 5.x
+elasticsearch==5.2.0
+elasticsearch-dsl==5.2.0
 gunicorn==18.0
 gevent==1.0.1
 hiredis==0.1.1
