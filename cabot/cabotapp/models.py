@@ -448,6 +448,10 @@ class StatusCheck(PolymorphicModel):
         null=True,
         help_text='HTTP(S) endpoint to poll.',
     )
+    host = models.TextField(
+        null=True,
+        help_text='HTTP Host header.'
+    )
     username = models.TextField(
         blank=True,
         null=True,
@@ -733,15 +737,19 @@ class HttpStatusCheck(StatusCheck):
         if self.username or self.password:
             auth = (self.username, self.password)
 
+        headers = {
+            "User-Agent": settings.HTTP_USER_AGENT,
+        }
+        if self.host:
+            headers["Host"] = self.host
+
         try:
             resp = requests.get(
                 self.endpoint,
                 timeout=self.timeout,
                 verify=self.verify_ssl_certificate,
                 auth=auth,
-                headers={
-                    "User-Agent": settings.HTTP_USER_AGENT,
-                },
+                headers=headers,
             )
         except requests.RequestException as e:
             result.error = u'Request error occurred: %s' % (e.message,)
