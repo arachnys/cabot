@@ -8,19 +8,25 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding model 'ElasticsearchSource'
-        db.create_table(u'metricsapp_elasticsearchsource', (
-            (u'metricssourcebase_ptr', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['metricsapp.MetricsSourceBase'], unique=True, primary_key=True)),
-            ('urls', self.gf('django.db.models.fields.TextField')(max_length=250)),
-            ('index', self.gf('django.db.models.fields.TextField')(default='*', max_length=50)),
-            ('timeout', self.gf('django.db.models.fields.IntegerField')(default=20)),
+        # Adding model 'ElasticsearchStatusCheck'
+        db.create_table(u'metricsapp_elasticsearchstatuscheck', (
+            (u'metricsstatuscheckbase_ptr', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['metricsapp.MetricsStatusCheckBase'], unique=True, primary_key=True)),
+            ('queries', self.gf('django.db.models.fields.TextField')(max_length=10000)),
         ))
-        db.send_create_signal('metricsapp', ['ElasticsearchSource'])
+        db.send_create_signal('metricsapp', ['ElasticsearchStatusCheck'])
+
+        # Adding field 'ElasticsearchSource.max_concurrent_searches'
+        db.add_column(u'metricsapp_elasticsearchsource', 'max_concurrent_searches',
+                      self.gf('django.db.models.fields.IntegerField')(default=None, null=True),
+                      keep_default=False)
 
 
     def backwards(self, orm):
-        # Deleting model 'ElasticsearchSource'
-        db.delete_table(u'metricsapp_elasticsearchsource')
+        # Deleting model 'ElasticsearchStatusCheck'
+        db.delete_table(u'metricsapp_elasticsearchstatuscheck')
+
+        # Deleting field 'ElasticsearchSource.max_concurrent_searches'
+        db.delete_column(u'metricsapp_elasticsearchsource', 'max_concurrent_searches')
 
 
     models = {
@@ -77,9 +83,15 @@ class Migration(SchemaMigration):
         'metricsapp.elasticsearchsource': {
             'Meta': {'object_name': 'ElasticsearchSource', '_ormbases': ['metricsapp.MetricsSourceBase']},
             'index': ('django.db.models.fields.TextField', [], {'default': "'*'", 'max_length': '50'}),
+            'max_concurrent_searches': ('django.db.models.fields.IntegerField', [], {'default': 'None', 'null': 'True'}),
             u'metricssourcebase_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': "orm['metricsapp.MetricsSourceBase']", 'unique': 'True', 'primary_key': 'True'}),
             'timeout': ('django.db.models.fields.IntegerField', [], {'default': '20'}),
             'urls': ('django.db.models.fields.TextField', [], {'max_length': '250'})
+        },
+        'metricsapp.elasticsearchstatuscheck': {
+            'Meta': {'ordering': "['name']", 'object_name': 'ElasticsearchStatusCheck', '_ormbases': ['metricsapp.MetricsStatusCheckBase']},
+            u'metricsstatuscheckbase_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': "orm['metricsapp.MetricsStatusCheckBase']", 'unique': 'True', 'primary_key': 'True'}),
+            'queries': ('django.db.models.fields.TextField', [], {'max_length': '10000'})
         },
         'metricsapp.metricssourcebase': {
             'Meta': {'object_name': 'MetricsSourceBase'},
@@ -90,11 +102,11 @@ class Migration(SchemaMigration):
             'Meta': {'ordering': "['name']", 'object_name': 'MetricsStatusCheckBase', '_ormbases': [u'cabotapp.StatusCheck']},
             'check_type': ('django.db.models.fields.CharField', [], {'max_length': '30'}),
             'high_alert_importance': ('django.db.models.fields.CharField', [], {'default': "'ERROR'", 'max_length': '30'}),
-            'high_alert_value': ('django.db.models.fields.FloatField', [], {'null': 'True'}),
+            'high_alert_value': ('django.db.models.fields.FloatField', [], {'null': 'True', 'blank': 'True'}),
             'source': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['metricsapp.MetricsSourceBase']"}),
             u'statuscheck_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['cabotapp.StatusCheck']", 'unique': 'True', 'primary_key': 'True'}),
             'time_range': ('django.db.models.fields.IntegerField', [], {'default': '30'}),
-            'warning_value': ('django.db.models.fields.FloatField', [], {'null': 'True'})
+            'warning_value': ('django.db.models.fields.FloatField', [], {'null': 'True', 'blank': 'True'})
         }
     }
 

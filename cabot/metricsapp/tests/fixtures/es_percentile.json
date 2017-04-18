@@ -1,0 +1,129 @@
+[{
+    "hits": {
+        "hits": [
+            {
+                "_score": 11.412194,
+                "_type": "metrics-event",
+                "_id": "i",
+                "_index": "metrics"
+            },
+            {
+                "_score": 11.412194,
+                "_type": "metrics-event",
+                "_id": "ii",
+                "_index": "metrics"
+            },
+            {
+                "_score": 11.412194,
+                "_type": "metrics-event",
+                "_id": "iii",
+                "_index": "metrics"
+            },
+            {
+                "_score": 11.412194,
+                "_type": "metrics-event",
+                "_id": "iv",
+                "_index": "metrics"
+            },
+            {
+                "_score": 11.412194,
+                "_type": "metrics-event",
+                "_id": "v",
+                "_index": "metrics"
+            },
+            {
+                "_score": 11.412194,
+                "_type": "metrics-event",
+                "_id": "vi",
+                "_index": "metrics"
+            },
+            {
+                "_score": 11.412194,
+                "_type": "metrics-event",
+                "_id": "vii",
+                "_index": "metrics"
+            },
+            {
+                "_score": 11.412194,
+                "_type": "metrics-event",
+                "_id": "viii",
+                "_index": "metrics"
+            },
+            {
+                "_score": 11.412194,
+                "_type": "metrics-event",
+                "_id": "ix",
+                "_index": "metrics"
+            },
+            {
+                "_score": 11.412194,
+                "_type": "metrics-event",
+                "_id": "x",
+                "_index": "metrics"
+            }
+        ],
+        "total": 2120,
+        "max_score": 11.412194
+    },
+    "_shards": {
+        "successful": 444,
+        "failed": 0,
+        "total": 444
+    },
+    "took": 200,
+    "aggregations": {
+        "agg": {
+            "buckets": [
+                {
+                    "percentiles": {
+                        "values": {
+                            "25.0": 294.75,
+                            "50.0": 1120.0,
+                            "75.0": 1350.0
+                        }
+                    },
+                    "key_as_string": "2017-04-07T12:00:00.000Z",
+                    "key": 1491566400000,
+                    "doc_count": 160
+                },
+                {
+                    "percentiles": {
+                        "values": {
+                            "25.0": 377.125,
+                            "50.0": 1124.0,
+                            "75.0": 1299.0833333333333
+                        }
+                    },
+                    "key_as_string": "2017-04-07T13:00:00.000Z",
+                    "key": 1491570000000,
+                    "doc_count": 560
+                },
+                {
+                    "percentiles": {
+                        "values": {
+                            "25.0": 403.0,
+                            "50.0": 1138.3333333333333,
+                            "75.0": 1321.875
+                        }
+                    },
+                    "key_as_string": "2017-04-07T14:00:00.000Z",
+                    "key": 1491573600000,
+                    "doc_count": 532
+                },
+                {
+                    "percentiles": {
+                        "values": {
+                            "25.0": 703.6666666666666,
+                            "50.0": 1114.3999999999999,
+                            "75.0": 1293.7333333333333
+                        }
+                    },
+                    "key_as_string": "2017-04-07T15:00:00.000Z",
+                    "key": 1491577200000,
+                    "doc_count": 978
+                }
+            ]
+        }
+    },
+    "timed_out": false
+}]

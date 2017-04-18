@@ -318,6 +318,14 @@ CELERYD_HIJACK_ROOT_LOGGER = False
 
 # Image for service page
 SERVICE_IMAGE = os.environ.get('SERVICE_IMAGE', None)
+
+# Metricsapp settings
+# Timeout for Elasticsearch queries
+ELASTICSEARCH_TIMEOUT = int(os.environ.get('ELASTICSEARCH_TIMEOUT', 20))
+# msearch max_concurrent_searches
+es_concurrency = os.environ.get('ELASTICSEARCH_MAX_CONCURRENT_SEARCHES', None)
+ELASTICSEARCH_MAX_CONCURRENT_SEARCHES = int(es_concurrency) if es_concurrency is not None else None
+
 # xml output for tests
 TEST_RUNNER = 'xmlrunner.extra.djangotestrunner.XMLTestRunner'
 TEST_OUTPUT_DIR = os.environ.get('TEST_OUTPUT_DIR', '.')

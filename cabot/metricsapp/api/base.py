@@ -101,7 +101,7 @@ def run_metrics_check(check):
                 continue
 
             # If there's a failure for high alert, the check fails
-            if check.high_alert_value and _point_failure_check(check.check_type, check.high_alert_value, value):
+            if check.high_alert_value is not None and _point_failure_check(check.check_type, check.high_alert_value, value):
                 # Set the importance so the check fails at the right level
                 check.importance = check.high_alert_importance
                 result.succeeded = False
@@ -112,7 +112,7 @@ def run_metrics_check(check):
             # If there's a failure for low alert, keep looping in case another point is failing
             # at the high alert level. Don't check for a warning if we've already found one
             # (result.succeeded == False)
-            if result.succeeded and check.warning_value and \
+            if result.succeeded and check.warning_value is not None and \
                     _point_failure_check(check.check_type, check.warning_value, value):
                 # Set the importance so the check fails at the right level
                 check.importance = Service.WARNING_STATUS
