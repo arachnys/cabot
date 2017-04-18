@@ -34,7 +34,8 @@ class MetricsStatusCheckBase(StatusCheck):
     warning_value = models.FloatField(
         null=True,
         blank=True,
-        help_text='If this expression evaluates to False, the check will fail with a warning.'
+        help_text='If this expression evaluates to False, the check will fail with a warning. Checks may have '
+                  'both warning and high alert values, or only one.'
     )
     high_alert_importance = models.CharField(
         max_length=30,

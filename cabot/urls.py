@@ -26,6 +26,11 @@ from cabot.cabotapp.views import (
     UserProfileUpdateView, ShiftListView, subscriptions,
 )
 
+from cabot.metricsapp.views import (
+    GrafanaInstanceSelectView, GrafanaDashboardSelectView,
+    GrafanaPanelSelectView, GrafanaElasticsearchStatusCheckCreateView,
+    GrafanaSeriesSelectView
+)
 from cabot import rest_urls
 
 from django.contrib import admin
@@ -120,6 +125,13 @@ urlpatterns = patterns('',
     url(r'^schedule/create/', view=ScheduleCreateView.as_view(), name='create-schedule'),
     url(r'^schedule/update/(?P<pk>\d+)/', view=ScheduleUpdateView.as_view(), name='update-schedule'),
     url(r'^schedule/delete/(?P<pk>\d+)/', view=ScheduleDeleteView.as_view(), name='delete-schedule'),
+
+    url(r'^grafana/instance/', view=GrafanaInstanceSelectView.as_view(), name='grafana-instance-select'),
+    url(r'^grafana/dashboard/', view=GrafanaDashboardSelectView.as_view(), name='grafana-dashboard-select'),
+    url(r'^grafana/panel/', view=GrafanaPanelSelectView.as_view(), name='grafana-panel-select'),
+    url(r'^grafana/series/', view=GrafanaSeriesSelectView.as_view(), name='grafana-series-select'),
+    url(r'^grafana/elasticsearch/create/', view=GrafanaElasticsearchStatusCheckCreateView.as_view(),
+        name='grafana-es-create'),
 
     # Comment below line to disable browsable rest api
     url(r'^api-auth/',

@@ -69,6 +69,9 @@
                   <a class="submenu" href="#"><i class="fa fa-cog"></i> Status check <span class="caret"></span></a>
                   <ul class="dropdown-menu">
                     <li>
+                      <a href="{% url "grafana-instance-select" %}" class=""><i class="glyphicon glyphicon-stats" title="Add new Grafana check"></i> Grafana</a>
+                    </li>
+                    <li>
                       <a href="{% url "create-influxdb-check" %}?service={{ service.id }}&instance={{ instance.id }}" class=""><i class="glyphicon glyphicon-signal" title="Add new metric check"></i> InfluxDB</a>
                     </li>
                     <li>
