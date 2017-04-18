@@ -1,0 +1,33 @@
+{
+  "bucketAggs": [
+    {
+      "field": "@timestamp",
+      "id": "2",
+      "settings": {
+        "interval": "$group_by",
+        "min_doc_count": 0,
+        "trimEdges": 0
+      },
+      "type": "date_histogram"
+    }
+  ],
+  "dsType": "elasticsearch",
+  "metrics": [
+    {
+      "field": "value",
+      "id": "1",
+      "meta": {
+
+      },
+      "settings": {
+        "percents": [
+          "$percentile"
+        ]
+      },
+      "type": "percentiles"
+    }
+  ],
+  "query": "request.body.test:$test_name AND request.body.event_name:$event_name",
+  "refId": "A",
+  "timeField": "@timestamp"
+}

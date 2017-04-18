@@ -1,0 +1,30 @@
+{
+  "bucketAggs": [
+    {
+      "field": "@timestamp",
+      "id": "2",
+      "settings": {
+        "interval": "$group_by",
+        "min_doc_count": 0,
+        "trimEdges": 0
+      },
+      "type": "date_histogram"
+    }
+  ],
+  "column": "value",
+  "dsType": "elasticsearch",
+  "function": "mean",
+  "interval": "2m",
+  "hide": false,
+  "metrics": [
+    {
+      "field": "fielder",
+      "id": "1",
+      "type": "sum"
+    }
+  ],
+  "query": "name:query",
+  "rawQuery": true,
+  "refId": "B",
+  "timeField": "@timestamp"
+}

@@ -8,7 +8,6 @@ from django.db import models
 from django.utils.html import escape
 from elasticsearch_dsl import MultiSearch, Search
 from cabot.metricsapp.api import create_es_client, validate_query
-from collections import defaultdict
 from .base import MetricsSourceBase, MetricsStatusCheckBase
 
 

@@ -1,0 +1,40 @@
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "query_string": {
+            "analyze_wildcard": true,
+            "query": "request.test:affirm AND event_name:mriffa"
+          }
+        },
+        {
+          "range": {
+            "@timestamp": {
+              "gte": "now-30m"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "aggs": {
+    "agg": {
+      "date_histogram": {
+        "field": "@timestamp",
+        "interval": "10m",
+        "extended_bounds": {
+          "min": "now-30m",
+          "max": "now"
+        }
+      },
+      "aggs": {
+        "sum": {
+          "sum": {
+            "field": "timing"
+          }
+        }
+      }
+    }
+  }
+}

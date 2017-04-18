@@ -3,3 +3,7 @@ ES_SUPPORTED_METRICS = set(['min', 'max', 'avg', 'value_count', 'sum', 'cardinal
                             'derivative', 'percentiles'])
 
 ES_VALIDATION_MSG_PREFIX = 'Elasticsearch query format error'
+
+ES_TIME_RANGE = 'now-10m'
+
+ES_DEFAULT_INTERVAL = '1m'

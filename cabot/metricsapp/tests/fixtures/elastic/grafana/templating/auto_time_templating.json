@@ -1,0 +1,50 @@
+{
+  "dashboard": {
+    "templating": {
+      "list": [
+        {
+          "allFormat": "glob",
+          "auto": true,
+          "auto_count": 100,
+          "auto_min": "10s",
+          "current": {
+            "text": "auto",
+            "value": "$__auto_interval"
+          },
+          "datasource": null,
+          "hide": 0,
+          "includeAll": false,
+          "label": "group_by",
+          "multi": false,
+          "multiFormat": "glob",
+          "name": "group_by",
+          "options": [
+            {
+              "selected": true,
+              "text": "auto",
+              "value": "$__auto_interval"
+            },
+            {
+              "selected": false,
+              "text": "1d",
+              "value": "1d"
+            },
+            {
+              "selected": false,
+              "text": "7d",
+              "value": "7d"
+            },
+            {
+              "selected": false,
+              "text": "14d",
+              "value": "14d"
+            }
+          ],
+          "query": "1d,7d,14d",
+          "refresh": 2,
+          "type": "interval"
+        }
+      ]
+    }
+  }
+}

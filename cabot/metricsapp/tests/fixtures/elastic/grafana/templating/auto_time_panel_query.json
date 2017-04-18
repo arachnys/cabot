@@ -1,0 +1,40 @@
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "query_string": {
+            "query": "name:query",
+            "analyze_wildcard": true
+          }
+        },
+        {
+          "range": {
+            "@timestamp": {
+              "gte": "now-10m"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "aggs": {
+    "agg": {
+      "date_histogram": {
+        "field": "@timestamp",
+        "interval": "2m",
+        "extended_bounds": {
+          "min": "now-10m",
+          "max": "now"
+        }
+      },
+      "aggs": {
+        "sum": {
+          "sum": {
+            "field": "fielder"
+          }
+        }
+      }
+    }
+  }
+}

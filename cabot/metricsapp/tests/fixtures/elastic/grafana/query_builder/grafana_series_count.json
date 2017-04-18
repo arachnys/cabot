@@ -1,0 +1,25 @@
+{
+  "bucketAggs": [
+    {
+      "field": "@timestamp",
+      "id": "2",
+      "settings": {
+        "interval": "10h",
+        "min_doc_count": 0,
+        "trimEdges": 0
+      },
+      "type": "date_histogram"
+    }
+  ],
+  "dsType": "elasticsearch",
+  "metrics": [
+    {
+      "field": "select field",
+      "id": "1",
+      "type": "count"
+    }
+  ],
+  "query": "query:query",
+  "refId": "A",
+  "timeField": "@timestamp"
+}
