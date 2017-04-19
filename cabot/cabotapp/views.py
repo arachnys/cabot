@@ -696,6 +696,9 @@ class AlertTestView(LoginRequiredMixin, View):
             with transaction.atomic():
                 sid = transaction.savepoint()
                 service.update_status()
+                check = StatusCheck(name='ALERT_TEST', calculated_status=data['new_status'])
+                check.save()
+                service.status_checks.add(check)
 
                 service.overall_status = data['new_status']
                 service.old_overall_status = data['old_status']
@@ -720,6 +723,9 @@ class AlertTestPluginView(LoginRequiredMixin, View):
                 service = Service.objects.create(
                     name='test-alert-service'
                 )
+                check = StatusCheck(name='ALERT_TEST', calculated_status=data['new_status'])
+                check.save()
+                service.status_checks.add(check)
                 service.users_to_notify.add(request.user)
                 service.alerts.add(data['alert_plugin'])
                 service.update_status()
