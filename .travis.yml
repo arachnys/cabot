@@ -12,7 +12,7 @@ before_script:
 
 script:
  - tox
- - docker-compose -f docker-compose-test.yml run --rm test bash bin/test_with_coverage -v2
+ - docker-compose -f docker-compose-test.yml run --rm --entrypoint bin/test_with_coverage test -v2
  - git checkout $(git describe --abbrev=0 --tags `git describe --tags`^) && docker-compose build web
  - docker-compose run --rm web true
  - git checkout - && docker-compose build web
