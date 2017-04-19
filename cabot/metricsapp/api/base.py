@@ -3,6 +3,7 @@ import json
 import time
 from cabot.cabotapp.models import Service, StatusCheckResult
 
+
 logger = get_task_logger(__name__)
 
 
@@ -45,13 +46,13 @@ def _add_threshold_data(check, series):
         end_time, _ = first_series_data[-1]
 
         # Add threshold line(s) for the graph
-        if check.warning_value:
+        if check.warning_value is not None:
             warning_threshold = dict(series='alert.warning_threshold',
                                      datapoints=[[start_time, check.warning_value],
                                                  [end_time, check.warning_value]])
             series['data'].append(warning_threshold)
 
-        if check.high_alert_value:
+        if check.high_alert_value is not None:
             high_alert_threshold = dict(series='alert.high_alert_threshold',
                                         datapoints=[[start_time, check.high_alert_value],
                                                     [end_time, check.high_alert_value]])
@@ -83,8 +84,8 @@ def run_metrics_check(check):
                                                                  series.get('error_message')))
         return result
 
-    # Oldest point we'll look at
-    earliest_point = time.time() - check.time_range
+    # Oldest point we'll look at (time range is in seconds)
+    earliest_point = time.time() - check.time_range * 60
 
     parsed_series = series['data']
     logger.info('Processing series {}'.format(str(parsed_series)))

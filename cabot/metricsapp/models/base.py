@@ -13,6 +13,9 @@ class MetricsSourceBase(models.Model):
         help_text='Unique name for the data source',
     )
 
+    def __unicode__(self):
+        return self.name
+
 
 class MetricsStatusCheckBase(StatusCheck):
     class Meta:
@@ -30,6 +33,7 @@ class MetricsStatusCheckBase(StatusCheck):
     )
     warning_value = models.FloatField(
         null=True,
+        blank=True,
         help_text='If this expression evaluates to False, the check will fail with a warning.'
     )
     high_alert_importance = models.CharField(
@@ -41,6 +45,7 @@ class MetricsStatusCheckBase(StatusCheck):
     )
     high_alert_value = models.FloatField(
         null=True,
+        blank=True,
         help_text='If this expression evaluates to False, the check will fail with an error or critical level alert.'
     )
     time_range = models.IntegerField(
