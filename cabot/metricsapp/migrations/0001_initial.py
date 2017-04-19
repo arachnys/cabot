@@ -72,7 +72,7 @@ class Migration(SchemaMigration):
             'cached_health': ('django.db.models.fields.TextField', [], {'null': 'True'}),
             'calculated_status': ('django.db.models.fields.CharField', [], {'default': "'passing'", 'max_length': '50', 'blank': 'True'}),
             'created_by': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['auth.User']", 'null': 'True'}),
-            'debounce': ('django.db.models.fields.IntegerField', [], {'default': '0', 'null': 'True'}),
+            'retries': ('django.db.models.fields.IntegerField', [], {'default': '0', 'null': 'True'}),
             'frequency': ('django.db.models.fields.IntegerField', [], {'default': '5'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'importance': ('django.db.models.fields.CharField', [], {'default': "'ERROR'", 'max_length': '30'}),

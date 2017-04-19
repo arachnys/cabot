@@ -12,6 +12,8 @@ class Migration(SchemaMigration):
         db.create_table(u'metricsapp_elasticsearchsource', (
             (u'metricssourcebase_ptr', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['metricsapp.MetricsSourceBase'], unique=True, primary_key=True)),
             ('urls', self.gf('django.db.models.fields.TextField')(max_length=250)),
+            ('index', self.gf('django.db.models.fields.TextField')(default='*', max_length=50)),
+            ('timeout', self.gf('django.db.models.fields.IntegerField')(default=60)),
         ))
         db.send_create_signal('metricsapp', ['ElasticsearchSource'])
 
@@ -57,13 +59,13 @@ class Migration(SchemaMigration):
             'cached_health': ('django.db.models.fields.TextField', [], {'null': 'True'}),
             'calculated_status': ('django.db.models.fields.CharField', [], {'default': "'passing'", 'max_length': '50', 'blank': 'True'}),
             'created_by': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['auth.User']", 'null': 'True'}),
-            'debounce': ('django.db.models.fields.IntegerField', [], {'default': '0', 'null': 'True'}),
             'frequency': ('django.db.models.fields.IntegerField', [], {'default': '5'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'importance': ('django.db.models.fields.CharField', [], {'default': "'ERROR'", 'max_length': '30'}),
             'last_run': ('django.db.models.fields.DateTimeField', [], {'null': 'True'}),
             'name': ('django.db.models.fields.TextField', [], {}),
-            'polymorphic_ctype': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "u'polymorphic_cabotapp.statuscheck_set'", 'null': 'True', 'to': u"orm['contenttypes.ContentType']"})
+            'polymorphic_ctype': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "u'polymorphic_cabotapp.statuscheck_set'", 'null': 'True', 'to': u"orm['contenttypes.ContentType']"}),
+            'retries': ('django.db.models.fields.IntegerField', [], {'default': '0', 'null': 'True'})
         },
         u'contenttypes.contenttype': {
             'Meta': {'ordering': "('name',)", 'unique_together': "(('app_label', 'model'),)", 'object_name': 'ContentType', 'db_table': "'django_content_type'"},
@@ -74,7 +76,9 @@ class Migration(SchemaMigration):
         },
         'metricsapp.elasticsearchsource': {
             'Meta': {'object_name': 'ElasticsearchSource', '_ormbases': ['metricsapp.MetricsSourceBase']},
+            'index': ('django.db.models.fields.TextField', [], {'default': "'*'", 'max_length': '50'}),
             u'metricssourcebase_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': "orm['metricsapp.MetricsSourceBase']", 'unique': 'True', 'primary_key': 'True'}),
+            'timeout': ('django.db.models.fields.IntegerField', [], {'default': '60'}),
             'urls': ('django.db.models.fields.TextField', [], {'max_length': '250'})
         },
         'metricsapp.metricssourcebase': {

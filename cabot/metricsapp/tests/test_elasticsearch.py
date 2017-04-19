@@ -6,7 +6,8 @@ class TestElasticsearchSource(TestCase):
     def setUp(self):
         self.es_source = ElasticsearchSource.objects.create(
             name='elastigirl',
-            urls='localhost'
+            urls='localhost',
+            index='i'
         )
 
     def test_client(self):

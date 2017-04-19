@@ -13,10 +13,11 @@ class ElasticsearchSourceForm(ModelForm):
     def clean_urls(self):
         """Make sure the input urls are valid Elasticsearch hosts."""
         input_urls = self.cleaned_data['urls']
+        timeout = self.cleaned_data['timeout']
 
         # Create an Elasticsearch test client and see if a health check for the instance succeeds
         try:
-            client = create_es_client(input_urls)
+            client = create_es_client(input_urls, timeout)
             ClusterClient(client).health()
             return input_urls
         except ConnectionError:

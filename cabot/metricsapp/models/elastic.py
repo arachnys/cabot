@@ -16,6 +16,15 @@ class ElasticsearchSource(MetricsSourceBase):
         help_text='Comma-separated list of Elasticsearch hosts. '
                   'Format: "localhost" or "https://user:secret@localhost:443."'
     )
+    index = models.TextField(
+        max_length=50,
+        default='*',
+        help_text='Elasticsearch index name. Can include wildcards (*)',
+    )
+    timeout = models.IntegerField(
+        default=60,
+        help_text='Timeout for queries to this index.'
+    )
 
     _client = None
 
@@ -27,4 +36,4 @@ class ElasticsearchSource(MetricsSourceBase):
         """
         if self._client:
             return self._client
-        return create_es_client(self.urls)
+        return create_es_client(self.urls, self.timeout)
