@@ -41,6 +41,7 @@ window.DATA = {{ result.raw_data|safe }};
 <script type="text/coffeescript">
 kvs = []
 labels = []
+{% if result.check.polymorphic_ctype.model == 'graphitestatuscheck' or result.check.polymorphic_ctype.model == 'influxdbstatuscheck' %}
 for series in window.DATA
   label = series.target
   labels.push label
@@ -49,6 +50,16 @@ for series in window.DATA
     tmp['time'] = point[1]*1000
     tmp[label] = point[0]
     kvs.push tmp
+{% else %}
+for s in window.DATA
+  label = s.series
+  labels.push label
+  for point in s.datapoints
+    tmp = {}
+    tmp['time'] = point[0]*1000
+    tmp[label] = point[1]
+    kvs.push tmp
+{% endif %}
 
 linegraph = Morris.Line(
   element: 'graph'

@@ -6,5 +6,6 @@ set -o errexit
 python manage.py syncdb --noinput
 python manage.py migrate cabotapp --noinput
 python manage.py migrate metricsapp --noinput
+python manage.py migrate dummyapp --noinput
 python manage.py migrate djcelery --noinput
 python manage.py collectstatic --noinput
