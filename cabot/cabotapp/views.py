@@ -236,6 +236,12 @@ class HttpStatusCheckForm(StatusCheckForm):
             }),
         })
 
+    def clean_password(self):
+        new_password_value = self.cleaned_data['password']
+        if new_password_value == '':
+            new_password_value = self.initial.get('password')
+        return new_password_value
+
 
 class JenkinsStatusCheckForm(StatusCheckForm):
     class Meta:

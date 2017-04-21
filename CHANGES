@@ -1,3 +1,8 @@
+master
+------
+
+* Fix basic auth passwords getting reset when editing checks
+
 Version 0.10.3
 --------------
 
