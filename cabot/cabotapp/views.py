@@ -692,6 +692,26 @@ class AlertTestPluginForm(AlertTestForm):
 
 
 class AlertTestView(LoginRequiredMixin, View):
+    def trigger_alert_to_user(self, service, user):
+        """
+        Clear out all service users and duty shifts, and disable all fallback users.
+        Then add a single shift for this user, and add this user to users-to-notify.
+
+        This should ensure we never alert anyone except the user triggering the alert test.
+        """
+        service.users_to_notify.clear()
+        service.users_to_notify.add(user)
+        Shift.objects.update(deleted=True)
+        UserProfile.objects.update(fallback_alert_user=False)
+        Shift(
+            start=timezone.now() - timedelta(days=1),
+            end=timezone.now() + timedelta(days=1),
+            uid='test-shift',
+            last_modified=timezone.now(),
+            user=user
+        ).save()
+        service.alert()
+
     def post(self, request):
         form = AlertTestForm(request.POST)
 
@@ -708,7 +728,8 @@ class AlertTestView(LoginRequiredMixin, View):
 
                 service.overall_status = data['new_status']
                 service.old_overall_status = data['old_status']
-                service.alert()
+
+                self.trigger_alert_to_user(service, request.user)
 
                 transaction.savepoint_rollback(sid)
 
@@ -716,7 +737,7 @@ class AlertTestView(LoginRequiredMixin, View):
         return JsonResponse({"result": "error"}, status=400)
 
 
-class AlertTestPluginView(LoginRequiredMixin, View):
+class AlertTestPluginView(AlertTestView):
     def post(self, request):
         form = AlertTestPluginForm(request.POST)
 
@@ -732,13 +753,13 @@ class AlertTestPluginView(LoginRequiredMixin, View):
                 check = StatusCheck(name='ALERT_TEST', calculated_status=data['new_status'])
                 check.save()
                 service.status_checks.add(check)
-                service.users_to_notify.add(request.user)
                 service.alerts.add(data['alert_plugin'])
                 service.update_status()
 
                 service.overall_status = data['new_status']
                 service.old_overall_status = data['old_status']
-                service.alert()
+
+                self.trigger_alert_to_user(service, request.user)
 
                 transaction.savepoint_rollback(sid)
 
