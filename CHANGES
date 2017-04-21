@@ -1,5 +1,5 @@
-master
-------
+Version 0.10.4
+--------------
 
 * Fix basic auth passwords getting reset when editing checks
 * Fix plugin alert tests alerting the current duty officer
