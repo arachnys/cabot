@@ -94,6 +94,11 @@ class LocalTestCase(APITestCase):
             name='Service',
         )
 
+        self.alert_plugin = AlertPlugin.objects.first()
+        self.service.alerts.add(
+            self.alert_plugin
+        )
+
         self.service.status_checks.add(
             self.graphite_check, self.jenkins_check, self.http_check)
         # failing is second most recent
@@ -243,8 +248,8 @@ class TestCheckRun(LocalTestCase):
         self.service.update_status()
         self.assertEqual(self.service.overall_status, Service.PASSING_STATUS)
 
-    @patch('cabot.cabotapp.models.send_alert')
-    @patch('cabot.cabotapp.models.send_alert_update')
+    @patch('cabot.cabotapp.alert.AlertPlugin._send_alert')
+    @patch('cabot.cabotapp.alert.AlertPlugin._send_alert_update')
     @freeze_time('2017-03-02 10:30:43.714759')
     def test_alert_acknowledgement(self, fake_send_alert_update, fake_send_alert):
         self.assertEqual(self.service.overall_status, Service.PASSING_STATUS)
@@ -255,12 +260,12 @@ class TestCheckRun(LocalTestCase):
         self.assertEqual(self.graphite_check.calculated_status,
                          Service.CALCULATED_FAILING_STATUS)
         self.service.update_status()
-        fake_send_alert.assert_called_with(self.service, duty_officers=[])
+        fake_send_alert.assert_called()
         fake_send_alert.reset_mock()
 
         with freeze_time(timezone.now() + timedelta(minutes=30)):
             self.service.update_status()
-            fake_send_alert.assert_called_with(self.service, duty_officers=[])
+            fake_send_alert.assert_called()
             fake_send_alert.reset_mock()
 
         self.service.acknowledge_alert(user=self.user)
@@ -271,13 +276,13 @@ class TestCheckRun(LocalTestCase):
         with freeze_time(timezone.now() + timedelta(minutes=60)):
             self.service.update_status()
             self.assertEqual(self.service.unexpired_acknowledgement(), None)
-            fake_send_alert.assert_called_with(self.service, duty_officers=[])
+            fake_send_alert.assert_called()
 
         with freeze_time(timezone.now() + timedelta(minutes=90)):
             self.service.acknowledge_alert(user=self.user)
             self.service.update_status()
             self.assertEqual(self.service.unexpired_acknowledgement().user, self.user)
-            fake_send_alert_update.assert_called_with(self.service, duty_officers=[])
+            fake_send_alert_update.assert_called()
 
     @patch('cabot.cabotapp.graphite.requests.get', fake_graphite_response)
     def test_graphite_run(self):
@@ -613,7 +618,7 @@ class TestAPI(LocalTestCase):
                         self.jenkins_check.id,
                         self.http_check.id
                     ],
-                    'alerts': [],
+                    'alerts': [self.alert_plugin.id],
                     'hackpad_id': None,
                     'instances': [],
                     'id': self.service.id,
@@ -737,7 +742,7 @@ class TestAPI(LocalTestCase):
                     'users_to_notify': [],
                     'alerts_enabled': True,
                     'status_checks': [],
-                    'alerts': [],
+                    'alerts': [self.alert_plugin.id],
                     'hackpad_id': None,
                     'instances': [],
                     'id': self.service.id,
@@ -998,11 +1003,12 @@ class TestAlerts(LocalTestCase):
         self.assertEqual(self.service.users_to_notify.all().count(), 1)
         self.assertEqual(self.service.users_to_notify.get().username, self.user.username)
 
-    @patch('cabot.cabotapp.models.send_alert')
+    @patch('cabot.cabotapp.alert.AlertPlugin._send_alert')
     def test_alert(self, fake_send_alert):
         self.service.alert()
         self.assertEqual(fake_send_alert.call_count, 1)
-        fake_send_alert.assert_called_with(self.service, duty_officers=[])
+        fake_send_alert.assert_called()
+        self.assertEqual(fake_send_alert.call_args[0][0], self.service)
 
     def trigger_failing_check(self, check):
         StatusCheckResult(
@@ -1014,7 +1020,7 @@ class TestAlerts(LocalTestCase):
         check.last_run = timezone.now()
         check.save()
 
-    @patch('cabot.cabotapp.models.send_alert')
+    @patch('cabot.cabotapp.alert.AlertPlugin._send_alert')
     def test_alert_increasing_severity(self, fake_send_alert):
         self.trigger_failing_check(self.warning_http_check)
         self.assertEqual(fake_send_alert.call_count, 1)
@@ -1025,7 +1031,7 @@ class TestAlerts(LocalTestCase):
         self.trigger_failing_check(self.critical_http_check)
         self.assertEqual(fake_send_alert.call_count, 3)
 
-    @patch('cabot.cabotapp.models.send_alert')
+    @patch('cabot.cabotapp.alert.AlertPlugin._send_alert')
     def test_alert_decreasing_severity(self, fake_send_alert):
         self.trigger_failing_check(self.critical_http_check)
         self.assertEqual(fake_send_alert.call_count, 1)
@@ -1036,7 +1042,7 @@ class TestAlerts(LocalTestCase):
         self.trigger_failing_check(self.warning_http_check)
         self.assertEqual(fake_send_alert.call_count, 1)
 
-    @patch('cabot.cabotapp.models.send_alert')
+    @patch('cabot.cabotapp.alert.AlertPlugin._send_alert')
     def test_alert_alternating_severity(self, fake_send_alert):
         self.trigger_failing_check(self.error_http_check)
         self.assertEqual(fake_send_alert.call_count, 1)

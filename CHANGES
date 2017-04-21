@@ -1,6 +1,7 @@
 master
 ------
 
+* Add plugin settings views with the ability to test alerts.
 * Allow user filter for LDAP to be configured
   - Set the AUTH_LDAP_USER_FILTER setting to change it (defaults to "(uid=%(user)s)")
 * Update cabot-alert-hipchat plugin to 2.0.2
