@@ -1,5 +1,5 @@
-master
-------
+Version 0.10.3
+--------------
 
 * Add plugin settings views with the ability to test alerts.
 * Allow user filter for LDAP to be configured
