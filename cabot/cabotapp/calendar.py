@@ -29,7 +29,10 @@ def _recurring_component_to_events(component):
     recur_set = rrule.rruleset()
     recur_set.rrule(recur_rule)
     if 'exdate' in component:
-        for exdate_line in component.decoded('exdate'):
+        lines = component.decoded('exdate')
+        if not hasattr(lines, '__iter__'):
+            lines = [lines]
+        for exdate_line in lines:
             for exdate in exdate_line.dts:
                 recur_set.exdate(ensure_tzaware(exdate.dt))
 
