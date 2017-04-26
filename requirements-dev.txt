@@ -1,0 +1,4 @@
+coverage==4.3.4
+django_coverage_plugin==1.5.0
+mock==2.0.0
+ipdb

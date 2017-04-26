@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Welcome to Cabot!</h1>
+<p>It looks like this is your first time launching Cabot. Please create a superuser account.
+<div class="row">
+  <div class="col-xs-12">
+    <div class="col-xs-10 col-xs-offset-2">
+      <h2>Create Super User</h2>
+    </div>
+  </div>
+</div>
+<form class="form-horizontal" action="" method="post" role="form">
+  {% include "cabotapp/_base_form.html" %}
+  <div class="col-xs-12">
+    <div class="form-group">
+      <div class="col-xs-6 col-xs-offset-2">
+        <button type="submit" class="btn btn-primary">Create</button>
+      </div>
+      </div>
+    </div>
+  </form>
+</form>
+{% endblock content %}

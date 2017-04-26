@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load extra %}
+{% load static from staticfiles %}
 
 {% block title %}{{ block.super }} - {{ service.name }}{% endblock title %}
 
@@ -63,7 +64,7 @@
       <div class="col-xs-8">
         <h5>
         {% for alert in service.alerts.all %}
-          <span class="label label-{% if service.alerts_enabled %}success{% else %}warning{% endif %}">{{ alert }}</span>
+          <span class="label label-{% if service.alerts_enabled and alert.enabled %}success{% else %}warning{% endif %}">{{ alert }}</span>
         {% endfor %}
         </h5>
       </div>
@@ -180,9 +181,9 @@
 <script type="text/javascript">
   window.SERVICE_HISTORY = {{ service.recent_snapshots|jsonify }}
 </script>
-<script type="text/javascript" src="{{ STATIC_URL }}arachnys/js/d3.js"></script>
+<script type="text/javascript" src="{% static 'arachnys/js/d3.js' %}"></script>
 {% compress js %}
-<script type="text/javascript" src="{{ STATIC_URL }}arachnys/js/rickshaw.js"></script>
+<script type="text/javascript" src="{% static 'arachnys/js/rickshaw.js' %}"></script>
 <script type="text/coffeescript">
 
 $(document).ready ->
@@ -245,7 +246,7 @@ drawRickshaw = (data, labels, events = []) ->
 $(function(){
     $(':input.datepicker').datepicker({
         dateFormat: 'yy-mm-dd',
-        buttonImage: '{{ STATIC_URL }}theme/img/calendar.gif',
+        buttonImage: "{% static 'theme/img/calendar.gif' %}",
         buttonImageOnly: true,
         showOn: 'button'
     });

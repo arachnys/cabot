@@ -1,14 +1,21 @@
 import datetime
 from django.conf import settings
-from django.utils.timezone import now
+from django.utils.timezone import now, get_current_timezone
 from dateutil import rrule
-from icalendar import Calendar, Event
+from icalendar import Calendar
 import requests
-
-MAX_FUTURE = 60  # days
 
 import logging
 logger = logging.getLogger(__name__)
+
+
+MAX_FUTURE = 60  # days
+
+
+def ensure_tzaware(dt):
+    if dt.tzinfo is None:
+        return get_current_timezone().localize(dt)
+    return dt
 
 
 def _recurring_component_to_events(component):
@@ -16,16 +23,15 @@ def _recurring_component_to_events(component):
     Given an icalendar component with an "RRULE"
     Return a list of events as dictionaries
     """
-
     rrule_as_str = component.get('rrule').to_ical()
     recur_rule = rrule.rrulestr(rrule_as_str,
-                                dtstart=component.decoded('dtstart'))
+                                dtstart=ensure_tzaware(component.decoded('dtstart')))
     recur_set = rrule.rruleset()
     recur_set.rrule(recur_rule)
     if 'exdate' in component:
         for exdate_line in component.decoded('exdate'):
             for exdate in exdate_line.dts:
-                recur_set.exdate(exdate.dt)
+                recur_set.exdate(ensure_tzaware(exdate.dt))
 
     # get list of events in MAX_FUTURE days
     utcnow = now()
@@ -70,5 +76,5 @@ def get_events():
                     })
                 except KeyError:
                     logger.debug('Failed to parse VEVENT component: %s',
-                        component.get('uid', 'no uid available'))
+                                 component.get('uid', 'no uid available'))
     return events

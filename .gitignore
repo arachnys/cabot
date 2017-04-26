@@ -2,11 +2,12 @@
 dev.db
 venv/*
 backups/*
-static/CACHE/*
+static/
+cabot/.collectstatic/
 node_modules/*
 .python-eggs/*
 cabot.egg-info
-cabot/static/CACHE
+cabot/static/
 .env
 .DS_Store
 celerybeat-schedule
@@ -20,3 +21,4 @@ local_config.yml
 build/
 
 .idea
+Pipfile.lock

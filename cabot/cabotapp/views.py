@@ -5,23 +5,28 @@ from itertools import groupby, dropwhile, izip_longest
 
 import requests
 from cabot.cabotapp import alert
+from cabot.cabotapp.utils import cabot_needs_setup
 from dateutil.relativedelta import relativedelta
 from django import forms
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
 from django.core.urlresolvers import reverse
 from django.core.urlresolvers import reverse_lazy
-from django.http import HttpResponse, HttpResponseRedirect
+from django.db import transaction
+from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
 from django.template import RequestContext, loader
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.timezone import utc
 from django.views.generic import (
     DetailView, CreateView, UpdateView, ListView, DeleteView, TemplateView, View)
-from models import AlertPluginUserData
+from django.shortcuts import redirect, render
+from alert import AlertPlugin, AlertPluginUserData
 from models import (
     StatusCheck, GraphiteStatusCheck, JenkinsStatusCheck, HttpStatusCheck, ICMPStatusCheck,
     StatusCheckResult, UserProfile, Service, Instance, Shift, get_duty_officers)
@@ -38,15 +43,14 @@ class LoginRequiredMixin(object):
 @login_required
 def subscriptions(request):
     """ Simple list of all checks """
-    t = loader.get_template('cabotapp/subscriptions.html')
     services = Service.objects.all()
     users = User.objects.filter(is_active=True)
-    c = RequestContext(request, {
+
+    return render(request, 'cabotapp/subscriptions.html', {
         'services': services,
         'users': users,
         'duty_officers': get_duty_officers(),
     })
-    return HttpResponse(t.render(c))
 
 
 @login_required
@@ -231,6 +235,12 @@ class HttpStatusCheckForm(StatusCheckForm):
                 'placeholder': '200',
             }),
         })
+
+    def clean_password(self):
+        new_password_value = self.cleaned_data['password']
+        if new_password_value == '':
+            new_password_value = self.initial.get('password')
+        return new_password_value
 
 
 class JenkinsStatusCheckForm(StatusCheckForm):
@@ -549,14 +559,15 @@ class UserProfileUpdateAlert(LoginRequiredMixin, View):
             form_model = get_object_form(type(plugin_userdata))
             form = form_model(instance=plugin_userdata)
 
-        c = RequestContext(request, {
+        return render(request, self.template.template.name, {
             'form': form,
             'alert_preferences': profile.user_data(),
         })
-        return HttpResponse(self.template.render(c))
 
     def post(self, request, pk, alerttype):
         profile = UserProfile.objects.get(user=pk)
+        success = False
+
         if alerttype == u'General':
             form = GeneralSettingsForm(request.POST)
             if form.is_valid():
@@ -565,26 +576,199 @@ class UserProfileUpdateAlert(LoginRequiredMixin, View):
                 profile.user.is_active = form.cleaned_data['enabled']
                 profile.user.email = form.cleaned_data['email_address']
                 profile.user.save()
-                return HttpResponseRedirect(reverse('update-alert-user-data', args=(self.kwargs['pk'], alerttype)))
 
+                success = True
         else:
             plugin_userdata = self.model.objects.get(title=alerttype, user=profile)
             form_model = get_object_form(type(plugin_userdata))
             form = form_model(request.POST, instance=plugin_userdata)
-            form.save()
             if form.is_valid():
-                return HttpResponseRedirect(reverse('update-alert-user-data', args=(self.kwargs['pk'], alerttype)))
+                form.save()
+
+                success = True
+
+        if success:
+            messages.add_message(request, messages.SUCCESS, 'Updated Successfully', extra_tags='success')
+        else:
+            messages.add_message(request, messages.ERROR, 'Error Updating Profile', extra_tags='danger')
+
+        return HttpResponseRedirect(reverse('update-alert-user-data', args=(self.kwargs['pk'], alerttype)))
+
+
+class PluginSettingsView(LoginRequiredMixin, View):
+    template = loader.get_template('cabotapp/plugin_settings_form.html')
+    model = AlertPlugin
+
+    def get(self, request, plugin_name):
+        if plugin_name == u'global':
+            form = CoreSettingsForm()
+            alert_test_form = AlertTestForm()
+        else:
+            plugin = self.model.objects.get(title=plugin_name)
+            form_model = get_object_form(type(plugin))
+            form = form_model(instance=plugin)
+            alert_test_form = AlertTestPluginForm(initial = {
+                'alert_plugin': plugin
+            })
+
+        return render(request, self.template.template.name, {
+            'form': form,
+            'plugins': AlertPlugin.objects.all(),
+            'plugin_name': plugin_name,
+            'alert_test_form': alert_test_form
+        })
+
+    def post(self, request, plugin_name):
+        if plugin_name == u'global':
+            form = CoreSettingsForm(request.POST)
+        else:
+            plugin = self.model.objects.get(title=plugin_name)
+            form_model = get_object_form(type(plugin))
+            form = form_model(request.POST, instance=plugin)
+
+        if form.is_valid():
+            form.save()
+            messages.add_message(request, messages.SUCCESS, 'Updated Successfully', extra_tags='success')
+        else:
+            messages.add_message(request, messages.ERROR, 'Error Updating Plugin', extra_tags='danger')
+
+        return HttpResponseRedirect(reverse('plugin-settings', args=(plugin_name,)))
 
 
 def get_object_form(model_type):
     class AlertPreferencesForm(forms.ModelForm):
         class Meta:
             model = model_type
+            fields = '__all__'
 
         def is_valid(self):
             return True
 
     return AlertPreferencesForm
+
+
+class AlertTestForm(forms.Form):
+    action = reverse_lazy('alert-test')
+
+    service = forms.ModelChoiceField(
+        queryset=Service.objects.all(),
+        widget=forms.Select(attrs={
+            'data-rel': 'chosen',
+        })
+    )
+
+    STATUS_CHOICES = (
+        (Service.PASSING_STATUS, 'Passing'),
+        (Service.WARNING_STATUS, 'Warning'),
+        (Service.ERROR_STATUS, 'Error'),
+        (Service.CRITICAL_STATUS, 'Critical'),
+    )
+
+    old_status = forms.ChoiceField(
+        choices=STATUS_CHOICES,
+        initial=Service.PASSING_STATUS,
+        widget=forms.Select(attrs={
+            'data-rel': 'chosen',
+        })
+    )
+
+    new_status = forms.ChoiceField(
+        choices=STATUS_CHOICES,
+        initial=Service.ERROR_STATUS,
+        widget=forms.Select(attrs={
+            'data-rel': 'chosen',
+        })
+    )
+
+
+class AlertTestPluginForm(AlertTestForm):
+    action = reverse_lazy('alert-test-plugin')
+
+    service = None
+    alert_plugin = forms.ModelChoiceField(
+        queryset=AlertPlugin.objects.filter(enabled=True),
+        widget=forms.HiddenInput
+    )
+
+
+class AlertTestView(LoginRequiredMixin, View):
+    def trigger_alert_to_user(self, service, user):
+        """
+        Clear out all service users and duty shifts, and disable all fallback users.
+        Then add a single shift for this user, and add this user to users-to-notify.
+
+        This should ensure we never alert anyone except the user triggering the alert test.
+        """
+        service.users_to_notify.clear()
+        service.users_to_notify.add(user)
+        Shift.objects.update(deleted=True)
+        UserProfile.objects.update(fallback_alert_user=False)
+        Shift(
+            start=timezone.now() - timedelta(days=1),
+            end=timezone.now() + timedelta(days=1),
+            uid='test-shift',
+            last_modified=timezone.now(),
+            user=user
+        ).save()
+        service.alert()
+
+    def post(self, request):
+        form = AlertTestForm(request.POST)
+
+        if form.is_valid():
+            data = form.clean()
+            service = data['service']
+
+            with transaction.atomic():
+                sid = transaction.savepoint()
+                service.update_status()
+                check = StatusCheck(name='ALERT_TEST', calculated_status=data['new_status'])
+                check.save()
+                service.status_checks.add(check)
+
+                service.overall_status = data['new_status']
+                service.old_overall_status = data['old_status']
+
+                self.trigger_alert_to_user(service, request.user)
+
+                transaction.savepoint_rollback(sid)
+
+            return JsonResponse({"result": "ok"})
+        return JsonResponse({"result": "error"}, status=400)
+
+
+class AlertTestPluginView(AlertTestView):
+    def post(self, request):
+        form = AlertTestPluginForm(request.POST)
+
+        if form.is_valid():
+            data = form.clean()
+
+            with transaction.atomic():
+                sid = transaction.savepoint()
+
+                service = Service.objects.create(
+                    name='test-alert-service'
+                )
+                check = StatusCheck(name='ALERT_TEST', calculated_status=data['new_status'])
+                check.save()
+                service.status_checks.add(check)
+                service.alerts.add(data['alert_plugin'])
+                service.update_status()
+
+                service.overall_status = data['new_status']
+                service.old_overall_status = data['old_status']
+
+                self.trigger_alert_to_user(service, request.user)
+
+                transaction.savepoint_rollback(sid)
+
+            return JsonResponse({"result": "ok"})
+        return JsonResponse({"result": "error"}, status=400)
+
+
+class CoreSettingsForm(forms.Form):
+    pass
 
 
 class GeneralSettingsForm(forms.Form):
@@ -704,7 +888,8 @@ class ServiceCreateView(LoginRequiredMixin, CreateView):
     model = Service
     form_class = ServiceForm
 
-    alert.update_alert_plugins()
+    def __init__(self, *args, **kwargs):
+        super(ServiceCreateView, self).__init__(*args, **kwargs)
 
     def get_success_url(self):
         return reverse('service', kwargs={'pk': self.object.id})
@@ -759,6 +944,41 @@ class StatusCheckReportView(LoginRequiredMixin, TemplateView):
             return {'checks': form.get_report(), 'service': form.cleaned_data['service']}
 
 
+class SetupForm(forms.Form):
+    username = forms.CharField(label='Username', max_length=100, required=True)
+    email = forms.EmailField(label='Email', max_length=200, required=False)
+    password = forms.CharField(label='Password', required=True, widget=forms.PasswordInput())
+
+
+class SetupView(View):
+    template = loader.get_template('cabotapp/setup.html')
+
+    def get(self, request):
+        if not cabot_needs_setup():
+            return redirect('login')
+
+        form = SetupForm(initial={
+            'username': 'admin',
+        })
+
+        return HttpResponse(self.template.render({'form': form}, request))
+
+    def post(self, request):
+        if not cabot_needs_setup():
+            return redirect('login')
+
+        form = SetupForm(request.POST)
+        if form.is_valid():
+            get_user_model().objects.create_superuser(
+                username=form.cleaned_data['username'],
+                email=form.cleaned_data['email'],
+                password=form.cleaned_data['password'],
+            )
+            return redirect('login')
+
+        return HttpResponse(self.template.render({'form': form}, request), status=400)
+
+
 # Misc JSON api and other stuff
 
 
@@ -772,6 +992,14 @@ def checks_run_recently(request):
         return HttpResponse('Checks running')
     return HttpResponse('Checks not running')
 
+
+def about(request):
+    """ Very simple about page """
+    from cabot import version
+
+    return render(request, 'cabotapp/about.html', {
+        'cabot_version': version,
+    })
 
 def jsonify(d):
     return HttpResponse(json.dumps(d), content_type='application/json')

@@ -17,6 +17,8 @@ PACKAGES=(
   'redis-server'
   'libsasl2-dev'
   'libldap2-dev'
+  'libffi-dev'
+  'libssl-dev'
 )
 
 # OS-specific install instructions

@@ -2,20 +2,23 @@ sudo: required
 services:
  - docker
 
-env:
-  COMPOSE_VERSION: 1.8.0
-
 before_install:
- - curl -L https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
- - chmod +x docker-compose
- - sudo mv docker-compose /usr/local/bin
+ - sudo pip install tox
 
 # setup databases
 before_script:
  - cp conf/development.env.example conf/development.env
  - docker-compose build
- - docker-compose up -d
- - sleep 20
 
 script:
- - docker-compose run web python manage.py test cabot
+ - tox
+ - docker-compose -f docker-compose-test.yml run --rm --entrypoint bin/test_with_coverage test -v2
+ - git checkout $(git describe --abbrev=0 --tags `git describe --tags`^) && docker-compose build web
+ - docker-compose run --rm web true
+ - git checkout - && docker-compose build web
+ - docker-compose run --rm web true
+
+after_success:
+  - pip install codecov
+  - pip install django_coverage_plugin==1.4.2
+  - codecov

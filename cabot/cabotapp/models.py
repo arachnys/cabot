@@ -13,7 +13,9 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.signals import post_save
 from django.utils import timezone
-from polymorphic import PolymorphicModel
+
+
+from polymorphic.models import PolymorphicModel
 
 from .alert import (
     send_alert,
@@ -176,7 +178,9 @@ class CheckGroupMixin(models.Model):
                     timezone.now() - timedelta(minutes=settings.NOTIFICATION_INTERVAL)) < self.last_alert_sent:
                     return
             elif self.overall_status in (self.CRITICAL_STATUS, self.ERROR_STATUS):
-                if self.last_alert_sent and (
+                more_important = self.old_overall_status == self.WARNING_STATUS or \
+                    (self.old_overall_status == self.ERROR_STATUS and self.overall_status == self.CRITICAL_STATUS)
+                if not more_important and self.last_alert_sent and (
                     timezone.now() - timedelta(minutes=settings.ALERT_INTERVAL)) < self.last_alert_sent:
                     return
             self.last_alert_sent = timezone.now()
@@ -490,11 +494,11 @@ class StatusCheck(PolymorphicModel):
     def recent_results(self):
         # Not great to use id but we are getting lockups, possibly because of something to do with index
         # on time_complete
-        return StatusCheckResult.objects.filter(check=self).order_by('-id').defer('raw_data')[:10]
+        return StatusCheckResult.objects.filter(status_check=self).order_by('-id').defer('raw_data')[:10]
 
     def last_result(self):
         try:
-            return StatusCheckResult.objects.filter(check=self).order_by('-id').defer('raw_data')[0]
+            return StatusCheckResult.objects.filter(status_check=self).order_by('-id').defer('raw_data')[0]
         except:
             return None
 
@@ -503,11 +507,11 @@ class StatusCheck(PolymorphicModel):
         try:
             result = self._run()
         except SoftTimeLimitExceeded as e:
-            result = StatusCheckResult(check=self)
+            result = StatusCheckResult(status_check=self)
             result.error = u'Error in performing check: Celery soft time limit exceeded'
             result.succeeded = False
         except Exception as e:
-            result = StatusCheckResult(check=self)
+            result = StatusCheckResult(status_check=self)
             logger.error(u"Error performing check: %s" % (e.message,))
             result.error = u'Error in performing check: %s' % (e.message,)
             result.succeeded = False
@@ -575,7 +579,7 @@ class ICMPStatusCheck(StatusCheck):
         return "ICMP/Ping Check"
 
     def _run(self):
-        result = StatusCheckResult(check=self)
+        result = StatusCheckResult(status_check=self)
         instances = self.instance_set.all()
         target = self.instance_set.get().address
 
@@ -642,7 +646,7 @@ class GraphiteStatusCheck(StatusCheck):
     def _run(self):
         if not hasattr(self, 'utcnow'):
             self.utcnow = None
-        result = StatusCheckResult(check=self)
+        result = StatusCheckResult(status_check=self)
 
         failures = []
 
@@ -723,7 +727,7 @@ class HttpStatusCheck(StatusCheck):
         return "HTTP check"
 
     def _run(self):
-        result = StatusCheckResult(check=self)
+        result = StatusCheckResult(status_check=self)
 
         auth = None
         if self.username or self.password:
@@ -773,7 +777,7 @@ class JenkinsStatusCheck(StatusCheck):
         return 'Job failing on Jenkins'
 
     def _run(self):
-        result = StatusCheckResult(check=self)
+        result = StatusCheckResult(status_check=self)
         try:
             status = get_job_status(self.name)
             active = status['active']
@@ -827,7 +831,7 @@ class StatusCheckResult(models.Model):
     Checks don't have to use all the fields, so most should be
     nullable
     """
-    check = models.ForeignKey(StatusCheck)
+    status_check = models.ForeignKey(StatusCheck)
     time = models.DateTimeField(null=False, db_index=True)
     time_complete = models.DateTimeField(null=True, db_index=True)
     raw_data = models.TextField(null=True)
@@ -840,12 +844,12 @@ class StatusCheckResult(models.Model):
     class Meta:
         ordering = ['-time_complete']
         index_together = (
-            ('check', 'time_complete'),
-            ('check', 'id'),  # used to speed up StatusCheck.last_result
+            ('status_check', 'time_complete'),
+            ('status_check', 'id'),  # used to speed up StatusCheck.last_result
         )
 
     def __unicode__(self):
-        return '%s: %s @%s' % (self.status, self.check.name, self.time)
+        return '%s: %s @%s' % (self.status, self.status_check.name, self.time)
 
     @property
     def status(self):
@@ -881,11 +885,11 @@ class StatusCheckResult(models.Model):
 
 class AlertAcknowledgement(models.Model):
     time = models.DateTimeField()
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL)
     service = models.ForeignKey(Service)
     cancelled_time = models.DateTimeField(null=True, blank=True)
     cancelled_user = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         null=True,
         blank=True,
         related_name='cancelleduser_set'
@@ -899,7 +903,7 @@ class AlertAcknowledgement(models.Model):
 
 
 class UserProfile(models.Model):
-    user = models.OneToOneField(User, related_name='profile')
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='profile')
 
     def user_data(self):
         for user_data_subclass in AlertPluginUserData.__subclasses__():
@@ -928,13 +932,13 @@ def create_user_profile(sender, instance, created, **kwargs):
     if created:
         UserProfile.objects.create(user=instance)
 
-post_save.connect(create_user_profile, sender=User)
+post_save.connect(create_user_profile, sender=settings.AUTH_USER_MODEL)
 
 
 class Shift(models.Model):
     start = models.DateTimeField()
     end = models.DateTimeField()
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL)
     uid = models.TextField()
     last_modified = models.DateTimeField()
     deleted = models.BooleanField(default=False)

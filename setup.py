@@ -2,19 +2,21 @@
 import os
 from setuptools import setup, find_packages
 from os import environ as env
+import subprocess
 
-requirements_file = os.path.join(os.path.dirname(__file__), 'requirements.txt')
-with open(requirements_file) as f:
-    requirements = [line.rstrip('\n')
-                    for line in f
-                    if line and not line.startswith('#')]
+from pip.req import parse_requirements
 
-# pull in active plugins
-plugins = env['CABOT_PLUGINS_ENABLED'].split(',') if 'CABOT_PLUGINS_ENABLED' in env else ["cabot_alert_hipchat", "cabot_alert_twilio", "cabot_alert_email"]
+requirements = [str(req.req) for req in parse_requirements('requirements.txt', session=False)]
+requirements_plugins = [str(req.req) for req in parse_requirements('requirements-plugins.txt', session=False)]
+
+try:
+    VERSION = subprocess.check_output(['git', 'describe', '--tags']).strip()
+except subprocess.CalledProcessError:
+    VERSION = '0.dev'
 
 setup(
     name='cabot',
-    version='0.0.1-dev',
+    version=VERSION,
     description="Self-hosted, easily-deployable monitoring and alerts service"
                 " - like a lightweight PagerDuty",
     long_description=open('README.md').read(),
@@ -22,8 +24,13 @@ setup(
     author_email='info@arachnys.com',
     url='http://cabotapp.com',
     license='MIT',
-    install_requires=requirements + plugins,
+    install_requires=requirements + requirements_plugins,
     packages=find_packages(),
     include_package_data=True,
-    zip_safe=False,
+    entry_points={
+        'console_scripts': [
+            'cabot = cabot.entrypoint:main',
+        ],
+    },
+    zip_safe=False
 )

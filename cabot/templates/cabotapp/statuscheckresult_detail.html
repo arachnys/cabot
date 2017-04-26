@@ -1,18 +1,19 @@
 {% extends 'base.html' %}
+{% load static from staticfiles %}
 
 {% block content %}
 <div class="row">
   <div class="col-xs-12">
-    <div class="col-xs-1"><h2><i class="glyphicon glyphicon-{% if result.check.polymorphic_ctype.model == 'graphitestatuscheck' %}signal{% elif result.check.polymorphic_ctype.model == 'httpstatuscheck' %}arrow-up{% elif result.check.polymorphic_ctype.model == 'jenkinsstatuscheck' %}ok{% endif %}"></i></h2></div>
+    <div class="col-xs-1"><h2><i class="glyphicon glyphicon-{% if result.status_check.polymorphic_ctype.model == 'graphitestatuscheck' %}signal{% elif result.status_check.polymorphic_ctype.model == 'httpstatuscheck' %}arrow-up{% elif result.status_check.polymorphic_ctype.model == 'jenkinsstatuscheck' %}ok{% endif %}"></i></h2></div>
     <div class="col-xs-9">
-      <h2>Check result: <a href="{% url "check" result.check.id %}">{{ result.check.name }}</a></h2>
+      <h2>Check result: <a href="{% url "check" result.status_check.id %}">{{ result.status_check.name }}</a></h2>
     </div>
     <div class="col-xs-2 text-right"><h2><span class="label label-{% if result.succeeded %}success{% else %}danger{% endif %}">{{ result.status|capfirst }}</span></h2></div>
   </div>
   <div class="col-xs-12">
     <table class="table table-striped table-bordered">
       <tbody>
-        <tr><th>Name</th><td>{{ result.check.name }}</td></tr>
+        <tr><th>Name</th><td>{{ result.status_check.name }}</td></tr>
 
         <tr><th>Status</th><td>{{ result.status|capfirst }}</td></tr>
         <tr><th>Time started</th><td>{{ result.time }}</td></tr>
@@ -38,7 +39,7 @@ try {
 }
 </script>
 {% compress js %}
-<script type="text/javascript" src="{{ STATIC_URL }}arachnys/js/raphael.js"></script>
+<script type="text/javascript" src="{% static 'arachnys/js/raphael.js' %}"></script>
 <script type="text/coffeescript">
 kvs = []
 labels = []

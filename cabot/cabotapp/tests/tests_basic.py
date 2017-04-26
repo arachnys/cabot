@@ -8,12 +8,15 @@ from datetime import timedelta, date
 import os
 import requests
 from cabot.cabotapp.graphite import parse_metric
+from cabot.cabotapp.alert import update_alert_plugins, AlertPlugin
 from cabot.cabotapp.models import (
     GraphiteStatusCheck, JenkinsStatusCheck,
     HttpStatusCheck, ICMPStatusCheck, Service, Instance,
-    StatusCheckResult, minimize_targets)
+    StatusCheckResult, minimize_targets, ServiceStatusSnapshot)
 from cabot.cabotapp.calendar import get_events
 from cabot.cabotapp.views import StatusCheckReportForm
+from cabot.cabotapp import tasks
+from django.conf import settings
 from django.contrib.auth.models import Permission
 from django.contrib.auth.models import User
 from django.core import mail
@@ -21,11 +24,17 @@ from django.core.urlresolvers import reverse
 from django.test.client import Client
 from django.test.utils import override_settings
 from django.utils import timezone
+from freezegun import freeze_time
 from mock import Mock, patch
 from rest_framework import status, HTTP_HEADER_ENCODING
 from rest_framework.reverse import reverse as api_reverse
 from rest_framework.test import APITestCase
 from twilio import rest
+
+# Silence noisy celery logs in tests.
+import logging
+from celery.utils.log import logger as celery_logger
+celery_logger.setLevel(logging.WARNING)
 
 
 def get_content(fname):
@@ -85,11 +94,16 @@ class LocalTestCase(APITestCase):
             name='Service',
         )
 
+        self.alert_plugin = AlertPlugin.objects.first()
+        self.service.alerts.add(
+            self.alert_plugin
+        )
+
         self.service.status_checks.add(
             self.graphite_check, self.jenkins_check, self.http_check)
         # failing is second most recent
         self.older_result = StatusCheckResult(
-            check=self.graphite_check,
+            status_check=self.graphite_check,
             time=timezone.now() - timedelta(seconds=60),
             time_complete=timezone.now() - timedelta(seconds=59),
             succeeded=False
@@ -97,7 +111,7 @@ class LocalTestCase(APITestCase):
         self.older_result.save()
         # Passing is most recent
         self.most_recent_result = StatusCheckResult(
-            check=self.graphite_check,
+            status_check=self.graphite_check,
             time=timezone.now() - timedelta(seconds=1),
             time_complete=timezone.now(),
             succeeded=True
@@ -169,14 +183,30 @@ def fake_gcal_response(*args, **kwargs):
     resp.status_code = 200
     return resp
 
+
 def fake_recurring_response(*args, **kwargs):
     resp = Mock()
     resp.content = get_content('recurring_response.ics')
     resp.status_code = 200
     return resp
 
+
+def fake_recurring_response_notz(*args, **kwargs):
+    resp = Mock()
+    resp.content = get_content('recurring_response_notz.ics')
+    resp.status_code = 200
+    return resp
+
+
 def throws_timeout(*args, **kwargs):
     raise requests.RequestException(u'фиктивная ошибка innit')
+
+
+class TestPolymorphic(LocalTestCase):
+    def test_polymorphic(self):
+        plugin = AlertPlugin.objects.first()
+
+        self.assertIn(type(plugin), AlertPlugin.__subclasses__())
 
 
 class TestCheckRun(LocalTestCase):
@@ -218,8 +248,9 @@ class TestCheckRun(LocalTestCase):
         self.service.update_status()
         self.assertEqual(self.service.overall_status, Service.PASSING_STATUS)
 
-    @patch('cabot.cabotapp.models.send_alert')
-    @patch('cabot.cabotapp.models.send_alert_update')
+    @patch('cabot.cabotapp.alert.AlertPlugin._send_alert')
+    @patch('cabot.cabotapp.alert.AlertPlugin._send_alert_update')
+    @freeze_time('2017-03-02 10:30:43.714759')
     def test_alert_acknowledgement(self, fake_send_alert_update, fake_send_alert):
         self.assertEqual(self.service.overall_status, Service.PASSING_STATUS)
         self.most_recent_result.succeeded = False
@@ -229,19 +260,29 @@ class TestCheckRun(LocalTestCase):
         self.assertEqual(self.graphite_check.calculated_status,
                          Service.CALCULATED_FAILING_STATUS)
         self.service.update_status()
-        fake_send_alert.assert_called_with(self.service, duty_officers=[])
-
+        fake_send_alert.assert_called()
         fake_send_alert.reset_mock()
-        self.service.last_alert_sent = timezone.now() - timedelta(minutes=30)
-        self.service.update_status()
-        fake_send_alert.assert_called_with(self.service, duty_officers=[])
 
-        fake_send_alert.reset_mock()
+        with freeze_time(timezone.now() + timedelta(minutes=30)):
+            self.service.update_status()
+            fake_send_alert.assert_called()
+            fake_send_alert.reset_mock()
+
         self.service.acknowledge_alert(user=self.user)
-        self.service.last_alert_sent = timezone.now() - timedelta(minutes=30)
         self.service.update_status()
         self.assertEqual(self.service.unexpired_acknowledgement().user, self.user)
-        fake_send_alert_update.assert_called_with(self.service, duty_officers=[])
+        self.assertFalse(fake_send_alert_update.called)
+
+        with freeze_time(timezone.now() + timedelta(minutes=60)):
+            self.service.update_status()
+            self.assertEqual(self.service.unexpired_acknowledgement(), None)
+            fake_send_alert.assert_called()
+
+        with freeze_time(timezone.now() + timedelta(minutes=90)):
+            self.service.acknowledge_alert(user=self.user)
+            self.service.update_status()
+            self.assertEqual(self.service.unexpired_acknowledgement().user, self.user)
+            fake_send_alert_update.assert_called()
 
     @patch('cabot.cabotapp.graphite.requests.get', fake_graphite_response)
     def test_graphite_run(self):
@@ -440,16 +481,29 @@ class TestDutyRota(LocalTestCase):
 
     @patch('cabot.cabotapp.models.requests.get', fake_recurring_response)
     def test_duty_rota_recurring(self):
-       events = get_events()
-       events.sort(key=lambda ev: ev['start'])
-       curr_summ = events[0]['summary'];
-       self.assertTrue(curr_summ == 'foo' or curr_summ == 'bar')
-       for i in range(0, 60):
-           self.assertEqual(events[i]['summary'], curr_summ)
-           if(curr_summ == 'foo'):
-               curr_summ = 'bar'
-           else:
-               curr_summ = 'foo'
+        events = get_events()
+        events.sort(key=lambda ev: ev['start'])
+        curr_summ = events[0]['summary']
+        self.assertTrue(curr_summ == 'foo' or curr_summ == 'bar')
+        for i in range(0, 60):
+            self.assertEqual(events[i]['summary'], curr_summ)
+            if(curr_summ == 'foo'):
+                curr_summ = 'bar'
+            else:
+                curr_summ = 'foo'
+
+    @patch('cabot.cabotapp.models.requests.get', fake_recurring_response_notz)
+    def test_duty_rota_recurring_notz(self):
+        events = get_events()
+        events.sort(key=lambda ev: ev['start'])
+        curr_summ = events[0]['summary']
+        self.assertTrue(curr_summ == 'foo' or curr_summ == 'bar')
+        for i in range(0, 60):
+            self.assertEqual(events[i]['summary'], curr_summ)
+            if(curr_summ == 'foo'):
+                curr_summ = 'bar'
+            else:
+                curr_summ = 'foo'
 
 
 class TestWebInterface(LocalTestCase):
@@ -529,6 +583,10 @@ class TestWebInterface(LocalTestCase):
         self.assertEqual(len(check.problems), 1)
         self.assertEqual(check.success_rate, 50)
 
+    def test_about_page(self):
+        response = self.client.get(reverse('about-cabot'))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('Version:', response.content)
 
 class TestAPI(LocalTestCase):
     def setUp(self):
@@ -560,7 +618,7 @@ class TestAPI(LocalTestCase):
                         self.jenkins_check.id,
                         self.http_check.id
                     ],
-                    'alerts': [],
+                    'alerts': [self.alert_plugin.id],
                     'hackpad_id': None,
                     'instances': [],
                     'id': self.service.id,
@@ -684,7 +742,7 @@ class TestAPI(LocalTestCase):
                     'users_to_notify': [],
                     'alerts_enabled': True,
                     'status_checks': [],
-                    'alerts': [],
+                    'alerts': [self.alert_plugin.id],
                     'hackpad_id': None,
                     'instances': [],
                     'id': self.service.id,
@@ -914,6 +972,27 @@ class TestAlerts(LocalTestCase):
     def setUp(self):
         super(TestAlerts, self).setUp()
 
+        self.warning_http_check = HttpStatusCheck.objects.create(
+            name='Http Check',
+            created_by=self.user,
+            importance=Service.WARNING_STATUS,
+            endpoint='http://arachnys.com',
+            timeout=10,
+            status_code='200',
+            text_match=None,
+        )
+        self.error_http_check = HttpStatusCheck.objects.create(
+            name='Http Check',
+            created_by=self.user,
+            importance=Service.ERROR_STATUS,
+            endpoint='http://arachnys.com',
+            timeout=10,
+            status_code='200',
+            text_match=None,
+        )
+        self.service.status_checks.add(self.warning_http_check, self.error_http_check)
+        self.critical_http_check = self.http_check
+
         self.user.profile.hipchat_alias = "test_user_hipchat_alias"
         self.user.profile.save()
 
@@ -924,11 +1003,174 @@ class TestAlerts(LocalTestCase):
         self.assertEqual(self.service.users_to_notify.all().count(), 1)
         self.assertEqual(self.service.users_to_notify.get().username, self.user.username)
 
-    @patch('cabot.cabotapp.models.send_alert')
+    @patch('cabot.cabotapp.alert.AlertPlugin._send_alert')
     def test_alert(self, fake_send_alert):
         self.service.alert()
         self.assertEqual(fake_send_alert.call_count, 1)
-        fake_send_alert.assert_called_with(self.service, duty_officers=[])
+        fake_send_alert.assert_called()
+        self.assertEqual(fake_send_alert.call_args[0][0], self.service)
+
+    def trigger_failing_check(self, check):
+        StatusCheckResult(
+            status_check=check,
+            time=timezone.now() - timedelta(seconds=60),
+            time_complete=timezone.now() - timedelta(seconds=59),
+            succeeded=False
+        ).save()
+        check.last_run = timezone.now()
+        check.save()
+
+    @patch('cabot.cabotapp.alert.AlertPlugin._send_alert')
+    def test_alert_increasing_severity(self, fake_send_alert):
+        self.trigger_failing_check(self.warning_http_check)
+        self.assertEqual(fake_send_alert.call_count, 1)
+
+        self.trigger_failing_check(self.error_http_check)
+        self.assertEqual(fake_send_alert.call_count, 2)
+
+        self.trigger_failing_check(self.critical_http_check)
+        self.assertEqual(fake_send_alert.call_count, 3)
+
+    @patch('cabot.cabotapp.alert.AlertPlugin._send_alert')
+    def test_alert_decreasing_severity(self, fake_send_alert):
+        self.trigger_failing_check(self.critical_http_check)
+        self.assertEqual(fake_send_alert.call_count, 1)
+
+        self.trigger_failing_check(self.error_http_check)
+        self.assertEqual(fake_send_alert.call_count, 1)
+
+        self.trigger_failing_check(self.warning_http_check)
+        self.assertEqual(fake_send_alert.call_count, 1)
+
+    @patch('cabot.cabotapp.alert.AlertPlugin._send_alert')
+    def test_alert_alternating_severity(self, fake_send_alert):
+        self.trigger_failing_check(self.error_http_check)
+        self.assertEqual(fake_send_alert.call_count, 1)
+
+        self.trigger_failing_check(self.warning_http_check)
+        self.assertEqual(fake_send_alert.call_count, 1)
+
+        self.trigger_failing_check(self.error_http_check)
+        self.assertEqual(fake_send_alert.call_count, 1)
+
+        self.trigger_failing_check(self.critical_http_check)
+        self.assertEqual(fake_send_alert.call_count, 2)
+
+    def test_update_profile_success(self):
+        url = reverse('update-alert-user-data', kwargs={'pk':self.user.id, 'alerttype': 'General'})
+        self.client.login(username=self.username, password=self.password)
+
+        response = self.client.post(url, follow=True, data={
+            "first_name": "Test Name"
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('alert-success', response.content)
+
+    def test_update_profile_fail(self):
+        url = reverse('update-alert-user-data', kwargs={'pk':self.user.id, 'alerttype': 'General'})
+        self.client.login(username=self.username, password=self.password)
+
+        response = self.client.post(url, follow=True, data={
+            "first_name": "Test Name" * 20  # Name too long
+        })
+
+        self.assertIn('alert-danger', response.content)
+
+class TestCleanUpTask(LocalTestCase):
+    def setUp(self):
+        super(TestCleanUpTask, self).setUp()
+
+    def test_cleanup_simple(self):
+        initial_results = StatusCheckResult.objects.all().count()
+        initial_snapshots = ServiceStatusSnapshot.objects.all().count()
+
+        ServiceStatusSnapshot(
+            service=self.service,
+            num_checks_active=1,
+            num_checks_passing=1,
+            num_checks_failing=1,
+            overall_status=self.service.overall_status,
+            time=timezone.now() - timedelta(days=61),
+        ).save()
+
+        StatusCheckResult(
+            status_check=self.graphite_check,
+            time=timezone.now() - timedelta(days=61),
+            time_complete=timezone.now() - timedelta(days=61),
+            succeeded=False
+        ).save()
+
+        self.assertEqual(StatusCheckResult.objects.all().count(), initial_results + 1)
+        tasks.clean_db()
+        self.assertEqual(StatusCheckResult.objects.all().count(), initial_results)
+        self.assertEqual(ServiceStatusSnapshot.objects.all().count(), initial_snapshots)
+
+    def test_cleanup_batch(self):
+        initial_results = StatusCheckResult.objects.all().count()
+
+        for i in range(2):
+            StatusCheckResult(
+                status_check=self.graphite_check,
+                time=timezone.now() - timedelta(days=61),
+                time_complete=timezone.now() - timedelta(days=61),
+                succeeded=False
+            ).save()
+
+        self.assertEqual(StatusCheckResult.objects.all().count(), initial_results + 2)
+        tasks.clean_db(batch_size=1)
+        self.assertEqual(StatusCheckResult.objects.all().count(), initial_results)
+
+    def test_cleanup_single_batch(self):
+        with patch('cabot.cabotapp.tasks.clean_db.apply_async'):
+            initial_results = StatusCheckResult.objects.all().count()
+
+            for i in range(2):
+                StatusCheckResult(
+                    status_check=self.graphite_check,
+                    time=timezone.now() - timedelta(days=61),
+                    time_complete=timezone.now() - timedelta(days=61),
+                    succeeded=False
+                ).save()
+
+            self.assertEqual(StatusCheckResult.objects.all().count(), initial_results + 2)
+            tasks.clean_db(batch_size=1)
+            self.assertEqual(StatusCheckResult.objects.all().count(), initial_results + 1)
+
+    @patch('cabot.cabotapp.tasks.clean_db.apply_async')
+    def test_infinite_cleanup_loop(self, mocked_apply_async):
+        """
+        There is a potential for the cleanup task to constantly call itself
+        if every time it re-runs there is at least 1 new object to clean up
+        (i.e. every 3 seconds for 60 days a new result is recorded). Make sure
+        it only re-calls itself if the whole batch is used.
+        """
+        with self.settings(CELERY_ALWAYS_EAGER=False):
+            initial_results = StatusCheckResult.objects.all().count()
+
+            for i in range(2):
+                StatusCheckResult(
+                    status_check=self.graphite_check,
+                    time=timezone.now() - timedelta(days=61),
+                    time_complete=timezone.now() - timedelta(days=61),
+                    succeeded=False
+                ).save()
+
+            tasks.clean_db(batch_size=2)
+            # If full batch is cleaned it should queue itself again
+            self.assertTrue(mocked_apply_async.called)
+
+            StatusCheckResult(
+                status_check=self.graphite_check,
+                time=timezone.now() - timedelta(days=61),
+                time_complete=timezone.now() - timedelta(days=61),
+                succeeded=False
+            ).save()
+
+            mocked_apply_async.reset_mock()
+            tasks.clean_db(batch_size=2)
+            # This time full batch isn't cleaned (only 1 out of 2) - don't call again
+            self.assertFalse(mocked_apply_async.called)
 
 
 class TestMinimizeTargets(LocalTestCase):
