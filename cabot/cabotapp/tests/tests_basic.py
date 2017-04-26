@@ -191,6 +191,13 @@ def fake_recurring_response(*args, **kwargs):
     return resp
 
 
+def fake_recurring_response_complex(*args, **kwargs):
+    resp = Mock()
+    resp.content = get_content('recurring_response_complex.ics')
+    resp.status_code = 200
+    return resp
+
+
 def fake_recurring_response_notz(*args, **kwargs):
     resp = Mock()
     resp.content = get_content('recurring_response_notz.ics')
@@ -504,6 +511,14 @@ class TestDutyRota(LocalTestCase):
                 curr_summ = 'bar'
             else:
                 curr_summ = 'foo'
+
+    @patch('cabot.cabotapp.models.requests.get',
+           fake_recurring_response_complex)
+    def test_duty_rota_recurring_complex(self):
+        events = get_events()
+        events.sort(key=lambda ev: ev['start'])
+        curr_summ = events[0]['summary']
+        self.assertTrue(curr_summ == 'foo' or curr_summ == 'bar')
 
 
 class TestWebInterface(LocalTestCase):
