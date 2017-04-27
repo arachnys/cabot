@@ -23,7 +23,8 @@ order: 1
 
 ### Running tests
 
-    $ docker-compose run --rm web python manage.py test -v2
+    $ docker-compose -f docker-compose-test.yml build
+    $ docker-compose -f docker-compose-test.yml run --rm test
 
 ### Requirements
 
