@@ -46,3 +46,8 @@ services:
 
   db:
     image: postgres
+    volumes:
+      - datavolume:/var/lib/postgresql/data
+
+volumes:
+  datavolume:
