@@ -26,7 +26,7 @@ TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
 URL_PREFIX = os.environ.get('URL_PREFIX', '/').rstrip('/')
 
-LOGIN_URL = reverse_lazy('login')
+LOGIN_URL = os.environ.get('LOGIN_URL', reverse_lazy('login'))
 LOGIN_REDIRECT_URL = reverse_lazy('services')
 
 USE_TZ = True
@@ -272,5 +272,17 @@ AUTH_LDAP = force_bool(os.environ.get('AUTH_LDAP', False))
 if AUTH_LDAP:
     from settings_ldap import *
     AUTHENTICATION_BACKENDS += tuple(['django_auth_ldap.backend.LDAPBackend'])
+
+GITHUB_ENTERPRISE_ORG_AUTH = force_bool(os.environ.get('GITHUB_ENTERPRISE_ORG_AUTH', False))
+if GITHUB_ENTERPRISE_ORG_AUTH:
+    SOCIAL_AUTH_URL_NAMESPACE = 'social'
+    AUTHENTICATION_BACKENDS += tuple(['social_core.backends.github_enterprise.GithubEnterpriseOrganizationOAuth2'])
+    INSTALLED_APPS += tuple(['social_django'])
+    SOCIAL_AUTH_GITHUB_ENTERPRISE_ORG_URL = os.environ.get('GITHUB_ENTERPRISE_ORG_URL')
+    SOCIAL_AUTH_GITHUB_ENTERPRISE_ORG_API_URL = os.environ.get('GITHUB_ENTERPRISE_ORG_API_URL')
+    SOCIAL_AUTH_GITHUB_ENTERPRISE_ORG_KEY = os.environ.get('GITHUB_ENTERPRISE_ORG_KEY')
+    SOCIAL_AUTH_GITHUB_ENTERPRISE_ORG_SECRET = os.environ.get('GITHUB_ENTERPRISE_ORG_SECRET')
+    SOCIAL_AUTH_GITHUB_ENTERPRISE_ORG_NAME = os.environ.get('GITHUB_ENTERPRISE_ORG_NAME')
+    SOCIAL_AUTH_GITHUB_SCOPE = []
 
 EXPOSE_USER_API = force_bool(os.environ.get('EXPOSE_USER_API', False))
