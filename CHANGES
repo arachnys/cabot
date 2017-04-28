@@ -1,6 +1,7 @@
 master
 ------
 
+* Fix bug which caused status graphs to sometimes not render
 * Fix issue with complex recurring calendar - `'vDDDLists' object is not iterable`
 * Fix css regression in logo/title
 
