@@ -226,7 +226,7 @@ class CheckGroupMixin(models.Model):
     @property
     def recent_snapshots(self):
         snapshots = self.snapshots.filter(
-            time__gt=(timezone.now() - timedelta(minutes=60 * 24)))
+            time__gt=(timezone.now() - timedelta(minutes=60 * 24))).order_by("time")
         snapshots = list(snapshots.values())
         for s in snapshots:
             s['time'] = time.mktime(s['time'].timetuple())
