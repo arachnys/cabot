@@ -171,7 +171,7 @@ def append_plugin_urls():
 
 append_plugin_urls()
 
-if settings.GITHUB_ENTERPRISE_ORG_AUTH:
+if settings.AUTH_SOCIAL:
     urlpatterns += [
         url('', include('social_django.urls', namespace='social'))
     ]
