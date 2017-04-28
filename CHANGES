@@ -1,5 +1,5 @@
-master
-------
+Version 0.10.5
+--------------
 
 * Fix bug which caused status graphs to sometimes not render
 * Fix issue with complex recurring calendar - `'vDDDLists' object is not iterable`
