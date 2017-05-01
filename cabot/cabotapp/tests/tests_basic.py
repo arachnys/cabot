@@ -837,6 +837,14 @@ class TestAlerts(LocalTestCase):
         fake_send_alert.assert_called_with(self.service, duty_officers=[], fallback_officers=[])
 
     @patch('cabot.cabotapp.models.send_alert')
+    def test_alert_no_schedule(self, fake_send_alert):
+        """Users only should be alerted if there's no oncall schedule"""
+        self.service.schedules = []
+        self.service.alert()
+        self.assertEqual(fake_send_alert.call_count, 1)
+        fake_send_alert.assert_called_with(self.service)
+
+    @patch('cabot.cabotapp.models.send_alert')
     def test_alert_empty_schedule(self, fake_send_alert):
         """Test service.alert() when there are no UserProfiles for the oncall schedule.
            The fallback officer shouldb be alerted."""
