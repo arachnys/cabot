@@ -185,7 +185,13 @@ class CheckGroupMixin(models.Model):
         self.save()
         self.snapshot.did_send_alert = True
         self.snapshot.save()
-        for schedule in self.schedules.all():
+
+        schedules = self.schedules.all()
+        
+        if not schedules:
+            send_alert(self)
+
+        for schedule in schedules:
             send_alert(self, duty_officers=get_duty_officers(schedule),
                        fallback_officers=get_fallback_officers(schedule))
 

@@ -54,6 +54,7 @@ class LocalTestCase(APITestCase):
         )
         self.user.save()
         self.graphite_check = GraphiteStatusCheck.objects.create(
+            id=10101,
             name='Graphite Check',
             metric='stats.fake.value',
             check_type='<=',
@@ -62,12 +63,14 @@ class LocalTestCase(APITestCase):
             importance=Service.ERROR_STATUS,
         )
         self.jenkins_check = JenkinsStatusCheck.objects.create(
+            id=10102,
             name='Jenkins Check',
             created_by=self.user,
             importance=Service.ERROR_STATUS,
             max_queued_build_time=10,
         )
         self.http_check = HttpStatusCheck.objects.create(
+            id=10103,
             name='Http Check',
             created_by=self.user,
             importance=Service.CRITICAL_STATUS,
@@ -462,6 +465,7 @@ class TestAPI(LocalTestCase):
             address='192.168.0.1',
         )
         pingcheck = ICMPStatusCheck.objects.create(
+            id=10104,
             name='Hello check',
         )
         self.instance.status_checks.add(pingcheck)
@@ -478,7 +482,7 @@ class TestAPI(LocalTestCase):
                     'name': u'Service',
                     'users_to_notify': [],
                     'alerts_enabled': True,
-                    'status_checks': [5, 6, 7],
+                    'status_checks': [10101, 10102, 10103],
                     'alerts': [],
                     'hackpad_id': None,
                     'instances': [],
@@ -491,7 +495,7 @@ class TestAPI(LocalTestCase):
                     'name': u'Hello',
                     'users_to_notify': [],
                     'alerts_enabled': True,
-                    'status_checks': [8],
+                    'status_checks': [10104],
                     'alerts': [],
                     'hackpad_id': None,
                     'address': u'192.168.0.1',
@@ -505,7 +509,7 @@ class TestAPI(LocalTestCase):
                     'importance': u'ERROR',
                     'frequency': 5,
                     'retries': 0,
-                    'id': 5
+                    'id': 10101
                 },
                 {
                     'name': u'Jenkins Check',
@@ -513,7 +517,7 @@ class TestAPI(LocalTestCase):
                     'importance': u'ERROR',
                     'frequency': 5,
                     'retries': 0,
-                    'id': 6
+                    'id': 10102
                 },
                 {
                     'name': u'Http Check',
@@ -521,7 +525,7 @@ class TestAPI(LocalTestCase):
                     'importance': u'CRITICAL',
                     'frequency': 5,
                     'retries': 0,
-                    'id': 7
+                    'id': 10103
                 },
                 {
                     'name': u'Hello check',
@@ -529,7 +533,7 @@ class TestAPI(LocalTestCase):
                     'importance': u'ERROR',
                     'frequency': 5,
                     'retries': 0,
-                    'id': 8
+                    'id': 10104
                 },
             ],
             'graphitestatuscheck': [
@@ -544,7 +548,7 @@ class TestAPI(LocalTestCase):
                     'value': u'9.0',
                     'expected_num_hosts': 0,
                     'expected_num_metrics': 0,
-                    'id': 5
+                    'id': 10101
                 },
             ],
             'httpstatuscheck': [
@@ -561,7 +565,7 @@ class TestAPI(LocalTestCase):
                     'status_code': u'200',
                     'timeout': 10,
                     'verify_ssl_certificate': True,
-                    'id': 7
+                    'id': 10103
                 },
             ],
             'jenkinsstatuscheck': [
@@ -572,7 +576,7 @@ class TestAPI(LocalTestCase):
                     'frequency': 5,
                     'retries': 0,
                     'max_queued_build_time': 10,
-                    'id': 6
+                    'id': 10102
                 },
             ],
             'icmpstatuscheck': [
@@ -582,7 +586,7 @@ class TestAPI(LocalTestCase):
                     'importance': u'ERROR',
                     'frequency': 5,
                     'retries': 0,
-                    'id': 8
+                    'id': 10104
                 },
             ],
         }
@@ -624,7 +628,7 @@ class TestAPI(LocalTestCase):
                     'value': u'2',
                     'expected_num_hosts': 0,
                     'expected_num_metrics': 0,
-                    'id': 5
+                    'id': 10101
                 },
             ],
             'httpstatuscheck': [
@@ -641,7 +645,7 @@ class TestAPI(LocalTestCase):
                     'status_code': u'201',
                     'timeout': 30,
                     'verify_ssl_certificate': True,
-                    'id': 7
+                    'id': 10103
                 },
             ],
             'jenkinsstatuscheck': [
@@ -652,7 +656,7 @@ class TestAPI(LocalTestCase):
                     'frequency': 5,
                     'retries': 0,
                     'max_queued_build_time': 37,
-                    'id': 6
+                    'id': 10102
                 },
             ],
             'icmpstatuscheck': [
@@ -662,7 +666,7 @@ class TestAPI(LocalTestCase):
                     'importance': u'CRITICAL',
                     'frequency': 5,
                     'retries': 0,
-                    'id': 8
+                    'id': 10104
                 },
             ],
         }
@@ -835,6 +839,14 @@ class TestAlerts(LocalTestCase):
         self.service.alert()
         self.assertEqual(fake_send_alert.call_count, 1)
         fake_send_alert.assert_called_with(self.service, duty_officers=[], fallback_officers=[])
+
+    @patch('cabot.cabotapp.models.send_alert')
+    def test_alert_no_schedule(self, fake_send_alert):
+        """Users only should be alerted if there's no oncall schedule"""
+        self.service.schedules = []
+        self.service.alert()
+        self.assertEqual(fake_send_alert.call_count, 1)
+        fake_send_alert.assert_called_with(self.service)
 
     @patch('cabot.cabotapp.models.send_alert')
     def test_alert_empty_schedule(self, fake_send_alert):

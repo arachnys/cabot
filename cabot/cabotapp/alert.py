@@ -35,7 +35,7 @@ class AlertPluginUserData(PolymorphicModel):
         return u'%s' % (self.title)
 
 
-def send_alert(service, duty_officers=None, fallback_officers=None):
+def send_alert(service, duty_officers=[], fallback_officers=[]):
     users = service.users_to_notify.filter(is_active=True)
     for alert in service.alerts.all():
         try:
