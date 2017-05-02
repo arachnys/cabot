@@ -26,7 +26,7 @@ class ElasticsearchSource(MetricsSourceBase):
         help_text='Timeout for queries to this index.'
     )
 
-    _client = None
+    _clients = {}
 
     @property
     def client(self):
@@ -34,13 +34,11 @@ class ElasticsearchSource(MetricsSourceBase):
         Return a global elasticsearch-py client for this ESSource (recommended practice
         for elasticsearch-py).
         """
-        if not self._client:
-            self._client = create_es_client(self.urls, self.timeout)
-        return self._client
+        client_key = '{}_{}'.format(self.urls, self.timeout)
+        client = self._clients.get(client_key)
 
-    def save(self, *args, **kwargs):
-        """
-        If the timeout or urls changes, we need to create a new global client.
-        """
-        self._client = create_es_client(self.urls, self.timeout)
-        super(ElasticsearchSource, self).save(*args, **kwargs)
+        if not client:
+            client = create_es_client(self.urls, self.timeout)
+            self._clients[client_key] = client
+
+        return client
