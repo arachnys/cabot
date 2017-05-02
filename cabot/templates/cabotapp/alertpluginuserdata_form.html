@@ -5,9 +5,9 @@
   <div class="row">
     <div class="col-sm-3 col-md-2 sidebar">
       <ul class="nav nav-sidebar">
-          <li><a href="General">General</a></li>
+          <li><a href="{% url 'update-alert-user-data' user.id 'General' %}">General</a></li>
         {% for alert in alert_preferences %}
-          <li><a href="{{ alert.title }}">{{ alert.title }}</a></li>
+          <li><a href="{% url 'update-alert-user-data' user.id alert.title %}">{{ alert.title }}</a></li>
         {% endfor %}
       </ul>
     </div>
