@@ -34,6 +34,13 @@ class ElasticsearchSource(MetricsSourceBase):
         Return a global elasticsearch-py client for this ESSource (recommended practice
         for elasticsearch-py).
         """
-        if self._client:
-            return self._client
-        return create_es_client(self.urls, self.timeout)
+        if not self._client:
+            self._client = create_es_client(self.urls, self.timeout)
+        return self._client
+
+    def save(self, *args, **kwargs):
+        """
+        If the timeout or urls changes, we need to create a new global client.
+        """
+        self._client = create_es_client(self.urls, self.timeout)
+        super(ElasticsearchSource, self).save(*args, **kwargs)
