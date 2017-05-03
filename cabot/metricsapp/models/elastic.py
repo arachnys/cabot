@@ -43,6 +43,7 @@ class ElasticsearchSource(MetricsSourceBase):
     max_concurrent_searches = models.IntegerField(
         default=settings.ELASTICSEARCH_MAX_CONCURRENT_SEARCHES,
         null=True,
+        blank=True,
         help_text='Maximum concurrent searches the multi search api can run.'
     )
 
