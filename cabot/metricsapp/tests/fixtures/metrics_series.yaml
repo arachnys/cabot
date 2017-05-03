@@ -1,6 +1,4 @@
 error: False
-error_message:
-error_code:
 raw: testing123
 data:
   - series: prod.good.data

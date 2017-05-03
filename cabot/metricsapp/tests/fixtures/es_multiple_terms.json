@@ -1,0 +1,115 @@
+[{
+    "hits": {
+        "hits": [
+        ],
+        "total": 3928,
+        "max_score": 11.412194
+    },
+    "_shards": {
+        "successful": 232,
+        "failed": 0,
+        "total": 232
+    },
+    "took": 988,
+    "aggregations": {
+        "agg": {
+            "buckets": [
+                {
+                    "agg": {
+                        "buckets": [
+                            {
+                                "agg": {
+                                    "buckets": [
+                                        {
+                                            "min": {
+                                                "value": 15.0
+                                            },
+                                            "key_as_string": "2017-04-07T12:00:00.000Z",
+                                            "key": 1491566400000,
+                                            "doc_count": 120
+                                        },
+                                        {
+                                            "min": {
+                                                "value": 15.0
+                                            },
+                                            "key_as_string": "2017-04-07T13:00:00.000Z",
+                                            "key": 1491570000000,
+                                            "doc_count": 228
+                                        }
+                                    ]
+                                },
+                                "key": "west",
+                                "doc_count": 906
+                            },
+                            {
+                                "agg": {
+                                    "buckets": [
+                                        {
+                                            "min": {
+                                                "value": 19.0
+                                            },
+                                            "key_as_string": "2017-04-07T12:00:00.000Z",
+                                            "key": 1491566400000,
+                                            "doc_count": 118
+                                        },
+                                        {
+                                            "min": {
+                                                "value": 13.0
+                                            },
+                                            "key_as_string": "2017-04-07T13:00:00.000Z",
+                                            "key": 1491570000000,
+                                            "doc_count": 196
+                                        }
+                                    ]
+                                },
+                                "key": "east",
+                                "doc_count": 857
+                            }
+                        ],
+                        "sum_other_doc_count": 0,
+                        "doc_count_error_upper_bound": 0
+                    },
+                    "key": "north",
+                    "doc_count": 1763
+                },
+                {
+                    "agg": {
+                        "buckets": [
+                            {
+                                "agg": {
+                                    "buckets": [
+                                        {
+                                            "min": {
+                                                "value": 16.0
+                                            },
+                                            "key_as_string": "2017-04-07T12:00:00.000Z",
+                                            "key": 1491566400000,
+                                            "doc_count": 22
+                                        },
+                                        {
+                                            "min": {
+                                                "value": 15.0
+                                            },
+                                            "key_as_string": "2017-04-07T13:00:00.000Z",
+                                            "key": 1491570000000,
+                                            "doc_count": 36
+                                        }
+                                    ]
+                                },
+                                "key": "west",
+                                "doc_count": 147
+                            }
+                        ],
+                        "sum_other_doc_count": 0,
+                        "doc_count_error_upper_bound": 0
+                    },
+                    "key": "south",
+                    "doc_count": 147
+                }
+            ],
+            "sum_other_doc_count": 0,
+            "doc_count_error_upper_bound": 0
+        }
+    },
+    "timed_out": false
+}]

@@ -1,0 +1,187 @@
+[{
+    "hits": {
+        "hits": [
+            {
+                "_score": 11.410242,
+                "_type": "metrics-event",
+                "_id": "a",
+                "_index": "meddlesome-metrics"
+            },
+            {
+                "_score": 11.410242,
+                "_type": "metrics-event",
+                "_id": "b",
+                "_index": "meddlesome-metrics"
+            },
+            {
+                "_score": 11.410242,
+                "_type": "metrics-event",
+                "_id": "c",
+                "_index": "meddlesome-metrics"
+            },
+            {
+                "_score": 11.410242,
+                "_type": "metrics-event",
+                "_id": "d",
+                "_index": "meddlesome-metrics"
+            },
+            {
+                "_score": 11.410242,
+                "_type": "metrics-event",
+                "_id": "e",
+                "_index": "meddlesome-metrics"
+            },
+            {
+                "_score": 11.410242,
+                "_type": "metrics-event",
+                "_id": "f",
+                "_index": "meddlesome-metrics"
+            },
+            {
+                "_score": 11.410242,
+                "_type": "metrics-event",
+                "_id": "g",
+                "_index": "meddlesome-metrics"
+            },
+            {
+                "_score": 11.410242,
+                "_type": "metrics-event",
+                "_id": "h",
+                "_index": "meddlesome-metrics"
+            },
+            {
+                "_score": 11.410242,
+                "_type": "metrics-event",
+                "_id": "i",
+                "_index": "meddlesome-metrics"
+            },
+            {
+                "_score": 11.410242,
+                "_type": "metrics-event",
+                "_id": "j",
+                "_index": "meddlesome-metrics"
+            }
+        ],
+        "total": 3200,
+        "max_score": 11.410242
+    },
+    "_shards": {
+        "successful": 608,
+        "failed": 0,
+        "total": 608
+    },
+    "took": 123,
+    "aggregations": {
+        "agg": {
+            "buckets": [
+                {
+                    "agg": {
+                        "buckets": [
+                            {
+                                "max": {
+                                    "value": 17.602
+                                },
+                                "min": {
+                                    "value": 17.603
+                                },
+                                "key_as_string": "2017-04-07T12:00:00.000Z",
+                                "key": 1491566400000,
+                                "doc_count": 238
+                            },
+                            {
+                                "max": {
+                                    "value": 15.953
+                                },
+                                "min": {
+                                    "value": 15.954
+                                },
+                                "key_as_string": "2017-04-07T13:00:00.000Z",
+                                "key": 1491570000000,
+                                "doc_count": 424
+                            },
+                            {
+                                "max": {
+                                    "value": 18.296
+                                },
+                                "min": {
+                                    "value": 17.297
+                                },
+                                "key_as_string": "2017-04-07T14:00:00.000Z",
+                                "key": 1491573600000,
+                                "doc_count": 501
+                            },
+                            {
+                                "max": {
+                                    "value": 14.242
+                                },
+                                "min": {
+                                    "value": 14.243
+                                },
+                                "key_as_string": "2017-04-07T15:00:00.000Z",
+                                "key": 1491577200000,
+                                "doc_count": 600
+                            }
+                        ]
+                    },
+                    "key": "maroon",
+                    "doc_count": 3920
+                },
+                {
+                    "agg": {
+                        "buckets": [
+                            {
+                                "max": {
+                                    "value": 12.220
+                                },
+                                "min": {
+                                    "value": 12.221
+                                },
+                                "key_as_string": "2017-04-07T12:00:00.000Z",
+                                "key": 1491566400000,
+                                "doc_count": 22
+                            },
+                            {
+                                "max": {
+                                    "value": 14.490
+                                },
+                                "min": {
+                                    "value": 14.491
+                                },
+                                "key_as_string": "2017-04-07T13:00:00.000Z",
+                                "key": 1491570000000,
+                                "doc_count": 36
+                            },
+                            {
+                                "max": {
+                                    "value": 14.400
+                                },
+                                "min": {
+                                    "value": 14.401
+                                },
+                                "key_as_string": "2017-04-07T14:00:00.000Z",
+                                "key": 1491573600000,
+                                "doc_count": 40
+                            },
+                            {
+                                "max": {
+                                    "value": 17.460
+                                },
+                                "min": {
+                                    "value": 17.461
+                                },
+                                "key_as_string": "2017-04-07T15:00:00.000Z",
+                                "key": 1491577200000,
+                                "doc_count": 49
+                            }
+                        ]
+                    },
+                    "key": "gold",
+                    "doc_count": 109
+                }
+            ],
+            "sum_other_doc_count": 0,
+            "doc_count_error_upper_bound": 0
+        }
+    },
+    "timed_out": false
+}]
