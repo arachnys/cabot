@@ -143,7 +143,7 @@ urlpatterns = [
         view=AlertTestView.as_view(), name='alert-test'),
      url(r'^alert-test-plugin/$',
         view=AlertTestPluginView.as_view(), name='alert-test-plugin'),
-     url(r'^plugins/(?P<plugin_name>.+)/$',
+     url(r'^plugin-settings/(?P<plugin_name>.+)/$',
         view=PluginSettingsView.as_view(), name='plugin-settings'),
      url(r'^user/(?P<pk>\d+)/profile/(?P<alerttype>.+)/',
         view=UserProfileUpdateAlert.as_view(), name='update-alert-user-data'),

@@ -1,6 +1,7 @@
 master
 ------
 
+* Fix plugin urls being overridden by plugin settings urls
 * Fix profile settings sidebar links not working
 
 Version 0.10.5
