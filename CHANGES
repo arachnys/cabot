@@ -1,6 +1,8 @@
 master
 ------
 
+* Update slack alert plugin
+  - Now shows an "acknowledge" button within slack
 * Fix alert tests not triggering if:
   - A user had acknowledged working on the service
   - A legitimate alert had been sent recently
