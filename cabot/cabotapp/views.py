@@ -699,19 +699,22 @@ class AlertTestView(LoginRequiredMixin, View):
 
         This should ensure we never alert anyone except the user triggering the alert test.
         """
-        service.users_to_notify.clear()
-        service.users_to_notify.add(user)
-        service.unexpired_acknowledgements().delete()
-        Shift.objects.update(deleted=True)
-        UserProfile.objects.update(fallback_alert_user=False)
-        Shift(
-            start=timezone.now() - timedelta(days=1),
-            end=timezone.now() + timedelta(days=1),
-            uid='test-shift',
-            last_modified=timezone.now(),
-            user=user
-        ).save()
-        service.alert()
+        with transaction.atomic():
+            sid = transaction.savepoint()
+            service.users_to_notify.clear()
+            service.users_to_notify.add(user)
+            service.unexpired_acknowledgements().delete()
+            Shift.objects.update(deleted=True)
+            UserProfile.objects.update(fallback_alert_user=False)
+            Shift(
+                start=timezone.now() - timedelta(days=1),
+                end=timezone.now() + timedelta(days=1),
+                uid='test-shift',
+                last_modified=timezone.now(),
+                user=user
+            ).save()
+            service.alert()
+            transaction.savepoint_rollback(sid)
 
     def post(self, request):
         form = AlertTestForm(request.POST)
