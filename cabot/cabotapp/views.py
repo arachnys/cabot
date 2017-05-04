@@ -692,7 +692,7 @@ class AlertTestPluginForm(AlertTestForm):
 
 
 class AlertTestView(LoginRequiredMixin, View):
-    def trigger_alert_to_user(self, service, user):
+    def trigger_alert_to_user(self, service, user, old_status, new_status):
         """
         Clear out all service users and duty shifts, and disable all fallback users.
         Then add a single shift for this user, and add this user to users-to-notify.
@@ -701,6 +701,14 @@ class AlertTestView(LoginRequiredMixin, View):
         """
         with transaction.atomic():
             sid = transaction.savepoint()
+            service.update_status()
+            service.overall_status = new_status
+            service.old_overall_status = old_status
+            service.last_alert_sent = None
+
+            check = StatusCheck(name='ALERT_TEST', calculated_status=service.overall_status)
+            check.save()
+            service.status_checks.add(check)
             service.users_to_notify.clear()
             service.users_to_notify.add(user)
             service.unexpired_acknowledgements().delete()
@@ -722,21 +730,7 @@ class AlertTestView(LoginRequiredMixin, View):
         if form.is_valid():
             data = form.clean()
             service = data['service']
-
-            with transaction.atomic():
-                sid = transaction.savepoint()
-                service.update_status()
-                check = StatusCheck(name='ALERT_TEST', calculated_status=data['new_status'])
-                check.save()
-                service.status_checks.add(check)
-
-                service.overall_status = data['new_status']
-                service.old_overall_status = data['old_status']
-                service.last_alert_sent = None
-
-                self.trigger_alert_to_user(service, request.user)
-
-                transaction.savepoint_rollback(sid)
+            self.trigger_alert_to_user(service, request.user, data['old_status'], data['new_status'])
 
             return JsonResponse({"result": "ok"})
         return JsonResponse({"result": "error"}, status=400)
@@ -755,17 +749,8 @@ class AlertTestPluginView(AlertTestView):
                 service = Service.objects.create(
                     name='test-alert-service'
                 )
-                check = StatusCheck(name='ALERT_TEST', calculated_status=data['new_status'])
-                check.save()
-                service.status_checks.add(check)
                 service.alerts.add(data['alert_plugin'])
-                service.update_status()
-
-                service.overall_status = data['new_status']
-                service.old_overall_status = data['old_status']
-                service.last_alert_sent = None
-
-                self.trigger_alert_to_user(service, request.user)
+                self.trigger_alert_to_user(service, request.user, data['old_status'], data['new_status'])
 
                 transaction.savepoint_rollback(sid)
 
