@@ -1,5 +1,5 @@
-master
-------
+Version 0.10.7
+--------------
 
 * Update slack alert plugin
   - Now shows an "acknowledge" button within slack
