@@ -1,7 +1,8 @@
-master
-------
+Version 0.10.6
+--------------
 
 * Fix plugin urls being overridden by plugin settings urls
+  - This fixes e.g. the twilio callback url not working
 * Fix profile settings sidebar links not working
 
 Version 0.10.5
