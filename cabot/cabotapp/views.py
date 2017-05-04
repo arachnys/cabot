@@ -702,11 +702,19 @@ class AlertTestView(LoginRequiredMixin, View):
         with transaction.atomic():
             sid = transaction.savepoint()
             service.update_status()
+            service.status_checks.update(active=False)
             service.overall_status = new_status
             service.old_overall_status = old_status
             service.last_alert_sent = None
 
-            check = StatusCheck(name='ALERT_TEST', calculated_status=service.overall_status)
+            check = StatusCheck(name='ALERT_TEST')
+            check.save()
+            StatusCheckResult.objects.create(
+                status_check=check,
+                time=timezone.now(),
+                time_complete=timezone.now(),
+                succeeded=new_status == Service.PASSING_STATUS)
+            check.last_run = timezone.now()
             check.save()
             service.status_checks.add(check)
             service.users_to_notify.clear()
