@@ -171,6 +171,11 @@ def append_plugin_urls():
 
 append_plugin_urls()
 
+if settings.AUTH_SOCIAL:
+    urlpatterns += [
+        url('', include('social_django.urls', namespace='social'))
+    ]
+
 if settings.URL_PREFIX.strip('/'):
     urlpatterns = [
         url(r'^%s/' % settings.URL_PREFIX.strip('/'), include(urlpatterns))

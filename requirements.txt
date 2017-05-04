@@ -38,6 +38,7 @@ redis==2.10.5
 requests==2.13.0
 rjsmin==1.0.12
 six==1.10.0
+social-auth-app-django==1.1.0
 twilio==5.7.0
 uritemplate==3.0.0
 vine==1.1.3
