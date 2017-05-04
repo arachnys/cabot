@@ -701,6 +701,7 @@ class AlertTestView(LoginRequiredMixin, View):
         """
         service.users_to_notify.clear()
         service.users_to_notify.add(user)
+        service.unexpired_acknowledgements().delete()
         Shift.objects.update(deleted=True)
         UserProfile.objects.update(fallback_alert_user=False)
         Shift(
@@ -728,6 +729,7 @@ class AlertTestView(LoginRequiredMixin, View):
 
                 service.overall_status = data['new_status']
                 service.old_overall_status = data['old_status']
+                service.last_alert_sent = None
 
                 self.trigger_alert_to_user(service, request.user)
 
@@ -758,6 +760,7 @@ class AlertTestPluginView(AlertTestView):
 
                 service.overall_status = data['new_status']
                 service.old_overall_status = data['old_status']
+                service.last_alert_sent = None
 
                 self.trigger_alert_to_user(service, request.user)
 

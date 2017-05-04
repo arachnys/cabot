@@ -1,6 +1,9 @@
 master
 ------
 
+* Fix alert tests not triggering if:
+  - A user had acknowledged working on the service
+  - A legitimate alert had been sent recently
 * Add support for GitHub OAuth logins
   - See http://cabotapp.com/use/users.html
 
