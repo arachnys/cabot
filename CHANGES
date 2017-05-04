@@ -1,3 +1,9 @@
+master
+------
+
+* Add support for GitHub OAuth logins
+  - See http://cabotapp.com/use/users.html
+
 Version 0.10.6
 --------------
 
