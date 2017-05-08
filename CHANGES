@@ -1,3 +1,8 @@
+master
+------
+
+* Update to django 1.11 (with working django-polymorphic this time)
+
 Version 0.10.7
 --------------
 
