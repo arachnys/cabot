@@ -1,6 +1,7 @@
+import distutils
 import os
 import ldap
-from django_auth_ldap.config import LDAPSearch, GroupOfNamesType
+from django_auth_ldap.config import LDAPSearch, PosixGroupType
 
 
 # Baseline configuration.
@@ -18,3 +19,14 @@ AUTH_LDAP_USER_ATTR_MAP = {
     'last_name': 'sn',
     'email': 'mail',
 }
+
+AUTH_LDAP_ALWAYS_UPDATE_USER = bool(distutils.util.strtobool(os.environ.get('AUTH_LDAP_ALWAYS_UPDATE_USER', 'True')))
+AUTH_LDAP_GROUP_TYPE = PosixGroupType()
+AUTH_LDAP_GROUP_SEARCH = LDAPSearch(os.environ.get('AUTH_LDAP_GROUP_SEARCH', 'ou=group,dc=example,dc=com'), ldap.SCOPE_SUBTREE, "(objectClass=posixGroup)")
+
+AUTH_LDAP_USER_FLAGS_BY_GROUP = {}
+for user_flag in ["is_active", "is_staff", "is_superuser"]:
+    env_variable = "AUTH_LDAP_USER_FLAGS_BY_GROUP_{user_flag}".format(user_flag=user_flag.upper())
+    value = os.environ.get(env_variable)
+    if value:
+        AUTH_LDAP_USER_FLAGS_BY_GROUP[user_flag] = value
