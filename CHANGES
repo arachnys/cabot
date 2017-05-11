@@ -1,5 +1,5 @@
-master
-------
+Version 0.10.8
+--------------
 
 * Update slack alert to 0.8.1
   - fixes names not linking
