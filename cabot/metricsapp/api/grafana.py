@@ -2,6 +2,7 @@ import json
 import logging
 import requests
 import urlparse
+from datetime import datetime
 from django.core.exceptions import ValidationError
 from pytimeparse import parse
 
@@ -73,6 +74,40 @@ def get_panel_choices(dashboard_info, templating_dict):
     return panels
 
 
+def get_panel_info(dashboard_info, panel_id):
+    """
+    Get info from the Grafana API response for a certain panel
+    :param dashboard_info: Dashboard data from the Grafana API
+    :param panel_id: unique ID for the panel
+    :return: panel information
+    """
+    for row in dashboard_info['dashboard']['rows']:
+        # There should only be one panel with this id
+        panels_with_id = filter(lambda p: p['id'] == panel_id, row['panels'])
+        if len(panels_with_id) == 1:
+            return panels_with_id[0]
+
+
+def get_updated_datetime(dashboard_info):
+    """
+    Get a datetime representing when the dashboard was last updated:
+    :param dashboard_info: Dashboard data from the Grafana API
+    :return: datetime
+    """
+    last_updated = dashboard_info['meta']['updated']
+    return datetime.strptime(last_updated, '%Y-%m-%dT%H:%M:%SZ')
+
+
+def get_series_ids(panel_info):
+    """
+    Get a string containing all series ids for a panel
+    :param panel_info: information about a panel
+    :return: string containin panel ref ids separated by underscores
+    """
+    series_ids = [series['refId'] for series in panel_info['targets']]
+    return '_'.join(series_ids)
+
+
 def get_series_choices(panel_info, templating_dict):
     """
     Get a list of the series for the panel with the input id
@@ -130,13 +165,15 @@ def create_generic_templating_dict(dashboard_info):
     return templates
 
 
-def get_status_check_fields(dashboard_info, panel_info, grafana_instance_id, datasource, templating_dict):
+def get_status_check_fields(dashboard_info, panel_info, grafana_instance_id, datasource, templating_dict,
+                            grafana_panel):
     """
     Given dashboard, panel, instance, and datasource info, find the fields for a generic status check
     :param dashboard_info: Grafana API dashboard info
     :param panel_info: Grafana API panel info
     :param grafana_instance_id: ID of the Grafana instance used
     :param templating_dict: dictionary of {template_name, template _value}
+    :param grafana_panel: GrafanaPanel object id
     :return: dictionary containing StatusCheck field names and values
     """
     fields = {}
@@ -164,6 +201,8 @@ def get_status_check_fields(dashboard_info, panel_info, grafana_instance_id, dat
             fields['warning_value'] = float(threshold['value'])
         elif color == 'critical':
             fields['high_alert_value'] = float(threshold['value'])
+
+    fields['grafana_panel'] = grafana_panel
 
     return fields
 

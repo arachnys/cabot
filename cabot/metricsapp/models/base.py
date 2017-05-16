@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from cabot.cabotapp.models import CHECK_TYPES, Service, StatusCheck
 from cabot.metricsapp.api import run_metrics_check
@@ -26,7 +27,7 @@ class MetricsStatusCheckBase(StatusCheck):
         (Service.CRITICAL_STATUS, 'Critical'),
     )
 
-    source = models.ForeignKey(MetricsSourceBase)
+    source = models.ForeignKey('MetricsSourceBase')
     check_type = models.CharField(
         choices=CHECK_TYPES,
         max_length=30
@@ -52,6 +53,16 @@ class MetricsStatusCheckBase(StatusCheck):
     time_range = models.IntegerField(
         default=30,
         help_text='Time range in minutes the check gathers data for.',
+    )
+    grafana_panel = models.ForeignKey(
+        'GrafanaPanel',
+        null=True
+    )
+    auto_sync = models.NullBooleanField(
+        default=True,
+        null=True,
+        help_text='For Grafana status checks--should Cabot poll Grafana for dashboard updates and automatically '
+                  'update the check?'
     )
 
     def _run(self):
@@ -79,3 +90,7 @@ class MetricsStatusCheckBase(StatusCheck):
         :return the parsed data
         """
         raise NotImplementedError('MetricsStatusCheckBase has no data source.')
+
+    def get_url_for_check(self):
+        """Get the url for viewing this check"""
+        return '{}://{}/check/{}/'.format(settings.WWW_SCHEME, settings.WWW_HTTP_HOST, self.id)

@@ -1,6 +1,6 @@
 from django import forms
 from cabot.cabotapp.views import StatusCheckForm
-from cabot.metricsapp.models import GrafanaInstance, GrafanaDataSource
+from cabot.metricsapp.models import GrafanaInstance, GrafanaDataSource, GrafanaPanel
 
 
 # Model forms for admin site
@@ -100,10 +100,12 @@ class GrafanaStatusCheckForm(StatusCheckForm):
                 self.fields[field_name].initial = field_value
                 self.fields[field_name].help_text += ' Autofilled from the Grafana dashboard.'
 
-        # Store fields for the source, which will be set in save()
+        # Store fields that will be set in save()
         source_info = fields['source_info']
         self.grafana_source_name = source_info['grafana_source_name']
         self.grafana_instance_id = source_info['grafana_instance_id']
+
+        self.grafana_panel = GrafanaPanel.objects.get(id=fields['grafana_panel'])
 
     def save(self):
         # set the MetricsSourceBase here so we don't have to display it
@@ -113,6 +115,7 @@ class GrafanaStatusCheckForm(StatusCheckForm):
             grafana_source_name=self.grafana_source_name,
             grafana_instance_id=self.grafana_instance_id,
         ).metrics_source_base
+        model.grafana_panel = self.grafana_panel
 
         model.save()
         return model
