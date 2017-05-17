@@ -1,6 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.test import TestCase
-from cabot.metricsapp.api import build_query, template_response, validate_query, create_elasticsearch_templating_dict
+from cabot.metricsapp.api import build_query, template_response, validate_query, \
+    create_elasticsearch_templating_dict, get_es_status_check_fields
 from .test_elasticsearch import get_json_file
 
 
@@ -50,6 +51,22 @@ class TestGrafanaQueryBuilder(TestCase):
         with self.assertRaises(ValidationError) as e:
             build_query(series, min_time='now-30m')
             self.assertEqual(e.exception, 'geohash_grid aggregation not supported.')
+
+    def test_get_es_status_check_fields(self):
+        dashboard_info = get_json_file('../grafana/dashboard_detail_response.json')
+
+        status_check_fields = []
+        for row in dashboard_info['dashboard']['rows']:
+            for panel in row['panels']:
+                status_check_fields.append(get_es_status_check_fields(dashboard_info, panel, ['B']))
+
+        expected_queries = get_json_file('grafana/query_builder/get_es_status_check_fields_queries.json')
+        expected_fields = [dict(queries=expected_queries[0])]
+        # Second panel doesn't have a 'B' series
+        expected_fields.append(dict())
+        expected_fields.append(dict(queries=expected_queries[1]))
+
+        self.assertEqual(status_check_fields, expected_fields)
 
 
 class TestGrafanaTemplating(TestCase):
