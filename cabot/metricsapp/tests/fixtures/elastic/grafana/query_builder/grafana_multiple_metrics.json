@@ -1,0 +1,31 @@
+{
+  "bucketAggs": [
+    {
+      "field": "@timestamp",
+      "id": "2",
+      "settings": {
+        "interval": "10m",
+        "min_doc_count": 0,
+        "trimEdges": 0
+      },
+      "type": "date_histogram"
+    }
+  ],
+  "dsType": "elasticsearch",
+  "metrics": [
+    {
+      "field": "value",
+      "id": "1",
+      "type": "sum"
+    },
+    {
+      "field": "timing",
+      "id": "2",
+      "type": "sum"
+    }
+  ],
+  "query": "request.test:affirm AND event_name:mriffa",
+  "refId": "A",
+  "timeField": "@timestamp"
+}
+

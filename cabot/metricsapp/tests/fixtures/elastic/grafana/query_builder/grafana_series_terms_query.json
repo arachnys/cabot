@@ -1,0 +1,63 @@
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "query_string": {
+            "analyze_wildcard": true,
+            "query": "name:affirm.a.metric"
+          }
+        },
+        {
+          "range": {
+            "@timestamp": {
+              "gte": "now-100m"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "aggs": {
+    "agg": {
+      "terms": {
+        "field": "grouper",
+        "order": {
+          "_term": "desc"
+        },
+        "min_doc_count": 1,
+        "size": 20
+      },
+      "aggs": {
+        "agg": {
+          "terms": {
+            "field": "flounder",
+            "order": {
+              "_term": "desc"
+            },
+            "min_doc_count": 1
+          },
+          "aggs": {
+            "agg": {
+              "date_histogram": {
+                "field": "@timestamp",
+                "interval": "20m",
+                "extended_bounds": {
+                  "min": "now-100m",
+                  "max": "now"
+                }
+              },
+              "aggs": {
+                "avg": {
+                  "avg": {
+                    "field": "timing"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

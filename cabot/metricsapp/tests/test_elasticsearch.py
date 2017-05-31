@@ -1,4 +1,5 @@
 import json
+import os
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.test import TestCase
@@ -9,7 +10,6 @@ from cabot.cabotapp.models import Service
 from cabot.metricsapp.api import validate_query
 from cabot.metricsapp.defs import ES_VALIDATION_MSG_PREFIX
 from cabot.metricsapp.models import ElasticsearchSource, ElasticsearchStatusCheck
-from cabot.metricsapp.tests.test_metrics_base import get_content
 
 
 class TestElasticsearchSource(TestCase):
@@ -46,29 +46,31 @@ def empty_es_response(*args):
     return Response(Search(), [])
 
 
-def get_es(file):
-    return json.loads(get_content(file))
+def get_json_file(file):
+    path = os.path.join(os.path.dirname(__file__), 'fixtures/elastic/{}'.format(file))
+    with open(path) as f:
+        return json.loads(f.read())
 
 
 def fake_es_response(*args):
-    return [Response(Search(), response) for response in get_es('es_response.json')]
+    return [Response(Search(), response) for response in get_json_file('es_response.json')]
 
 
 def fake_es_multiple_metrics_terms(*args):
-    return [Response(Search(), response) for response in get_es('es_multiple_metrics_terms.json')]
+    return [Response(Search(), response) for response in get_json_file('es_multiple_metrics_terms.json')]
 
 
 def fake_es_percentile(*args):
-    return [Response(Search(), response) for response in get_es('es_percentile.json')]
+    return [Response(Search(), response) for response in get_json_file('es_percentile.json')]
 
 
 def fake_es_multiple_terms(*args):
-    return [Response(Search(), response) for response in get_es('es_multiple_terms.json')]
+    return [Response(Search(), response) for response in get_json_file('es_multiple_terms.json')]
 
 
 def fake_es_multiple_queries(*args):
-    return [Response(Search(), response) for response in get_es('es_response.json')] + \
-           [Response(Search(), response) for response in get_es('es_percentile.json')]
+    return [Response(Search(), response) for response in get_json_file('es_response.json')] + \
+           [Response(Search(), response) for response in get_json_file('es_percentile.json')]
 
 
 def mock_time():
@@ -104,7 +106,7 @@ class TestElasticsearchStatusCheck(TestCase):
         # Test output series
         series = self.es_check.get_series()
         self.assertFalse(series['error'])
-        self.assertEqual(series['raw'], get_es('es_response.json'))
+        self.assertEqual(series['raw'], get_json_file('es_response.json'))
         data = series['data']
         self.assertEqual(len(data), 1)
 
@@ -145,7 +147,7 @@ class TestElasticsearchStatusCheck(TestCase):
         self.es_check.high_alert_value = 18
         series = self.es_check.get_series()
         self.assertFalse(series['error'])
-        self.assertEqual(series['raw'], get_es('es_multiple_metrics_terms.json'))
+        self.assertEqual(series['raw'], get_json_file('es_multiple_metrics_terms.json'))
 
         data = series['data']
         self.assertEqual(len(data), 4)
@@ -177,7 +179,7 @@ class TestElasticsearchStatusCheck(TestCase):
     def test_percentile(self):
         series = self.es_check.get_series()
         self.assertFalse(series['error'])
-        self.assertEqual(series['raw'], get_es('es_percentile.json'))
+        self.assertEqual(series['raw'], get_json_file('es_percentile.json'))
 
         data = series['data']
         self.assertEqual(len(data), 3)
@@ -200,7 +202,7 @@ class TestElasticsearchStatusCheck(TestCase):
     def test_multiple_terms(self):
         series = self.es_check.get_series()
         self.assertFalse(series['error'])
-        self.assertEqual(series['raw'], get_es('es_multiple_terms.json'))
+        self.assertEqual(series['raw'], get_json_file('es_multiple_terms.json'))
 
         data = series['data']
         self.assertEqual(len(data), 3)
@@ -223,7 +225,7 @@ class TestElasticsearchStatusCheck(TestCase):
 
         series = self.es_check.get_series()
         self.assertFalse(series['error'])
-        self.assertEqual(series['raw'], get_es('es_response.json'))
+        self.assertEqual(series['raw'], get_json_file('es_response.json'))
         data = series['data']
         self.assertEqual(len(data), 1)
 
@@ -236,7 +238,7 @@ class TestElasticsearchStatusCheck(TestCase):
     def test_multiple_queries(self):
         series = self.es_check.get_series()
         self.assertFalse(series['error'])
-        self.assertEqual(series['raw'], get_es('es_response.json') + get_es('es_percentile.json'))
+        self.assertEqual(series['raw'], get_json_file('es_response.json') + get_json_file('es_percentile.json'))
 
         data = series['data']
         # 1 from es_response, 3 from es_percentile
