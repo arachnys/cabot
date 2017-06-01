@@ -1,9 +1,10 @@
 import logging
-import json
+from collections import defaultdict
 from elasticsearch_dsl import Search, A
 from elasticsearch_dsl.query import Range
 from django.core.exceptions import ValidationError
 from cabot.metricsapp.defs import ES_SUPPORTED_METRICS, ES_TIME_RANGE, ES_DEFAULT_INTERVAL
+from .grafana import template_response
 
 
 logger = logging.getLogger(__name__)
@@ -114,25 +115,15 @@ def build_query(series, min_time=ES_TIME_RANGE, default_interval=ES_DEFAULT_INTE
     :param default_interval: default for the group by interval
     :return: Elasticsearch json query
     """
-    search = Search().query('query_string', query=series['query'], analyze_wildcard=True) \
+    query = series.get('query')
+    # If there's no specified query, query for everything
+    if query is None:
+        query = '*'
+
+    search = Search().query('query_string', query=query, analyze_wildcard=True) \
         .query(Range(** {series['timeField']: {'gte': min_time}}))
     _add_aggs(search.aggs, series, min_time, default_interval)
     return search.to_dict()
-
-
-def template_response(data, templating_dict):
-    """
-    Change the panel info from the Grafana dashboard API response
-    based on the dashboard templates
-    :param data: any string portion of the response from the Grafana API
-    :param templating_info: dictionary of {template_name, output_value}
-    :return: panel_info with all templating values filled in
-    """
-    data = json.dumps(data)
-    # Loop through all the templates and replace them if they're used in this panel
-    for name, value in templating_dict.iteritems():
-        data = data.replace('${}'.format(name), value)
-    return json.loads(data)
 
 
 def create_elasticsearch_templating_dict(dashboard_info):
@@ -168,3 +159,36 @@ def create_elasticsearch_templating_dict(dashboard_info):
             templates[template_name] = template_value
 
     return templates
+
+
+def get_es_status_check_fields(dashboard_info, panel_info, series_list):
+    """
+    Get the fields necessary to create an ElasticsearchStatusCheck (that aren't in a generic
+    MetricsStatusCheck).
+    :param dashboard_info: all info for a dashboard from the Grafana API
+    :param panel_info: info about the panel we're alerting off of from the Grafana API
+    :param series_list: the series the user selected to use
+    :return dictionary of the required ElasticsearchStatusCheck fields (queries)
+    """
+    fields = defaultdict(list)
+
+    templating_dict = create_elasticsearch_templating_dict(dashboard_info)
+    series_list = [s for s in panel_info['targets'] if s['refId'] in series_list]
+    min_time = dashboard_info['dashboard']['time']['from']
+    default_interval = panel_info.get('interval')
+
+    if default_interval is not None:
+        # interval can be in format (>1h, <10m, etc.). Get rid of symbols
+        templated_interval = str(template_response(default_interval, templating_dict))
+        default_interval = filter(str.isalnum, templated_interval)
+
+    for series in series_list:
+        templated_series = template_response(series, templating_dict)
+        if default_interval is not None and default_interval != 'auto':
+            query = build_query(templated_series, min_time=min_time, default_interval=default_interval)
+        else:
+            query = build_query(templated_series, min_time=min_time)
+
+        fields['queries'].append(query)
+
+    return fields

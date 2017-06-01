@@ -31,9 +31,9 @@ class ElasticsearchSource(MetricsSourceBase):
         max_length=50,
         default='*',
         help_text=escape('Elasticsearch index name. Can include wildcards ("*") or date math expressions '
-                  '("<static_name{date_math_expr{date_format|time_zone}}\>"). For example, an index could be '
-                  '"<metrics-{now/d}>,<metrics-{now/d-1d}>", resolving to "metrics-yyyy-mm-dd,metrics-yyyy-mm-dd", '
-                  'for the past 2 days of metrics.'),
+                         '("<static_name{date_math_expr{date_format|time_zone}}\>"). For example, an index could be '
+                         '"<metrics-{now/d}>,<metrics-{now/d-1d}>", resolving to "metrics-yyyy-mm-dd,'
+                         'metrics-yyyy-mm-dd", for the past 2 days of metrics.'),
     )
     timeout = models.IntegerField(
         default=settings.ELASTICSEARCH_TIMEOUT,
