@@ -3,6 +3,7 @@ from collections import defaultdict
 from elasticsearch_dsl import Search, A
 from elasticsearch_dsl.query import Range
 from django.core.exceptions import ValidationError
+from pytimeparse import parse
 from cabot.metricsapp.defs import ES_SUPPORTED_METRICS, ES_TIME_RANGE, ES_DEFAULT_INTERVAL
 from .grafana import template_response
 
@@ -21,11 +22,15 @@ def _get_terms_settings(agg):
     settings = agg['settings']
     order_by = settings.get('orderBy')
     if order_by:
+        # Grafana indicates sub-aggregation ordering by a number representing the aggregation
+        if order_by.isdigit():
+            raise ValidationError('Ordering by sub-aggregations not supported.')
+
         terms_settings['order'] = {order_by: settings['order']}
 
     # size 0 in Grafana is equivalent to no size setting in an Elasticsearch query
     size = int(settings.get('size') or 0)
-    if size and int(size) > 0:
+    if size and size > 0:
         terms_settings['size'] = int(size)
 
     min_doc_count = settings.get('min_doc_count')
@@ -192,3 +197,29 @@ def get_es_status_check_fields(dashboard_info, panel_info, series_list):
         fields['queries'].append(query)
 
     return fields
+
+
+def adjust_time_range(queries, time_range):
+    """
+    Adjust the range setting of a list of queries to a new minimum value (so
+    we're not fetching a ton of unused data)
+    :param queries: list of ES json queries
+    :param time_range: time range for the status check
+    :return: the new query
+    """
+    minimum = '{}m'.format(time_range)
+
+    for n, query in enumerate(queries):
+        # Find the minimum range value and set it
+        for m, subquery in enumerate(query['query']['bool']['must']):
+            range = subquery.get('range')
+            if range is not None:
+                # There should only be one value in range
+                for value in range:
+                    time_field = value
+                curr_minimum = range[time_field]['gte']
+                if parse(minimum) != parse(curr_minimum):
+                    query['query']['bool']['must'][m]['range'][time_field]['gte'] = 'now-{}'.format(minimum)
+                    queries[n] = query
+
+    return queries

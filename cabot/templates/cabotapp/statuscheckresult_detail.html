@@ -55,6 +55,8 @@ for s in window.DATA
   label = s.series
   labels.push label
   for point in s.datapoints
+    if point[1] == 'NaN'
+      point[1] = 0
     tmp = {}
     tmp['time'] = point[0]*1000
     tmp[label] = point[1]
