@@ -1,6 +1,7 @@
 import json
 import logging
 import requests
+import urlparse
 from django.core.exceptions import ValidationError
 from pytimeparse import parse
 
@@ -165,3 +166,19 @@ def get_status_check_fields(dashboard_info, panel_info, grafana_instance_id, dat
             fields['high_alert_value'] = float(threshold['value'])
 
     return fields
+
+
+def get_panel_url(instance_url, dashboard_uri, panel_id, templating_dict):
+    """
+    Get the Grafana URL for a specified panel
+    :param instance_url: URL for the Grafana instance
+    :param dashboard_uri: db/dashboard-name
+    :param panel_id: letter identifying the panel
+    :param templating_dict: generic templating dict
+    """
+    uri = '/dashboard-solo/{}?panelId={}'.format(dashboard_uri, panel_id)
+    for template_name, template_value in templating_dict.iteritems():
+        for value in template_value.split(', '):
+            uri = '{}&var-{}={}'.format(uri, template_name, value)
+
+    return urlparse.urljoin(instance_url, uri)

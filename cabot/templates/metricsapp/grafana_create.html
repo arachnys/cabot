@@ -9,6 +9,9 @@
       {% else %}
         <h2>New Status Check from Grafana</h2>
       {% endif %}
+      {% if panel_url %}
+        <iframe src="{{ panel_url }}" width="100%" height="300" frameborder="0"></iframe>
+      {% endif %}
     </div>
   </div>
 </div>
