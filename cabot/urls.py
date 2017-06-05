@@ -28,8 +28,9 @@ from cabot.cabotapp.views import (
 
 from cabot.metricsapp.views import (
     GrafanaInstanceSelectView, GrafanaDashboardSelectView,
-    GrafanaPanelSelectView, GrafanaElasticsearchStatusCheckCreateView,
-    GrafanaSeriesSelectView
+    GrafanaPanelSelectView, GrafanaSeriesSelectView,
+    GrafanaElasticsearchStatusCheckCreateView, GrafanaElasticsearchStatusCheckUpdateView,
+    GrafanaElasticsearchStatusCheckRefreshView, GrafanaEditView
 )
 from cabot import rest_urls
 
@@ -126,12 +127,25 @@ urlpatterns = patterns('',
     url(r'^schedule/update/(?P<pk>\d+)/', view=ScheduleUpdateView.as_view(), name='update-schedule'),
     url(r'^schedule/delete/(?P<pk>\d+)/', view=ScheduleDeleteView.as_view(), name='delete-schedule'),
 
-    url(r'^grafana/instance/', view=GrafanaInstanceSelectView.as_view(), name='grafana-instance-select'),
-    url(r'^grafana/dashboard/', view=GrafanaDashboardSelectView.as_view(), name='grafana-dashboard-select'),
-    url(r'^grafana/panel/', view=GrafanaPanelSelectView.as_view(), name='grafana-panel-select'),
-    url(r'^grafana/series/', view=GrafanaSeriesSelectView.as_view(), name='grafana-series-select'),
-    url(r'^grafana/elasticsearch/create/', view=GrafanaElasticsearchStatusCheckCreateView.as_view(),
+    url(r'^grafana/instance/$', view=GrafanaInstanceSelectView.as_view(), name='grafana-instance-select'),
+    url(r'^grafana/dashboard/$', view=GrafanaDashboardSelectView.as_view(), name='grafana-dashboard-select'),
+    url(r'^grafana/panel/$', view=GrafanaPanelSelectView.as_view(), name='grafana-panel-select'),
+    url(r'^grafana/series/$', view=GrafanaSeriesSelectView.as_view(), name='grafana-series-select'),
+    url(r'^grafana/edit/(?P<pk>\d+)/', view=GrafanaEditView.as_view(), name='grafana-edit'),
+    url(r'^grafana/elasticsearch/create/$', view=GrafanaElasticsearchStatusCheckCreateView.as_view(),
         name='grafana-es-create'),
+    url(r'^grafana/elasticsearch/update/(?P<pk>\d+)/', view=GrafanaElasticsearchStatusCheckUpdateView.as_view(),
+        name='grafana-es-update'),
+    url(r'^grafana/elasticsearch/refresh/(?P<pk>\d+)/', view=GrafanaElasticsearchStatusCheckRefreshView.as_view(),
+        name='grafana-es-refresh'),
+    url(r'^grafana/refresh/(?P<pk>\d+)/', view=GrafanaInstanceSelectView.as_view(),
+        name='grafana-refresh'),
+    url(r'^grafana/dashboard/(?P<pk>\d+)/', view=GrafanaDashboardSelectView.as_view(),
+        name='grafana-dashboard-select'),
+    url(r'^grafana/panel/(?P<pk>\d+)/', view=GrafanaPanelSelectView.as_view(),
+        name='grafana-panel-select'),
+    url(r'^grafana/series/(?P<pk>\d+)/', view=GrafanaSeriesSelectView.as_view(),
+        name='grafana-series-select'),
 
     # Comment below line to disable browsable rest api
     url(r'^api-auth/',

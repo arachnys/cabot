@@ -4,10 +4,18 @@
 <div class="row">
   <div class="col-xs-12">
     <div class="col-xs-10 col-xs-offset-2">
-      {% if check_type %}
-        <h2>New {{ check_type }} Status Check from Grafana</h2>
+      {% if form.instance.id %}
+        {% if check_type %}
+          <h2>Update {{ check_type }} Status Check from Grafana</h2>
+        {% else %}
+          <h2>Update Status Check from Grafana</h2>
+        {% endif %}
       {% else %}
-        <h2>New Status Check from Grafana</h2>
+        {% if check_type %}
+          <h2>New {{ check_type }} Status Check from Grafana</h2>
+        {% else %}
+          <h2>New Status Check from Grafana</h2>
+        {% endif %}
       {% endif %}
       {% if panel_url %}
         <iframe src="{{ panel_url }}" width="100%" height="300" frameborder="0"></iframe>
@@ -24,6 +32,11 @@
         <button type="submit" class="btn btn-primary">Submit</button>
         <a href="{% url "dashboard" %}" class="btn">Back to dashboard</a>
       </div>
+      {% if form.instance.id %}
+      <div class="col-xs-4">
+        <a class="btn btn-danger" href="{% url "delete-check" form.instance.id %}">Delete check</a>
+      </div>
+      {% endif %}
     </div>
   </div>
 </form>

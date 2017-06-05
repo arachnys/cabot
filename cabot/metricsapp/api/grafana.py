@@ -3,7 +3,6 @@ import logging
 import requests
 import urlparse
 from datetime import datetime
-from django.core.exceptions import ValidationError
 from pytimeparse import parse
 from urlparse import urljoin
 
@@ -168,7 +167,7 @@ def create_generic_templating_dict(dashboard_info):
     return templates
 
 
-def get_status_check_fields(dashboard_info, panel_info, grafana_instance_id, datasource, templating_dict,
+def get_status_check_fields(dashboard_info, panel_info, grafana_data_source, templating_dict,
                             grafana_panel):
     """
     Given dashboard, panel, instance, and datasource info, find the fields for a generic status check
@@ -182,8 +181,7 @@ def get_status_check_fields(dashboard_info, panel_info, grafana_instance_id, dat
     fields = {}
 
     fields['name'] = template_response(panel_info['title'], templating_dict)
-    fields['source_info'] = dict(grafana_source_name=datasource,
-                                 grafana_instance_id=grafana_instance_id)
+    fields['source'] = grafana_data_source.metrics_source_base
 
     # Earliest time should be formatted "now-3h", all other formats will be ignored
     time_from = dashboard_info['dashboard']['time']['from'].split('-')

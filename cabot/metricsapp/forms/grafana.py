@@ -23,11 +23,17 @@ class GrafanaInstanceForm(forms.Form):
         help_text='Grafana site instance to select a dashboard from.'
     )
 
+    def __init__(self, *args, **kwargs):
+        default_grafana_instance = kwargs.pop('default_grafana_instance')
+        if default_grafana_instance is not None:
+            self.fields['grafana_instance'].initial = default_grafana_instance
+
 
 class GrafanaDashboardForm(forms.Form):
     """Select a Grafana dashboard to use for a status check"""
     def __init__(self, *args, **kwargs):
         dashboards = kwargs.pop('dashboards')
+        default_dashboard = kwargs.pop('default_dashboard')
         super(GrafanaDashboardForm, self).__init__(*args, **kwargs)
 
         self.fields['dashboard'] = forms.ChoiceField(
@@ -35,17 +41,25 @@ class GrafanaDashboardForm(forms.Form):
             help_text='Grafana dashboard to use for the check.'
         )
 
+        if default_dashboard is not None:
+            self.fields['dashboard'].initial = default_dashboard
+
 
 class GrafanaPanelForm(forms.Form):
     """Select a Grafana panel to use for a status check"""
     def __init__(self, *args, **kwargs):
         panels = kwargs.pop('panels')
+        default_panel_id = kwargs.pop('default_panel_id')
         super(GrafanaPanelForm, self).__init__(*args, **kwargs)
 
         self.fields['panel'] = forms.ChoiceField(
             choices=panels,
             help_text='Grafana panel to use for the check.'
         )
+
+        if default_panel_id is not None:
+            default_panel = next(panel for panel in panels if panel[0]['panel_id'] == default_panel_id)
+            self.fields['panel'].initial = default_panel[0]
 
     def clean_panel(self):
         """Make sure the data source for the panel is supported"""
@@ -64,6 +78,7 @@ class GrafanaSeriesForm(forms.Form):
     """Select the series to use for a status check"""
     def __init__(self, *args, **kwargs):
         series = kwargs.pop('series')
+        default_series = kwargs.pop('default_series')
         super(GrafanaSeriesForm, self).__init__(*args, **kwargs)
 
         self.fields['series'] = forms.MultipleChoiceField(
@@ -71,6 +86,9 @@ class GrafanaSeriesForm(forms.Form):
             widget=forms.CheckboxSelectMultiple,
             help_text='Data series to use in the check.'
         )
+
+        if default_series is not None:
+            self.fields['series'].initial = default_series
 
     def clean_series(self):
         """Make sure at least one series is selected."""
@@ -101,21 +119,23 @@ class GrafanaStatusCheckForm(StatusCheckForm):
                 self.fields[field_name].help_text += ' Autofilled from the Grafana dashboard.'
 
         # Store fields that will be set in save()
-        source_info = fields['source_info']
-        self.grafana_source_name = source_info['grafana_source_name']
-        self.grafana_instance_id = source_info['grafana_instance_id']
-
+        self.source = fields['source']
         self.grafana_panel = GrafanaPanel.objects.get(id=fields['grafana_panel'])
 
     def save(self):
         # set the MetricsSourceBase here so we don't have to display it
         model = super(GrafanaStatusCheckForm, self).save(commit=False)
 
-        model.source = GrafanaDataSource.objects.get(
-            grafana_source_name=self.grafana_source_name,
-            grafana_instance_id=self.grafana_instance_id,
-        ).metrics_source_base
+        model.source = self.source
         model.grafana_panel = self.grafana_panel
 
         model.save()
         return model
+
+
+class GrafanaStatusCheckUpdateForm(StatusCheckForm):
+    """Update a status check created from Grafana"""
+    def __init__(self, *args, **kwargs):
+        super(GrafanaStatusCheckUpdateForm, self).__init__(*args, **kwargs)
+        # Hide name field
+        self.fields['name'].widget = forms.TextInput(attrs=dict(readonly='readonly', style='width:50%'))

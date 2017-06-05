@@ -81,6 +81,10 @@
 </div>
 <hr>
 
+{% include 'cabotapp/_statuscheck_list.html' with checks=service.elasticsearch_status_checks.all service=service checks_type="Elasticsearch" %}
+
+<hr>
+
 {% include 'cabotapp/_statuscheck_list.html' with checks=service.graphite_status_checks.all service=service checks_type="Graphite" %}
 
 <hr>

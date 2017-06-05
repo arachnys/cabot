@@ -1,3 +1,4 @@
 from .grafana import GrafanaInstanceSelectView, GrafanaDashboardSelectView, GrafanaPanelSelectView, \
-    GrafanaSeriesSelectView
-from .grafana_elastic import GrafanaElasticsearchStatusCheckCreateView
+    GrafanaSeriesSelectView, GrafanaEditView
+from .grafana_elastic import GrafanaElasticsearchStatusCheckCreateView, GrafanaElasticsearchStatusCheckUpdateView, \
+    GrafanaElasticsearchStatusCheckRefreshView

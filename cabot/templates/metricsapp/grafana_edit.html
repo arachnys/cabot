@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="col-xs-12">
+  <h2><a class="btn btn-primary" href="{% url update_url pk=pk %}">Edit check fields</a></h2>
+  Change the check's type, warning or high alert values, time range, frequency, retry count, etc.
+</div>
+
+<div class="col-xs-12">
+  <h2><a class="btn btn-primary" href="{% url "grafana-refresh" pk=pk %}">Update check from Grafana</a></h2>
+  Go through the entire flow of creating a check from Grafana. Resets all values to the defaults from the graph.
+</div>
+{% endblock %}
