@@ -14,7 +14,6 @@ django-filter==1.0.2
 django-jsonify==0.3.0
 django-polymorphic==1.2
 djangorestframework==3.6.2
-freezegun==0.3.8
 gevent==1.2.1
 greenlet==0.4.12
 gunicorn==19.7.1
