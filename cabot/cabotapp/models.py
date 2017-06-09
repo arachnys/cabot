@@ -8,10 +8,13 @@ from .jenkins import get_job_status
 from .alert import (send_alert, AlertPluginUserData)
 from .influx import parse_metric
 from .tasks import update_service, update_instance
+from cabot.cabotapp.models_plugins import HipchatInstance
+
 from collections import defaultdict
 from datetime import timedelta
 from django.utils import timezone
 from icalendar import Calendar
+
 
 import json
 import re
@@ -140,6 +143,17 @@ class CheckGroupMixin(models.Model):
         verbose_name='Recovery instructions',
         help_text='Gist, Hackpad or Refheap js embed with recovery instructions e.g. '
                   'https://you.hackpad.com/some_document.js'
+    )
+    hipchat_instance = models.ForeignKey(
+        'HipchatInstance',
+        null=True,
+        blank=True,
+        help_text='Hipchat instance to send Hipchat alerts to (can be none if Hipchat alerts disabled).'
+    )
+    hipchat_room_id = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text='Id of the Hipchat room to be alerted for this service (can be none).'
     )
 
     def __unicode__(self):
