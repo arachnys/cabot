@@ -1,0 +1,43 @@
+[
+  {
+    "id": 1,
+    "title": "Awesome Dashboard",
+    "uri": "db\/awesome-dashboard",
+    "type": "dash-db",
+    "tags": [
+      "thebest",
+      "infrastructure"
+    ],
+    "isStarred": false
+  },
+  {
+    "id": 2,
+    "title": "Really Really Good Dashboard",
+    "uri": "db\/really-really-good-dashboard",
+    "type": "dash-db",
+    "tags": [
+      "monitoring"
+    ],
+    "isStarred": false
+  },
+  {
+    "id": 3,
+    "title": "Also Great Dashboard",
+    "uri": "db\/also-great-dashboard",
+    "type": "dash-db",
+    "tags": [
+      
+    ],
+    "isStarred": false
+  },
+  {
+    "id": 123454321,
+    "title": "Only Ok Dashboard",
+    "uri": "db\/only-ok-dashboard",
+    "type": "dash-db",
+    "tags": [
+      
+    ],
+    "isStarred": false
+  }
+]

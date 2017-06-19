@@ -1,0 +1,565 @@
+{
+  "meta": {
+    "isStarred": true,
+    "type": "db",
+    "canSave": true,
+    "canEdit": true,
+    "canStar": true,
+    "slug": "web",
+    "expires": "0004-03-03T00:00:00Z",
+    "created": "2013-01-24T00:00:00Z",
+    "updated": "2017-02-01T00:00:00Z",
+    "updatedBy": "admin",
+    "createdBy": "admin",
+    "version": 513 
+  },
+  "dashboard": {
+    "annotations": {
+      "list": [
+        
+      ]
+    },
+    "editMode": false,
+    "editable": true,
+    "gnetId": null,
+    "graphTooltip": 1,
+    "hideControls": false,
+    "id": 95,
+    "links": [
+      
+    ],
+    "refresh": false,
+    "rows": [
+      {
+        "collapse": false,
+        "height": "250px",
+        "panels": [
+          {
+            "aliasColors": {
+              
+            },
+            "bars": false,
+            "datasource": "deep-thought",
+            "fill": 1,
+            "id": 1,
+            "legend": {
+              "avg": false,
+              "current": false,
+              "max": false,
+              "min": false,
+              "show": true,
+              "total": false,
+              "values": false
+            },
+            "lines": true,
+            "linewidth": 1,
+            "links": [
+              
+            ],
+            "nullPointMode": "null",
+            "percentage": false,
+            "pointradius": 5,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [
+              {
+                "alias": "42",
+                "yaxis": 2
+              }
+            ],
+            "span": 6,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+              {
+                "alias": "42",
+                "bucketAggs": [
+                  {
+                    "field": "@timestamp",
+                    "id": "2",
+                    "settings": {
+                      "interval": "$group_by",
+                      "min_doc_count": 0,
+                      "trimEdges": 0
+                    },
+                    "type": "date_histogram"
+                  }
+                ],
+                "dsType": "elasticsearch",
+                "metrics": [
+                  {
+                    "field": "value",
+                    "id": "1",
+                    "meta": {
+
+                    },
+                    "settings": {
+
+                    },
+                    "type": "sum"
+                  }
+                ],
+                "query": "query:life-the-universe-and-everything",
+                "refId": "B",
+                "timeField": "@timestamp"
+              }
+            ],
+            "thresholds": [
+              {
+                "colorMode": "critical",
+                "fill": true,
+                "line": true,
+                "op": "gt",
+                "value": 1
+              },
+              {
+                "colorMode": "warning",
+                "op": "gt",
+                "value": 0
+              }
+            ],
+            "timeFrom": null,
+            "timeShift": null,
+            "title": "42",
+            "tooltip": {
+              "shared": true,
+              "sort": 0,
+              "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+              "mode": "time",
+              "name": null,
+              "show": true,
+              "values": [
+                
+              ]
+            },
+            "yaxes": [
+              {
+                "format": "short",
+                "label": "42",
+                "logBase": 1,
+                "max": null,
+                "min": "0",
+                "show": true
+              }
+            ]
+          },
+          {
+            "aliasColors": {
+
+            },
+            "bars": false,
+            "datasource": "shallow-thought",
+            "fill": 1,
+            "id": 5,
+            "legend": {
+              "alignAsTable": true,
+              "avg": false,
+              "current": false,
+              "max": false,
+              "min": false,
+              "rightSide": true,
+              "show": true,
+              "total": false,
+              "values": false
+            },
+            "lines": true,
+            "linewidth": 1,
+            "links": [
+
+            ],
+            "nullPointMode": "null",
+            "percentage": false,
+            "pointradius": 5,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [
+              {
+                "alias": "al",
+                "yaxis": 2
+              }
+            ],
+            "span": 6,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+              {
+                "alias": "al",
+                "bucketAggs": [
+                  {
+                    "fake": true,
+                    "field": "@timestamp",
+                    "id": "3",
+                    "settings": {
+                      "interval": "$group_by",
+                      "min_doc_count": 0,
+                      "trimEdges": 0
+                    },
+                    "type": "date_histogram"
+                  }
+                ],
+                "dsType": "elasticsearch",
+                "metrics": [
+                  {
+                    "field": "count",
+                    "id": "1",
+                    "meta": {
+
+                    },
+                    "settings": {
+
+                    },
+                    "type": "sum"
+                  }
+                ],
+                "query": "query:who-cares",
+                "refId": "A",
+                "timeField": "@timestamp"
+              }
+            ],
+            "thresholds": [
+              {
+                "colorMode": "warning",
+                "op": "lt",
+                "value": 100
+              }
+            ],
+            "timeFrom": null,
+            "timeShift": null,
+            "title": "Pct $percentile_1",
+            "tooltip": {
+              "shared": true,
+              "sort": 0,
+              "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+              "mode": "time",
+              "name": null,
+              "show": true,
+              "values": [
+
+              ]
+            },
+            "yaxes": [
+              {
+                "format": "short",
+                "label": "",
+                "logBase": 1,
+                "max": null,
+                "min": null,
+                "show": true
+              },
+              {
+                "format": "short",
+                "label": "",
+                "logBase": 1,
+                "max": null,
+                "min": null,
+                "show": false
+              }
+            ]
+          }
+        ],
+        "repeat": null,
+        "repeatIteration": null,
+        "repeatRowId": null,
+        "showTitle": false,
+        "title": "Dashboard Row",
+        "titleSize": "h6"
+      },
+      {
+        "collapse": false,
+        "height": 250,
+        "panels": [
+          {
+            "aliasColors": {
+            },
+            "bars": false,
+            "datasource": "ds",
+            "fill": 0,
+            "id": 3,
+            "legend": {
+              "avg": false,
+              "current": false,
+              "max": false,
+              "min": false,
+              "show": true,
+              "total": false,
+              "values": false
+            },
+            "lines": true,
+            "linewidth": 1,
+            "links": [
+            ],
+            "nullPointMode": "null",
+            "percentage": false,
+            "pointradius": 5,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [
+              {
+                "alias": "2",
+                "yaxis": 2
+              },
+              {
+                "alias": "1",
+                "yaxis": 1
+              }
+            ],
+            "span": 6,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+              {
+                "bucketAggs": [
+                  {
+                    "fake": true,
+                    "field": "wrigley",
+                    "id": "3",
+                    "settings": {
+                      "min_doc_count": 1,
+                      "size": "20"
+                    },
+                    "type": "terms"
+                  },
+                  {
+                    "field": "@timestamp",
+                    "id": "2",
+                    "settings": {
+                      "interval": "$group_by",
+                      "min_doc_count": 0,
+                      "trimEdges": 0
+                    },
+                    "type": "date_histogram"
+                  }
+                ],
+                "dsType": "elasticsearch",
+                "metrics": [
+                  {
+                    "field": "timing",
+                    "id": "1",
+                    "meta": {
+                    },
+                    "settings": {
+                      "percents": [
+                        "$percentile_1"
+                      ]
+                    },
+                    "type": "percentiles"
+                  }
+                ],
+                "query": "name:the-goat AND module:$module",
+                "refId": "B",
+                "timeField": "@timestamp"
+              }
+            ],
+            "thresholds": [
+            ],
+            "timeFrom": null,
+            "timeShift": null,
+            "title": "Panel 106",
+            "tooltip": {
+              "shared": true,
+              "sort": 0,
+              "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+              "mode": "time",
+              "name": null,
+              "show": true,
+              "values": [
+              ]
+            },
+            "yaxes": [
+              {
+                "format": "ms",
+                "label": "",
+                "logBase": 10,
+                "max": null,
+                "min": null,
+                "show": true
+              },
+              {
+                "format": "ms",
+                "label": "",
+                "logBase": 10,
+                "max": null,
+                "min": null,
+                "show": true
+              }
+            ]
+          }
+        ],
+        "repeat": null,
+        "repeatIteration": null,
+        "repeatRowId": null,
+        "showTitle": false,
+        "title": "Dashboard Row",
+        "titleSize": "h6"
+      }
+    ],
+    "schemaVersion": 14,
+    "style": "dark",
+    "tags": [
+      
+    ],
+    "templating": {
+      "list": [
+        {
+          "allValue": null,
+          "current": {
+            "text": "All",
+            "value": [
+              "module"
+            ]
+          },
+          "datasource": "who-cares",
+          "hide": 0,
+          "includeAll": true,
+          "label": "Module",
+          "multi": true,
+          "name": "module",
+          "options": [
+            
+          ],
+          "query": "query",
+          "refresh": 1,
+          "regex": "",
+          "sort": 0,
+          "tagValuesQuery": "",
+          "tags": [
+            
+          ],
+          "tagsQuery": "",
+          "type": "query",
+          "useTags": false
+        },
+        {
+          "auto": true,
+          "auto_count": 30,
+          "auto_min": "10s",
+          "current": {
+            "text": "1m",
+            "value": "1m"
+          },
+          "hide": 0,
+          "label": "Group By",
+          "name": "group_by",
+          "options": [
+            {
+              "selected": false,
+              "text": "auto",
+              "value": "$__auto_interval"
+            },
+            {
+              "selected": true,
+              "text": "1m",
+              "value": "1m"
+            },
+            {
+              "selected": false,
+              "text": "10m",
+              "value": "10m"
+            },
+            {
+              "selected": false,
+              "text": "30m",
+              "value": "30m"
+            }
+          ],
+          "query": "1m,10m,30m",
+          "refresh": 2,
+          "type": "interval"
+        },
+        {
+          "allValue": null,
+          "current": {
+            "selected": true,
+            "text": "75",
+            "value": "75"
+          },
+          "hide": 0,
+          "includeAll": false,
+          "label": "Percentile (Left)",
+          "multi": false,
+          "name": "percentile_1",
+          "options": [
+            {
+              "selected": false,
+              "text": "50",
+              "value": "50"
+            },
+            {
+              "selected": true,
+              "text": "75",
+              "value": "75"
+            },
+            {
+              "selected": false,
+              "text": "90",
+              "value": "90"
+            },
+            {
+              "selected": false,
+              "text": "95",
+              "value": "95"
+            },
+            {
+              "selected": false,
+              "text": "99",
+              "value": "99"
+            }
+          ],
+          "query": "50,75,90,95,99",
+          "type": "custom"
+        },
+        {
+          "datasource": "ds",
+          "filters": [
+            
+          ],
+          "hide": 0,
+          "label": "Ad-hoc Filters",
+          "name": "filters",
+          "type": "adhoc"
+        }
+      ]
+    },
+    "time": {
+      "from": "now-3h",
+      "to": "now"
+    },
+    "timepicker": {
+      "refresh_intervals": [
+        "5s",
+        "10s",
+        "30s",
+        "1m",
+        "5m",
+        "15m",
+        "30m",
+        "1h",
+        "2h",
+        "1d"
+      ],
+      "time_options": [
+        "5m",
+        "15m",
+        "1h",
+        "6h",
+        "12h",
+        "24h",
+        "2d",
+        "7d",
+        "30d"
+      ]
+    },
+    "timezone": "browser",
+    "title": "Also Great Dashboard",
+    "version": 95
+  }
+}

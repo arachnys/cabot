@@ -1,0 +1,98 @@
+[
+  [
+    {
+      "query": {
+        "bool": {
+          "must": [
+            {
+              "query_string": {
+                "analyze_wildcard": true,
+                "query": "query:life-the-universe-and-everything"
+              }
+            },
+            {
+              "range": {
+                "@timestamp": {
+                  "gte": "now-3h"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "aggs": {
+        "agg": {
+          "date_histogram": {
+            "field": "@timestamp",
+            "interval": "1m",
+            "extended_bounds": {
+              "max": "now",
+              "min": "now-3h"
+            }
+          },
+          "aggs": {
+            "sum": {
+              "sum": {
+                "field": "value"
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  [
+    {
+      "query": {
+        "bool": {
+          "must": [
+            {
+              "query_string": {
+                "analyze_wildcard": true,
+                "query": "name:the-goat AND module:(module)"
+              }
+            },
+            {
+              "range": {
+                "@timestamp": {
+                  "gte": "now-3h"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "aggs": {
+        "agg": {
+          "terms": {
+            "field": "wrigley",
+            "min_doc_count": 1,
+            "size": 20
+          },
+          "aggs": {
+            "agg": {
+              "date_histogram": {
+                "field": "@timestamp",
+                "interval": "1m",
+                "extended_bounds": {
+                  "max": "now",
+                  "min": "now-3h"
+                }
+              },
+              "aggs": {
+                "percentiles": {
+                  "percentiles": {
+                    "field": "timing",
+                    "percents": [
+                      "75"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+]
