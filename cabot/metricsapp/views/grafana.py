@@ -4,7 +4,7 @@ from django.shortcuts import render
 from django.views.generic import View
 from cabot.cabotapp.views import LoginRequiredMixin
 from cabot.metricsapp.api import get_dashboard_info, get_dashboards, get_dashboard_choices, get_panel_choices, \
-    get_series_choices, create_generic_templating_dict
+    get_series_choices, create_generic_templating_dict, get_panel_url
 from cabot.metricsapp.forms import GrafanaInstanceForm, GrafanaDashboardForm, GrafanaPanelForm, \
     GrafanaSeriesForm
 from cabot.metricsapp.models import GrafanaDataSource, ElasticsearchSource, GrafanaInstance
@@ -57,6 +57,7 @@ class GrafanaDashboardSelectView(LoginRequiredMixin, View):
             instance = GrafanaInstance.objects.get(id=instance_id)
 
             dashboard_info = get_dashboard_info(instance, dashboard_uri)
+            request.session['dashboard_uri'] = dashboard_uri
             request.session['dashboard_info'] = dashboard_info
             request.session['templating_dict'] = create_generic_templating_dict(dashboard_info)
 
@@ -105,7 +106,12 @@ class GrafanaSeriesSelectView(LoginRequiredMixin, View):
             return HttpResponseRedirect(reverse(url))
 
         form = self.form_class(series=series)
-        return render(request, self.template_name, {'form': form, 'check_type': 'Elasticsearch'})
+        panel_url = get_panel_url(GrafanaInstance.objects.get(id=request.session['instance_id']).url,
+                                  request.session['dashboard_uri'],
+                                  request.session['panel_id'],
+                                  request.session['templating_dict'])
+        return render(request, self.template_name, {'form': form, 'check_type': 'Elasticsearch',
+                                                    'panel_url': panel_url})
 
     def post(self, request, *args, **kwargs):
         form = self.form_class(request.POST, series=get_series_choices(request.session['panel_info'],
@@ -119,7 +125,11 @@ class GrafanaSeriesSelectView(LoginRequiredMixin, View):
 
             return HttpResponseRedirect(reverse(url))
 
-        return render(request, self.template_name, {'form': form})
+        panel_url = get_panel_url(GrafanaInstance.objects.get(id=request.session['instance_id']).url,
+                                  request.session['dashboard_uri'],
+                                  request.session['panel_id'],
+                                  request.session['templating_dict'])
+        return render(request, self.template_name, {'form': form, 'panel_url': panel_url})
 
     def get_url_for_check_type(self, instance_id, datasource):
         """

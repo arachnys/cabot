@@ -3,7 +3,7 @@ import os
 from django.test import TestCase
 from mock import patch
 from cabot.metricsapp.api import get_dashboard_choices, get_panel_choices, create_generic_templating_dict, \
-    get_series_choices, get_status_check_fields
+    get_series_choices, get_status_check_fields, get_panel_url
 from cabot.metricsapp.models import GrafanaInstance
 
 
@@ -134,3 +134,14 @@ class TestGrafanaApiRequests(TestCase):
     def test_get_request(self, fake_get):
         self.grafana_instance.get_request('index.html')
         fake_get.assert_called_once_with('http://test.url/index.html')
+
+
+class TestPanelUrl(TestCase):
+    def test_panel_url_creation(self):
+        dashboard_info = get_json_file('dashboard_detail_response.json')
+        templating_dict = create_generic_templating_dict(dashboard_info)
+
+        panel_url = get_panel_url('https://grafana-site.com', 'db/dddashboard', 1, templating_dict)
+
+        self.assertEqual(panel_url, 'https://grafana-site.com/dashboard-solo/db/dddashboard?panelId=1'
+                                    '&var-percentile_1=75&var-group_by=1m&var-module=module')

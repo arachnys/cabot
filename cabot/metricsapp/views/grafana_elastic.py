@@ -3,8 +3,9 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.views.generic import View
 from cabot.cabotapp.views import LoginRequiredMixin
-from cabot.metricsapp.api import get_es_status_check_fields, get_status_check_fields
+from cabot.metricsapp.api import get_es_status_check_fields, get_status_check_fields, get_panel_url
 from cabot.metricsapp.forms import GrafanaElasticsearchStatusCheckForm
+from cabot.metricsapp.models import GrafanaInstance
 
 
 class GrafanaElasticsearchStatusCheckCreateView(LoginRequiredMixin, View):
@@ -23,7 +24,12 @@ class GrafanaElasticsearchStatusCheckCreateView(LoginRequiredMixin, View):
                                                               datasource, templating_dict),
                                es_fields=get_es_status_check_fields(dashboard_info, panel_info, series))
 
-        return render(request, self.template_name, {'form': form, 'check_type': 'Elasticsearch'})
+        panel_url = get_panel_url(GrafanaInstance.objects.get(id=instance_id).url,
+                                  request.session['dashboard_uri'],
+                                  request.session['panel_id'],
+                                  templating_dict)
+        return render(request, self.template_name, {'form': form, 'check_type': 'Elasticsearch',
+                                                    'panel_url': panel_url})
 
     def post(self, request, *args, **kwargs):
         dashboard_info = request.session['dashboard_info']
@@ -42,4 +48,9 @@ class GrafanaElasticsearchStatusCheckCreateView(LoginRequiredMixin, View):
             check = form.save()
             return HttpResponseRedirect(reverse('check', kwargs={'pk': check.id}))
 
-        return render(request, self.template_name, {'form': form, 'check_type': 'Elasticsearch'})
+        panel_url = get_panel_url(GrafanaInstance.objects.get(id=instance_id).url,
+                                  request.session['dashboard_uri'],
+                                  request.session['panel_id'],
+                                  templating_dict)
+        return render(request, self.template_name, {'form': form, 'check_type': 'Elasticsearch',
+                                                    'panel_url': panel_url})
