@@ -68,6 +68,20 @@ class ElasticsearchStatusCheck(MetricsStatusCheckBase):
     class Meta:
         app_label = 'metricsapp'
 
+    @property
+    def description(self):
+        desc = []
+        if self.warning_value is not None:
+            desc.append('Warning: {} {}'.format(self.check_type, self.warning_value))
+        if self.high_alert_value is not None:
+            desc.append('{}: {} {}'.format(self.high_alert_importance.title(), self.check_type, self.high_alert_value))
+        return '; '.join(desc)
+
+    metrics_update_url = 'grafana-es-update'
+    refresh_url = 'grafana-es-refresh'
+
+    icon = 'glyphicon glyphicon-stats'
+
     queries = models.TextField(
         max_length=10000,
         help_text='List of raw json Elasticsearch queries. Format: [q] or [q1, q2, ...]. '
@@ -201,3 +215,7 @@ class ElasticsearchStatusCheck(MetricsStatusCheckBase):
 
             else:
                 raise NotImplementedError('Unsupported metric: {}.'.format(metric))
+
+    def set_fields_from_grafana(self, fields):
+        self.queries = json.dumps(fields['queries'])
+        super(ElasticsearchStatusCheck, self).set_fields_from_grafana(fields)

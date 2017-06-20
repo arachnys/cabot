@@ -25,6 +25,14 @@ class DummyStatusCheck(MetricsStatusCheckBase):
     class Meta:
         app_label = 'dummyapp'
 
+    @property
+    def description(self):
+        return 'Test check--should never fail'
+
+    update_url = 'check'
+
+    icon = 'glyphicon glyphicon-remove'
+
     counter = models.IntegerField(default=0)
 
     def get_series(self):

@@ -4,7 +4,7 @@ from datetime import datetime
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.test import TestCase
-from mock import patch
+from mock import patch, Mock
 from cabot.metricsapp.api import get_dashboard_choices, get_panel_choices, create_generic_templating_dict, \
     get_series_choices, get_status_check_fields, get_panel_url, get_series_ids, get_updated_datetime, get_panel_info
 from cabot.metricsapp.models import ElasticsearchStatusCheck, ElasticsearchSource, GrafanaDataSource, \
@@ -98,28 +98,31 @@ class TestGrafanaApiParsing(TestCase):
         self.assertEqual(series_choices, expected_series_choices)
 
     def test_get_status_check_fields(self):
+        grafana_data_source = Mock()
+        grafana_data_source.metrics_source_base = 'datasource'
+
         status_check_fields = []
         for row in self.dashboard_info['dashboard']['rows']:
             for panel in row['panels']:
-                status_check_fields.append(get_status_check_fields(self.dashboard_info, panel, 1, 'datasource',
+                status_check_fields.append(get_status_check_fields(self.dashboard_info, panel, grafana_data_source,
                                                                    self.templating_dict, 1))
 
         expected_fields = [
             dict(name='42',
-                 source_info=dict(grafana_source_name='datasource', grafana_instance_id=1),
+                 source='datasource',
                  time_range=180,
                  high_alert_value=1.0,
                  check_type='>',
                  grafana_panel=1,
                  warning_value=0.0),
             dict(name='Pct 75',
-                 source_info=dict(grafana_source_name='datasource', grafana_instance_id=1),
+                 source='datasource',
                  time_range=180,
                  warning_value=100.0,
                  grafana_panel=1,
                  check_type='<'),
             dict(name='Panel 106',
-                 source_info=dict(grafana_source_name='datasource', grafana_instance_id=1),
+                 source='datasource',
                  grafana_panel=1,
                  time_range=180)
         ]

@@ -213,6 +213,9 @@ class CheckGroupMixin(models.Model):
     def jenkins_status_checks(self):
         return self.status_checks.filter(polymorphic_ctype__model='jenkinsstatuscheck')
 
+    def elasticsearch_status_checks(self):
+        return self.status_checks.filter(polymorphic_ctype__model='elasticsearchstatuscheck')
+
     def active_graphite_status_checks(self):
         return self.graphite_status_checks().filter(active=True)
 
@@ -508,6 +511,17 @@ class ICMPStatusCheck(StatusCheck):
     def check_category(self):
         return "ICMP/Ping Check"
 
+    @property
+    def description(self):
+        instances = self.instance_set.all()
+        if len(instances) > 0:
+            return 'ICMP Reply from {}'.format(self.instance_set.all()[0].address)
+        return 'ICMP Reply'
+
+    update_url = 'update-icmp-check'
+
+    icon = 'glyphicon glyphicon-transfer'
+
     def _run(self):
         result = StatusCheckResult(check=self)
         instances = self.instance_set.all()
@@ -539,6 +553,17 @@ class GraphiteStatusCheck(StatusCheck):
     @property
     def check_category(self):
         return "Metric check"
+
+    @property
+    def description(self):
+        desc = ['{} {} {}'.format(self.metric[:70], self.check_type, self.value)]
+        if self.expected_num_hosts is not None:
+            desc.append(' from {} hosts'.format(self.expected_num_hosts))
+        return ''.join(desc)
+
+    update_url = 'update-graphite-check'
+
+    icon = 'glyphicon glyphicon-signal'
 
     metric = models.TextField(
         null=True,
@@ -779,6 +804,17 @@ class HttpStatusCheck(StatusCheck):
     def check_category(self):
         return "HTTP check"
 
+    @property
+    def description(self):
+        desc = ['Status code {} from {}'.format(self.status_code, self.endpoint)]
+        if self.text_match:
+            desc.append('; match text /{}/'.format(self.text_match))
+        return ''.join(desc)
+
+    update_url = 'update-http-check'
+
+    icon = 'glyphicon glyphicon-arrow-up'
+
     endpoint = models.TextField(
         null=True,
         help_text='HTTP(S) endpoint to poll.',
@@ -915,6 +951,17 @@ class JenkinsStatusCheck(StatusCheck):
     @property
     def check_category(self):
         return "Jenkins check"
+
+    @property
+    def description(self):
+        desc = ['Monitor job {}'.format(self.name)]
+        if self.max_queued_build_time is not None:
+            desc.append('; no build waiting for > {} minutes'.format(self.max_queued_build_time))
+        return ''.join(desc)
+
+    update_url = 'update-jenkins-check'
+
+    icon ='glyphicon glyphicon-ok'
 
     max_queued_build_time = models.IntegerField(
         null=True,
