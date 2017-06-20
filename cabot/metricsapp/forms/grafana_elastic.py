@@ -11,6 +11,7 @@ class GrafanaElasticsearchStatusCheckForm(GrafanaStatusCheckForm):
             'name',
             'queries',
             'active',
+            'auto_sync',
             'check_type',
             'warning_value',
             'high_alert_importance',
@@ -19,6 +20,9 @@ class GrafanaElasticsearchStatusCheckForm(GrafanaStatusCheckForm):
             'retries',
             'time_range',
         ]
+        widgets = {
+            'auto_sync': forms.CheckboxInput()
+        }
 
     def __init__(self, *args, **kwargs):
         es_fields = kwargs.pop('es_fields')

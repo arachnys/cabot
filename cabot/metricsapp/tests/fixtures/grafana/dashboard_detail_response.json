@@ -9,8 +9,8 @@
     "expires": "0004-03-03T00:00:00Z",
     "created": "2013-01-24T00:00:00Z",
     "updated": "2017-02-01T00:00:00Z",
-    "updatedBy": "admin",
-    "createdBy": "admin",
+    "updatedBy": "enduser@affirm.com",
+    "createdBy": "admin@affirm.com",
     "version": 513 
   },
   "dashboard": {

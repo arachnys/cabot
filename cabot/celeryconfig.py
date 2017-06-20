@@ -1,6 +1,7 @@
 import os
 from datetime import timedelta
 from kombu import Exchange, Queue
+from cabot.metricsapp.defs import GRAFANA_SYNC_TIMEDELTA_MINUTES
 
 BROKER_URL = os.environ['CELERY_BROKER_URL']
 CELERY_IMPORTS = (
@@ -25,6 +26,10 @@ CELERYBEAT_SCHEDULE = {
     'clean-db': {
         'task': 'cabot.cabotapp.tasks.clean_db',
         'schedule': timedelta(seconds=60*60*24),
+    },
+    'sync-all-grafana-checks': {
+        'task': 'cabot.metricsapp.tasks.sync_all_grafana_checks',
+        'schedule': timedelta(seconds=GRAFANA_SYNC_TIMEDELTA_MINUTES * 60)
     },
 }
 
@@ -65,6 +70,18 @@ CELERY_ROUTES = {
         'queue': 'maintenance',
         'routing_key': 'maintenance',
     },
+    'cabot.metricsapp.tasks.sync_all_grafana_checks': {
+        'queue': 'batch',
+        'routing_key': 'batch',
+    },
+    'cabot.metricsapp.tasks.sync_grafana_check': {
+        'queue': 'batch',
+        'routing_key': 'batch',
+    },
+    'cabot.metricsapp.tasks.send_grafana_sync_email': {
+        'queue': 'batch',
+        'routing_key': 'batch'
+    }
 }
 
 CELERY_TIMEZONE = 'UTC'

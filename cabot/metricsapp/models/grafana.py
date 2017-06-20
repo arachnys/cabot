@@ -76,3 +76,17 @@ class GrafanaDataSource(models.Model):
     def __unicode__(self):
         return '{} ({}, {})'.format(self.grafana_source_name, self.metrics_source_base.name,
                                     self.grafana_instance.name)
+
+
+class GrafanaPanel(models.Model):
+    """
+    Data about a Grafana panel.
+    """
+    class Meta:
+        app_label = 'metricsapp'
+
+    grafana_instance = models.ForeignKey('GrafanaInstance')
+    dashboard_uri = models.CharField(max_length=40)
+    panel_id = models.IntegerField()
+    series_ids = models.CharField(max_length=20)
+    selected_series = models.CharField(max_length=20)

@@ -42,6 +42,12 @@ class TestElasticsearchSource(TestCase):
         self.assertNotIn(' globalhost', repr(client))
 
 
+def get_content(filename):
+    path = os.path.join(os.path.dirname(__file__), 'fixtures/elastic/{}'.format(filename))
+    with open(path) as f:
+        return f.read()
+
+
 def empty_es_response(*args):
     return Response(Search(), [])
 

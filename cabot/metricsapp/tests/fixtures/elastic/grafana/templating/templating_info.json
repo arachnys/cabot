@@ -15,7 +15,6 @@
           "multi": true,
           "name": "event_name",
           "options": [
-            
           ],
           "query": "{\"find\": \"terms\", \"field\": \"module\", \"query\": \"name:request.body.event_name:*\"}",
           "refresh": 1,
@@ -23,7 +22,6 @@
           "sort": 0,
           "tagValuesQuery": "",
           "tags": [
-            
           ],
           "tagsQuery": "",
           "type": "query",
@@ -167,7 +165,7 @@
           "sort": 1,
           "tagValuesQuery": "",
           "tags": [
-            
+
           ],
           "tagsQuery": "",
           "type": "query",
@@ -176,7 +174,7 @@
         {
           "datasource": "ds",
           "filters": [
-            
+
           ],
           "hide": 0,
           "label": "Ad-hoc Filters",
