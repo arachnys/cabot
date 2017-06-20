@@ -1,7 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from cabot.metricsapp.api import build_query, template_response, validate_query, \
-    create_elasticsearch_templating_dict, get_es_status_check_fields
+    create_elasticsearch_templating_dict, get_es_status_check_fields, adjust_time_range
 from .test_elasticsearch import get_json_file
 
 
@@ -67,6 +67,12 @@ class TestGrafanaQueryBuilder(TestCase):
         expected_fields.append(dict(queries=expected_queries[1]))
 
         self.assertEqual(status_check_fields, expected_fields)
+
+    def test_adjust_time_range(self):
+        queries = [get_json_file('grafana/query_builder/grafana_series_query.json')]
+        new_queries = adjust_time_range(queries, 30)
+        expected_queries = [get_json_file('grafana/query_builder/grafana_series_query_30m.json')]
+        self.assertEqual(new_queries, expected_queries)
 
 
 class TestGrafanaTemplating(TestCase):

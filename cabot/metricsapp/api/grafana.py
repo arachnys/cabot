@@ -5,9 +5,27 @@ import urlparse
 from datetime import datetime
 from django.core.exceptions import ValidationError
 from pytimeparse import parse
+from urlparse import urljoin
 
 
 logger = logging.getLogger(__name__)
+
+
+def _grafana_api_request(grafana_instance, uri):
+    """
+    Generic method for getting data from the Grafana API
+    :param grafana_instance: the GrafanaInstance object for the site we're looking at
+    :param uri: the URI we want to request
+    :return: the response from Grafana
+    """
+    response = grafana_instance.get_request(uri)
+
+    try:
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.HTTPError as e:
+        logger.exception('Request to {} failed with error {}'.format(urljoin(grafana_instance.url, uri), e))
+        raise ValidationError('Request to Grafana API failed.')
 
 
 def get_dashboards(grafana_instance):
@@ -16,14 +34,7 @@ def get_dashboards(grafana_instance):
     :param grafana_instance: GrafanaInstance object corresponding to the Grafana site
     :return: api response containing dashboard id, title, uri, etc.
     """
-    response = grafana_instance.get_request('api/search')
-
-    try:
-        response.raise_for_status()
-        return response.json()
-    except requests.exceptions.HTTPError as e:
-        logger.exception('Request to {} failed with error {}'.format(grafana_instance.url, e))
-        raise ValidationError('Request to Grafana API failed.')
+    return _grafana_api_request(grafana_instance, 'api/search')
 
 
 def get_dashboard_choices(api_response):
@@ -42,15 +53,7 @@ def get_dashboard_info(grafana_instance, dashboard_uri):
     :param dashboard_uri: dashboard part of the url
     :return: api response containing creator information and panel information
     """
-    response = grafana_instance.get_request('api/dashboards/{}'.format(dashboard_uri))
-
-    try:
-        response.raise_for_status()
-        return response.json()
-    except requests.exceptions.HTTPError as e:
-        logger.exception('Request to {} for dashboard {} failed with error {}'.format(grafana_instance.url,
-                                                                                      dashboard_uri, e))
-        raise ValidationError('Request to Grafana API failed.')
+    return _grafana_api_request(grafana_instance, 'api/dashboards/{}'.format(dashboard_uri))
 
 
 def get_panel_choices(dashboard_info, templating_dict):
