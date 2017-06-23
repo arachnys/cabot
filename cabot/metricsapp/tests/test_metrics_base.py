@@ -56,6 +56,65 @@ class TestMetricsBase(TestCase):
         self.assertIsNone(result.error)
 
     @patch('cabot.metricsapp.models.MetricsStatusCheckBase.get_series', mock_get_series)
+    @patch('time.time', mock_time)
+    def test_lte(self):
+        # maximum value in the series
+        self.metrics_check.warning_value = 9.66092
+        self.metrics_check.save()
+        result = self.metrics_check._run()
+        self.assertTrue(result.succeeded)
+
+        self.metrics_check.warning_value = 9.66091
+        self.metrics_check.save()
+        result = self.metrics_check._run()
+        self.assertFalse(result.succeeded)
+
+    @patch('cabot.metricsapp.models.MetricsStatusCheckBase.get_series', mock_get_series)
+    @patch('time.time', mock_time)
+    def test_lt(self):
+        self.metrics_check.check_type = '<'
+        # maximum value in the series
+        self.metrics_check.warning_value = 9.66092
+        self.metrics_check.save()
+        result = self.metrics_check._run()
+        self.assertFalse(result.succeeded)
+
+        self.metrics_check.warning_value = 9.660921
+        self.metrics_check.save()
+        result = self.metrics_check._run()
+        self.assertTrue(result.succeeded)
+
+    @patch('cabot.metricsapp.models.MetricsStatusCheckBase.get_series', mock_get_series)
+    @patch('time.time', mock_time)
+    def test_gte(self):
+        self.metrics_check.check_type = '>='
+        # minimum value in the series
+        self.metrics_check.warning_value = 1.16092
+        self.metrics_check.save()
+        result = self.metrics_check._run()
+        self.assertTrue(result.succeeded)
+
+        self.metrics_check.warning_value = 1.16093
+        self.metrics_check.save()
+        result = self.metrics_check._run()
+        self.assertFalse(result.succeeded)
+
+    @patch('cabot.metricsapp.models.MetricsStatusCheckBase.get_series', mock_get_series)
+    @patch('time.time', mock_time)
+    def test_gt(self):
+        self.metrics_check.check_type = '>'
+        # minimum value in the series
+        self.metrics_check.warning_value = 1.16092
+        self.metrics_check.save()
+        result = self.metrics_check._run()
+        self.assertFalse(result.succeeded)
+
+        self.metrics_check.warning_value = 1.160915
+        self.metrics_check.save()
+        result = self.metrics_check._run()
+        self.assertTrue(result.succeeded)
+
+    @patch('cabot.metricsapp.models.MetricsStatusCheckBase.get_series', mock_get_series)
     def test_no_datapoints(self):
         """
         Run check at the current time (all the points are outdated). Should succeed
