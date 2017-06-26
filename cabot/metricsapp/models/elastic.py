@@ -188,8 +188,8 @@ class ElasticsearchStatusCheck(MetricsStatusCheckBase):
             for result in results:
                 yield result
 
-    def _point_valid(self, point):
-        return point not in ['None', 'NaN'] and point is not None
+    def _valid_point(self, point):
+        return point not in ['None', 'NaN', None]
 
     def _get_metric_data(self, subseries, series_name):
         """
@@ -208,14 +208,14 @@ class ElasticsearchStatusCheck(MetricsStatusCheckBase):
 
             if 'value' in value_dict:
                 value = value_dict['value']
-                if self._point_valid(value):
+                if self._valid_point(value):
                     # Series_name might be none if there are no aggs
                     metric_name = '.'.join(filter(None, [series_name, metric]))
                     yield (metric_name, (timestamp, value_dict['value']))
 
             elif 'values' in value_dict:
                 for submetric_name, value in value_dict['values'].iteritems():
-                    if self._point_valid(value):
+                    if self._valid_point(value):
                         metric_name = '.'.join(filter(None, [series_name, submetric_name]))
                         yield (metric_name, (timestamp, value))
 
