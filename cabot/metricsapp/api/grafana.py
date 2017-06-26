@@ -3,6 +3,7 @@ import logging
 import requests
 import urlparse
 from datetime import datetime
+from django.core.exceptions import ValidationError
 from pytimeparse import parse
 from urlparse import urljoin
 
