@@ -48,10 +48,6 @@ def get_content(filename):
         return f.read()
 
 
-def empty_es_response(*args):
-    return Response(Search(), [])
-
-
 def get_json_file(file):
     path = os.path.join(os.path.dirname(__file__), 'fixtures/elastic/{}'.format(file))
     with open(path) as f:
@@ -60,6 +56,10 @@ def get_json_file(file):
 
 def fake_es_response(*args):
     return [Response(Search(), response) for response in get_json_file('es_response.json')]
+
+
+def empty_es_response(*args):
+    return [Response(Search(), response) for response in get_json_file('es_empty_response.json')]
 
 
 def fake_es_multiple_metrics_terms(*args):
@@ -80,6 +80,9 @@ def fake_es_multiple_queries(*args):
 
 def fake_es_none(*args):
     return [Response(Search(), response) for response in get_json_file('es_none_nan.json')]
+
+def fake_es_only_none(*args):
+    return [Response(Search(), response) for response in get_json_file('es_only_none.json')]
 
 
 def mock_time():
@@ -140,13 +143,20 @@ class TestElasticsearchStatusCheck(TestCase):
     @patch('cabot.metricsapp.models.elastic.MultiSearch.execute', empty_es_response)
     @patch('time.time', mock_time)
     def test_empty_response(self):
-        """Test result when elasticsearch returns an empty response"""
+        """Test that a 0 is filled in when when elasticsearch returns an empty response"""
         series = self.es_check.get_series()
-        self.assertTrue(series['error'])
+        self.assertFalse(series['error'])
+        self.assertEqual(series['raw'], get_json_file('es_empty_response.json'))
+        data = series['data']
+        self.assertEqual(len(data), 1)
+
+        data = data[0]
+        self.assertEqual(str(data['series']), 'no_data_fill_0')
+        self.assertEqual(data['datapoints'], [[1491577200, 0]])
 
         result = self.es_check._run()
         self.assertFalse(result.succeeded)
-        self.assertEqual(result.error, 'Error fetching metric from source')
+        self.assertEqual(result.error, 'no_data_fill_0: 0.0 >= 3.0')
 
     @patch('cabot.metricsapp.models.elastic.MultiSearch.execute', fake_es_multiple_metrics_terms)
     @patch('time.time', mock_time)
@@ -290,6 +300,23 @@ class TestElasticsearchStatusCheck(TestCase):
         result = self.es_check._run()
         self.assertTrue(result.succeeded)
         self.assertIsNone(result.error)
+
+    @patch('cabot.metricsapp.models.elastic.MultiSearch.execute', fake_es_only_none)
+    @patch('time.time', mock_time)
+    def test_only_none(self):
+        series = self.es_check.get_series()
+        self.assertFalse(series['error'])
+        self.assertEqual(series['raw'], get_json_file('es_only_none.json'))
+        data = series['data']
+        self.assertEqual(len(data), 1)
+
+        data = data[0]
+        self.assertEqual(str(data['series']), 'no_data_fill_0')
+        self.assertEqual(data['datapoints'], [[1491577200, 0]])
+
+        result = self.es_check._run()
+        self.assertFalse(result.succeeded)
+        self.assertEqual(result.error, 'no_data_fill_0: 0.0 >= 3.0')
 
 
 class TestQueryValidation(TestCase):

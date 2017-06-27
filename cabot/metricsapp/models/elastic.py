@@ -133,16 +133,30 @@ class ElasticsearchStatusCheck(MetricsStatusCheckBase):
 
         try:
             responses = multisearch.using(source.client).index(source.index).execute()
+
             for response in responses:
                 raw_data = response.to_dict()
                 parsed_data['raw'].append(raw_data)
-                parsed_data['data'].extend(self._parse_es_response([raw_data['aggregations']]))
+
+                if raw_data['hits']['hits'] == []:
+                    continue
+
+                data = self._parse_es_response([raw_data['aggregations']])
+                if data == []:
+                    continue
+
+                parsed_data['data'].extend(data)
 
         except Exception as e:
             logger.exception('Error executing Elasticsearch query: {}'.format(query))
             parsed_data['error_code'] = type(e).__name__
             parsed_data['error_message'] = str(e)
             parsed_data['error'] = True
+
+        # If there's no data, fill in a 0 so the check doesn't fail.
+        # TODO: fill value could be set based on "Stacking & Null value" in Grafana
+        if parsed_data['data'] == []:
+            parsed_data['data'].append(dict(series='no_data_fill_0', datapoints=[[int(time.time()), 0]]))
 
         return parsed_data
 
