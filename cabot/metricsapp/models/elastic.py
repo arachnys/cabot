@@ -188,6 +188,9 @@ class ElasticsearchStatusCheck(MetricsStatusCheckBase):
             for result in results:
                 yield result
 
+    def _valid_point(self, point):
+        return point not in ['None', 'NaN', None]
+
     def _get_metric_data(self, subseries, series_name):
         """
         Given the part of the ES response grouped by timestamp, generate
@@ -204,14 +207,17 @@ class ElasticsearchStatusCheck(MetricsStatusCheckBase):
                 continue
 
             if 'value' in value_dict:
-                # Series_name might be none if there are no aggs
-                metric_name = '.'.join(filter(None, [series_name, metric]))
-                yield (metric_name, (timestamp, value_dict['value']))
+                value = value_dict['value']
+                if self._valid_point(value):
+                    # Series_name might be none if there are no aggs
+                    metric_name = '.'.join(filter(None, [series_name, metric]))
+                    yield (metric_name, (timestamp, value_dict['value']))
 
             elif 'values' in value_dict:
                 for submetric_name, value in value_dict['values'].iteritems():
-                    metric_name = '.'.join(filter(None, [series_name, submetric_name]))
-                    yield (metric_name, (timestamp, value))
+                    if self._valid_point(value):
+                        metric_name = '.'.join(filter(None, [series_name, submetric_name]))
+                        yield (metric_name, (timestamp, value))
 
             else:
                 raise NotImplementedError('Unsupported metric: {}.'.format(metric))

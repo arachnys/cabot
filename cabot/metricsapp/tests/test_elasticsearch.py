@@ -78,6 +78,9 @@ def fake_es_multiple_queries(*args):
     return [Response(Search(), response) for response in get_json_file('es_response.json')] + \
            [Response(Search(), response) for response in get_json_file('es_percentile.json')]
 
+def fake_es_none(*args):
+    return [Response(Search(), response) for response in get_json_file('es_none_nan.json')]
+
 
 def mock_time():
     return 1491577200.0
@@ -267,6 +270,26 @@ class TestElasticsearchStatusCheck(TestCase):
                                                  [1491559200, 3.53005464480873], [1491562800, 4.04651162790697],
                                                  [1491566400, 4.8390501319261], [1491570000, 4.51913477537437],
                                                  [1491573600, 4.4642857142857]])
+
+    @patch('cabot.metricsapp.models.elastic.MultiSearch.execute', fake_es_none)
+    @patch('time.time', mock_time)
+    def test_none(self):
+        # Test output series
+        series = self.es_check.get_series()
+        self.assertFalse(series['error'])
+        self.assertEqual(series['raw'], get_json_file('es_none_nan.json'))
+        data = series['data']
+        self.assertEqual(len(data), 1)
+
+        data = data[0]
+        self.assertEqual(str(data['series']), 'avg')
+        self.assertEqual(data['datapoints'], [[1491555600, 4.7958115183246], [1491562800, 4.04651162790697],
+                                              [1491570000, 4.51913477537437], [1491573600, 4.4642857142857]])
+
+        # Test check result
+        result = self.es_check._run()
+        self.assertTrue(result.succeeded)
+        self.assertIsNone(result.error)
 
 
 class TestQueryValidation(TestCase):
