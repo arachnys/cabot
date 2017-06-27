@@ -59,6 +59,9 @@ class GrafanaElasticsearchStatusCheckUpdateForm(GrafanaStatusCheckUpdateForm):
             'retries',
             'frequency',
         ]
+        widgets = {
+            'auto_sync': forms.CheckboxInput()
+        }
 
     def __init__(self, *args, **kwargs):
         super(GrafanaElasticsearchStatusCheckUpdateForm, self).__init__(*args, **kwargs)
