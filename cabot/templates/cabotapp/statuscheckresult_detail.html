@@ -51,9 +51,14 @@ for series in window.DATA
     tmp[label] = point[0]
     kvs.push tmp
 {% else %}
+i = 0
 for s in window.DATA
   label = s.series
+  if label in labels
+    n = "#{i}"
+    label = label + n
   labels.push label
+
   for point in s.datapoints
     if point[1] == 'NaN'
       point[1] = 0
@@ -61,6 +66,7 @@ for s in window.DATA
     tmp['time'] = point[0]*1000
     tmp[label] = point[1]
     kvs.push tmp
+  i++
 {% endif %}
 
 linegraph = Morris.Line(
