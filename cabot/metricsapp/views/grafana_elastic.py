@@ -25,7 +25,7 @@ class GrafanaElasticsearchStatusCheckCreateView(LoginRequiredMixin, View):
         )
 
         form = self.form_class(fields=get_status_check_fields(dashboard_info, panel_info, grafana_data_source,
-                                                              templating_dict, grafana_panel),
+                                                              templating_dict, grafana_panel, request.user),
                                es_fields=get_es_status_check_fields(dashboard_info, panel_info, series))
 
         panel_url = get_panel_url(GrafanaInstance.objects.get(id=instance_id).url,
@@ -49,7 +49,7 @@ class GrafanaElasticsearchStatusCheckCreateView(LoginRequiredMixin, View):
 
         form = self.form_class(request.POST,
                                fields=get_status_check_fields(dashboard_info, panel_info, grafana_data_source,
-                                                              templating_dict, grafana_panel),
+                                                              templating_dict, grafana_panel, request.user),
                                es_fields=get_es_status_check_fields(dashboard_info, panel_info, series))
 
         if form.is_valid() and not form.errors:
