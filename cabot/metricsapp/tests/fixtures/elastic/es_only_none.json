@@ -1,0 +1,43 @@
+[{
+    "hits": {
+        "hits": [
+          {
+            "_score": 9.112747,
+            "_type": "metrics-event",
+            "_id": "1",
+            "_index": "mr-metric"
+          }
+        ],
+        "total": 1200,
+        "max_score": 9.112747
+    },
+    "_shards": {
+        "successful": 120,
+        "failed": 0,
+        "total": 120
+    },
+    "took": 487,
+    "aggregations": {
+        "agg": {
+            "buckets": [
+                {
+                    "avg": {
+                        "value": "None"
+                    },
+                    "key_as_string": "2017-04-07T08:00:00.000Z",
+                    "key": 1491552000000,
+                    "doc_count": 210
+                },
+                {
+                    "avg": {
+                        "value": "None"
+                    },
+                    "key_as_string": "2017-04-07T09:00:00.000Z",
+                    "key": 1491555600000,
+                    "doc_count": 191
+                }
+            ]
+        }
+    },
+    "timed_out": false
+}]

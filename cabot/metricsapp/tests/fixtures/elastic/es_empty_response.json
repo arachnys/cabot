@@ -1,0 +1,22 @@
+[
+  {
+    "status": 200,
+    "hits": {
+      "hits": [],
+      "total": 0,
+      "max_score": null
+    },
+    "_shards": {
+      "successful": 10,
+      "failed": 0,
+      "total": 10
+    },
+    "took": 15,
+    "aggregations": {
+      "agg": {
+        "buckets": []
+      }
+    },
+    "timed_out": false
+  }
+]

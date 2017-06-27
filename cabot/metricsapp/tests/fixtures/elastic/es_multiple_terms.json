@@ -1,6 +1,12 @@
 [{
     "hits": {
         "hits": [
+            {
+                "_score": 9.112747,
+                "_type": "metrics-event",
+                "_id": "1",
+                "_index": "mmmmmmm"
+            }
         ],
         "total": 3928,
         "max_score": 11.412194
