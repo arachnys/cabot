@@ -26,7 +26,7 @@ def _point_failure_check(check_type, check_value, value):
     elif check_type == '>':
         return not value > check_value
     elif check_type == '>=':
-        return not value > check_value
+        return not value >= check_value
     elif check_type == '==':
         return not value == check_value
     else:
