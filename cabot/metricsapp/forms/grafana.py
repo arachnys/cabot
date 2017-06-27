@@ -121,6 +121,7 @@ class GrafanaStatusCheckForm(StatusCheckForm):
         # Store fields that will be set in save()
         self.source = fields['source']
         self.grafana_panel = GrafanaPanel.objects.get(id=fields['grafana_panel'])
+        self.user = fields['user']
 
     def save(self):
         # set the MetricsSourceBase here so we don't have to display it
@@ -128,6 +129,8 @@ class GrafanaStatusCheckForm(StatusCheckForm):
 
         model.source = self.source
         model.grafana_panel = self.grafana_panel
+        if self.user is not None:
+            model.created_by = self.user
 
         model.save()
         return model

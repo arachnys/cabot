@@ -114,17 +114,20 @@ class TestGrafanaApiParsing(TestCase):
                  high_alert_value=1.0,
                  check_type='>',
                  grafana_panel=1,
-                 warning_value=0.0),
+                 warning_value=0.0,
+                 user=None),
             dict(name='Pct 75',
                  source='datasource',
                  time_range=180,
                  warning_value=100.0,
                  grafana_panel=1,
-                 check_type='<'),
+                 check_type='<',
+                 user=None),
             dict(name='Panel 106',
                  source='datasource',
                  grafana_panel=1,
-                 time_range=180)
+                 time_range=180,
+                 user=None)
         ]
 
         self.assertEqual(status_check_fields, expected_fields)

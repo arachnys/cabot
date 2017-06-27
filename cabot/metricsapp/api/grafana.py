@@ -169,7 +169,7 @@ def create_generic_templating_dict(dashboard_info):
 
 
 def get_status_check_fields(dashboard_info, panel_info, grafana_data_source, templating_dict,
-                            grafana_panel):
+                            grafana_panel, user=None):
     """
     Given dashboard, panel, instance, and datasource info, find the fields for a generic status check
     :param dashboard_info: Grafana API dashboard info
@@ -177,6 +177,7 @@ def get_status_check_fields(dashboard_info, panel_info, grafana_data_source, tem
     :param grafana_instance_id: ID of the Grafana instance used
     :param templating_dict: dictionary of {template_name, template _value}
     :param grafana_panel: GrafanaPanel object id
+    :param user: user who created the check
     :return: dictionary containing StatusCheck field names and values
     """
     fields = {}
@@ -205,6 +206,7 @@ def get_status_check_fields(dashboard_info, panel_info, grafana_data_source, tem
             fields['high_alert_value'] = float(threshold['value'])
 
     fields['grafana_panel'] = grafana_panel
+    fields['user'] = user
 
     return fields
 
