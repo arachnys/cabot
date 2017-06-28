@@ -81,6 +81,7 @@ def fake_es_multiple_queries(*args):
 def fake_es_none(*args):
     return [Response(Search(), response) for response in get_json_file('es_none_nan.json')]
 
+
 def fake_es_only_none(*args):
     return [Response(Search(), response) for response in get_json_file('es_only_none.json')]
 
