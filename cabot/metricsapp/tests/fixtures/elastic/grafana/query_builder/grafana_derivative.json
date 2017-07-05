@@ -1,0 +1,58 @@
+{
+  "bucketAggs": [
+    {
+      "fake": true,
+      "field": "integral",
+      "id": "5",
+      "settings": {
+        "min_doc_count": 0,
+        "order": "desc",
+        "orderBy": "_term",
+        "size": "10"
+      },
+      "type": "terms"
+    },
+    {
+      "field": "@timestamp",
+      "id": "2",
+      "settings": {
+        "interval": "1m",
+        "min_doc_count": 0,
+        "trimEdges": 0
+      },
+      "type": "date_histogram"
+    }
+  ],
+  "dsType": "elasticsearch",
+  "hide": false,
+  "metrics": [
+    {
+      "field": "timing",
+      "hide": true,
+      "id": "1",
+      "meta": {
+
+      },
+      "pipelineAgg": "select metric",
+      "settings": {
+
+      },
+      "type": "avg"
+    },
+    {
+      "field": "1",
+      "id": "4",
+      "meta": {
+
+      },
+      "pipelineAgg": "1",
+      "settings": {
+
+      },
+      "type": "derivative"
+    }
+  ],
+  "query": "newton.leibniz",
+  "refId": "A",
+  "timeField": "@timestamp"
+}

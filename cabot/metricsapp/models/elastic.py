@@ -8,6 +8,7 @@ from django.db import models
 from django.utils.html import escape
 from elasticsearch_dsl import MultiSearch, Search
 from cabot.metricsapp.api import create_es_client, validate_query
+from cabot.metricsapp.defs import HIDDEN_METRIC_SUFFIX
 from .base import MetricsSourceBase, MetricsStatusCheckBase
 
 
@@ -216,8 +217,8 @@ class ElasticsearchStatusCheck(MetricsStatusCheckBase):
         timestamp = subseries['key'] / 1000
 
         for metric, value_dict in subseries.iteritems():
-            # Not actually the metric field--timestamp, doc_count, etc.
-            if type(value_dict) != dict:
+            # Ignore hidden metrics and things that are not actually the metric field--timestamp, doc_count, etc.
+            if type(value_dict) != dict or HIDDEN_METRIC_SUFFIX in metric:
                 continue
 
             if 'value' in value_dict:

@@ -1,0 +1,56 @@
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "query_string": {
+            "analyze_wildcard": true,
+            "query": "newton.leibniz"
+          }
+        },
+        {
+          "range": {
+            "@timestamp": {
+              "gte": "now-3h"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "aggs": {
+    "agg": {
+      "terms": {
+        "field": "integral",
+        "order": {
+          "_term": "desc"
+        },
+        "size": 10
+      },
+      "aggs": {
+        "agg": {
+          "date_histogram": {
+            "field": "@timestamp",
+            "interval": "1m",
+            "extended_bounds": {
+              "max": "now",
+              "min": "now-3h"
+            }
+          },
+          "aggs": {
+            "derivative": {
+              "derivative": {
+                "buckets_path": "avg_hidethismetric"
+              }
+            },
+            "avg_hidethismetric": {
+              "avg": {
+                "field": "timing"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

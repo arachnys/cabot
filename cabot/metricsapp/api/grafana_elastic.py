@@ -4,7 +4,7 @@ from elasticsearch_dsl import Search, A
 from elasticsearch_dsl.query import Range
 from django.core.exceptions import ValidationError
 from pytimeparse import parse
-from cabot.metricsapp.defs import ES_SUPPORTED_METRICS, ES_TIME_RANGE, ES_DEFAULT_INTERVAL
+from cabot.metricsapp.defs import ES_SUPPORTED_METRICS, ES_TIME_RANGE, ES_DEFAULT_INTERVAL, HIDDEN_METRIC_SUFFIX
 from .grafana import template_response
 
 
@@ -92,24 +92,50 @@ def _add_aggs(search_aggs, series, min_time, default_interval):
     settings = _get_date_histogram_settings(date_histogram, min_time, default_interval)
     search_aggs = search_aggs.bucket('agg', A({'date_histogram': settings}))
 
+    pipeline_id_name_mapping = dict()
+    pipeline_metrics = []
     for metric in series['metrics']:
-        metric_type = metric['type']
+        metric_type = metric_name = metric['type']
+        if metric.get('hide') is True:
+            metric_name = '{}_{}'.format(metric_name, HIDDEN_METRIC_SUFFIX)
 
         # Special case for count--not actually an elasticsearch metric, but supported
         if metric_type not in ES_SUPPORTED_METRICS.union(set(['count'])):
             raise ValidationError('Metric type {} not supported.'.format(metric_type))
 
+        # Store the mapping of "id" to "name" to use for pipeline mappings
+        pipeline_id_name_mapping[metric['id']] = metric_name
+
+        # Handle pipeline aggs at the end (the field 'pipelineAgg' will refer to the id
+        # of another metric
+        pipeline_agg = metric.get('pipelineAgg')
+        if pipeline_agg is not None and pipeline_agg.isdigit():
+            pipeline_metrics.append(metric)
+            continue
+
         # value_count the time field if count is the metric (since the time field must always be present)
         if metric_type == 'count':
-            search_aggs.metric('value_count', 'value_count', field=series['timeField'])
+            search_aggs.metric('value_{}'.format(metric_name), 'value_count', field=series['timeField'])
 
         # percentiles has an extra setting for percents
         elif metric_type == 'percentiles':
-            search_aggs.metric('percentiles', 'percentiles', field=metric['field'],
+            search_aggs.metric(metric_name, 'percentiles', field=metric['field'],
                                percents=metric['settings']['percents'])
 
         else:
-            search_aggs.metric(metric['type'], metric['type'], field=metric['field'])
+            search_aggs.metric(metric_name, metric_type, field=metric['field'])
+
+    for metric in pipeline_metrics:
+        pipeline_agg = metric['pipelineAgg']
+        metric_type = metric_name = metric['type']
+        if metric.get('hide') is True:
+            metric_name = '{}_{}'.format(metric_name, HIDDEN_METRIC_SUFFIX)
+
+        bucket = pipeline_id_name_mapping.get(pipeline_agg)
+        if bucket is None:
+            raise ValidationError('Cannot find metric with id {} for pipeline metric'.format(pipeline_agg))
+
+        search_aggs.pipeline(metric_name, metric_type, buckets_path=bucket)
 
 
 def build_query(series, min_time=ES_TIME_RANGE, default_interval=ES_DEFAULT_INTERVAL):
