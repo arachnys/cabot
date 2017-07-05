@@ -10,16 +10,7 @@ order: 3
 
 During day-to-day use of Cabot you may want to do some operations on it for, apart from [deployment or upgrade](deployment.html).
 
-To do that follow these simple steps:
+To do that, please SSH onto your host and run commands. If using docker-compose:
 
-1. Go into the Cabot repository you cloned during the 1st step of [Quickstart](/qs/quickstart.html)
+* backup: `docker-compose exec postgres pg_dump -U postgres postgres > cabot.sql`
 
-2. Use [Fabric](http://docs.fabfile.org/) to do some command on your Cabot instance:
-
-        $ fab <command> -H ubuntu@your.server.hostname
-          
-..where &lt;command&gt; is one of the following:
-
-* **stop** - stops your Cabot instance, obviously,
-* **restart** - restarts it,
-* **backup** - backups Cabot's database locally
