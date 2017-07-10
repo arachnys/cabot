@@ -151,17 +151,23 @@ def fake_slow_graphite_response(*args, **kwargs):
 
 
 def fake_jenkins_response(*args, **kwargs):
-    resp = Mock()
-    resp.json = lambda: json.loads(get_content('jenkins_response.json'))
-    resp.status_code = 200
-    return resp
+    return {
+        'active': True,
+        'status_code': 200,
+        'blocked_build_time': None,
+        'succeeded': False,
+        'job_number': 176
+    }
 
 
 def jenkins_blocked_response(*args, **kwargs):
-    resp = Mock()
-    resp.json = lambda: json.loads(get_content('jenkins_blocked_response.json'))
-    resp.status_code = 200
-    return resp
+    return {
+        'active': True,
+        'status_code': 200,
+        'blocked_build_time': 108616352.65387,
+        'succeeded': False,
+        'job_number': 1999
+    }
 
 
 def fake_http_200_response(*args, **kwargs):
@@ -388,8 +394,9 @@ class TestCheckRun(LocalTestCase):
         self.assertTrue(self.graphite_check.last_result().succeeded)
         self.assertGreater(list(checkresults)[-1].took, 0.0)
 
-    @patch('cabot.cabotapp.jenkins.requests.get', fake_jenkins_response)
-    def test_jenkins_run(self):
+    @patch('cabot.cabotapp.models.get_job_status')
+    def test_jenkins_run(self, mock_get_job_status):
+        mock_get_job_status.return_value = fake_jenkins_response()
         checkresults = self.jenkins_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 0)
         custom_check_types = add_custom_check_plugins()
@@ -399,8 +406,9 @@ class TestCheckRun(LocalTestCase):
         self.assertEqual(len(checkresults), 1)
         self.assertFalse(self.jenkins_check.last_result().succeeded)
 
-    @patch('cabot.cabotapp.jenkins.requests.get', jenkins_blocked_response)
-    def test_jenkins_blocked_build(self):
+    @patch('cabot.cabotapp.models.get_job_status')
+    def test_jenkins_blocked_build(self, mock_get_job_status):
+        mock_get_job_status.return_value = jenkins_blocked_response()
         checkresults = self.jenkins_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 0)
         custom_check_types = add_custom_check_plugins()
