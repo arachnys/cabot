@@ -4,7 +4,7 @@ from django.shortcuts import render
 from django.views.generic import View, TemplateView
 from cabot.cabotapp.views import LoginRequiredMixin
 from cabot.metricsapp.api import get_dashboard_info, get_dashboards, get_dashboard_choices, get_panel_choices, \
-    get_series_choices, create_generic_templating_dict, get_updated_datetime, get_series_ids, get_panel_url
+    get_series_choices, create_generic_templating_dict, get_series_ids, get_panel_url
 from cabot.metricsapp.forms import GrafanaInstanceForm, GrafanaDashboardForm, GrafanaPanelForm, \
     GrafanaSeriesForm
 from cabot.metricsapp.models import GrafanaDataSource, ElasticsearchSource, GrafanaInstance, GrafanaPanel, \
@@ -117,7 +117,8 @@ class GrafanaSeriesSelectView(LoginRequiredMixin, View):
     template_name = 'metricsapp/grafana_create.html'
 
     def get(self, request, *args, **kwargs):
-        series = get_series_choices(request.session['panel_info'], request.session['templating_dict'])
+        templating_dict = request.session['templating_dict']
+        series = get_series_choices(request.session['panel_info'], templating_dict)
         # If there's only one series, skip the page and just select it
         if len(series) == 1:
             request.session['series'] = [series[0][0]]
@@ -138,7 +139,8 @@ class GrafanaSeriesSelectView(LoginRequiredMixin, View):
                                                                          request.session['panel_id'],
                                                                          get_series_ids(request.session['panel_info']),
                                                                          series[0][0],
-                                                                         existing_panel)
+                                                                         existing_panel,
+                                                                         templating_dict)
 
             return HttpResponseRedirect(reverse(url, kwargs=kwargs))
 
@@ -151,13 +153,14 @@ class GrafanaSeriesSelectView(LoginRequiredMixin, View):
         panel_url = get_panel_url(GrafanaInstance.objects.get(id=request.session['instance_id']).url,
                                   request.session['dashboard_uri'],
                                   request.session['panel_id'],
-                                  request.session['templating_dict'])
+                                  templating_dict)
         return render(request, self.template_name, {'form': form, 'check_type': 'Elasticsearch',
                                                     'panel_url': panel_url})
 
     def post(self, request, *args, **kwargs):
+        templating_dict = request.session['templating_dict']
         form = self.form_class(request.POST, series=get_series_choices(request.session['panel_info'],
-                                                                       request.session['templating_dict']),
+                                                                       templating_dict),
                                default_series=None)
         if form.is_valid() and not form.errors:
             series = form.cleaned_data['series']
@@ -179,14 +182,15 @@ class GrafanaSeriesSelectView(LoginRequiredMixin, View):
                                                                          request.session['panel_id'],
                                                                          get_series_ids(request.session['panel_info']),
                                                                          series,
-                                                                         existing_panel)
+                                                                         existing_panel,
+                                                                         templating_dict)
 
             return HttpResponseRedirect(reverse(url, kwargs=kwargs))
 
         panel_url = get_panel_url(GrafanaInstance.objects.get(id=request.session['instance_id']).url,
                                   request.session['dashboard_uri'],
                                   request.session['panel_id'],
-                                  request.session['templating_dict'])
+                                  templating_dict)
         return render(request, self.template_name, {'form': form, 'panel_url': panel_url})
 
     def get_url_for_check_type(self, instance_id, datasource):
@@ -209,7 +213,8 @@ class GrafanaSeriesSelectView(LoginRequiredMixin, View):
 
         return url
 
-    def get_grafana_panel_id(self, instance_id, dashboard_uri, panel_id, series_ids, selected_series, grafana_panel):
+    def get_grafana_panel_id(self, instance_id, dashboard_uri, panel_id, series_ids, selected_series, grafana_panel,
+                             templating_dict):
         """
         Create a GrafanaPanel object based on a dashboard_uri and panel_id
         :param dashboard_uri: uri for the dashboard
@@ -217,15 +222,18 @@ class GrafanaSeriesSelectView(LoginRequiredMixin, View):
         :param series_ids: list of all series ids possible for this panel
         :param selected_series: series ids that were actually selected for the check
         :param id: id of the existing GrafanaPanel object if it exists
+        :param templating_dict: dictionary of {template_name, template_value}
         :return id of the created GrafanaPanel object
         """
+        instance = GrafanaInstance.objects.get(id=instance_id)
         if grafana_panel is None:
             grafana_panel = GrafanaPanel.objects.create(
-                grafana_instance=GrafanaInstance.objects.get(id=instance_id),
+                grafana_instance=instance,
                 dashboard_uri=dashboard_uri,
                 panel_id=int(panel_id),
                 series_ids=series_ids,
-                selected_series='_'.join(selected_series)
+                selected_series='_'.join(selected_series),
+                panel_url=get_panel_url(instance.url, dashboard_uri, panel_id, templating_dict)
             )
         else:
             grafana_panel.grafana_instance = GrafanaInstance.objects.get(id=instance_id)
@@ -233,6 +241,7 @@ class GrafanaSeriesSelectView(LoginRequiredMixin, View):
             grafana_panel.panel_id = int(panel_id)
             grafana_panel.series_ids = series_ids
             grafana_panel.selected_series = '_'.join(selected_series)
+            grafana_panel.panel_url = get_panel_url(instance.url, dashboard_uri, panel_id, templating_dict)
             grafana_panel.save()
 
         return grafana_panel.id

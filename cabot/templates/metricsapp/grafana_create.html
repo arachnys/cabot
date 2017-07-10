@@ -10,6 +10,9 @@
         {% else %}
           <h2>Update Status Check from Grafana</h2>
         {% endif %}
+        {% if form.instance.grafana_panel and form.instance.grafana_panel.panel_url %}
+        <iframe src="{{ form.instance.grafana_panel.panel_url }}" width="100%" height="300" frameborder="0"></iframe>
+        {% endif %}
       {% else %}
         {% if check_type %}
           <h2>New {{ check_type }} Status Check from Grafana</h2>

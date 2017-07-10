@@ -90,3 +90,4 @@ class GrafanaPanel(models.Model):
     panel_id = models.IntegerField()
     series_ids = models.CharField(max_length=20)
     selected_series = models.CharField(max_length=20)
+    panel_url = models.CharField(max_length=1024, null=True)
