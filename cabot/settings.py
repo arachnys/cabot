@@ -156,7 +156,16 @@ for plugin in CABOT_PLUGINS_ENABLED.split(","):
     exploded = re.split(r'[<>=]+', plugin)
     CABOT_PLUGINS_ENABLED_PARSED.append(exploded[0])
 
+
+CABOT_CUSTOM_CHECK_PLUGINS_PARSED = []
+for plugin in CABOT_CUSTOM_CHECK_PLUGINS.split(","):
+    exploded = re.split(r'[<>=]+', plugin)
+    CABOT_CUSTOM_CHECK_PLUGINS_PARSED.append(exploded[0])
+    CABOT_CUSTOM_CHECK_PLUGINS_PARSED = filter(lambda x: x != '', CABOT_CUSTOM_CHECK_PLUGINS_PARSED)
+
 INSTALLED_APPS += tuple(CABOT_PLUGINS_ENABLED_PARSED)
+INSTALLED_APPS += tuple(CABOT_CUSTOM_CHECK_PLUGINS_PARSED)
+
 
 COMPRESS_PRECOMPILERS = (
     ('text/coffeescript', 'coffee --compile --stdio'),

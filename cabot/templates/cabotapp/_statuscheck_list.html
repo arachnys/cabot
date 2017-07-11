@@ -18,6 +18,10 @@
       {% if checks_type == "All" or checks_type == "ICMP" %}
       &nbsp;<a href="{% url "create-icmp-check" %}?instance={{ instance.id }}&service={{ service.id }}" class="" title="Add new ICMP check"><i class="glyphicon glyphicon-plus"></i><i class="glyphicon glyphicon-transfer"></i></a>
       {% endif %}
+      <!-- Custom check plugins buttons-->
+      {% for checktype in custom_check_types %}
+        &nbsp;<a href="{% url checktype.creation_url %}?instance={{ instance.id }}&service={{ service.id }}" class="" title="Add new {{checktype.check_name|capfirst}} check"><i class="glyphicon glyphicon-plus"></i><i class="glyphicon glyphicon-ok"></i></a>
+      {% endfor %}
       </h3>
     </div>
   </div>
@@ -97,11 +101,15 @@
             <span class="label label-warning">No instance</span>
             {% endif %}
           </td>
-          <td class="text-right">
-            <a class="btn btn-xs" href="{% if check.polymorphic_ctype.model == 'graphitestatuscheck' %}{% url "update-graphite-check" pk=check.id %}{% elif check.polymorphic_ctype.model == 'httpstatuscheck' %}{% url "update-http-check" pk=check.id %}{% elif check.polymorphic_ctype.model == 'icmpstatuscheck' %}{% url "update-icmp-check" pk=check.id %}{% elif check.polymorphic_ctype.model == 'jenkinsstatuscheck' %}{% url "update-jenkins-check" pk=check.id %}{% endif %}">
+          <td class="text-right"><a class="btn btn-xs" href="{% if check.polymorphic_ctype.model == 'graphitestatuscheck' %}{% url "update-graphite-check" pk=check.id %}{% elif check.polymorphic_ctype.model == 'httpstatuscheck' %}{% url "update-http-check" pk=check.id %}{% elif check.polymorphic_ctype.model == 'icmpstatuscheck' %}{% url "update-icmp-check" pk=check.id %}{% elif check.polymorphic_ctype.model == 'jenkinsstatuscheck' %}{% url "update-jenkins-check" pk=check.id %}
+              {% elif check.edit_url_name %}
+                {% url check.edit_url_name pk=check.id %}
+              {% endif %}">
               <i class="glyphicon glyphicon-edit"></i><span class="break"></span>
-            </a>
-            <a class="btn btn-xs" href="{% if check.polymorphic_ctype.model == 'graphitestatuscheck' %}{% url "duplicate-graphite-check" pk=check.id %}{% elif check.polymorphic_ctype.model == 'httpstatuscheck' %}{% url "duplicate-http-check" pk=check.id %}{% elif check.polymorphic_ctype.model == 'icmpstatuscheck' %}{% url "duplicate-icmp-check" pk=check.id %}{% elif check.polymorphic_ctype.model == 'jenkinsstatuscheck' %}{% url "duplicate-jenkins-check" pk=check.id %}{% endif %}">
+            </a><a class="btn btn-xs" href="{% if check.polymorphic_ctype.model == 'graphitestatuscheck' %}{% url "duplicate-graphite-check" pk=check.id %}{% elif check.polymorphic_ctype.model == 'httpstatuscheck' %}{% url "duplicate-http-check" pk=check.id %}{% elif check.polymorphic_ctype.model == 'icmpstatuscheck' %}{% url "duplicate-icmp-check" pk=check.id %}{% elif check.polymorphic_ctype.model == 'jenkinsstatuscheck' %}{% url "duplicate-jenkins-check" pk=check.id %}
+              {% elif check.duplicate_url_name %}
+                {% url check.duplicate_url_name pk=check.id %}
+              {% endif %}">
               <i class="fa fa-copy"></i><span class="break"></span>
             </a>
             <a class="btn btn-xs" href="{% url "run-check" pk=check.id %}">

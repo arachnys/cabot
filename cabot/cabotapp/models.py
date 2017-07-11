@@ -71,6 +71,17 @@ def calculate_debounced_passing(recent_results, debounce=0):
             return True
     return False
 
+def add_custom_check_plugins():
+    custom_check_types = []
+    if len(settings.CABOT_CUSTOM_CHECK_PLUGINS_PARSED) > 0:
+        for plugin_name in settings.CABOT_CUSTOM_CHECK_PLUGINS_PARSED:
+            check_name = plugin_name.replace('cabot_check_', '')
+            custom_check = {}
+            custom_check['creation_url'] = "create-" + check_name + "-check"
+            custom_check['check_name'] = check_name
+            custom_check_types.append(custom_check)
+
+    return custom_check_types
 
 class CheckGroupMixin(models.Model):
     class Meta:
@@ -881,7 +892,6 @@ class StatusCheckResult(models.Model):
         if isinstance(self.raw_data, basestring):
             self.raw_data = self.raw_data[:RAW_DATA_LIMIT]
         return super(StatusCheckResult, self).save(*args, **kwargs)
-
 
 class AlertAcknowledgement(models.Model):
     time = models.DateTimeField()

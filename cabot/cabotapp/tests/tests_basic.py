@@ -12,7 +12,8 @@ from cabot.cabotapp.alert import update_alert_plugins, AlertPlugin
 from cabot.cabotapp.models import (
     GraphiteStatusCheck, JenkinsStatusCheck,
     HttpStatusCheck, ICMPStatusCheck, Service, Instance,
-    StatusCheckResult, minimize_targets, ServiceStatusSnapshot)
+    StatusCheckResult, minimize_targets, ServiceStatusSnapshot,
+    add_custom_check_plugins)
 from cabot.cabotapp.calendar import get_events
 from cabot.cabotapp.views import StatusCheckReportForm
 from cabot.cabotapp import tasks
@@ -294,7 +295,11 @@ class TestCheckRun(LocalTestCase):
     @patch('cabot.cabotapp.graphite.requests.get', fake_graphite_response)
     def test_graphite_run(self):
         checkresults = self.graphite_check.statuscheckresult_set.all()
+        custom_check_types = add_custom_check_plugins()
+        self.assertEqual(len(custom_check_types), 0)
         self.assertEqual(len(checkresults), 2)
+        custom_check_types = add_custom_check_plugins()
+        self.assertEqual(len(custom_check_types), 0)
         self.graphite_check.utcnow = 1387818601 # see graphite_response.json for this magic timestamp
         self.graphite_check.run()
         checkresults = self.graphite_check.statuscheckresult_set.all()
@@ -354,6 +359,8 @@ class TestCheckRun(LocalTestCase):
     def test_graphite_empty_run(self):
         checkresults = self.graphite_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 2)
+        custom_check_types = add_custom_check_plugins()
+        self.assertEqual(len(custom_check_types), 0)
         self.graphite_check.run()
         checkresults = self.graphite_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 3)
@@ -373,6 +380,8 @@ class TestCheckRun(LocalTestCase):
     def test_graphite_timing(self):
         checkresults = self.graphite_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 2)
+        custom_check_types = add_custom_check_plugins()
+        self.assertEqual(len(custom_check_types), 0)
         self.graphite_check.run()
         checkresults = self.graphite_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 3)
@@ -383,6 +392,8 @@ class TestCheckRun(LocalTestCase):
     def test_jenkins_run(self):
         checkresults = self.jenkins_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 0)
+        custom_check_types = add_custom_check_plugins()
+        self.assertEqual(len(custom_check_types), 0)
         self.jenkins_check.run()
         checkresults = self.jenkins_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 1)
@@ -392,6 +403,8 @@ class TestCheckRun(LocalTestCase):
     def test_jenkins_blocked_build(self):
         checkresults = self.jenkins_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 0)
+        custom_check_types = add_custom_check_plugins()
+        self.assertEqual(len(custom_check_types), 0)
         self.jenkins_check.run()
         checkresults = self.jenkins_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 1)
@@ -401,6 +414,8 @@ class TestCheckRun(LocalTestCase):
     def test_timeout_handling_in_jenkins(self):
         checkresults = self.jenkins_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 0)
+        custom_check_types = add_custom_check_plugins()
+        self.assertEqual(len(custom_check_types), 0)
         self.jenkins_check.run()
         checkresults = self.jenkins_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 1)
@@ -412,6 +427,8 @@ class TestCheckRun(LocalTestCase):
     def test_http_run(self):
         checkresults = self.http_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 0)
+        custom_check_types = add_custom_check_plugins()
+        self.assertEqual(len(custom_check_types), 0)
         self.http_check.run()
         checkresults = self.http_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 1)
@@ -436,6 +453,8 @@ class TestCheckRun(LocalTestCase):
     def test_timeout_handling_in_http(self):
         checkresults = self.http_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 0)
+        custom_check_types = add_custom_check_plugins()
+        self.assertEqual(len(custom_check_types), 0)
         self.http_check.run()
         checkresults = self.http_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 1)
@@ -1225,3 +1244,16 @@ class TestMinimizeTargets(LocalTestCase):
         result = minimize_targets(["prefix.prefix.a.suffix.suffix",
                                    "prefix.prefix.b.suffix.suffix",])
         self.assertEqual(result, ["a", "b"])
+
+class TestCustomCheckPluginFunctions(LocalTestCase):
+    def test_without_check_plugins(self):
+        result = add_custom_check_plugins()
+        self.assertEqual(result, [])
+
+    @override_settings(CABOT_CUSTOM_CHECK_PLUGINS_PARSED=['cabot_check_skeleton'])
+    def test_with_check_plugins(self):
+        result = add_custom_check_plugins()
+        self.assertEqual(result, [{
+            'creation_url': 'create-skeleton-check',
+            'check_name': 'skeleton'
+        }])
