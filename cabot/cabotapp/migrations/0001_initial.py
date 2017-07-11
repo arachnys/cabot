@@ -8,22 +8,24 @@ from functools import reduce
 
 def add_custom_check_plugins_models(operations, plugin_name):
     name = plugin_name.replace('cabot_check_', '')
-    operation = migrations.CreateModel(
-        name=name.capitalize() + 'StatusCheck',
-        fields=[
-        ],
-        options={
-            'abstract': False,
-            'proxy': True,
-        },
-        bases=('cabotapp.statuscheck',),
-    )
+    if plugin_name != '':
+        operation = migrations.CreateModel(
+            name=name.capitalize() + 'StatusCheck',
+            fields=[
+            ],
+            options={
+                'abstract': False,
+                'proxy': True,
+            },
+            bases=('cabotapp.statuscheck',),
+        )
 
-    operations += [
-        operation
-    ]
+        operations += [
+            operation
+        ]
 
     return operations
+
 
 class Migration(migrations.Migration):
 
