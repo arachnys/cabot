@@ -12,11 +12,17 @@
   <div class="col-xs-12">
     <div id="graph"></div>
     <div id="legend"></div>
+    {% if result.check.grafana_panel and result.check.grafana_panel.panel_url %}
+    <iframe src="{{ result.check.grafana_panel.panel_url }}" width="100%" height="300" frameborder="0"></iframe>
+    {% endif %}
   </div>
   <div class="col-xs-12">
     <table class="table table-striped table-bordered">
       <tbody>
         <tr><th>Name</th><td>{{ result.check.name }}</td></tr>
+        {% if result.check.grafana_panel and result.check.grafana_panel.panel_url %}
+        <tr><th>Grafana Link</th><td><a href="{{ result.check.grafana_panel.panel_url }}">{{ result.check.name }}</a></td></tr>
+        {% endif %}
         <tr><th>Status</th><td>{{ result.status|capfirst }}</td></tr>
         <tr><th>Time started</th><td>{{ result.time }}</td></tr>
         <tr><th>Time complete</th><td>{{ result.time_complete }}</td></tr>

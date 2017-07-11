@@ -3,9 +3,9 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.views.generic import View, UpdateView
 from cabot.cabotapp.views import LoginRequiredMixin
-from cabot.metricsapp.api import get_es_status_check_fields, get_status_check_fields, get_panel_url
+from cabot.metricsapp.api import get_es_status_check_fields, get_status_check_fields
 from cabot.metricsapp.forms import GrafanaElasticsearchStatusCheckForm, GrafanaElasticsearchStatusCheckUpdateForm
-from cabot.metricsapp.models import GrafanaInstance, ElasticsearchStatusCheck, GrafanaDataSource
+from cabot.metricsapp.models import ElasticsearchStatusCheck, GrafanaDataSource, GrafanaPanel
 
 
 class GrafanaElasticsearchStatusCheckCreateView(LoginRequiredMixin, View):
@@ -28,12 +28,8 @@ class GrafanaElasticsearchStatusCheckCreateView(LoginRequiredMixin, View):
                                                               templating_dict, grafana_panel, request.user),
                                es_fields=get_es_status_check_fields(dashboard_info, panel_info, series))
 
-        panel_url = get_panel_url(GrafanaInstance.objects.get(id=instance_id).url,
-                                  request.session['dashboard_uri'],
-                                  request.session['panel_id'],
-                                  templating_dict)
         return render(request, self.template_name, {'form': form, 'check_type': 'Elasticsearch',
-                                                    'panel_url': panel_url})
+                                                    'panel_url': GrafanaPanel.objects.get(id=grafana_panel).panel_url})
 
     def post(self, request, *args, **kwargs):
         dashboard_info = request.session['dashboard_info']
@@ -56,12 +52,8 @@ class GrafanaElasticsearchStatusCheckCreateView(LoginRequiredMixin, View):
             check = form.save()
             return HttpResponseRedirect(reverse('check', kwargs={'pk': check.id}))
 
-        panel_url = get_panel_url(GrafanaInstance.objects.get(id=instance_id).url,
-                                  request.session['dashboard_uri'],
-                                  request.session['panel_id'],
-                                  templating_dict)
         return render(request, self.template_name, {'form': form, 'check_type': 'Elasticsearch',
-                                                    'panel_url': panel_url})
+                                                    'panel_url': GrafanaPanel.objects.get(id=grafana_panel).panel_url})
 
 
 class GrafanaElasticsearchStatusCheckUpdateView(LoginRequiredMixin, UpdateView):
