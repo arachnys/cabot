@@ -1,7 +1,8 @@
 from django.contrib import admin
-from .models import (UserProfile, Service, Shift,
-                     ServiceStatusSnapshot, StatusCheck, StatusCheckResult,
-                     Instance, AlertAcknowledgement)
+from cabot.cabotapp.modelcategories.user import UserProfile
+from cabot.cabotapp.modelcategories.common import (Service, ServiceStatusSnapshot, Shift,
+                                        StatusCheck, StatusCheckResult, Instance,
+                                        AlertAcknowledgement)
 from .alert import AlertPluginUserData, AlertPlugin
 
 admin.site.register(UserProfile)

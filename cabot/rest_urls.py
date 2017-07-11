@@ -5,6 +5,8 @@ from django.contrib.auth import models as django_models
 
 from polymorphic.models import PolymorphicModel
 from cabot.cabotapp import models, alert
+from cabot.cabotapp.modelcategories import common as common_model
+from cabot.cabotapp.modelcategories import user as user_model
 from rest_framework import routers, serializers, viewsets, mixins
 import logging
 
@@ -132,7 +134,7 @@ if settings.EXPOSE_USER_API:
     ))
 
     router.register(r'user_profiles', create_viewset(
-        arg_model=models.UserProfile,
+        arg_model=user_model.UserProfile,
         arg_fields=(
             'user',
             'fallback_alert_user',
@@ -141,7 +143,7 @@ if settings.EXPOSE_USER_API:
 
 
 router.register(r'shifts', create_viewset(
-    arg_model=models.Shift,
+    arg_model=common_model.Shift,
     arg_fields=(
         'start',
         'end',

@@ -144,6 +144,8 @@ INSTALLED_APPS = (
     'polymorphic',
     'jsonify',
     'cabot.cabotapp',
+    # Add custom check plugins you've installed
+    #'cabot_check_skeleton',
     'rest_framework',
 )
 

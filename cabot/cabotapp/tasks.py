@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 @task(ignore_result=True)
 def run_status_check(check_or_id):
-    from .models import StatusCheck
+    from cabot.cabotapp.modelcategories.common import StatusCheck
     if not isinstance(check_or_id, StatusCheck):
         check = StatusCheck.objects.get(id=check_or_id)
     else:
@@ -22,7 +22,7 @@ def run_status_check(check_or_id):
 
 @task(ignore_result=True)
 def run_all_checks():
-    from .models import StatusCheck
+    from cabot.cabotapp.modelcategories.common import StatusCheck
     from datetime import timedelta
     checks = StatusCheck.objects.all()
     seconds = range(60)
@@ -43,7 +43,7 @@ def update_services(ignore_result=True):
 
 @task(ignore_result=True)
 def update_service(service_or_id):
-    from .models import Service
+    from cabot.cabotapp.modelcategories.common import StatusCheck
     if not isinstance(service_or_id, Service):
         service = Service.objects.get(id=service_or_id)
     else:
@@ -53,7 +53,7 @@ def update_service(service_or_id):
 
 @task(ignore_result=True)
 def update_instance(instance_or_id):
-    from .models import Instance
+    from cabot.cabotapp.modelcategories.common import StatusCheck
     if not isinstance(instance_or_id, Instance):
         instance = Instance.objects.get(id=instance_or_id)
     else:
@@ -63,7 +63,7 @@ def update_instance(instance_or_id):
 
 @task(ignore_result=True)
 def update_shifts():
-    from .models import update_shifts as _update_shifts
+    from cabot.cabotapp.modelcategories.common import update_shifts as _update_shifts
     _update_shifts()
 
 
@@ -74,7 +74,7 @@ def clean_db(days_to_retain=60, batch_size=10000):
 
     To loop over undeleted results, spawn new tasks to make sure db connection closed etc
     """
-    from .models import StatusCheckResult, ServiceStatusSnapshot
+    from cabot.cabotapp.modelcategories.common import StatusCheckResult, ServiceStatusSnapshot
 
     to_discard_results = StatusCheckResult.objects.filter(time_complete__lte=timezone.now() - timedelta(days=days_to_retain))
     to_discard_snapshots = ServiceStatusSnapshot.objects.order_by('time').filter(time__lte=timezone.now() - timedelta(days=days_to_retain))

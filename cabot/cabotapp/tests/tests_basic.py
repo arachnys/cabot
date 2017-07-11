@@ -11,8 +11,11 @@ from cabot.cabotapp.graphite import parse_metric
 from cabot.cabotapp.alert import update_alert_plugins, AlertPlugin
 from cabot.cabotapp.models import (
     GraphiteStatusCheck, JenkinsStatusCheck,
-    HttpStatusCheck, ICMPStatusCheck, Service, Instance,
-    StatusCheckResult, minimize_targets, ServiceStatusSnapshot)
+    HttpStatusCheck, ICMPStatusCheck, minimize_targets
+)
+from cabot.cabotapp.modelcategories.common import (
+    Service, Instance,
+    StatusCheckResult, ServiceStatusSnapshot)
 from cabot.cabotapp.calendar import get_events
 from cabot.cabotapp.views import StatusCheckReportForm
 from cabot.cabotapp import tasks
@@ -397,7 +400,7 @@ class TestCheckRun(LocalTestCase):
         self.assertEqual(len(checkresults), 1)
         self.assertFalse(self.jenkins_check.last_result().succeeded)
 
-    @patch('cabot.cabotapp.models.requests.get', throws_timeout)
+    @patch('cabot.cabotapp.modelcategories.requests.get', throws_timeout)
     def test_timeout_handling_in_jenkins(self):
         checkresults = self.jenkins_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 0)
@@ -408,7 +411,7 @@ class TestCheckRun(LocalTestCase):
         self.assertIn(u'Error fetching from Jenkins - фиктивная ошибка',
                       self.jenkins_check.last_result().error)
 
-    @patch('cabot.cabotapp.models.requests.get', fake_http_200_response)
+    @patch('cabot.cabotapp.modelcategories.requests.get', fake_http_200_response)
     def test_http_run(self):
         checkresults = self.http_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 0)
@@ -432,7 +435,7 @@ class TestCheckRun(LocalTestCase):
         self.assertEqual(self.http_check.calculated_status,
                          Service.CALCULATED_FAILING_STATUS)
 
-    @patch('cabot.cabotapp.models.requests.get', throws_timeout)
+    @patch('cabot.cabotapp.modelcategories.requests.get', throws_timeout)
     def test_timeout_handling_in_http(self):
         checkresults = self.http_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 0)
@@ -443,7 +446,7 @@ class TestCheckRun(LocalTestCase):
         self.assertIn(u'Request error occurred: фиктивная ошибка innit',
                       self.http_check.last_result().error)
 
-    @patch('cabot.cabotapp.models.requests.get', fake_http_404_response)
+    @patch('cabot.cabotapp.modelcategories.requests.get', fake_http_404_response)
     def test_http_run_bad_resp(self):
         checkresults = self.http_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 0)
@@ -481,12 +484,12 @@ class TestInstances(LocalTestCase):
 
 class TestDutyRota(LocalTestCase):
 
-    @patch('cabot.cabotapp.models.requests.get', fake_gcal_response)
+    @patch('cabot.cabotapp.modelcategories.requests.get', fake_gcal_response)
     def test_duty_rota(self):
         events = get_events()
         self.assertEqual(events[0]['summary'], 'troels')
 
-    @patch('cabot.cabotapp.models.requests.get', fake_recurring_response)
+    @patch('cabot.cabotapp.modelcategories.requests.get', fake_recurring_response)
     def test_duty_rota_recurring(self):
         events = get_events()
         events.sort(key=lambda ev: ev['start'])
@@ -499,7 +502,7 @@ class TestDutyRota(LocalTestCase):
             else:
                 curr_summ = 'foo'
 
-    @patch('cabot.cabotapp.models.requests.get', fake_recurring_response_notz)
+    @patch('cabot.cabotapp.modelcategories.requests.get', fake_recurring_response_notz)
     def test_duty_rota_recurring_notz(self):
         events = get_events()
         events.sort(key=lambda ev: ev['start'])
@@ -512,7 +515,7 @@ class TestDutyRota(LocalTestCase):
             else:
                 curr_summ = 'foo'
 
-    @patch('cabot.cabotapp.models.requests.get',
+    @patch('cabot.cabotapp.modelcategories.requests.get',
            fake_recurring_response_complex)
     def test_duty_rota_recurring_complex(self):
         events = get_events()
