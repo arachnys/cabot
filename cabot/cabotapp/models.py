@@ -13,6 +13,7 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.signals import post_save
 from django.utils import timezone
+from cabot.cabot_config import CABOT_CUSTOM_CHECK_PLUGINS
 
 
 from polymorphic.models import PolymorphicModel
@@ -71,6 +72,19 @@ def calculate_debounced_passing(recent_results, debounce=0):
             return True
     return False
 
+def add_custom_check_plugins():
+    custom_check_types = []
+    plugins_name = None
+    if CABOT_CUSTOM_CHECK_PLUGINS:
+        plugins_name = CABOT_CUSTOM_CHECK_PLUGINS.split(',')
+        for plugin_name in plugins_name:
+            check_name = plugin_name.replace('cabot_check_', '')
+            custom_check = {}
+            custom_check['creation_url'] = "create-" + check_name + "-check"
+            custom_check['check_name'] = check_name
+            custom_check_types.append(custom_check)
+
+    return custom_check_types
 
 class CheckGroupMixin(models.Model):
     class Meta:
@@ -882,6 +896,12 @@ class StatusCheckResult(models.Model):
             self.raw_data = self.raw_data[:RAW_DATA_LIMIT]
         return super(StatusCheckResult, self).save(*args, **kwargs)
 
+
+class CustomStatusCheck(StatusCheck):
+    class Meta(StatusCheck.Meta):
+        proxy = True
+
+    custom_check_types = add_custom_check_plugins()
 
 class AlertAcknowledgement(models.Model):
     time = models.DateTimeField()
