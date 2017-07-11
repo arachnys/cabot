@@ -6,7 +6,7 @@ from django.test import TestCase
 from mock import patch
 
 from cabot.cabotapp.alert import AlertPlugin
-from cabot.cabotapp.models import Service
+from cabot.cabotapp.modelcategories.common import Service
 
 
 class PluginSettingsTest(TestCase):

@@ -75,6 +75,12 @@
                 <li>
                   <a href="{% url "create-icmp-check" %}?service={{ service.id }}&instance={{ instance.id }}" class="" title="Add new ICMP check"><i class="glyphicon glyphicon-transfer"></i> ICMP check</a>
                 </li>
+                <!-- Custom check plugins buttons-->
+                {% for checktype in custom_check_types %}
+                  <li>
+                    <a href="{% url checktype.creation_url %}?service={{ service.id }}&instance={{ instance.id }}" class="" title="Add new {{checktype.check_name|capfirst}} check"><i class="glyphicon glyphicon-transfer"></i> {{checktype.check_name|capfirst}} check</a>
+                  </li>
+                {% endfor %}
               </ul>
             </li>
           </ul>
