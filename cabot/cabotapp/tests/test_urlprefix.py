@@ -46,12 +46,12 @@ class override_local_settings(override_settings):
         super(override_local_settings, self).__exit__(exc_type, exc_value, traceback)
         self.clear_cache()
 
+def set_url_prefix_and_custom_check_plugins(prefix, plugins):
+    return override_local_settings(prefix, plugins)
+
 class URLPrefixTestCase(LocalTestCase):
     def set_url_prefix(self, prefix):
         return override_local_settings(prefix, [])
-
-    def set_url_prefix_and_custom_check_plugins(self, prefix, plugins):
-        return override_local_settings(prefix, plugins)
 
     def test_reverse(self):
         prefix = '/test'
@@ -97,7 +97,7 @@ class URLPrefixTestCase(LocalTestCase):
         custom_check_plugins = ['cabot_check_skeleton']
         self.client.login(username=self.username, password=self.password)
 
-        with self.set_url_prefix_and_custom_check_plugins(prefix, custom_check_plugins):
+        with set_url_prefix_and_custom_check_plugins(prefix, custom_check_plugins):
             response = self.client.get(reverse('create-skeleton-check'))
 
             self.assertEqual(response.status_code, 200)
