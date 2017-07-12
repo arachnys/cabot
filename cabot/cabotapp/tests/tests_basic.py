@@ -12,7 +12,8 @@ from cabot.cabotapp.alert import update_alert_plugins, AlertPlugin
 from cabot.cabotapp.models import (
     GraphiteStatusCheck, JenkinsStatusCheck,
     HttpStatusCheck, ICMPStatusCheck, Service, Instance,
-    StatusCheckResult, minimize_targets, ServiceStatusSnapshot)
+    StatusCheckResult, minimize_targets, ServiceStatusSnapshot,
+    add_custom_check_plugins)
 from cabot.cabotapp.calendar import get_events
 from cabot.cabotapp.views import StatusCheckReportForm
 from cabot.cabotapp import tasks
@@ -1225,3 +1226,16 @@ class TestMinimizeTargets(LocalTestCase):
         result = minimize_targets(["prefix.prefix.a.suffix.suffix",
                                    "prefix.prefix.b.suffix.suffix",])
         self.assertEqual(result, ["a", "b"])
+
+class TestCustomCheckPluginFunctions(LocalTestCase):
+    def test_without_check_plugins(self):
+        result = add_custom_check_plugins()
+        self.assertEqual(result, [])
+
+    @override_settings(CABOT_CUSTOM_CHECK_PLUGINS_PARSED=['cabot_check_skeleton'])
+    def test_with_check_plugins(self):
+        result = add_custom_check_plugins()
+        self.assertEqual(result, [{
+            'creation_url': 'create-skeleton-check',
+            'check_name': 'skeleton'
+        }])

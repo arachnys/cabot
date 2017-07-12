@@ -13,7 +13,6 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.signals import post_save
 from django.utils import timezone
-from cabot.cabot_config import CABOT_CUSTOM_CHECK_PLUGINS
 
 
 from polymorphic.models import PolymorphicModel
@@ -74,10 +73,8 @@ def calculate_debounced_passing(recent_results, debounce=0):
 
 def add_custom_check_plugins():
     custom_check_types = []
-    plugins_name = None
-    if CABOT_CUSTOM_CHECK_PLUGINS:
-        plugins_name = CABOT_CUSTOM_CHECK_PLUGINS.split(',')
-        for plugin_name in plugins_name:
+    if len(settings.CABOT_CUSTOM_CHECK_PLUGINS_PARSED) > 0:
+        for plugin_name in settings.CABOT_CUSTOM_CHECK_PLUGINS_PARSED:
             check_name = plugin_name.replace('cabot_check_', '')
             custom_check = {}
             custom_check['creation_url'] = "create-" + check_name + "-check"

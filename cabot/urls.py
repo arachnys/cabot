@@ -31,7 +31,7 @@ admin.autodiscover()
 
 from importlib import import_module
 import logging
-from cabot.cabot_config import CABOT_CUSTOM_CHECK_PLUGINS
+#from cabot.settings import CABOT_CUSTOM_CHECK_PLUGINS_PARSED as CABOT_CUSTOM_CHECK_PLUGINS
 
 logger = logging.getLogger(__name__)
 
@@ -170,7 +170,7 @@ def append_plugin_urls():
                 url(r'^plugins/%s/' % plugin, include('%s.urls' % plugin))
             ]
 
-    for plugin_name in CABOT_CUSTOM_CHECK_PLUGINS.split(','):
+    for plugin_name in settings.CABOT_CUSTOM_CHECK_PLUGINS_PARSED:
         if plugin_name != '':
             try:
                 plugin = import_module(plugin_name + ".plugin")

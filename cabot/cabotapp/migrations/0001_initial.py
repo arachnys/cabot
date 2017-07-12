@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from django.db import models, migrations
 from django.conf import settings
-from cabot.cabot_config import CABOT_CUSTOM_CHECK_PLUGINS
+from cabot.settings import CABOT_CUSTOM_CHECK_PLUGINS_PARSED as CABOT_CUSTOM_CHECK_PLUGINS
 from functools import reduce
 
 def add_custom_check_plugins_models(operations, plugin_name):
@@ -34,7 +34,7 @@ class Migration(migrations.Migration):
         ('contenttypes', '0001_initial'),
     ]
 
-    operations = reduce(add_custom_check_plugins_models, CABOT_CUSTOM_CHECK_PLUGINS.split(','), [
+    operations = reduce(add_custom_check_plugins_models, CABOT_CUSTOM_CHECK_PLUGINS, [
         migrations.CreateModel(
             name='AlertAcknowledgement',
             fields=[
