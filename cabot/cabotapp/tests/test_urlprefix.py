@@ -4,15 +4,13 @@ from django.core.urlresolvers import reverse, clear_url_caches
 from django.conf import settings
 from django.test.utils import override_settings
 from importlib import import_module
-from mock import Mock
-import sys
 
 from rest_framework import status, HTTP_HEADER_ENCODING
 
 from tests_basic import LocalTestCase
 
 
-class override_settings(override_settings):
+class override_local_settings(override_settings):
     def clear_cache(self):
         # If we don't do this, nothing gets correctly set for the URL Prefix
         urlconf = settings.ROOT_URLCONF
@@ -31,7 +29,7 @@ class override_settings(override_settings):
 
         # Have to turn off the compressor here, can't find a way to reload
         # the COMPRESS_URL into it on the fly
-        super(override_settings, self).__init__(
+        super(override_local_settings, self).__init__(
             URL_PREFIX=urlprefix,
             MEDIA_URL="%s/media/" % urlprefix,
             STATIC_URL="%s/static/" % urlprefix,
@@ -43,19 +41,19 @@ class override_settings(override_settings):
         )
 
     def __enter__(self):
-        super(override_settings, self).__enter__()
+        super(override_local_settings, self).__enter__()
         self.clear_cache()
 
     def __exit__(self, exc_type, exc_value, traceback):
-        super(override_settings, self).__exit__(exc_type, exc_value, traceback)
+        super(override_local_settings, self).__exit__(exc_type, exc_value, traceback)
         self.clear_cache()
 
 class URLPrefixTestCase(LocalTestCase):
     def set_url_prefix(self, prefix):
-        return override_settings(prefix, [])
+        return override_local_settings(prefix, [])
 
     def set_url_prefix_and_custom_check_plugins(self, prefix, plugins):
-        return override_settings(prefix, plugins)
+        return override_local_settings(prefix, plugins)
 
     def test_reverse(self):
         prefix = '/test'
