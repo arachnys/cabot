@@ -26,7 +26,6 @@ def add_custom_check_plugins_models(operations, plugin_name):
 
     return operations
 
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -34,7 +33,7 @@ class Migration(migrations.Migration):
         ('contenttypes', '0001_initial'),
     ]
 
-    operations = reduce(add_custom_check_plugins_models, CABOT_CUSTOM_CHECK_PLUGINS, [
+    operations = reduce(add_custom_check_plugins_models, [[
         migrations.CreateModel(
             name='AlertAcknowledgement',
             fields=[
@@ -321,4 +320,4 @@ class Migration(migrations.Migration):
             },
             bases=('cabotapp.statuscheck',),
         ),
-    ])
+    ]] + CABOT_CUSTOM_CHECK_PLUGINS)

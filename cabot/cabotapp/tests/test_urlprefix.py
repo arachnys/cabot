@@ -9,7 +9,6 @@ from rest_framework import status, HTTP_HEADER_ENCODING
 
 from tests_basic import LocalTestCase
 
-
 class override_local_settings(override_settings):
     def clear_cache(self):
         # If we don't do this, nothing gets correctly set for the URL Prefix
@@ -25,7 +24,6 @@ class override_local_settings(override_settings):
         urlprefix = urlprefix.rstrip("/")
         installed_apps = settings.INSTALLED_APPS
         installed_apps += tuple(custom_check_plugins)
-
 
         # Have to turn off the compressor here, can't find a way to reload
         # the COMPRESS_URL into it on the fly
