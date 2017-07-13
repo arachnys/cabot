@@ -98,16 +98,19 @@ class URLPrefixTestCase(LocalTestCase):
         with self.set_url_prefix(prefix):
             try:
                 response = self.client.get(reverse('create-skeleton-check'))
+                self.assertEqual(response.status_code, 500)
             except Exception as e:
                 self.assertEqual(e.message, u"Reverse for 'create-skeleton-check' not found. 'create-skeleton-check' is not a valid view function or pattern name.")
 
             try:
                 response = self.client.get(reverse('update-skeleton-check'))
+                self.assertEqual(response.status_code, 500)
             except Exception as e:
                 self.assertEqual(e.message, u"Reverse for 'update-skeleton-check' not found. 'update-skeleton-check' is not a valid view function or pattern name.")
 
             try:
                 response = self.client.get(reverse('duplicate-skeleton-check'))
+                self.assertEqual(response.status_code, 500)
             except Exception as e:
                 self.assertEqual(e.message, u"Reverse for 'duplicate-skeleton-check' not found. 'duplicate-skeleton-check' is not a valid view function or pattern name.")
 
@@ -144,7 +147,6 @@ def test_settings_parsed_correctly(self):
     settings.CABOT_CUSTOM_CHECK_PLUGINS = 'cabot_check_skeleton'
 
     with self.set_url_prefix(prefix):
-        print('settings.CABOT_CUSTOM_CHECK_PLUGINS', settings.CABOT_CUSTOM_CHECK_PLUGINS)
-        self.assertEqual(CABOT_CUSTOM_CHECK_PLUGINS_PARSED, ['cabot_check_skeleton'])
+        self.assertEqual(settings.CABOT_CUSTOM_CHECK_PLUGINS_PARSED, ['cabot_check_skeleton'])
         plugin_in_installed_apps = filter(lambda app: app == 'cabot_check_skeleton', settings.INSTALLED_APPS)
         self.assertEqual(plugin_in_installed_apps, ['cabot_check_skeleton'])
