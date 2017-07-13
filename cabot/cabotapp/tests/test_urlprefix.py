@@ -100,19 +100,25 @@ class URLPrefixTestCase(LocalTestCase):
                 response = self.client.get(reverse('create-skeleton-check'))
                 self.assertEqual(response.status_code, 500)
             except Exception as e:
-                self.assertEqual(e.message, u"Reverse for 'create-skeleton-check' not found. 'create-skeleton-check' is not a valid view function or pattern name.")
+                create_error = (u"Reverse for 'create-skeleton-check' not found. "
+                    "'create-skeleton-check' is not a valid view function or pattern name.")
+                self.assertEqual(e.message, create_error)
 
             try:
                 response = self.client.get(reverse('update-skeleton-check'))
                 self.assertEqual(response.status_code, 500)
             except Exception as e:
-                self.assertEqual(e.message, u"Reverse for 'update-skeleton-check' not found. 'update-skeleton-check' is not a valid view function or pattern name.")
+                update_error = (u"Reverse for 'update-skeleton-check' not found. "
+                    "'update-skeleton-check' is not a valid view function or pattern name.")
+                self.assertEqual(e.message, update_error)
 
             try:
                 response = self.client.get(reverse('duplicate-skeleton-check'))
                 self.assertEqual(response.status_code, 500)
             except Exception as e:
-                self.assertEqual(e.message, u"Reverse for 'duplicate-skeleton-check' not found. 'duplicate-skeleton-check' is not a valid view function or pattern name.")
+                duplicate_error = (u"Reverse for 'duplicate-skeleton-check' not found. "
+                    "'duplicate-skeleton-check' is not a valid view function or pattern name.")
+                self.assertEqual(e.message, duplicate_error)
 
     def test_custom_check_plugins_urls(self):
         sys.modules['cabot_check_skeleton'] = import_module("cabot.cabotapp.tests.fixtures.cabot_check_skeleton")
