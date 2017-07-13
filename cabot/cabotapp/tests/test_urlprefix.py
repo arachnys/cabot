@@ -152,6 +152,7 @@ def test_correct_custom_checks_template(self):
 def test_settings_parsed_correctly(self):
     settings.CABOT_CUSTOM_CHECK_PLUGINS = 'cabot_check_skeleton'
 
+    prefix = '/test'
     with self.set_url_prefix(prefix):
         self.assertEqual(settings.CABOT_CUSTOM_CHECK_PLUGINS_PARSED, ['cabot_check_skeleton'])
         plugin_in_installed_apps = filter(lambda app: app == 'cabot_check_skeleton', settings.INSTALLED_APPS)
