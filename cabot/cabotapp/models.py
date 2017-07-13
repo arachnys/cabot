@@ -893,13 +893,6 @@ class StatusCheckResult(models.Model):
             self.raw_data = self.raw_data[:RAW_DATA_LIMIT]
         return super(StatusCheckResult, self).save(*args, **kwargs)
 
-
-class CustomStatusCheck(StatusCheck):
-    class Meta(StatusCheck.Meta):
-        proxy = True
-
-    custom_check_types = add_custom_check_plugins()
-
 class AlertAcknowledgement(models.Model):
     time = models.DateTimeField()
     user = models.ForeignKey(settings.AUTH_USER_MODEL)

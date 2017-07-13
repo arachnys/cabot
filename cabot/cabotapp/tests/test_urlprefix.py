@@ -139,21 +139,12 @@ class URLPrefixTestCase(LocalTestCase):
 
             self.assertEqual(response.status_code, 302)
 
-def test_correct_custom_checks_template(self):
-    sys.modules['cabot_check_skeleton'] = import_module("cabot.cabotapp.tests.fixtures.cabot_check_skeleton")
-    prefix = '/test'
-    custom_check_plugins = ['cabot_check_skeleton']
-    self.client.login(username=self.username, password=self.password)
+    def test_correct_custom_checks_template(self):
+        sys.modules['cabot_check_skeleton'] = import_module("cabot.cabotapp.tests.fixtures.cabot_check_skeleton")
+        prefix = '/test'
+        custom_check_plugins = ['cabot_check_skeleton']
+        self.client.login(username=self.username, password=self.password)
 
-    with set_url_prefix_and_custom_check_plugins(prefix, custom_check_plugins):
-        response = self.client.get(reverse('checks'))
-        self.assertIn(response.content, reverse('create-skeleton-check'))
-
-def test_settings_parsed_correctly(self):
-    settings.CABOT_CUSTOM_CHECK_PLUGINS = 'cabot_check_skeleton'
-
-    prefix = '/test'
-    with self.set_url_prefix(prefix):
-        self.assertEqual(settings.CABOT_CUSTOM_CHECK_PLUGINS_PARSED, ['cabot_check_skeleton'])
-        plugin_in_installed_apps = filter(lambda app: app == 'cabot_check_skeleton', settings.INSTALLED_APPS)
-        self.assertEqual(plugin_in_installed_apps, ['cabot_check_skeleton'])
+        with set_url_prefix_and_custom_check_plugins(prefix, custom_check_plugins):
+            response = self.client.get(reverse('checks'))
+            self.assertIn(reverse('create-skeleton-check'), response.content)

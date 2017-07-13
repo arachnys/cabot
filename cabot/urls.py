@@ -175,7 +175,7 @@ def append_plugin_urls():
             try:
                 plugin = import_module(plugin_name + ".plugin")
             except Exception as e:
-                logger.error(u"Unable to load plugin: %s , %s" % (plugin_name, e.message,))
+                pass
             else:
                 check_name = plugin_name.replace('cabot_check_', '')
                 createViewClass = getattr(plugin, '%sCheckCreateView' % check_name.capitalize())
