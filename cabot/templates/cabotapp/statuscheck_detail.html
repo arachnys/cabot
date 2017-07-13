@@ -14,28 +14,8 @@
         {% if check.polymorphic_ctype.model == 'jenkinsstatuscheck' %}
           <a href="{% jenkins_human_url check.name %}" class=""><i class="glyphicon glyphicon-link"></i></a>
         {% endif %}
-        <a href="
-          {% if check.polymorphic_ctype.model == 'graphitestatuscheck' %}
-            {% url "update-graphite-check" pk=check.id %}
-          {% elif check.polymorphic_ctype.model == 'httpstatuscheck' %}
-            {% url "update-http-check" pk=check.id %}
-          {% elif check.polymorphic_ctype.model == 'jenkinsstatuscheck' %}
-            {% url "update-jenkins-check" pk=check.id %}
-          {% elif check.polymorphic_ctype.model == 'icmpstatuscheck' %}
-            {% url "update-icmp-check" pk=check.id %}
-          {% elif check.edit_url_name %}
-            {% url check.edit_url_name pk=check.id %}
-          {% endif %}" class="">
-          <i class="glyphicon glyphicon-edit"></i>
-        <a href="
-          {% if check.polymorphic_ctype.model == 'graphitestatuscheck' %}
-            {% url "duplicate-graphite-check" pk=check.id %}
-          {% elif check.polymorphic_ctype.model == 'httpstatuscheck' %}
-            {% url "duplicate-http-check" pk=check.id %}
-          {% elif check.polymorphic_ctype.model == 'jenkinsstatuscheck' %}
-            {% url "duplicate-jenkins-check" pk=check.id %}
-          {% elif check.polymorphic_ctype.model == 'icmpstatuscheck' %}
-            {% url "duplicate-icmp-check" pk=check.id %}
+        <a href="{% if check.polymorphic_ctype.model == 'graphitestatuscheck' %}{% url "update-graphite-check" pk=check.id %}{% elif check.polymorphic_ctype.model == 'httpstatuscheck' %}{% url "update-http-check" pk=check.id %}{% elif check.polymorphic_ctype.model == 'jenkinsstatuscheck' %}{% url "update-jenkins-check" pk=check.id %}{% elif check.polymorphic_ctype.model == 'icmpstatuscheck' %}{% url "update-icmp-check" pk=check.id %}{% elif check.edit_url_name %}{% url check.edit_url_name pk=check.id %}{% endif %}" class=""><i class="glyphicon glyphicon-edit"></i>
+        <a href="{% if check.polymorphic_ctype.model == 'graphitestatuscheck' %}{% url "duplicate-graphite-check" pk=check.id %}{% elif check.polymorphic_ctype.model == 'httpstatuscheck' %}{% url "duplicate-http-check" pk=check.id %}{% elif check.polymorphic_ctype.model == 'jenkinsstatuscheck' %}{% url "duplicate-jenkins-check" pk=check.id %}{% elif check.polymorphic_ctype.model == 'icmpstatuscheck' %}{% url "duplicate-icmp-check" pk=check.id %}
           {% elif check.duplicate_url_name %}
             {% url check.duplicate_url_name pk=check.id %}
           {% endif %}" class="">
