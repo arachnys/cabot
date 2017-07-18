@@ -78,6 +78,7 @@ def fake_es_multiple_queries(*args):
     return [Response(Search(), response) for response in get_json_file('es_response.json')] + \
            [Response(Search(), response) for response in get_json_file('es_percentile.json')]
 
+
 def fake_es_none(*args):
     return [Response(Search(), response) for response in get_json_file('es_none_nan.json')]
 

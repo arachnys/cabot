@@ -1,4 +1,5 @@
 {
+  "alias": "al",
   "bucketAggs": [
     {
       "field": "@timestamp",
