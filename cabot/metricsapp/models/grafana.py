@@ -1,7 +1,11 @@
+import logging
 import requests
 import urlparse
 from django.core.exceptions import ValidationError
 from django.db import models
+
+
+logger = logging.getLogger(__name__)
 
 
 class GrafanaInstance(models.Model):
@@ -91,6 +95,24 @@ class GrafanaPanel(models.Model):
         if self.panel_url:
             return '{}&fullscreen'.format(self.panel_url.replace('dashboard-solo', 'dashboard'))
         return None
+
+    def get_rendered_image(self):
+        """Get a .png image of this panel"""
+        # GrafanaInstance.get_request only takes the path
+        panel_url = self.panel_url.replace(urlparse.urljoin(self.grafana_instance.url, '/'), '')
+        rendered_image_url = urlparse.urljoin('render/', panel_url)
+
+        # Unfortunately "$__all" works for the normal image but not render
+        rendered_image_url = rendered_image_url.replace('$__all', 'All')
+
+        try:
+            image_request = self.grafana_instance.get_request(rendered_image_url)
+            image_request.raise_for_status()
+            return image_request.content
+
+        except requests.exceptions.RequestException:
+            logger.error('Failed to get Grafana panel image')
+            return None
 
     grafana_instance = models.ForeignKey('GrafanaInstance')
     dashboard_uri = models.CharField(max_length=40)

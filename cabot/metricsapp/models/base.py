@@ -123,3 +123,15 @@ class MetricsStatusCheckBase(StatusCheck):
             self.high_alert_value = high_alert_value
 
         self.save()
+
+    def get_status_image(self):
+        """Return a Grafana png image for the check if it exists"""
+        if self.grafana_panel is not None:
+            return self.grafana_panel.get_rendered_image()
+        return None
+
+    def get_status_link(self):
+        """Return a link from Grafana with more information about the check."""
+        if self.grafana_panel is not None:
+            return self.grafana_panel.modifiable_url
+        return None
