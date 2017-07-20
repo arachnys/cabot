@@ -27,7 +27,7 @@
       "type": "percentiles"
     }
   ],
-  "query": "request.body.test:(affirm OR ation) AND request.body.event_name:*",
+  "query": "request.body.test:(affirm OR ation) AND request.body.event_name:(e1 OR e2 OR e3)",
   "refId": "A",
   "timeField": "@timestamp"
 }

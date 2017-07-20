@@ -15,6 +15,21 @@
           "multi": true,
           "name": "event_name",
           "options": [
+            {
+              "selected": false,
+              "text": "E1",
+              "value": "e1"
+            },
+            {
+              "selected": true,
+              "text": "E2",
+              "value": "e2"
+            },
+            {
+              "selected": false,
+              "text": "E3",
+              "value": "e3"
+            }
           ],
           "query": "{\"find\": \"terms\", \"field\": \"module\", \"query\": \"name:request.body.event_name:*\"}",
           "refresh": 1,
