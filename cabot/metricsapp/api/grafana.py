@@ -186,10 +186,15 @@ def get_status_check_fields(dashboard_info, panel_info, grafana_data_source, tem
     fields['name'] = template_response(name, templating_dict)
     fields['source'] = grafana_data_source.metrics_source_base
 
-    # Earliest time should be formatted "now-3h", all other formats will be ignored
-    time_from = dashboard_info['dashboard']['time']['from'].split('-')
-    if len(time_from) == 2:
-        timestring = str(time_from[1])
+    # Get either the timeFrom override or the graph default
+    timestring = panel_info.get('timeFrom')
+    if timestring is None:
+        # Earliest time should be formatted "now-3h", all other formats will be ignored
+        time_from = dashboard_info['dashboard']['time']['from'].split('-')
+        if len(time_from) == 2:
+            timestring = str(time_from[1])
+
+    if timestring is not None:
         # pytimeparse.parse returns seconds, we want minutes
         fields['time_range'] = parse(timestring) / 60
 
