@@ -146,12 +146,15 @@ def sync_grafana_check(check_id, sync_time):
         if ElasticsearchStatusCheck.objects.filter(id=check_id).exists():
             queries = json.dumps(
                 get_es_status_check_fields(dashboard_info, panel_info, panel.selected_series)['queries'])
-            if check.queries != queries:
-                context_dict['old_queries'] = str(check.queries)
-                context_dict['new_queries'] = str(queries)
+
+            old_queries = check.queries
+            check.queries = queries
+            # Saving the check adjust the time range, so might change the queries
+            check.save()
+            if check.queries != old_queries:
+                context_dict['old_queries'] = str(old_queries)
+                context_dict['new_queries'] = str(check.queries)
                 changed_message.append(ES_QUERIES_CHANGED)
-                check.queries = queries
-                check.save()
 
         # If anything has changed, send an email!
         if changed_message != []:

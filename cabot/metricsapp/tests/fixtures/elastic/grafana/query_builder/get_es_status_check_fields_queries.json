@@ -55,7 +55,7 @@
             {
               "range": {
                 "@timestamp": {
-                  "gte": "now-3h"
+                  "gte": "now-20m"
                 }
               }
             }
@@ -76,7 +76,7 @@
                 "interval": "1m",
                 "extended_bounds": {
                   "max": "now",
-                  "min": "now-3h"
+                  "min": "now-20m"
                 }
               },
               "aggs": {

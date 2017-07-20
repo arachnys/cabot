@@ -231,7 +231,7 @@ def get_es_status_check_fields(dashboard_info, panel_info, series_list):
         # Format of timeFrom is '2h', '1m', etc.
         min_time = 'now-{}'.format(time_from)
     else:
-        min_time = panel_info.get('timeFrom') or dashboard_info['dashboard']['time']['from']
+        min_time = dashboard_info['dashboard']['time']['from']
     default_interval = panel_info.get('interval')
 
     if default_interval is not None:

@@ -358,7 +358,7 @@
             ],
             "thresholds": [
             ],
-            "timeFrom": null,
+            "timeFrom": "20m",
             "timeShift": null,
             "title": "Panel 106",
             "tooltip": {

@@ -168,6 +168,28 @@ def create_generic_templating_dict(dashboard_info):
     return templates
 
 
+def get_time_range(dashboard_info, panel_info):
+    """
+    Given info from the Grafana API, find the time range for the graph
+    :param dashboard_info: info about the dashboard selected
+    :param panel_info: info about the panel selected
+    :return: specified time range or None
+    """
+    # timeFrom: panel override
+    timestring = panel_info.get('timeFrom')
+    if timestring is None:
+        # Earliest time should be formatted "now-3h", all other formats will be ignored
+        time_from = dashboard_info['dashboard']['time']['from'].split('-')
+        if len(time_from) == 2:
+            timestring = time_from[1]
+
+    if timestring is not None:
+        # pytimeparse.parse returns seconds, we want minutes
+        return parse(str(timestring)) / 60
+
+    return None
+
+
 def get_status_check_fields(dashboard_info, panel_info, grafana_data_source, templating_dict,
                             grafana_panel, user=None):
     """
@@ -186,17 +208,9 @@ def get_status_check_fields(dashboard_info, panel_info, grafana_data_source, tem
     fields['name'] = template_response(name, templating_dict)
     fields['source'] = grafana_data_source.metrics_source_base
 
-    # Get either the timeFrom override or the graph default
-    timestring = panel_info.get('timeFrom')
-    if timestring is None:
-        # Earliest time should be formatted "now-3h", all other formats will be ignored
-        time_from = dashboard_info['dashboard']['time']['from'].split('-')
-        if len(time_from) == 2:
-            timestring = str(time_from[1])
-
-    if timestring is not None:
-        # pytimeparse.parse returns seconds, we want minutes
-        fields['time_range'] = parse(timestring) / 60
+    time_range = get_time_range(dashboard_info, panel_info)
+    if time_range is not None:
+        fields['time_range'] = time_range
 
     thresholds = panel_info['thresholds']
     for threshold in thresholds:
