@@ -108,7 +108,7 @@ class GrafanaStatusCheckForm(StatusCheckForm):
         self.fields['name'].initial = fields['name']
 
         # Hide name field so users can't edit it.
-        self.fields['name'].widget = forms.TextInput(attrs=dict(readonly='readonly', style='width:50%'))
+        self.fields['name'].widget = forms.TextInput(attrs=dict(style='width:50%'))
         self.fields['name'].help_text = None
 
         # Time range, check_type, and thresholds are editable.
@@ -141,4 +141,4 @@ class GrafanaStatusCheckUpdateForm(StatusCheckForm):
     def __init__(self, *args, **kwargs):
         super(GrafanaStatusCheckUpdateForm, self).__init__(*args, **kwargs)
         # Hide name field
-        self.fields['name'].widget = forms.TextInput(attrs=dict(readonly='readonly', style='width:50%'))
+        self.fields['name'].widget = forms.TextInput(attrs=dict(style='width:50%'))

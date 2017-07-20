@@ -108,7 +108,7 @@ class TestGrafanaApiParsing(TestCase):
                                                                    self.templating_dict, 1))
 
         expected_fields = [
-            dict(name='42',
+            dict(name='Also Great Dashboard: 42',
                  source='datasource',
                  time_range=180,
                  high_alert_value=1.0,
@@ -116,14 +116,14 @@ class TestGrafanaApiParsing(TestCase):
                  grafana_panel=1,
                  warning_value=0.0,
                  user=None),
-            dict(name='Pct 75',
+            dict(name='Also Great Dashboard: Pct 75',
                  source='datasource',
                  time_range=180,
                  warning_value=100.0,
                  grafana_panel=1,
                  check_type='<',
                  user=None),
-            dict(name='Panel 106',
+            dict(name='Also Great Dashboard: Panel 106',
                  source='datasource',
                  grafana_panel=1,
                  time_range=180,
