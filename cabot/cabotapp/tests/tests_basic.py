@@ -14,14 +14,14 @@ from datetime import timedelta, date, datetime
 import json
 import os
 import base64
-from mock import call, Mock, patch, ANY
+from mock import Mock, patch
 
 from cabot.cabotapp.models import (
     get_duty_officers, get_all_duty_officers, update_shifts, GraphiteStatusCheck,
     JenkinsStatusCheck, HttpStatusCheck, ICMPStatusCheck,
-    Service, Schedule, Instance, StatusCheckResult, UserProfile)
+    Service, Schedule, Instance, StatusCheckResult)
 from cabot.cabotapp.views import StatusCheckReportForm
-from cabot.cabotapp.alert import send_alert, AlertPlugin
+
 
 def get_content(fname):
     path = os.path.join(os.path.dirname(__file__), 'fixtures/%s' % fname)
@@ -92,6 +92,7 @@ class LocalTestCase(APITestCase):
         self.schedule.save()
         self.secondary_schedule.save()
         self.service = Service.objects.create(
+            id=2194,
             name='Service',
         )
         self.service.save()
@@ -486,7 +487,7 @@ class TestAPI(LocalTestCase):
                     'alerts': [],
                     'hackpad_id': None,
                     'instances': [],
-                    'id': 2,
+                    'id': 2194,
                     'url': u''
                 },
             ],
@@ -600,7 +601,7 @@ class TestAPI(LocalTestCase):
                     'alerts': [],
                     'hackpad_id': None,
                     'instances': [],
-                    'id': 2,
+                    'id': 2194,
                     'url': u'',
                 },
             ],
@@ -816,142 +817,6 @@ class TestAPIFiltering(LocalTestCase):
             [item['name'] for item in response.data],
             self.expected_sort_names[::-1]
         )
-
-
-class TestAlerts(LocalTestCase):
-    def setUp(self):
-        super(TestAlerts, self).setUp()
-
-        self.user_profile = UserProfile.objects.create(
-            user=self.user,
-            hipchat_alias="test_user_hipchat_alias",)
-        self.user_profile.save()
-
-        self.service.users_to_notify.add(self.user)
-        self.service.update_status()
-
-    def test_users_to_notify(self):
-        self.assertEqual(self.service.users_to_notify.all().count(), 1)
-        self.assertEqual(self.service.users_to_notify.get().username, self.user.username)
-
-    @patch('cabot.cabotapp.models.send_alert')
-    def test_alert(self, fake_send_alert):
-        self.service.alert()
-        self.assertEqual(fake_send_alert.call_count, 1)
-        fake_send_alert.assert_called_with(self.service, duty_officers=[], fallback_officers=[])
-
-    @patch('cabot.cabotapp.models.send_alert')
-    def test_alert_no_schedule(self, fake_send_alert):
-        """Users only should be alerted if there's no oncall schedule"""
-        self.service.schedules = []
-        self.service.alert()
-        self.assertEqual(fake_send_alert.call_count, 1)
-        fake_send_alert.assert_called_with(self.service)
-
-    @patch('cabot.cabotapp.models.send_alert')
-    def test_alert_empty_schedule(self, fake_send_alert):
-        """Test service.alert() when there are no UserProfiles for the oncall schedule.
-           The fallback officer shouldb be alerted."""
-        service = Service.objects.create(
-            name='Test2',
-        )
-        service.save()
-        service.schedules.add(self.secondary_schedule)
-        service.update_status()
-
-        service.alert()
-        self.assertEqual(fake_send_alert.call_count, 1)
-        # Since there are no duty officers with profiles, the fallback will be alerted
-        fake_send_alert.assert_called_with(service, duty_officers=[self.user], fallback_officers=[self.user])
-
-    @patch('cabot.cabotapp.models.send_alert')
-    def test_alert_multiple_schedules(self, fake_send_alert):
-        """
-        Make sure service.alert() works with multiple schedules per service.
-        """
-        user = User.objects.create(username='scheduletest')
-        user.save()
-        schedule = Schedule.objects.create(
-            name='Test',
-            ical_url='calendar_response_different.ics',
-            fallback_officer=user
-        )
-        schedule.save()
-
-        service = Service.objects.create(
-            name='Test3'
-        )
-        service.save()
-        service.schedules.add(self.secondary_schedule)
-        service.schedules.add(schedule)
-        service.update_status()
-
-        service.alert()
-        self.assertEqual(fake_send_alert.call_count, 2)
-        # Since there are no duty officers with profiles, the fallback will be alerted
-        calls = [call(service, duty_officers=[self.user], fallback_officers=[self.user]),
-                 call(service, duty_officers=[user], fallback_officers=[user])]
-        fake_send_alert.has_calls(calls)
-
-    @patch('cabot.cabotapp.alert.AlertPlugin.send_alert')
-    def test_alert_plugin(self, fake_send_alert):
-        """Test send_alert() when the alert to the duty officer succeeds"""
-        alert_plugin = AlertPlugin()
-        alert_plugin.save()
-        self.service.alerts.add(alert_plugin)
-
-        # No errors in send_alert
-        duty_officers = []
-        fallback_officers = [UserProfile.objects.all()]
-        send_alert(self.service, duty_officers=duty_officers,
-                   fallback_officers=fallback_officers)
-
-        # send_alert should be called once with duty_officers
-        self.assertEqual(fake_send_alert.call_count, 1)
-        fake_send_alert.assert_called_once_with(self.service, ANY, duty_officers)
-
-    @patch('cabot.cabotapp.alert.AlertPlugin.send_alert')
-    def test_alert_plugin_fallback(self, fake_send_alert):
-        """Test that the fallback officer is alerted if the the alert to the
-           duty officer fails"""
-        alert_plugin = AlertPlugin()
-        alert_plugin.save()
-
-        self.service.alerts.add(alert_plugin)
-
-        # Raise RuntimeError so fallback officer will be alerted
-        fake_send_alert.side_effect = RuntimeError
-
-        duty_officers = []
-        fallback_officers = [UserProfile.objects.all()]
-        send_alert(self.service, duty_officers=duty_officers,
-                   fallback_officers=fallback_officers)
-
-        # send_alert should be called with duty_officers and then fallback_officers
-        self.assertEqual(fake_send_alert.call_count, 2)
-        calls = [call(self.service, ANY, duty_officers),
-                 call(self.service, ANY, fallback_officers)]
-        fake_send_alert.has_calls(calls)
-
-    @patch('cabot.cabotapp.alert.AlertPlugin.send_alert')
-    def test_alert_plugin_no_fallback(self, fake_send_alert):
-        """Test an alertplugin failure with no fallback officer"""
-        alert_plugin = AlertPlugin()
-        alert_plugin.save()
-
-        self.service.alerts.add(alert_plugin)
-
-        # Raise RuntimeError to simulate alerting the duty officer failing
-        fake_send_alert.side_effect = RuntimeError
-
-        duty_officers = [UserProfile.objects.all()]
-        fallback_officers = []
-        send_alert(self.service, duty_officers=duty_officers,
-                   fallback_officers=fallback_officers)
-
-        # send_alert should only be called once since there are no fallback officers
-        self.assertEqual(fake_send_alert.call_count, 1)
-        fake_send_alert.assert_called_once_with(self.service, ANY, duty_officers)
 
 
 class TestSchedules(LocalTestCase):
