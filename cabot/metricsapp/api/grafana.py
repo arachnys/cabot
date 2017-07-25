@@ -182,7 +182,8 @@ def get_status_check_fields(dashboard_info, panel_info, grafana_data_source, tem
     """
     fields = {}
 
-    fields['name'] = template_response(panel_info['title'], templating_dict)
+    name = '{}: {}'.format(dashboard_info['dashboard']['title'], panel_info['title'])
+    fields['name'] = template_response(name, templating_dict)
     fields['source'] = grafana_data_source.metrics_source_base
 
     # Earliest time should be formatted "now-3h", all other formats will be ignored
