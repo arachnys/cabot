@@ -221,7 +221,7 @@ class TestDashboardSync(TestCase):
                            '"extended_bounds": {"max": "now", "min": "now-3h"}}, ' \
                            '"aggs": {"sum": {"sum": {"field": "count"}}}}}}}}]'
         self.check = ElasticsearchStatusCheck.objects.create(
-            name='42',
+            name='Also Great Dashboard: 42',
             created_by=user,
             source=self.source,
             check_type='>',
@@ -266,9 +266,9 @@ class TestDashboardSync(TestCase):
         sync_grafana_check(self.check.id, str(datetime(2017, 2, 1, 0, 0, 1, 1231)))
         send_email.assert_called_once_with(args=(['hi@affirm.com', 'admin@affirm.com', 'enduser@affirm.com'],
                                                  'http://localhost/check/{}/\n\n'
-                                                 'The check name has changed from "44" to "42".'.format(self.check.id),
-                                                 '44'))
-        self.assertEqual(ElasticsearchStatusCheck.objects.get(id=self.check.id).name, '42')
+                                                 'The check name has changed from "44" to "Also Great Dashboard: 42".'
+                                                 .format(self.check.id), '44'))
+        self.assertEqual(ElasticsearchStatusCheck.objects.get(id=self.check.id).name, 'Also Great Dashboard: 42')
 
     @patch('cabot.metricsapp.tasks.get_dashboard_info', fake_get_dashboard_info)
     @patch('cabot.metricsapp.tasks.send_grafana_sync_email.apply_async')
@@ -281,7 +281,8 @@ class TestDashboardSync(TestCase):
                                                  'http://localhost/check/{}/\n\n'
                                                  'The Grafana data source has changed from "hello" to "deep-thought". '
                                                  'The new source is not configured in Cabot, so the status check will '
-                                                 'continue to use the old source.'.format(self.check.id), '42'))
+                                                 'continue to use the old source.'.format(self.check.id),
+                                                 'Also Great Dashboard: 42'))
 
     @patch('cabot.metricsapp.tasks.get_dashboard_info', fake_get_dashboard_info)
     @patch('cabot.metricsapp.tasks.send_grafana_sync_email.apply_async')
@@ -293,7 +294,7 @@ class TestDashboardSync(TestCase):
         send_email.assert_called_once_with(args=(['hi@affirm.com', 'admin@affirm.com', 'enduser@affirm.com'],
                                                  'http://localhost/check/{}/\n\n'
                                                  'The panel series ids have changed from B,E to B. The check has not '
-                                                 'been changed.'.format(self.check.id), '42'))
+                                                 'been changed.'.format(self.check.id), 'Also Great Dashboard: 42'))
         self.assertEqual(GrafanaPanel.objects.get(id=self.panel.id).series_ids, 'B')
 
     @patch('cabot.metricsapp.tasks.get_dashboard_info', fake_get_dashboard_info)
@@ -307,7 +308,7 @@ class TestDashboardSync(TestCase):
                                                  'http://localhost/check/{}/\n\n'
                                                  'The queries have changed from\n{}\nto\n{}.'.format(
                                                      self.check.id, self.old_queries, self.queries
-                                                 ), '42'))
+                                                 ), 'Also Great Dashboard: 42'))
         self.assertEqual(ElasticsearchStatusCheck.objects.get(id=self.check.id).queries, str(self.queries))
 
     @patch('cabot.metricsapp.tasks.get_dashboard_info', fake_get_dashboard_info)
@@ -320,12 +321,13 @@ class TestDashboardSync(TestCase):
         sync_grafana_check(self.check.id, str(datetime(2017, 2, 1, 0, 0, 1, 12312)))
         send_email.assert_called_once_with(args=(['hi@affirm.com', 'admin@affirm.com', 'enduser@affirm.com'],
                                                  'http://localhost/check/{}/\n\n'
-                                                 'The check name has changed from "goodbye" to "42".\n\n'
+                                                 'The check name has changed from "goodbye" to '
+                                                 '"Also Great Dashboard: 42".\n\n'
                                                  'The queries have changed from\n{}\nto\n{}.'.format(
                                                      self.check.id, self.old_queries, self.queries
                                                  ), 'goodbye'))
         check = ElasticsearchStatusCheck.objects.get(id=self.check.id)
-        self.assertEqual(check.name, '42')
+        self.assertEqual(check.name, 'Also Great Dashboard: 42')
         self.assertEqual(check.queries, str(self.queries))
 
     @patch('cabot.metricsapp.tasks.get_dashboard_info', raise_validation_error)
@@ -337,8 +339,8 @@ class TestDashboardSync(TestCase):
                                                  'Dashboard "{}" has been deleted, so check "{}" has been '
                                                  'deactivated. If you would like to keep the check, re-enable it '
                                                  'with auto_sync: False.'
-                                                 .format(self.check.id, '42', '42'),
-                                                 '42'))
+                                                 .format(self.check.id, '42', 'Also Great Dashboard: 42'),
+                                                 'Also Great Dashboard: 42'))
         check = ElasticsearchStatusCheck.objects.get(id=self.check.id)
         self.assertFalse(check.active)
 
@@ -351,8 +353,9 @@ class TestDashboardSync(TestCase):
                                                  'http://localhost/check/{}/\n\n'
                                                  'Panel {} in dashboard "{}" has been deleted, so check "{}" has been '
                                                  'deactivated. If you would like to keep the check, re-enable it with '
-                                                 'auto_sync: False.'.format(self.check.id, '1', '42', '42'),
-                                                 '42'))
+                                                 'auto_sync: False.'
+                                                 .format(self.check.id, '1', '42', 'Also Great Dashboard: 42'),
+                                                 'Also Great Dashboard: 42'))
 
         check = ElasticsearchStatusCheck.objects.get(id=self.check.id)
         self.assertFalse(check.active)

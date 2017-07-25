@@ -8,7 +8,8 @@ from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.template import Context, Template
 from cabot.metricsapp.api import get_dashboard_info, get_updated_datetime, get_panel_info, \
-    create_generic_templating_dict, template_response, get_es_status_check_fields, get_series_ids
+    create_generic_templating_dict, get_es_status_check_fields, get_series_ids, \
+    get_status_check_name
 from cabot.metricsapp.defs import GRAFANA_SYNC_TIMEDELTA_MINUTES
 from cabot.metricsapp.models import MetricsStatusCheckBase, ElasticsearchStatusCheck, GrafanaDataSource
 from cabot.metricsapp.templates import NAME_CHANGED, SOURCE_CHANGED_EXISTING, SOURCE_CHANGED_NONEXISTING, \
@@ -107,7 +108,7 @@ def sync_grafana_check(check_id, sync_time):
         changed_message = []
 
         # Check name parity
-        name = template_response(panel_info['title'], templating_dict)
+        name = get_status_check_name(dashboard_info, panel_info, templating_dict)
         # Save old name to use in the email
         old_name = check.name
         if name != old_name:

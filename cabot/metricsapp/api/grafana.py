@@ -190,6 +190,18 @@ def get_time_range(dashboard_info, panel_info):
     return None
 
 
+def get_status_check_name(dashboard_info, panel_info, templating_dict):
+    """
+    Create the name for a status check: 'Dashboard name: panel name'
+    :param dashboard_info: Grafana API dashboard info
+    :param panel_info: Grafana API panel info
+    :param templating_dict: dictionary of {template_name, template_value}
+    :return: the name for the related status check
+    """
+    name = '{}: {}'.format(dashboard_info['dashboard']['title'], panel_info['title'])
+    return template_response(name, templating_dict)
+
+
 def get_status_check_fields(dashboard_info, panel_info, grafana_data_source, templating_dict,
                             grafana_panel, user=None):
     """
@@ -197,15 +209,14 @@ def get_status_check_fields(dashboard_info, panel_info, grafana_data_source, tem
     :param dashboard_info: Grafana API dashboard info
     :param panel_info: Grafana API panel info
     :param grafana_instance_id: ID of the Grafana instance used
-    :param templating_dict: dictionary of {template_name, template _value}
+    :param templating_dict: dictionary of {template_name, template_value}
     :param grafana_panel: GrafanaPanel object id
     :param user: user who created the check
     :return: dictionary containing StatusCheck field names and values
     """
     fields = {}
 
-    name = '{}: {}'.format(dashboard_info['dashboard']['title'], panel_info['title'])
-    fields['name'] = template_response(name, templating_dict)
+    fields['name'] = get_status_check_name(dashboard_info, panel_info, templating_dict)
     fields['source'] = grafana_data_source.metrics_source_base
 
     time_range = get_time_range(dashboard_info, panel_info)
