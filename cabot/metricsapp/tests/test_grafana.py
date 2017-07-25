@@ -217,7 +217,7 @@ class TestDashboardSync(TestCase):
                                     'aggs': {'agg': {'date_histogram': {'field': u'@timestamp', 'interval': u'1m',
                                                                         'extended_bounds':
                                                                             {'max': 'now', 'min': u'now-3h'}},
-                                                     'aggs': {u'sum': {'sum': {'field': u'value'}}}}}}])
+                                                     'aggs': {u'sum: 42': {'sum': {'field': u'value'}}}}}}])
         self.check = ElasticsearchStatusCheck.objects.create(
             name='42',
             created_by=user,

@@ -29,7 +29,7 @@
         }
       },
       "aggs": {
-        "sum": {
+        "sum: al": {
           "sum": {
             "field": "value"
           }

@@ -31,7 +31,7 @@
             }
           },
           "aggs": {
-            "sum": {
+            "sum: 42": {
               "sum": {
                 "field": "value"
               }

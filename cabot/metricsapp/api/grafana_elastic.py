@@ -4,7 +4,7 @@ from elasticsearch_dsl import Search, A
 from elasticsearch_dsl.query import Range
 from django.core.exceptions import ValidationError
 from pytimeparse import parse
-from cabot.metricsapp.defs import ES_SUPPORTED_METRICS, ES_TIME_RANGE, ES_DEFAULT_INTERVAL, HIDDEN_METRIC_SUFFIX
+from cabot.metricsapp import defs
 from .grafana import template_response
 
 
@@ -55,6 +55,27 @@ def _get_date_histogram_settings(agg, min_time, default_interval):
     return dict(field=agg['field'], interval=interval, extended_bounds={'min': min_time, 'max': 'now'})
 
 
+def _get_metric_name(series, metric_type, metric):
+    """
+    Get the name for a metric (including hidden values, aliases, etc) from a series
+    :param series: a "target" in the Grafana dashboard API response
+    :param metric_type: the type of metric (sum, avg, etc.)
+    :param metric: one value in the 'metric' section of the series
+    :return: the metric name
+    """
+    alias = series.get('alias')
+    # Ignore templated aliases because they will be the same thing for every series
+    if alias is not None and not alias.startswith('{{'):
+        metric_name = '{}{}{}'.format(metric_type, defs.ALIAS_DELIMITER, alias)
+    else:
+        metric_name = metric_type
+
+    if metric.get('hide') is True:
+        metric_name = '{}_{}'.format(metric_name, defs.HIDDEN_METRIC_SUFFIX)
+
+    return metric_name
+
+
 def _add_aggs(search_aggs, series, min_time, default_interval):
     """
     Add the ES aggregations from the input Grafana API series info to an input search
@@ -95,12 +116,11 @@ def _add_aggs(search_aggs, series, min_time, default_interval):
     pipeline_id_name_mapping = dict()
     pipeline_metrics = []
     for metric in series['metrics']:
-        metric_type = metric_name = metric['type']
-        if metric.get('hide') is True:
-            metric_name = '{}_{}'.format(metric_name, HIDDEN_METRIC_SUFFIX)
+        metric_type = metric['type']
+        metric_name = _get_metric_name(series, metric_type, metric)
 
         # Special case for count--not actually an elasticsearch metric, but supported
-        if metric_type not in ES_SUPPORTED_METRICS.union(set(['count'])):
+        if metric_type not in defs.ES_SUPPORTED_METRICS.union(set(['count'])):
             raise ValidationError('Metric type {} not supported.'.format(metric_type))
 
         # Store the mapping of "id" to "name" to use for pipeline mappings
@@ -129,7 +149,7 @@ def _add_aggs(search_aggs, series, min_time, default_interval):
         pipeline_agg = metric['pipelineAgg']
         metric_type = metric_name = metric['type']
         if metric.get('hide') is True:
-            metric_name = '{}_{}'.format(metric_name, HIDDEN_METRIC_SUFFIX)
+            metric_name = '{}_{}'.format(metric_name, defs.HIDDEN_METRIC_SUFFIX)
 
         bucket = pipeline_id_name_mapping.get(pipeline_agg)
         if bucket is None:
@@ -138,7 +158,7 @@ def _add_aggs(search_aggs, series, min_time, default_interval):
         search_aggs.pipeline(metric_name, metric_type, buckets_path=bucket)
 
 
-def build_query(series, min_time=ES_TIME_RANGE, default_interval=ES_DEFAULT_INTERVAL):
+def build_query(series, min_time=defs.ES_TIME_RANGE, default_interval=defs.ES_DEFAULT_INTERVAL):
     """
     Given series information from the Grafana API, build an Elasticsearch query
     :param series: a "target" in the Grafana dashboard API response

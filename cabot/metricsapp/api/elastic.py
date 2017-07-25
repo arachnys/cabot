@@ -1,7 +1,19 @@
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from elasticsearch import Elasticsearch
-from cabot.metricsapp.defs import ES_SUPPORTED_METRICS, ES_VALIDATION_MSG_PREFIX, HIDDEN_METRIC_SUFFIX
+from cabot.metricsapp import defs
+
+
+def _find_base_metric_name(name):
+    """
+    Remove extra info we've added to a metric name and return just sum, avg, etc.
+    :param name: Metric name in the response from Elasticsearch
+    :return: shortened metric name that should be the same as the metric type
+    """
+    # If the metric is hidden ignore the hidden suffix
+    metric = name.replace('_{}'.format(defs.HIDDEN_METRIC_SUFFIX), '')
+    # Get rid of a possible alias name
+    return metric.split(defs.ALIAS_DELIMITER)[0]
 
 
 def create_es_client(urls, timeout=settings.ELASTICSEARCH_TIMEOUT):
@@ -15,7 +27,7 @@ def create_es_client(urls, timeout=settings.ELASTICSEARCH_TIMEOUT):
     return Elasticsearch(urls, timeout=timeout)
 
 
-def validate_query(query, msg_prefix=ES_VALIDATION_MSG_PREFIX):
+def validate_query(query, msg_prefix=defs.ES_VALIDATION_MSG_PREFIX):
     """
     Validate that an Elasticsearch query is in the format we want
     (all aggregations named 'agg', 'date_histogram' most internal
@@ -47,9 +59,9 @@ def validate_query(query, msg_prefix=ES_VALIDATION_MSG_PREFIX):
         raise ValidationError('{}: query must include a metric'.format(msg_prefix))
 
     for metric, items in query.iteritems():
-        # If metric is hidden ignore the hidden suffix
-        metric = metric.replace('_{}'.format(HIDDEN_METRIC_SUFFIX), '')
-        if metric not in ES_SUPPORTED_METRICS:
+        metric = _find_base_metric_name(metric)
+
+        if metric not in defs.ES_SUPPORTED_METRICS:
             raise ValidationError('{}: unsupported metric "{}."'.format(msg_prefix, metric))
 
         if metric not in items:
