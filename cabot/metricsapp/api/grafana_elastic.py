@@ -198,7 +198,11 @@ def create_elasticsearch_templating_dict(dashboard_info):
         # Multi-valued templates are surrounded by parentheses and combined with OR
         if '$__all' in template_value:
             options = [option['value'] for option in template['options']]
-            templates[template_name] = '({})'.format(' OR '.join(options))
+            # If there aren't any options, fall back to selecting everything
+            if options == []:
+                templates[template_name] = '*'
+            else:
+                templates[template_name] = '({})'.format(' OR '.join(options))
 
         elif isinstance(template_value, list):
             templates[template_name] = '({})'.format(' OR '.join(template_value))
