@@ -169,15 +169,17 @@ class CheckGroupMixin(models.Model):
         if not self.alerts_enabled:
             return
         if self.overall_status != self.PASSING_STATUS:
-            # Don't alert every time
-            if self.overall_status == self.WARNING_STATUS:
-                if self.last_alert_sent and (timezone.now() - timedelta(minutes=settings.NOTIFICATION_INTERVAL)) \
-                        < self.last_alert_sent:
-                    return
-            elif self.overall_status in (self.CRITICAL_STATUS, self.ERROR_STATUS):
-                if self.last_alert_sent and (timezone.now() - timedelta(minutes=settings.ALERT_INTERVAL)) \
-                        < self.last_alert_sent:
-                    return
+            # We want to alert if the status changes no matter what
+            if self.overall_status == self.old_overall_status:
+                # Don't alert every time if status hasn't changed
+                if self.overall_status == self.WARNING_STATUS:
+                    if self.last_alert_sent and (timezone.now() - timedelta(minutes=settings.NOTIFICATION_INTERVAL)) \
+                            < self.last_alert_sent:
+                        return
+                elif self.overall_status in (self.CRITICAL_STATUS, self.ERROR_STATUS):
+                    if self.last_alert_sent and (timezone.now() - timedelta(minutes=settings.ALERT_INTERVAL)) \
+                            < self.last_alert_sent:
+                        return
             self.last_alert_sent = timezone.now()
         else:
             # We don't count "back to normal" as an alert
@@ -187,7 +189,7 @@ class CheckGroupMixin(models.Model):
         self.snapshot.save()
 
         schedules = self.schedules.all()
-        
+
         if not schedules:
             send_alert(self)
 
