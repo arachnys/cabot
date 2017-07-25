@@ -226,7 +226,12 @@ def get_es_status_check_fields(dashboard_info, panel_info, series_list):
 
     templating_dict = create_elasticsearch_templating_dict(dashboard_info)
     series_list = [s for s in panel_info['targets'] if s['refId'] in series_list]
-    min_time = dashboard_info['dashboard']['time']['from']
+    time_from = panel_info.get('timeFrom')
+    if time_from is not None:
+        # Format of timeFrom is '2h', '1m', etc.
+        min_time = 'now-{}'.format(time_from)
+    else:
+        min_time = dashboard_info['dashboard']['time']['from']
     default_interval = panel_info.get('interval')
 
     if default_interval is not None:

@@ -126,7 +126,7 @@ class TestGrafanaApiParsing(TestCase):
             dict(name='Also Great Dashboard: Panel 106',
                  source='datasource',
                  grafana_panel=1,
-                 time_range=180,
+                 time_range=20,
                  user=None)
         ]
 
@@ -209,15 +209,17 @@ class TestDashboardSync(TestCase):
             series_ids='B',
             selected_series='B'
         )
-        self.queries = json.dumps([{'query': {'bool': {'must': [{'query_string':
-                                                                     {'analyze_wildcard': True,
-                                                                      'query':
-                                                                          u'query:life-the-universe-and-everything'}},
-                                                                {'range': {u'@timestamp': {'gte': u'now-3h'}}}]}},
-                                    'aggs': {'agg': {'date_histogram': {'field': u'@timestamp', 'interval': u'1m',
-                                                                        'extended_bounds':
-                                                                            {'max': 'now', 'min': u'now-3h'}},
-                                                     'aggs': {u'sum: 42': {'sum': {'field': u'value'}}}}}}])
+        self.queries = '[{"query": {"bool": {"must": [{"query_string": {"analyze_wildcard": true, ' \
+                       '"query": "query:life-the-universe-and-everything"}}, ' \
+                       '{"range": {"@timestamp": {"gte": "now-180m"}}}]}}, "aggs": {"agg": {"date_histogram": ' \
+                       '{"field": "@timestamp", "interval": "1m", "extended_bounds": ' \
+                       '{"max": "now", "min": "now-3h"}}, "aggs": {"sum: 42": {"sum": {"field": "value"}}}}}}]'
+        self.old_queries = '[{"query": {"bool": {"must": [{"query_string": {"analyze_wildcard": true, ' \
+                           '"query": "test.query"}}, {"range": {"@timestamp": {"gte": "now-180m"}}}]}}, ' \
+                           '"aggs": {"agg": {"terms": {"field": "outstanding"}, ' \
+                           '"aggs": {"agg": {"date_histogram": {"field": "@timestamp", "interval": "1m", ' \
+                           '"extended_bounds": {"max": "now", "min": "now-3h"}}, ' \
+                           '"aggs": {"sum": {"sum": {"field": "count"}}}}}}}}]'
         self.check = ElasticsearchStatusCheck.objects.create(
             name='42',
             created_by=user,
@@ -297,14 +299,14 @@ class TestDashboardSync(TestCase):
     @patch('cabot.metricsapp.tasks.get_dashboard_info', fake_get_dashboard_info)
     @patch('cabot.metricsapp.tasks.send_grafana_sync_email.apply_async')
     def test_change_queries(self, send_email):
-        self.check.queries = 'to-be-or-not-to-be'
+        self.check.queries = self.old_queries
         self.check.save()
 
         sync_grafana_check(self.check.id, str(datetime(2017, 2, 1, 0, 0, 1, 123)))
         send_email.assert_called_once_with(args=(['hi@affirm.com', 'admin@affirm.com', 'enduser@affirm.com'],
                                                  'http://localhost/check/{}/\n\n'
-                                                 'The queries have changed from\nto-be-or-not-to-be\nto\n{}.'.format(
-                                                     self.check.id, str(self.queries)
+                                                 'The queries have changed from\n{}\nto\n{}.'.format(
+                                                     self.check.id, self.old_queries, self.queries
                                                  ), '42'))
         self.assertEqual(ElasticsearchStatusCheck.objects.get(id=self.check.id).queries, str(self.queries))
 
@@ -312,15 +314,15 @@ class TestDashboardSync(TestCase):
     @patch('cabot.metricsapp.tasks.send_grafana_sync_email.apply_async')
     def test_change_multiple(self, send_email):
         self.check.name = 'goodbye'
-        self.check.queries = 'to-be-or-not-to-be'
+        self.check.queries = self.old_queries
         self.check.save()
 
         sync_grafana_check(self.check.id, str(datetime(2017, 2, 1, 0, 0, 1, 12312)))
         send_email.assert_called_once_with(args=(['hi@affirm.com', 'admin@affirm.com', 'enduser@affirm.com'],
                                                  'http://localhost/check/{}/\n\n'
                                                  'The check name has changed from "goodbye" to "42".\n\n'
-                                                 'The queries have changed from\nto-be-or-not-to-be\nto\n{}.'.format(
-                                                     self.check.id, str(self.queries)
+                                                 'The queries have changed from\n{}\nto\n{}.'.format(
+                                                     self.check.id, self.old_queries, self.queries
                                                  ), 'goodbye'))
         check = ElasticsearchStatusCheck.objects.get(id=self.check.id)
         self.assertEqual(check.name, '42')

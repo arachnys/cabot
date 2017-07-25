@@ -107,10 +107,12 @@ class TestElasticsearchStatusCheck(TestCase):
             warning_value=3.5,
             high_alert_importance='CRITICAL',
             high_alert_value=3.0,
-            queries='[{"aggs": {"agg": {"terms": {"field": "a1"},'
-                    '"aggs": {"agg": {"terms": {"field": "b2"},'
-                    '"aggs": {"agg": {"date_histogram": {"field": "@timestamp","interval": "hour"},'
-                    '"aggs": {"max": {"max": {"field": "timing"}}}}}}}}}}]',
+            queries='[{"query": {"bool": {"must": [{"query_string": {"analyze_wildcard": true, '
+                    '"query": "test.query"}}, {"range": {"@timestamp": {"gte": "now-300m"}}}]}}, '
+                    '"aggs": {"agg": {"terms": {"field": "outstanding"}, '
+                    '"aggs": {"agg": {"date_histogram": {"field": "@timestamp", "interval": "1m", '
+                    '"extended_bounds": {"max": "now", "min": "now-3h"}}, '
+                    '"aggs": {"sum": {"sum": {"field": "count"}}}}}}}}]',
             time_range=10000
         )
 
@@ -319,6 +321,18 @@ class TestElasticsearchStatusCheck(TestCase):
         result = self.es_check._run()
         self.assertFalse(result.succeeded)
         self.assertEqual(result.error, 'no_data_fill_0: 0.0 >= 3.0')
+
+    def test_adjust_time_range(self):
+        # save() should adjust the time range in queries to match the time range field
+        self.es_check.time_range = 10
+        self.es_check.save()
+        expected_queries = '[{"query": {"bool": {"must": [{"query_string": {"analyze_wildcard": true, ' \
+                           '"query": "test.query"}}, {"range": {"@timestamp": {"gte": "now-10m"}}}]}}, ' \
+                           '"aggs": {"agg": {"terms": {"field": "outstanding"}, ' \
+                           '"aggs": {"agg": {"date_histogram": {"field": "@timestamp", "interval": "1m", ' \
+                           '"extended_bounds": {"max": "now", "min": "now-3h"}}, ' \
+                           '"aggs": {"sum": {"sum": {"field": "count"}}}}}}}}]'
+        self.assertEqual(self.es_check.queries, expected_queries)
 
 
 class TestQueryValidation(TestCase):
