@@ -7,8 +7,8 @@
 <div class="row">
   <div class="col-xs-12">
     <div class="col-xs-1"><h2><i class="{{ check.icon }}"></i></h2></div>
-    {% if check.grafana_panel and check.grafana_panel.panel_url %}
-    <div class="col-xs-5"><h2><a href="{{ check.grafana_panel.panel_url }}">{{ check.name }}</a></h2></div>
+    {% if check.grafana_panel and check.grafana_panel.modifiable_url %}
+    <div class="col-xs-5"><h2><a href="{{ check.grafana_panel.modifiable_url }}">{{ check.name }}</a></h2></div>
     {% else %}
     <div class="col-xs-5"><h2>{{ check.name }}</h2></div>
     {% endif %}

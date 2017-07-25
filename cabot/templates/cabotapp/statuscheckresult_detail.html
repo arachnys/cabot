@@ -20,8 +20,8 @@
     <table class="table table-striped table-bordered">
       <tbody>
         <tr><th>Name</th><td>{{ result.check.name }}</td></tr>
-        {% if result.check.grafana_panel and result.check.grafana_panel.panel_url %}
-        <tr><th>Grafana Link</th><td><a href="{{ result.check.grafana_panel.panel_url }}">{{ result.check.name }}</a></td></tr>
+        {% if result.check.grafana_panel and result.check.grafana_panel.modifiable_url %}
+        <tr><th>Grafana Link</th><td><a href="{{ result.check.grafana_panel.modifiable_url }}">{{ result.check.name }}</a></td></tr>
         {% endif %}
         <tr><th>Status</th><td>{{ result.status|capfirst }}</td></tr>
         <tr><th>Time started</th><td>{{ result.time }}</td></tr>

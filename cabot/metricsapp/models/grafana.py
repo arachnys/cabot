@@ -85,6 +85,13 @@ class GrafanaPanel(models.Model):
     class Meta:
         app_label = 'metricsapp'
 
+    @property
+    def modifiable_url(self):
+        """Url with modifiable time range, dashboard link, etc"""
+        if self.panel_url:
+            return '{}&fullscreen'.format(self.panel_url.replace('dashboard-solo', 'dashboard'))
+        return None
+
     grafana_instance = models.ForeignKey('GrafanaInstance')
     dashboard_uri = models.CharField(max_length=40)
     panel_id = models.IntegerField()
