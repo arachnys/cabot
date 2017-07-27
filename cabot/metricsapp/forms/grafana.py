@@ -133,6 +133,10 @@ class GrafanaStatusCheckForm(StatusCheckForm):
             model.created_by = self.user
 
         model.save()
+
+        # When commit is False, we just get the model, but the service/instance sets aren't saved
+        # (since the model doesn't have a pk yet). Re-run to actually save the service and instance sets
+        model = super(GrafanaStatusCheckForm, self).save()
         return model
 
 
