@@ -506,6 +506,14 @@ class StatusCheck(PolymorphicModel):
         for instance in instances:
             update_instance.apply_async(args=[instance.id])
 
+    def get_status_image(self):
+        """Return a related image for the check (if it exists)"""
+        return None
+
+    def get_status_link(self):
+        """Return a link with more information about the check"""
+        return None
+
 
 class ICMPStatusCheck(StatusCheck):
 

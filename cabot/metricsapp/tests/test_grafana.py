@@ -1,5 +1,6 @@
 import json
 import os
+import requests
 from datetime import datetime
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
@@ -359,3 +360,30 @@ class TestDashboardSync(TestCase):
 
         check = ElasticsearchStatusCheck.objects.get(id=self.check.id)
         self.assertFalse(check.active)
+
+
+class TestGrafanaPanel(TestCase):
+    def setUp(self):
+        self.grafana_instance = GrafanaInstance.objects.create(
+            name='graf',
+            url='http://graf.graf',
+            api_key='graf'
+        )
+
+        self.panel = GrafanaPanel.objects.create(
+            grafana_instance=self.grafana_instance,
+            panel_id=1,
+            dashboard_uri='db/42',
+            series_ids='B',
+            selected_series='B',
+            panel_url='http://graf.graf/dashboard-solo/db/42?panelId=1&var-variable=x&var-group_by=1y'
+        )
+
+    @patch('requests.Session.get')
+    def test_get_rendered_image(self, mock_requests):
+        mock_requests.side_effect = requests.exceptions.RequestException()
+        image = self.panel.get_rendered_image()
+
+        mock_requests.assert_called_once_with('http://graf.graf/render/dashboard-solo/db/42?panelId=1&var-variable=x'
+                                              '&var-group_by=1y')
+        self.assertIsNone(image)
