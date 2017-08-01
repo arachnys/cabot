@@ -7,7 +7,8 @@ from .models import (
     StatusCheck,
     StatusCheckResult,
     Instance,
-    Schedule
+    Schedule,
+    HipchatInstance
 )
 from .alert import AlertPluginUserData, AlertPlugin
 
@@ -21,3 +22,4 @@ admin.site.register(Instance)
 admin.site.register(AlertPlugin)
 admin.site.register(AlertPluginUserData)
 admin.site.register(Schedule)
+admin.site.register(HipchatInstance)
