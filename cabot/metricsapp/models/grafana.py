@@ -3,6 +3,7 @@ import requests
 import urlparse
 from django.core.exceptions import ValidationError
 from django.db import models
+from cabot.metricsapp import defs
 
 
 logger = logging.getLogger(__name__)
@@ -101,6 +102,9 @@ class GrafanaPanel(models.Model):
         # GrafanaInstance.get_request only takes the path
         panel_url = self.panel_url.replace(urlparse.urljoin(self.grafana_instance.url, '/'), '')
         rendered_image_url = urlparse.urljoin('render/', panel_url)
+        rendered_image_url = '{}&width={}&height={}'.format(rendered_image_url,
+                                                            defs.GRAFANA_RENDERED_IMAGE_WIDTH,
+                                                            defs.GRAFANA_RENDERED_IMAGE_HEIGHT)
 
         # Unfortunately "$__all" works for the normal image but not render
         rendered_image_url = rendered_image_url.replace('$__all', 'All')

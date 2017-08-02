@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from mock import patch, Mock
+from cabot.metricsapp import defs
 from cabot.metricsapp.api import get_dashboard_choices, get_panel_choices, create_generic_templating_dict, \
     get_series_choices, get_status_check_fields, get_panel_url, get_series_ids, get_updated_datetime, get_panel_info
 from cabot.metricsapp.models import ElasticsearchStatusCheck, ElasticsearchSource, GrafanaDataSource, \
@@ -385,5 +386,8 @@ class TestGrafanaPanel(TestCase):
         image = self.panel.get_rendered_image()
 
         mock_requests.assert_called_once_with('http://graf.graf/render/dashboard-solo/db/42?panelId=1&var-variable=x'
-                                              '&var-group_by=1y')
+                                              '&var-group_by=1y&width={}&height={}'.format(
+            defs.GRAFANA_RENDERED_IMAGE_WIDTH,
+            defs.GRAFANA_RENDERED_IMAGE_HEIGHT
+        ))
         self.assertIsNone(image)
