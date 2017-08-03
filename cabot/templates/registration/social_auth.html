@@ -1,0 +1,28 @@
+{% load extra %}
+{% echo_setting 'AUTH_GOOGLE_OAUTH2' as google_enable %}
+{% echo_setting 'AUTH_GITHUB_ORG' as github_enable %}
+{% echo_setting 'AUTH_GITHUB_ENTERPRISE_ORG' as github_enterprise_enable %}
+
+<div class="col-xs-3 col-xs-offset-2">
+<hr/>
+  {% if github_enable %}
+  <a class="btn btn-block btn-social btn-github" href="{% url 'social:begin' 'github-org' %}">
+    <i class="fa fa-github" aria-hidden="true"></i>
+    Sig in with Github
+  </a>
+  {% endif %}
+
+  {% if github_enterprise_enable %}
+  <a class="btn btn-block btn-social btn-github" href="{% url 'social:begin' 'github-enterprise-org' %}">
+    <i class="fa fa-github" aria-hidden="true"></i>
+    Sig in with GitHub Enterprise
+  </a>
+  {% endif %}
+
+  {% if google_enable %}
+  <a class="btn btn-block btn-social btn-google" href="{% url 'social:begin' 'google-oauth2' %}">
+    <i class="fa fa-google" aria-hidden="true"></i>
+    Sign in with Google
+  </a>
+  {% endif %}
+</div>
