@@ -45,10 +45,10 @@ def first_time_setup_wrapper(func):
 
 
 def home_authentication_switcher(request, *args, **kwargs):
-  if not request.user.is_authenticated():
-    return ServicePublicListView.as_view()(request, *args, **kwargs)
-  else:
-    return ServiceListView.as_view()(request, *args, **kwargs)
+    if not request.user.is_authenticated():
+        return ServicePublicListView.as_view()(request, *args, **kwargs)
+    else:
+        return ServiceListView.as_view()(request, *args, **kwargs)
 
 urlpatterns = [
      # for the password reset views
