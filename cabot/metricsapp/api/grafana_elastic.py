@@ -105,7 +105,7 @@ def _add_aggs(search_aggs, series, min_time, default_interval):
 
         # Geo hash grid doesn't make much sense for alerting
         else:
-            raise ValidationError('{} aggregation not supported.'.format(type))
+            raise ValidationError('{} aggregation not supported.'.format(agg_type))
 
     if not date_histogram:
         raise ValidationError('Dashboard must include a date histogram aggregation.')
