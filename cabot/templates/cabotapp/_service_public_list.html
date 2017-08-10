@@ -22,7 +22,7 @@
 <hr/>
 <div class="row">
   <div class="col-xs-8 {% if service.alerts_enabled %}enabled{% else %}warning{% endif %}">
-    <a href="{{service.url}}" title="{{service.url}}">{{service.name}} </a>
+    <a href="{{service.url}}" title="{{service.url}}" target="_blank">{{service.name}}</a>
   </div>
   <div class="col-xs-2">
     <span class="label label-{% if not service.alerts_enabled %}warning{% else %}{% if service.overall_status == service.PASSING_STATUS %}success{% else %}danger{% endif %}{% endif %}">{% if service.alerts_enabled %}{{ service.overall_status|lower|capfirst }}{% else %}Disabled{% endif %}</span>
