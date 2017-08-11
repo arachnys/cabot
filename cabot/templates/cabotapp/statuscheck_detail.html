@@ -17,7 +17,7 @@
       {% if check.polymorphic_ctype.model == 'jenkinsstatuscheck' %}
         <a href="{% jenkins_human_url check.name %}" class=""><i class="glyphicon glyphicon-link"></i></a>
       {% endif %}
-      <a href="{% url check.update_url pk=check.id%}"><i class="glyphicon glyphicon-edit"></i>
+      <a href="{% url check.update_url pk=check.id%}"><i class="glyphicon glyphicon-edit"></i></a>
       <a href="{% url "duplicate-check" pk=check.id %}" class=""><i class="fa fa-copy"></i></a>
       <a href="{% url "run-check" pk=check.id %}"><i class="glyphicon glyphicon-refresh"></i></a>
     </h2></div>
