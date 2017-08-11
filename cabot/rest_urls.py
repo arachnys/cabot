@@ -85,11 +85,6 @@ router.register(r'status_checks', create_viewset(
     no_create=True,
 ))
 
-router.register(r'icmp_checks', create_viewset(
-    arg_model=models.ICMPStatusCheck,
-    arg_fields=status_check_fields,
-))
-
 router.register(r'graphite_checks', create_viewset(
     arg_model=models.GraphiteStatusCheck,
     arg_fields=status_check_fields + (

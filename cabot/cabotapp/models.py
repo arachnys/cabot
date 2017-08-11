@@ -536,7 +536,8 @@ class ICMPStatusCheck(StatusCheck):
             return 'ICMP Reply from {}'.format(self.instance_set.all()[0].address)
         return 'ICMP Reply'
 
-    update_url = 'update-icmp-check'
+    # Unless we unlink this status from everywhere, we just need to provide an alternative url.
+    update_url = 'update-jenkins-check'
 
     icon = 'glyphicon glyphicon-transfer'
 
