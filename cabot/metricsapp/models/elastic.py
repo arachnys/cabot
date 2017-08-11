@@ -193,19 +193,31 @@ class ElasticsearchStatusCheck(MetricsStatusCheckBase):
         :param series_name: the name for the series ('key1.key2. ... .metric')
         :return: (series, (timestamp, datapoint)) pairs
         """
+
+        original_series_name = series_name
+
+        if isinstance(series, dict):
+            series = series.iteritems()
+
         for subseries in series:
-            # If there are no more aggregations, we've reached the metric
+            if isinstance(subseries, tuple):
+                series_name = '.'.join(filter(None, [original_series_name, subseries[0]]))
+                subseries = subseries[1]
+
             if subseries.get('agg') is None:
                 results = self._get_metric_data(subseries, series_name)
 
             else:
                 # New name is "series_name.subseries_name" (if they exist)
                 key = subseries.get('key')
+                if isinstance(key, float):
+                    key = str(key)
                 subseries_name = '.'.join(filter(None, [series_name, key]))
                 results = self._parse_series(subseries['agg']['buckets'], series_name=subseries_name)
 
             for result in results:
                 yield result
+
 
     def _valid_point(self, point):
         return point not in ['None', 'NaN', None]

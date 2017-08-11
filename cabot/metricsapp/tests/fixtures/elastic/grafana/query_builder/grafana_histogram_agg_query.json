@@ -1,0 +1,49 @@
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "query_string": {
+            "analyze_wildcard": true,
+            "query": "request.body.test:affirm AND request.body.event_name:mriffa"
+          }
+        },
+        {
+          "range": {
+            "@timestamp": {
+              "gte": "now-1h"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "aggs": {
+    "agg": {
+      "histogram": {
+        "interval": 20,
+        "field": "cuttlefish",
+        "min_doc_count": 1
+      },
+      "aggs": {
+        "agg": {
+          "date_histogram": {
+            "field": "@timestamp",
+            "interval": "10m",
+            "extended_bounds": {
+              "min": "now-1h",
+              "max": "now"
+            }
+          },
+          "aggs": {
+            "sum: al": {
+              "sum": {
+                "field": "value"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

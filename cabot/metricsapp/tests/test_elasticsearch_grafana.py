@@ -46,6 +46,22 @@ class TestGrafanaQueryBuilder(TestCase):
         self.assertEqual(expected_query, created_query)
         validate_query(created_query)
 
+    def test_histogram_agg(self):
+        """histogram aggregation"""
+        series = get_json_file('grafana/query_builder/grafana_histogram_agg.json')
+        created_query = build_query(series, min_time='now-1h')
+        expected_query = get_json_file('grafana/query_builder/grafana_histogram_agg_query.json')
+        self.assertEqual(expected_query, created_query)
+        validate_query(expected_query)
+
+    def test_filters_agg(self):
+        """filter aggregation"""
+        series = get_json_file('grafana/query_builder/grafana_filters_agg.json')
+        created_query = build_query(series, min_time='now-1h')
+        expected_query = get_json_file('grafana/query_builder/grafana_filters_agg_query.json')
+        self.assertEqual(expected_query, created_query)
+        validate_query(expected_query)
+
     def test_no_date_histogram(self):
         """If there's no date_histogram agg, raise an exception"""
         series = get_json_file('grafana/query_builder/grafana_no_date_histogram.json')

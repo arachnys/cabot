@@ -40,6 +40,44 @@ def _get_terms_settings(agg):
     return terms_settings
 
 
+def _get_filters_settings(agg):
+    """
+    Get the settings for a filters aggregation
+    :param agg: the filter aggregation json data
+    :return: dict of {setting_name: setting_value}
+    """
+    filter_settings = dict(filters=dict())
+
+    settings = agg['settings']
+
+    filters = settings['filters']
+
+    for _filter in filters:
+        query_string = {"query_string": {"query": _filter['query'], "analyze_wildcard": True}}
+        filter_settings["filters"][_filter['query']] = query_string
+
+    return filter_settings
+
+
+def _get_histogram_settings(agg):
+    """
+    Get the settings for a histogram aggregation
+    :param agg: the histogram aggregation json data
+    :return: dict of {setting_name: setting_value}
+    """
+    histogram_settings = dict(field=agg['field'])
+
+    settings = agg['settings']
+
+    histogram_settings['interval'] = settings.get('interval')
+
+    min_doc_count = settings.get('min_doc_count')
+    if min_doc_count:
+        histogram_settings['min_doc_count'] = int(min_doc_count)
+
+    return histogram_settings
+
+
 def _get_date_histogram_settings(agg, min_time, default_interval):
     """
     Get the settings for a date_histogram aggregation.
@@ -65,7 +103,7 @@ def _get_metric_name(series, metric_type, metric):
     """
     alias = series.get('alias')
     # Ignore templated aliases because they will be the same thing for every series
-    if alias is not None and not alias.startswith('{{'):
+    if alias is not None and not alias.startswith('{{') and alias != "":
         metric_name = '{}{}{}'.format(metric_type, defs.ALIAS_DELIMITER, alias)
     else:
         metric_name = metric_type
@@ -100,8 +138,13 @@ def _add_aggs(search_aggs, series, min_time, default_interval):
             search_aggs = search_aggs.bucket('agg', A({'terms': settings}))
 
         # Filter functionality can be accomplished with multiple queries instead
-        elif agg_type == 'filter':
-            raise ValidationError('Filter aggregation not supported. Please change the query instead.')
+        elif agg_type == 'filters':
+            settings = _get_filters_settings(agg)
+            search_aggs = search_aggs.bucket('agg', A({'filters': settings}))
+
+        elif agg_type == 'histogram':
+            settings = _get_histogram_settings(agg)
+            search_aggs = search_aggs.bucket('agg', A({'histogram': settings}))
 
         # Geo hash grid doesn't make much sense for alerting
         else:

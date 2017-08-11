@@ -1,0 +1,159 @@
+[{
+    "hits": {
+        "hits": [
+            {
+                "_score": 5.7443924,
+                "_type": "metrics-event",
+                "_id": "a",
+                "_index": "meddlesome-metrics"
+            },
+            {
+                "_score": 5.7443924,
+                "_type": "metrics-event",
+                "_id": "b",
+                "_index": "meddlesome-metrics"
+            },
+            {
+                "_score": 5.7443924,
+                "_type": "metrics-event",
+                "_id": "c",
+                "_index": "meddlesome-metrics"
+            },
+            {
+                "_score": 5.7443924,
+                "_type": "metrics-event",
+                "_id": "d",
+                "_index": "meddlesome-metrics"
+            },
+            {
+                "_score": 5.7443924,
+                "_type": "metrics-event",
+                "_id": "e",
+                "_index": "meddlesome-metrics"
+            },
+            {
+                "_score": 5.7443924,
+                "_type": "metrics-event",
+                "_id": "f",
+                "_index": "meddlesome-metrics"
+            },
+            {
+                "_score": 5.7443924,
+                "_type": "metrics-event",
+                "_id": "g",
+                "_index": "meddlesome-metrics"
+            },
+            {
+                "_score": 5.7443924,
+                "_type": "metrics-event",
+                "_id": "h",
+                "_index": "meddlesome-metrics"
+            },
+            {
+                "_score": 5.7443924,
+                "_type": "metrics-event",
+                "_id": "i",
+                "_index": "meddlesome-metrics"
+            },
+            {
+                "_score": 5.7443924,
+                "_type": "metrics-event",
+                "_id": "j",
+                "_index": "meddlesome-metrics"
+            }
+        ],
+        "total": 45,
+        "max_score": 5.7443924
+    },
+    "_shards": {
+        "successful": 5,
+        "failed": 0,
+        "total": 5
+    },
+    "took": 25,
+    "aggregations": {
+        "agg": {
+            "buckets": {
+                "status_code:301": {
+                    "agg": {
+                        "buckets": [
+                            {
+                                "value_count": {
+                                    "value": 1
+                                },
+                                "key_as_string": "2017-04-07T12:00:00.000Z",
+                                "key": 1491566400000,
+                                "doc_count": 1
+                            },
+                            {
+                                "value_count": {
+                                    "value": 4
+                                },
+                                "key_as_string": "2017-04-07T13:00:00.000Z",
+                                "key": 1491570000000,
+                                "doc_count": 4
+                            },
+                            {
+                                "value_count": {
+                                    "value": 3
+                                },
+                                "key_as_string": "2017-04-07T14:00:00.000Z",
+                                "key": 1491573600000,
+                                "doc_count": 3
+                            },
+                            {
+                                "value_count": {
+                                    "value": 2
+                                },
+                                "key_as_string": "2017-04-07T15:00:00.000Z",
+                                "key": 1491577200000,
+                                "doc_count": 2
+                            }
+                        ]
+                    },
+                    "doc_count": 45
+                },
+                "status_code:302": {
+                    "agg": {
+                        "buckets": [
+                            {
+                                "value_count": {
+                                    "value": 42
+                                },
+                                "key_as_string": "2017-04-07T12:00:00.000Z",
+                                "key": 1491566400000,
+                                "doc_count": 42
+                            },
+                            {
+                                "value_count": {
+                                    "value": 24
+                                },
+                                "key_as_string": "2017-04-07T13:00:00.000Z",
+                                "key": 1491570000000,
+                                "doc_count": 24
+                            },
+                            {
+                                "value_count": {
+                                    "value": 11
+                                },
+                                "key_as_string": "2017-04-07T14:00:00.000Z",
+                                "key": 1491573600000,
+                                "doc_count": 11
+                            },
+                            {
+                                "value_count": {
+                                    "value": 99
+                                },
+                                "key_as_string": "2017-04-07T15:00:00.000Z",
+                                "key": 1491577200000,
+                                "doc_count": 99
+                            }
+                        ]
+                    },
+                    "doc_count": 0
+                }
+            }
+        }
+    },
+    "timed_out": false
+}]

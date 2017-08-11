@@ -24,7 +24,7 @@ django-yamlfield==1.0.1
 djangorestframework==2.4.2
 # Elasticsearch 5.x
 elasticsearch==5.2.0
-elasticsearch-dsl==5.2.0
+elasticsearch-dsl==5.3.0
 gunicorn==18.0
 gevent==1.0.1
 hiredis==0.1.1

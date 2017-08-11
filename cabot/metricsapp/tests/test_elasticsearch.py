@@ -66,6 +66,10 @@ def fake_es_multiple_metrics_terms(*args):
     return [Response(Search(), response) for response in get_json_file('es_multiple_metrics_terms.json')]
 
 
+def fake_es_filters_aggregation(*args):
+    return [Response(Search(), response) for response in get_json_file('es_filters_aggregation.json')]
+
+
 def fake_es_percentile(*args):
     return [Response(Search(), response) for response in get_json_file('es_percentile.json')]
 
@@ -196,6 +200,22 @@ class TestElasticsearchStatusCheck(TestCase):
         self.assertFalse(result.succeeded)
         self.assertEquals(result.error, 'maroon.max: 18.3 < 18.0')
         self.assertEqual(self.es_check.importance, Service.CRITICAL_STATUS)
+
+    @patch('cabot.metricsapp.models.elastic.MultiSearch.execute', fake_es_filters_aggregation)
+    @patch('time.time', mock_time)
+    def test_filters_aggregation(self):
+        series = self.es_check.get_series()
+        self.assertFalse(series['error'])
+        self.assertEqual(series['raw'], get_json_file('es_filters_aggregation.json'))
+        data = series['data']
+        self.assertEqual(len(data), 2)
+        data = sorted(data, key=lambda d: d['series'])
+
+        self.assertEqual(data[0]['series'], 'status_code:301.value_count')
+        self.assertEqual(data[0]['datapoints'], [[1491566400, 1], [1491570000, 4], [1491573600, 3]])
+
+        self.assertEqual(data[1]['series'], 'status_code:302.value_count')
+        self.assertEqual(data[1]['datapoints'], [[1491566400, 42], [1491570000, 24], [1491573600, 11]])
 
     @patch('cabot.metricsapp.models.elastic.MultiSearch.execute', fake_es_percentile)
     @patch('time.time', mock_time)
