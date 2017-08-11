@@ -124,24 +124,12 @@ base_widgets = {
 
 
 class StatusCheckForm(SymmetricalForm):
-    symmetrical_fields = ('service_set', 'instance_set')
+    symmetrical_fields = ('service_set',)
 
     service_set = forms.ModelMultipleChoiceField(
         queryset=Service.objects.all(),
         required=False,
         help_text='Link to service(s).',
-        widget=forms.SelectMultiple(
-            attrs={
-                'data-rel': 'chosen',
-                'style': 'width: 70%',
-            },
-        )
-    )
-
-    instance_set = forms.ModelMultipleChoiceField(
-        queryset=Instance.objects.all(),
-        required=False,
-        help_text='Link to instance(s).',
         widget=forms.SelectMultiple(
             attrs={
                 'data-rel': 'chosen',
@@ -356,7 +344,6 @@ class ServiceForm(forms.ModelForm):
             'users_to_notify',
             'schedules',
             'status_checks',
-            'instances',
             'alerts',
             'alerts_enabled',
             'hipchat_instance',
@@ -367,10 +354,6 @@ class ServiceForm(forms.ModelForm):
             'name': forms.TextInput(attrs={'style': 'width: 30%;'}),
             'url': forms.TextInput(attrs={'style': 'width: 70%;'}),
             'status_checks': forms.SelectMultiple(attrs={
-                'data-rel': 'chosen',
-                'style': 'width: 70%',
-            }),
-            'instances': forms.SelectMultiple(attrs={
                 'data-rel': 'chosen',
                 'style': 'width: 70%',
             }),
@@ -601,7 +584,7 @@ class StatusCheckListView(LoginRequiredMixin, ListView):
     context_object_name = 'checks'
 
     def get_queryset(self):
-        return StatusCheck.objects.all().order_by('name').prefetch_related('service_set', 'instance_set')
+        return StatusCheck.objects.all().order_by('name').prefetch_related('service_set')
 
 
 class StatusCheckDeleteView(LoginRequiredMixin, DeleteView):

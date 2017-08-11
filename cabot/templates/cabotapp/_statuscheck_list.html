@@ -40,7 +40,6 @@
           <th>Test description</th>
           <th>Importance</th>
           <th>Service(s)</th>
-          <th>Instance(s)</th>
           <th></th>
         </tr>
       </thead>
@@ -83,18 +82,6 @@
             {% endfor %}
             {% if not check.service_set.all %}
             <span class="label label-warning">No service</span>
-            {% endif %}
-          </td>
-          <td>
-            {% for instance in check.instance_set.all %}
-            <a href="{% url "instance" pk=instance.id %}">{{ instance.name }}</a>
-            {% if forloop.last %}
-            {% else %}
-            /
-            {% endif %}
-            {% endfor %}
-            {% if not check.instance_set.all %}
-            <span class="label label-warning">No instance</span>
             {% endif %}
           </td>
           <td class="text-right">

@@ -44,9 +44,6 @@
       <div class="navbar-collapse collapse" id="navbar-main">
         <ul class="nav navbar-nav">
           <li>
-            <a href="{% url "instances" %}"><i class="fa fa-desktop"></i> Instances</a>
-          </li>
-          <li>
             <a href="{% url "services" %}"><i class="fa fa-gears"></i> Services</a>
           </li>
           <li>
@@ -58,9 +55,6 @@
               <ul class="dropdown-menu" aria-labelledby="New">
                 <li>
                   <a href="{% url "create-service" %}"><i class="fa fa-gears"></i> Service</a>
-                </li>
-                <li>
-                  <a href="{% url "create-instance" %}"><i class="fa fa-desktop"></i> Instance</a>
                 </li>
                 <li>
                   <a href="{% url "create-schedule" %}"><i class="glyphicon glyphicon-time"></i> Oncall schedule</a>
