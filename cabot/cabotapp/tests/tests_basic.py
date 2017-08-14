@@ -425,23 +425,6 @@ class TestWebInterface(LocalTestCase):
         # Still the same
         self.assertEqual(reloaded.hackpad_id, snippet_link)
 
-    def test_create_instance(self):
-        instances = Instance.objects.all()
-        self.assertEqual(len(instances), 0)
-        self.client.login(username=self.username, password=self.password)
-        resp = self.client.post(
-            reverse('create-instance'),
-            data={
-                'name': 'My little instance',
-            },
-            follow=True,
-        )
-        self.assertEqual(resp.status_code, 200)
-        instances = Instance.objects.all()
-        self.assertEqual(len(instances), 1)
-        instance = instances[0]
-        self.assertEqual(len(instance.status_checks.all()), 1)
-
     def test_checks_report(self):
         form = StatusCheckReportForm({
             'service': self.service.id,
@@ -489,18 +472,6 @@ class TestAPI(LocalTestCase):
                     'instances': [],
                     'id': 2194,
                     'url': u''
-                },
-            ],
-            'instance': [
-                {
-                    'name': u'Hello',
-                    'users_to_notify': [],
-                    'alerts_enabled': True,
-                    'status_checks': [10104],
-                    'alerts': [],
-                    'hackpad_id': None,
-                    'address': u'192.168.0.1',
-                    'id': 2
                 },
             ],
             'statuscheck': [
@@ -580,16 +551,6 @@ class TestAPI(LocalTestCase):
                     'id': 10102
                 },
             ],
-            'icmpstatuscheck': [
-                {
-                    'name': u'Hello check',
-                    'active': True,
-                    'importance': u'ERROR',
-                    'frequency': 5,
-                    'retries': 0,
-                    'id': 10104
-                },
-            ],
         }
         self.post_data = {
             'service': [
@@ -603,18 +564,6 @@ class TestAPI(LocalTestCase):
                     'instances': [],
                     'id': 2194,
                     'url': u'',
-                },
-            ],
-            'instance': [
-                {
-                    'name': u'posted instance',
-                    'users_to_notify': [],
-                    'alerts_enabled': True,
-                    'status_checks': [],
-                    'alerts': [],
-                    'hackpad_id': None,
-                    'address': u'255.255.255.255',
-                    'id': 2
                 },
             ],
             'graphitestatuscheck': [
@@ -658,16 +607,6 @@ class TestAPI(LocalTestCase):
                     'retries': 0,
                     'max_queued_build_time': 37,
                     'id': 10102
-                },
-            ],
-            'icmpstatuscheck': [
-                {
-                    'name': u'posted icmp check',
-                    'active': True,
-                    'importance': u'CRITICAL',
-                    'frequency': 5,
-                    'retries': 0,
-                    'id': 10104
                 },
             ],
         }
