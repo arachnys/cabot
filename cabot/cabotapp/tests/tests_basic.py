@@ -19,7 +19,7 @@ from mock import Mock, patch
 from cabot.cabotapp.models import (
     get_duty_officers, get_all_duty_officers, update_shifts, GraphiteStatusCheck,
     JenkinsStatusCheck, HttpStatusCheck,
-    Service, Schedule, Instance, StatusCheckResult)
+    Service, Schedule, StatusCheckResult)
 from cabot.cabotapp.views import StatusCheckReportForm
 
 
@@ -45,7 +45,6 @@ class LocalTestCase(APITestCase):
         self.user = User.objects.create(username=self.username)
         self.user.set_password(self.password)
         self.user.user_permissions.add(
-            Permission.objects.get(codename='add_instance'),
             Permission.objects.get(codename='add_service'),
             Permission.objects.get(codename='add_httpstatuscheck'),
             Permission.objects.get(codename='add_graphitestatuscheck'),
@@ -419,11 +418,6 @@ class TestAPI(LocalTestCase):
     def setUp(self):
         super(TestAPI, self).setUp()
 
-        self.instance = Instance.objects.create(
-            name='Hello',
-            address='192.168.0.1',
-        )
-
         self.basic_auth = 'Basic {}'.format(
             base64.b64encode(
                 '{}:{}'.format(self.username, self.password).encode(HTTP_HEADER_ENCODING)
@@ -439,7 +433,6 @@ class TestAPI(LocalTestCase):
                     'status_checks': [10101, 10102, 10103],
                     'alerts': [],
                     'hackpad_id': None,
-                    'instances': [],
                     'id': 2194,
                     'url': u''
                 },
@@ -523,7 +516,6 @@ class TestAPI(LocalTestCase):
                     'status_checks': [],
                     'alerts': [],
                     'hackpad_id': None,
-                    'instances': [],
                     'id': 2194,
                     'url': u'',
                 },
@@ -625,11 +617,6 @@ class TestAPI(LocalTestCase):
 class TestAPIFiltering(LocalTestCase):
     def setUp(self):
         super(TestAPIFiltering, self).setUp()
-
-        self.instance = Instance.objects.create(
-            name='Hello',
-            address='192.168.0.1',
-        )
 
         self.expected_filter_result = JenkinsStatusCheck.objects.create(
             name='Filter test 1',
