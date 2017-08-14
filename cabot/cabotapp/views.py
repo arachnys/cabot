@@ -8,7 +8,6 @@ from models import (StatusCheck,
                     GraphiteStatusCheck,
                     JenkinsStatusCheck,
                     HttpStatusCheck,
-                    ICMPStatusCheck,
                     InfluxDBStatusCheck,
                     StatusCheckResult,
                     UserProfile,
@@ -209,19 +208,6 @@ class InfluxDBStatusCheckForm(StatusCheckForm):
                 'data-rel': 'chosen',
             })
         })
-
-
-class ICMPStatusCheckForm(StatusCheckForm):
-    class Meta:
-        model = ICMPStatusCheck
-        fields = (
-            'name',
-            'frequency',
-            'importance',
-            'active',
-            'retries',
-        )
-        widgets = dict(**base_widgets)
 
 
 class HttpStatusCheckForm(StatusCheckForm):
@@ -521,16 +507,6 @@ class CheckUpdateView(LoginRequiredMixin, UpdateView):
         return reverse('check', kwargs={'pk': self.object.id})
 
 
-class ICMPCheckCreateView(CheckCreateView):
-    model = ICMPStatusCheck
-    form_class = ICMPStatusCheckForm
-
-
-class ICMPCheckUpdateView(CheckUpdateView):
-    model = ICMPStatusCheck
-    form_class = ICMPStatusCheckForm
-
-
 class GraphiteCheckUpdateView(CheckUpdateView):
     model = GraphiteStatusCheck
     form_class = GraphiteStatusCheckForm
@@ -770,21 +746,7 @@ class InstanceCreateView(LoginRequiredMixin, CreateView):
     form_class = InstanceForm
 
     def form_valid(self, form):
-        ret = super(InstanceCreateView, self).form_valid(form)
-        if self.object.status_checks.filter(polymorphic_ctype__model='icmpstatuscheck').count() == 0:
-            self.generate_default_ping_check(self.object)
-        return ret
-
-    def generate_default_ping_check(self, obj):
-        pc = ICMPStatusCheck(
-            name="Default Ping Check for %s" % obj.name,
-            frequency=5,
-            importance=Service.ERROR_STATUS,
-            retries=0,
-            created_by=None,
-        )
-        pc.save()
-        obj.status_checks.add(pc)
+        return super(InstanceCreateView, self).form_valid(form)
 
     def get_success_url(self):
         return reverse('instance', kwargs={'pk': self.object.id})

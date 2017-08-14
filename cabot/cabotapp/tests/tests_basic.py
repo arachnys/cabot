@@ -18,7 +18,7 @@ from mock import Mock, patch
 
 from cabot.cabotapp.models import (
     get_duty_officers, get_all_duty_officers, update_shifts, GraphiteStatusCheck,
-    JenkinsStatusCheck, HttpStatusCheck, ICMPStatusCheck,
+    JenkinsStatusCheck, HttpStatusCheck,
     Service, Schedule, Instance, StatusCheckResult)
 from cabot.cabotapp.views import StatusCheckReportForm
 
@@ -50,7 +50,6 @@ class LocalTestCase(APITestCase):
             Permission.objects.get(codename='add_httpstatuscheck'),
             Permission.objects.get(codename='add_graphitestatuscheck'),
             Permission.objects.get(codename='add_jenkinsstatuscheck'),
-            Permission.objects.get(codename='add_icmpstatuscheck'),
         )
         self.user.save()
         self.graphite_check = GraphiteStatusCheck.objects.create(
@@ -355,30 +354,6 @@ class TestStatusCheck(LocalTestCase):
         self.assertEqual(new.status_code, old.status_code)
 
 
-class TestInstances(LocalTestCase):
-
-    def test_duplicate_instance(self):
-        instances = Instance.objects.all()
-        self.assertEqual(len(instances), 0)
-        self.instance = Instance.objects.create(
-            name='Hello',
-            address='192.168.0.1',
-        )
-        pingcheck = ICMPStatusCheck.objects.create(
-            name='Hello check',
-        )
-        self.instance.status_checks.add(pingcheck)
-        self.instance.duplicate()
-        instances = Instance.objects.all()
-        self.assertEqual(len(instances), 2)
-        new = instances.filter(name__icontains='Copy of')[0]
-        self.assertEqual(new.name, 'Copy of Hello')
-        old = instances.exclude(name__icontains='Copy of')[0]
-        self.assertEqual(len(new.status_checks.all()), 1)
-        self.assertEqual(len(old.status_checks.all()), 1)
-        self.assertNotEqual(new.status_checks.all()[0], old.status_checks.all()[0])
-
-
 class TestWebInterface(LocalTestCase):
 
     def setUp(self):
@@ -448,11 +423,6 @@ class TestAPI(LocalTestCase):
             name='Hello',
             address='192.168.0.1',
         )
-        pingcheck = ICMPStatusCheck.objects.create(
-            id=10104,
-            name='Hello check',
-        )
-        self.instance.status_checks.add(pingcheck)
 
         self.basic_auth = 'Basic {}'.format(
             base64.b64encode(
@@ -498,14 +468,6 @@ class TestAPI(LocalTestCase):
                     'frequency': 5,
                     'retries': 0,
                     'id': 10103
-                },
-                {
-                    'name': u'Hello check',
-                    'active': True,
-                    'importance': u'ERROR',
-                    'frequency': 5,
-                    'retries': 0,
-                    'id': 10104
                 },
             ],
             'graphitestatuscheck': [
@@ -668,10 +630,6 @@ class TestAPIFiltering(LocalTestCase):
             name='Hello',
             address='192.168.0.1',
         )
-        pingcheck = ICMPStatusCheck.objects.create(
-            name='Hello check',
-        )
-        self.instance.status_checks.add(pingcheck)
 
         self.expected_filter_result = JenkinsStatusCheck.objects.create(
             name='Filter test 1',

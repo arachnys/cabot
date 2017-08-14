@@ -356,16 +356,6 @@ class Instance(CheckGroupMixin):
         help_text="Address (IP/Hostname) of service."
     )
 
-    def icmp_status_checks(self):
-        return self.status_checks.filter(polymorphic_ctype__model='icmpstatuscheck')
-
-    def active_icmp_status_checks(self):
-        return self.icmp_status_checks().filter(active=True)
-
-    def delete(self, *args, **kwargs):
-        self.icmp_status_checks().delete()
-        return super(Instance, self).delete(*args, **kwargs)
-
 
 class Snapshot(models.Model):
 
@@ -521,47 +511,6 @@ class StatusCheck(PolymorphicModel):
     def get_status_link(self):
         """Return a link with more information about the check"""
         return None
-
-
-class ICMPStatusCheck(StatusCheck):
-
-    @property
-    def check_category(self):
-        return "ICMP/Ping Check"
-
-    @property
-    def description(self):
-        instances = self.instance_set.all()
-        if len(instances) > 0:
-            return 'ICMP Reply from {}'.format(self.instance_set.all()[0].address)
-        return 'ICMP Reply'
-
-    # Unless we unlink this status from everywhere, we just need to provide an alternative url.
-    update_url = 'update-jenkins-check'
-
-    icon = 'glyphicon glyphicon-transfer'
-
-    def _run(self):
-        result = StatusCheckResult(check=self)
-        instances = self.instance_set.all()
-        target = self.instance_set.get().address
-
-        # We need to read both STDOUT and STDERR because ping can write to both, depending on the kind of error.
-        # Thanks a lot, ping.
-        ping_process = subprocess.Popen("ping -c 1 " + target,
-                                        stdout=subprocess.PIPE,
-                                        stderr=subprocess.STDOUT,
-                                        shell=True)
-        response = ping_process.wait()
-
-        if response == 0:
-            result.succeeded = True
-        else:
-            output = ping_process.stdout.read()
-            result.succeeded = False
-            result.error = output
-
-        return result
 
 
 class GraphiteStatusCheck(StatusCheck):
