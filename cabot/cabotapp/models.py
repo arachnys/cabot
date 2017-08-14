@@ -7,7 +7,7 @@ from celery.exceptions import SoftTimeLimitExceeded
 from .jenkins import get_job_status
 from .alert import (send_alert, AlertPluginUserData)
 from .influx import parse_metric
-from .tasks import update_service, update_instance
+from .tasks import update_service
 from cabot.cabotapp.models_plugins import HipchatInstance
 
 from collections import defaultdict
@@ -300,12 +300,6 @@ class Service(CheckGroupMixin):
         if not (self.overall_status == Service.PASSING_STATUS and self.old_overall_status == Service.PASSING_STATUS):
             self.alert()
 
-    instances = models.ManyToManyField(
-        'Instance',
-        blank=True,
-        help_text='Instances this service is running on.',
-    )
-
     url = models.TextField(
         blank=True,
         help_text="URL of service."
@@ -313,48 +307,6 @@ class Service(CheckGroupMixin):
 
     class Meta:
         ordering = ['name']
-
-
-class Instance(CheckGroupMixin):
-
-    def duplicate(self):
-        checks = self.status_checks.all()
-        new_instance = self
-        new_instance.pk = None
-        new_instance.id = None
-        new_instance.name = u"Copy of %s" % self.name
-
-        new_instance.save()
-
-        for check in checks:
-            check.duplicate(inst_set=(new_instance,), serv_set=())
-
-        return new_instance.pk
-
-    def update_status(self):
-        self.old_overall_status = self.overall_status
-        # Only active checks feed into our calculation
-        status_checks_failed_count = self.all_failing_checks().count()
-        self.overall_status = self.most_severe(self.all_failing_checks())
-        self.snapshot = InstanceStatusSnapshot(
-            instance=self,
-            num_checks_active=self.active_status_checks().count(),
-            num_checks_passing=self.active_status_checks(
-            ).count() - status_checks_failed_count,
-            num_checks_failing=status_checks_failed_count,
-            overall_status=self.overall_status,
-            time=timezone.now(),
-        )
-        self.snapshot.save()
-        self.save()
-
-    class Meta:
-        ordering = ['name']
-
-    address = models.TextField(
-        blank=True,
-        help_text="Address (IP/Hostname) of service."
-    )
 
 
 class Snapshot(models.Model):
@@ -375,13 +327,6 @@ class ServiceStatusSnapshot(Snapshot):
 
     def __unicode__(self):
         return u"%s: %s" % (self.service.name, self.overall_status)
-
-
-class InstanceStatusSnapshot(Snapshot):
-    instance = models.ForeignKey(Instance, related_name='snapshots')
-
-    def __unicode__(self):
-        return u"%s: %s" % (self.instance.name, self.overall_status)
 
 
 class StatusCheck(PolymorphicModel):

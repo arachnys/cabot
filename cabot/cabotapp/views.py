@@ -12,7 +12,6 @@ from models import (StatusCheck,
                     StatusCheckResult,
                     UserProfile,
                     Service,
-                    Instance,
                     Shift,
                     Schedule,
                     get_all_duty_officers,
@@ -80,12 +79,6 @@ def duplicate_check(request, pk):
     check = StatusCheck.objects.get(pk=pk)
     new_pk = check.duplicate()
     return HttpResponseRedirect(reverse('check', kwargs={'pk': new_pk}))
-
-
-def duplicate_instance(request, pk):
-    instance = Instance.objects.get(pk=pk)
-    new_instance = instance.duplicate()
-    return HttpResponseRedirect(reverse('update-instance', kwargs={'pk': new_instance}))
 
 
 class StatusCheckResultDetailView(LoginRequiredMixin, DetailView):
@@ -267,59 +260,6 @@ class JenkinsStatusCheckForm(StatusCheckForm):
         widgets = dict(**base_widgets)
 
 
-class InstanceForm(SymmetricalForm):
-    symmetrical_fields = ('service_set',)
-    service_set = forms.ModelMultipleChoiceField(
-        queryset=Service.objects.all(),
-        required=False,
-        help_text='Link to service(s).',
-        widget=forms.SelectMultiple(
-            attrs={
-                'data-rel': 'chosen',
-                'style': 'width: 70%',
-            },
-        )
-    )
-
-    class Meta:
-        model = Instance
-        template_name = 'instance_form.html'
-        fields = (
-            'name',
-            'address',
-            'users_to_notify',
-            'schedules',
-            'status_checks',
-            'service_set',
-        )
-        widgets = {
-            'name': forms.TextInput(attrs={'style': 'width: 30%;'}),
-            'address': forms.TextInput(attrs={'style': 'width: 70%;'}),
-            'status_checks': forms.SelectMultiple(attrs={
-                'data-rel': 'chosen',
-                'style': 'width: 70%',
-            }),
-            'service_set': forms.SelectMultiple(attrs={
-                'data-rel': 'chosen',
-                'style': 'width: 70%',
-            }),
-            'alerts': forms.SelectMultiple(attrs={
-                'data-rel': 'chosen',
-                'style': 'width: 70%',
-            }),
-            'users_to_notify': forms.CheckboxSelectMultiple(),
-            'schedules': forms.CheckboxSelectMultiple(),
-            'hackpad_id': forms.TextInput(attrs={'style': 'width:30%;'}),
-        }
-
-    def __init__(self, *args, **kwargs):
-        ret = super(InstanceForm, self).__init__(*args, **kwargs)
-        self.fields['users_to_notify'].queryset = User.objects.filter(
-            is_active=True)
-        self.fields['schedules'].queryset = Schedule.objects.all()
-        return ret
-
-
 class ServiceForm(forms.ModelForm):
     class Meta:
         model = Service
@@ -474,7 +414,6 @@ class CheckCreateView(LoginRequiredMixin, CreateView):
         if metric:
             initial['metric'] = metric
         service_id = self.request.GET.get('service')
-        instance_id = self.request.GET.get('instance')
 
         if service_id:
             try:
@@ -483,20 +422,11 @@ class CheckCreateView(LoginRequiredMixin, CreateView):
             except Service.DoesNotExist:
                 pass
 
-        if instance_id:
-            try:
-                instance = Instance.objects.get(id=instance_id)
-                initial['instance_set'] = [instance]
-            except Instance.DoesNotExist:
-                pass
-
         return initial
 
     def get_success_url(self):
         if self.request.GET.get('service'):
             return reverse('service', kwargs={'pk': self.request.GET.get('service')})
-        if self.request.GET.get('instance'):
-            return reverse('instance', kwargs={'pk': self.request.GET.get('instance')})
         return reverse('checks')
 
 
@@ -687,14 +617,6 @@ class GeneralSettingsForm(forms.Form):
     enabled = forms.BooleanField(label='Enabled', required=False)
 
 
-class InstanceListView(LoginRequiredMixin, ListView):
-    model = Instance
-    context_object_name = 'instances'
-
-    def get_queryset(self):
-        return Instance.objects.all().order_by('name').prefetch_related('status_checks')
-
-
 class ServiceListView(LoginRequiredMixin, ListView):
     model = Service
     context_object_name = 'services'
@@ -705,22 +627,6 @@ class ServiceListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super(ServiceListView, self).get_context_data(**kwargs)
         context['service_image'] = settings.SERVICE_IMAGE
-        return context
-
-
-class InstanceDetailView(LoginRequiredMixin, DetailView):
-    model = Instance
-    context_object_name = 'instance'
-
-    def get_context_data(self, **kwargs):
-        context = super(InstanceDetailView, self).get_context_data(**kwargs)
-        date_from = date.today() - relativedelta(day=1)
-        context['report_form'] = StatusCheckReportForm(initial={
-            'checks': self.object.status_checks.all(),
-            'service': self.object,
-            'date_from': date_from,
-            'date_to': date_from + relativedelta(months=1) - relativedelta(days=1)
-        })
         return context
 
 
@@ -741,33 +647,6 @@ class ServiceDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class InstanceCreateView(LoginRequiredMixin, CreateView):
-    model = Instance
-    form_class = InstanceForm
-
-    def form_valid(self, form):
-        return super(InstanceCreateView, self).form_valid(form)
-
-    def get_success_url(self):
-        return reverse('instance', kwargs={'pk': self.object.id})
-
-    def get_initial(self):
-        if self.initial:
-            initial = self.initial
-        else:
-            initial = {}
-        service_id = self.request.GET.get('service')
-
-        if service_id:
-            try:
-                service = Service.objects.get(id=service_id)
-                initial['service_set'] = [service]
-            except Service.DoesNotExist:
-                pass
-
-        return initial
-
-
 class ServiceCreateView(LoginRequiredMixin, CreateView):
     model = Service
     form_class = ServiceForm
@@ -782,14 +661,6 @@ class ScheduleCreateView(LoginRequiredMixin, CreateView):
     model = Schedule
     form_class = ScheduleForm
     success_url = reverse_lazy('shifts')
-
-
-class InstanceUpdateView(LoginRequiredMixin, UpdateView):
-    model = Instance
-    form_class = InstanceForm
-
-    def get_success_url(self):
-        return reverse('instance', kwargs={'pk': self.object.id})
 
 
 class ServiceUpdateView(LoginRequiredMixin, UpdateView):
@@ -821,13 +692,6 @@ class ScheduleDeleteView(LoginRequiredMixin, DeleteView):
     success_url = reverse_lazy('shifts')
     context_object_name = 'schedule'
     template_name = 'cabotapp/schedule_confirm_delete.html'
-
-
-class InstanceDeleteView(LoginRequiredMixin, DeleteView):
-    model = Instance
-    success_url = reverse_lazy('instances')
-    context_object_name = 'instance'
-    template_name = 'cabotapp/instance_confirm_delete.html'
 
 
 class ScheduleListView(LoginRequiredMixin, ListView):

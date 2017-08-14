@@ -36,7 +36,6 @@ CELERYBEAT_SCHEDULE = {
 CELERY_QUEUES = (
     Queue('checks', Exchange('checks', type='direct'), routing_key='checks'),
     Queue('service', Exchange('service', type='direct'), routing_key='service'),
-    Queue('instance', Exchange('instance', type='direct'), routing_key='instance'),
     Queue('batch', Exchange('batch', type='direct'), routing_key='batch'),
     Queue('maintenance', Exchange('maintenance', type='direct'), routing_key='maintenance'),
 )
@@ -53,10 +52,6 @@ CELERY_ROUTES = {
     'cabot.cabotapp.tasks.update_service': {
         'queue': 'service',
         'routing_key': 'service',
-    },
-    'cabot.cabotapp.tasks.update_instance': {
-        'queue': 'instance',
-        'routing_key': 'instance',
     },
     'cabot.cabotapp.tasks.update_shifts': {
         'queue': 'batch',
