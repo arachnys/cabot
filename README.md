@@ -108,6 +108,7 @@ As an example, for POST access to all `status_check` subclasses, add the followi
 cabotapp | status check | Can add graphite status check
 cabotapp | status check | Can add http status check
 cabotapp | status check | Can add jenkins status check
+cabotapp | status check | Can add tcp status check
 ```
 
 Access the Django admin page at https://cabot.yourcompany.com/admin to add/remove users, change user permissions, add/remove groups for group-based permission control, and change group permissions.

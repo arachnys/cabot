@@ -108,6 +108,15 @@ router.register(r'jenkins_checks', create_viewset(
     ),
 ))
 
+router.register(r'tcp_checks', create_viewset(
+    arg_model=models.TCPStatusCheck,
+    arg_fields=status_check_fields + (
+        'address',
+        'port',
+        'timeout',
+    ),
+))
+
 '''
 Omitting user API, could expose/allow modifying dangerous fields.
 

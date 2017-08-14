@@ -9,6 +9,7 @@ from models import (StatusCheck,
                     JenkinsStatusCheck,
                     HttpStatusCheck,
                     InfluxDBStatusCheck,
+                    TCPStatusCheck,
                     StatusCheckResult,
                     UserProfile,
                     Service,
@@ -260,6 +261,27 @@ class JenkinsStatusCheckForm(StatusCheckForm):
         widgets = dict(**base_widgets)
 
 
+class TCPStatusCheckForm(StatusCheckForm):
+    class Meta:
+        model = TCPStatusCheck
+        fields = (
+            'name',
+            'address',
+            'port',
+            'timeout',
+            'frequency',
+            'importance',
+            'active',
+            'retries',
+        )
+        widgets = dict(**base_widgets)
+        widgets.update({
+            'address': forms.TextInput(attrs={
+                'style': 'width:50%',
+            })
+        })
+
+
 class ServiceForm(forms.ModelForm):
     class Meta:
         model = Service
@@ -483,6 +505,16 @@ class JenkinsCheckUpdateView(CheckUpdateView):
     def form_valid(self, form):
         form.instance.frequency = 1
         return super(JenkinsCheckUpdateView, self).form_valid(form)
+
+
+class TCPCheckCreateView(CheckCreateView):
+    model = TCPStatusCheck
+    form_class = TCPStatusCheckForm
+
+
+class TCPCheckUpdateView(CheckUpdateView):
+    model = TCPStatusCheck
+    form_class = TCPStatusCheckForm
 
 
 class StatusCheckListView(LoginRequiredMixin, ListView):

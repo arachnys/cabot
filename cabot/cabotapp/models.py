@@ -18,8 +18,8 @@ from icalendar import Calendar
 
 import json
 import re
+import socket
 import time
-import subprocess
 import yaml
 
 import requests
@@ -229,6 +229,9 @@ class CheckGroupMixin(models.Model):
     def jenkins_status_checks(self):
         return self.status_checks.filter(polymorphic_ctype__model='jenkinsstatuscheck')
 
+    def tcp_status_checks(self):
+        return self.status_checks.filter(polymorphic_ctype__model='tcpstatuscheck')
+
     def elasticsearch_status_checks(self):
         return self.status_checks.filter(polymorphic_ctype__model='elasticsearchstatuscheck')
 
@@ -240,6 +243,9 @@ class CheckGroupMixin(models.Model):
 
     def active_jenkins_status_checks(self):
         return self.jenkins_status_checks().filter(active=True)
+
+    def active_tcp_status_checks(self):
+        return self.tcp_status_checks().filter(active=True)
 
     def active_status_checks(self):
         return self.status_checks.filter(active=True)
@@ -330,7 +336,6 @@ class ServiceStatusSnapshot(Snapshot):
 
 
 class StatusCheck(PolymorphicModel):
-
     """
     Base class for polymorphic models. We're going to use
     proxy models for inheriting because it makes life much simpler,
@@ -781,7 +786,7 @@ class HttpStatusCheck(StatusCheck):
         default=30,
         null=True,
         help_text='Time out after this many seconds.',
-    )
+     )
     verify_ssl_certificate = models.BooleanField(
         default=True,
         help_text='Set to false to allow not try to verify ssl certificates (default True)',
@@ -934,8 +939,50 @@ class JenkinsStatusCheck(StatusCheck):
         return result
 
 
-class StatusCheckResult(models.Model):
+class TCPStatusCheck(StatusCheck):
 
+    @property
+    def check_category(self):
+        return "TCP Check"
+
+    @property
+    def description(self):
+        return 'Monitoring connection of {0}:{1}'.format(self.address, self.port)
+
+    address = models.CharField(
+        max_length=1024,
+        help_text='IP address or hostname to monitor',)
+    port = models.PositiveIntegerField(
+        help_text='Port to listen on',)
+    timeout = models.IntegerField(
+        default=8,
+        help_text='Timeout on idle connection after this many seconds',)
+
+    update_url = 'update-tcp-check'
+
+    icon = 'glyphicon glyphicon-text-wide'
+
+    def _run(self):
+        """
+        We wish to provide a method to ensure a TCP endpoint is still up. To
+        achieve this, we use the python socket library to connect to the TCP
+        service listening on the specified address and port. In other words,
+        if this call succeeds (i.e. returns without raising an exception and/or
+        timeing out), we can conclude that the TCP endpoint is valid.
+        """
+        result = StatusCheckResult(check=self)
+
+        try:
+            socket.create_connection((self.address,self.port), self.timeout)
+            result.succeeded = True
+        except socket.error as e:
+            result.error = str(e)
+            result.succeeded = False
+
+        return result
+
+
+class StatusCheckResult(models.Model):
     """
     We use the same StatusCheckResult model for all check types,
     because really they are not so very different.

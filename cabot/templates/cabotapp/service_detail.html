@@ -85,6 +85,10 @@
 
 <hr>
 
+{% include 'cabotapp/_statuscheck_list.html' with checks=service.tcp_status_checks.all service=service checks_type="TCP" %}
+
+<hr>
+
 <div class="row">
   <div class="col-xs-12">
     <div class="col-xs-1"><h3><i class="fa fa-table"></i></h3></div>
