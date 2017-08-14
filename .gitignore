@@ -17,3 +17,9 @@ celerybeat-schedule
 conf/*.env
 dist/
 local_config.yml
+.idea/
+.tox/
+.venv/
+build/
+static/
+*.log
