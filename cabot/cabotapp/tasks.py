@@ -65,15 +65,6 @@ def update_service(service_or_id):
 
 
 @task(ignore_result=True)
-def update_instance(instance_or_id):
-    if not isinstance(instance_or_id, models.Instance):
-        instance = models.Instance.objects.get(id=instance_or_id)
-    else:
-        instance = instance_or_id
-    instance.update_status()
-
-
-@task(ignore_result=True)
 def update_shifts():
     schedules = models.Schedule.objects.all()
     for schedule in schedules:

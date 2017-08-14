@@ -4,8 +4,7 @@ from importlib import import_module
 from django.conf.urls import patterns, include, url
 from django.conf import settings
 from cabot.cabotapp.views import (
-        run_status_check, graphite_api_data, checks_run_recently,
-        duplicate_check, duplicate_instance,
+        run_status_check, graphite_api_data, checks_run_recently, duplicate_check,
         GraphiteCheckCreateView, GraphiteCheckUpdateView,
         InfluxDBCheckCreateView, InfluxDBCheckUpdateView,
         HttpCheckCreateView, HttpCheckUpdateView,
