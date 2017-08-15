@@ -305,6 +305,12 @@ class Service(CheckGroupMixin):
         help_text="URL of service."
     )
 
+    is_public = models.BooleanField(
+        verbose_name='Is Public',
+        default=False,
+        help_text='The service will be shown in the public home'
+    )
+
     class Meta:
         ordering = ['name']
 

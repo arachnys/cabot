@@ -1,0 +1,36 @@
+{% if not services %}
+
+  <div class="col-xs-11 col-xs-offset-1">
+    <hr/>
+    No available services monitoring
+  </div>
+
+{% else %}
+
+<div class="row">
+  <div class="col-xs-8">
+    <h4>Name</h4>
+  </div>
+  <div class="col-xs-2">
+    <h4>Overall Checks</h4>
+  </div>
+  <div class="col-xs-2">
+    <h4>Acknowledgment</h4>
+  </div>
+</div>
+  {% for service in services %}
+<hr/>
+<div class="row">
+  <div class="col-xs-8 {% if service.alerts_enabled %}enabled{% else %}warning{% endif %}">
+    <a href="{{service.url}}" title="{{service.url}}" target="_blank">{{service.name}}</a>
+  </div>
+  <div class="col-xs-2">
+    <span class="label label-{% if not service.alerts_enabled %}warning{% else %}{% if service.overall_status == service.PASSING_STATUS %}success{% else %}danger{% endif %}{% endif %}">{% if service.alerts_enabled %}{{ service.overall_status|lower|capfirst }}{% else %}Disabled{% endif %}</span>
+  </div>
+  <div class="col-xs-2">
+    <span class="label label-{% if not service.unexpired_acknowledgement %}danger{% else %}success{% endif %}">{% if service.overall_status != service.PASSING_STATUS %}{% if service.unexpired_acknowledgement %}Yes{% else %}No{% endif %}{% endif %}</span>
+  </div>
+</div>
+  {% endfor %}
+
+{% endif %}

@@ -318,7 +318,8 @@ class ServiceForm(forms.ModelForm):
             'alerts',
             'alerts_enabled',
             'hackpad_id',
-            'runbook_link'
+            'runbook_link',
+            'is_public'
         )
         widgets = {
             'name': forms.TextInput(attrs={'style': 'width: 70%;'}),
@@ -800,6 +801,18 @@ class ServiceListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         return Service.objects.all().order_by('name').prefetch_related('status_checks')
 
+
+class ServicePublicListView(TemplateView):
+    model = Service
+    context_object_name = 'services'
+    template_name = "cabotapp/service_public_list.html"
+
+    def get_context_data(self, **kwargs):
+        context = super(ServicePublicListView, self).get_context_data(**kwargs)
+        context[self.context_object_name] = Service.objects\
+            .filter(is_public=True, alerts_enabled=True)\
+            .order_by('name').prefetch_related('status_checks')
+        return context
 
 class InstanceDetailView(LoginRequiredMixin, DetailView):
     model = Instance

@@ -1,0 +1,17 @@
+{% extends 'base_public.html' %}
+{% block header_navbar_menu %}
+  <ul class="nav navbar-nav">
+    <li>
+      <a href="{% url 'public' %}"><i class="fa fa-gears"></i> Services</a>
+    </li>
+  </ul>
+{{block.super}}
+{% endblock header_navbar_menu %}
+{% block content %}
+<div class="row">
+
+  <div class="col-xs-12">
+    {% include 'cabotapp/_service_public_list.html' %}
+  </div>
+</div>
+{% endblock content %}

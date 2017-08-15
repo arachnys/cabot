@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'base_public.html' %}
 
 {% block content %}
 <div class="row">
@@ -14,10 +14,10 @@
     <div class="form-group">
       <div class="col-xs-6 col-xs-offset-2">
         <button type="submit" class="btn btn-primary">Log in</button>
-        <a href="{% url "password-reset" %}" class="btn">Reset password</a>
+        <a href="{% url 'password-reset' %}" class="btn">Reset password</a>
       </div>
       </div>
     </div>
   </form>
-</form>
+{% include "./social_auth.html" %}
 {% endblock %}

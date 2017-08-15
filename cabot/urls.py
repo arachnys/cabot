@@ -14,7 +14,7 @@ from cabot.cabotapp.views import (
 
 from cabot.cabotapp.views import (InstanceListView, InstanceDetailView,
     InstanceUpdateView, InstanceCreateView, InstanceDeleteView,
-    ServiceListView, ServiceDetailView,
+    ServiceListView, ServicePublicListView, ServiceDetailView,
     ServiceUpdateView, ServiceCreateView, ServiceDeleteView,
     UserProfileUpdateView, ShiftListView, subscriptions)
 
@@ -43,11 +43,20 @@ def first_time_setup_wrapper(func):
             return func(*args, **kwargs)
     return wrapper
 
+
+def home_authentication_switcher(request, *args, **kwargs):
+    if cabot_needs_setup():
+        return redirect('first_time_setup')
+    if not request.user.is_authenticated():
+        return ServicePublicListView.as_view()(request, *args, **kwargs)
+    else:
+        return ServiceListView.as_view()(request, *args, **kwargs)
+
 urlpatterns = [
      # for the password reset views
      url('^', include('django.contrib.auth.urls')),
 
-     url(r'^$', view=RedirectView.as_view(url='services/', permanent=False),
+     url(r'^$', view=home_authentication_switcher,
         name='dashboard'),
      url(r'^subscriptions/', view=subscriptions,
         name='subscriptions'),
@@ -67,6 +76,8 @@ urlpatterns = [
 
      url(r'^services/', view=ServiceListView.as_view(),
         name='services'),
+     url(r'^public/', view=ServicePublicListView.as_view(),
+        name='public'),
      url(r'^service/create/', view=ServiceCreateView.as_view(),
         name='create-service'),
      url(r'^service/update/(?P<pk>\d+)/',
