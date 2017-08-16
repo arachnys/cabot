@@ -350,7 +350,7 @@ class TestElasticsearchStatusCheck(TestCase):
                            '"query": "test.query"}}, {"range": {"@timestamp": {"gte": "now-10m"}}}]}}, ' \
                            '"aggs": {"agg": {"terms": {"field": "outstanding"}, ' \
                            '"aggs": {"agg": {"date_histogram": {"field": "@timestamp", "interval": "1m", ' \
-                           '"extended_bounds": {"max": "now", "min": "now-3h"}}, ' \
+                           '"extended_bounds": {"max": "now", "min": "now-10m"}}, ' \
                            '"aggs": {"sum": {"sum": {"field": "count"}}}}}}}}]'
         self.assertEqual(self.es_check.queries, expected_queries)
 

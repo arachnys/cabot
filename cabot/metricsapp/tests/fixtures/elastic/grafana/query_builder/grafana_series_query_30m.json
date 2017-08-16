@@ -24,7 +24,7 @@
         "field": "@timestamp",
         "interval": "10m",
         "extended_bounds": {
-          "min": "now-1h",
+          "min": "now-30m",
           "max": "now"
         }
       },

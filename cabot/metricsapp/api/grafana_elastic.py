@@ -321,4 +321,25 @@ def adjust_time_range(queries, time_range):
                     query['query']['bool']['must'][m]['range'][time_field]['gte'] = 'now-{}'.format(minimum)
                     queries[n] = query
 
+        _adjust_extended_bounds(query['aggs'], minimum)
+
     return queries
+
+
+def _adjust_extended_bounds(aggs, minimum):
+    """
+    Adjust extended bounds so we don't fetch more data than we need to
+    :param aggs: Takes in the 'aggs' part of a query
+    :param minimum: the time range to limit extended_bounds to - formatted as '{}m'.format(time_range)
+    :return: None
+    """
+    next_level = aggs.get('agg')
+
+    if not next_level or len(next_level) < 2:
+        return
+
+    for k, v in next_level.iteritems():
+        if k == 'date_histogram':
+            v['extended_bounds']['min'] = 'now-{}'.format(minimum)
+            v['extended_bounds']['max'] = 'now'
+        return _adjust_extended_bounds(next_level['aggs'], minimum)

@@ -215,12 +215,12 @@ class TestDashboardSync(TestCase):
                        '"query": "query:life-the-universe-and-everything"}}, ' \
                        '{"range": {"@timestamp": {"gte": "now-180m"}}}]}}, "aggs": {"agg": {"date_histogram": ' \
                        '{"field": "@timestamp", "interval": "1m", "extended_bounds": ' \
-                       '{"max": "now", "min": "now-3h"}}, "aggs": {"sum: 42": {"sum": {"field": "value"}}}}}}]'
+                       '{"max": "now", "min": "now-180m"}}, "aggs": {"sum: 42": {"sum": {"field": "value"}}}}}}]'
         self.old_queries = '[{"query": {"bool": {"must": [{"query_string": {"analyze_wildcard": true, ' \
                            '"query": "test.query"}}, {"range": {"@timestamp": {"gte": "now-180m"}}}]}}, ' \
                            '"aggs": {"agg": {"terms": {"field": "outstanding"}, ' \
                            '"aggs": {"agg": {"date_histogram": {"field": "@timestamp", "interval": "1m", ' \
-                           '"extended_bounds": {"max": "now", "min": "now-3h"}}, ' \
+                           '"extended_bounds": {"max": "now", "min": "now-180m"}}, ' \
                            '"aggs": {"sum": {"sum": {"field": "count"}}}}}}}}]'
         self.check = ElasticsearchStatusCheck.objects.create(
             name='Also Great Dashboard: 42',
