@@ -75,13 +75,20 @@ for s in window.DATA
   i++
 {% endif %}
 
+colors = ['#028E9B', '#2C17B1', '#A101A6', '#FF1E00', '#FFA400', '#FFEB00', '#84E900'
+          '#00AF64', '#1533AD', '#6A0AAB', '#E9003A', '#FF8700', '#FFD300', '#BAF300'
+          '#0D58A6', '#4A11AE', '#CE0071', '#FF5F00', '#FFBC00', '#F0FC00', '#2DD700'
+          ]
+
 linegraph = Morris.Line(
   element: 'graph'
   data: kvs
   xkey: 'time'
   ykeys: labels
   labels: (label[0..25] for label in labels)
-  hideHover: true)
+  hideHover: true,
+  lineColors: colors
+)
 
 linegraph.options.labels.forEach (label, i) ->
   legendItem = $('<span></span>').text(label).prepend('<i>&nbsp;</i>').css('margin', '20px')
