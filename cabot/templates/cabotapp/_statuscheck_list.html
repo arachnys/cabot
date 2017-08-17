@@ -2,21 +2,18 @@
 
 <div class="row">
   <div class="col-xs-12">
-    <div class="col-xs-1"><h3><i class="{% if checks_type == "All" %}fa fa-cog{% else %}glyphicon glyphicon-{% if checks_type == "Http" %}arrow-up{% elif checks_type == "Jenkins" %}ok{% elif checks_type == "ICMP" %}transfer{% elif checks_type == 'Graphite' %}signal{% else %}stats{% endif %}{% endif %}"></i></h3></div>
+    <div class="col-xs-1"><h3><i class="{% if checks_type == "All" %}fa fa-cog{% else %}glyphicon glyphicon-{% if checks_type == "Http" %}arrow-up{% elif checks_type == "Jenkins" %}ok{% elif checks_type == 'Graphite' %}signal{% else %}stats{% endif %}{% endif %}"></i></h3></div>
     <div class="col-xs-8"><h3>{{ checks_type }} checks</h3></div>
     <div class="col-xs-3 text-right">
       <h3>
       &nbsp;{% if checks_type == "All" or checks_type == "Graphite" %}
-      <a href="{% url "create-graphite-check" %}?instance={{ instance.id }}&service={{ service.id }}" class=""><i class="glyphicon glyphicon-plus" title="Add new metric check"></i><i class="glyphicon glyphicon-signal" title="Add new metric check"></i></a>
+      <a href="{% url "create-graphite-check" %}?service={{ service.id }}" class=""><i class="glyphicon glyphicon-plus" title="Add new metric check"></i><i class="glyphicon glyphicon-signal" title="Add new metric check"></i></a>
       {% endif %}
       {% if checks_type == "All" or checks_type == "Http" %}
-      &nbsp;<a href="{% url "create-http-check" %}?instance={{ instance.id }}&service={{ service.id }}" class="" title="Add new Http check"><i class="glyphicon glyphicon-plus"></i><i class="glyphicon glyphicon-arrow-up"></i></a>
+      &nbsp;<a href="{% url "create-http-check" %}?service={{ service.id }}" class="" title="Add new Http check"><i class="glyphicon glyphicon-plus"></i><i class="glyphicon glyphicon-arrow-up"></i></a>
       {% endif %}
       {% if checks_type == "All" or checks_type == "Jenkins" %}
-      &nbsp;<a href="{% url "create-jenkins-check" %}?instance={{ instance.id }}&service={{ service.id }}" class="" title="Add new Jenkins check"><i class="glyphicon glyphicon-plus"></i><i class="glyphicon glyphicon-ok"></i></a>
-      {% endif %}
-      {% if checks_type == "All" or checks_type == "ICMP" %}
-      &nbsp;<a href="{% url "create-icmp-check" %}?instance={{ instance.id }}&service={{ service.id }}" class="" title="Add new ICMP check"><i class="glyphicon glyphicon-plus"></i><i class="glyphicon glyphicon-transfer"></i></a>
+      &nbsp;<a href="{% url "create-jenkins-check" %}?service={{ service.id }}" class="" title="Add new Jenkins check"><i class="glyphicon glyphicon-plus"></i><i class="glyphicon glyphicon-ok"></i></a>
       {% endif %}
       </h3>
     </div>
@@ -40,7 +37,6 @@
           <th>Test description</th>
           <th>Importance</th>
           <th>Service(s)</th>
-          <th>Instance(s)</th>
           <th></th>
         </tr>
       </thead>
@@ -83,18 +79,6 @@
             {% endfor %}
             {% if not check.service_set.all %}
             <span class="label label-warning">No service</span>
-            {% endif %}
-          </td>
-          <td>
-            {% for instance in check.instance_set.all %}
-            <a href="{% url "instance" pk=instance.id %}">{{ instance.name }}</a>
-            {% if forloop.last %}
-            {% else %}
-            /
-            {% endif %}
-            {% endfor %}
-            {% if not check.instance_set.all %}
-            <span class="label label-warning">No instance</span>
             {% endif %}
           </td>
           <td class="text-right">

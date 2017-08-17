@@ -18,8 +18,8 @@ from mock import Mock, patch
 
 from cabot.cabotapp.models import (
     get_duty_officers, get_all_duty_officers, update_shifts, GraphiteStatusCheck,
-    JenkinsStatusCheck, HttpStatusCheck, ICMPStatusCheck,
-    Service, Schedule, Instance, StatusCheckResult)
+    JenkinsStatusCheck, HttpStatusCheck,
+    Service, Schedule, StatusCheckResult)
 from cabot.cabotapp.views import StatusCheckReportForm
 
 
@@ -45,12 +45,10 @@ class LocalTestCase(APITestCase):
         self.user = User.objects.create(username=self.username)
         self.user.set_password(self.password)
         self.user.user_permissions.add(
-            Permission.objects.get(codename='add_instance'),
             Permission.objects.get(codename='add_service'),
             Permission.objects.get(codename='add_httpstatuscheck'),
             Permission.objects.get(codename='add_graphitestatuscheck'),
             Permission.objects.get(codename='add_jenkinsstatuscheck'),
-            Permission.objects.get(codename='add_icmpstatuscheck'),
         )
         self.user.save()
         self.graphite_check = GraphiteStatusCheck.objects.create(
@@ -355,30 +353,6 @@ class TestStatusCheck(LocalTestCase):
         self.assertEqual(new.status_code, old.status_code)
 
 
-class TestInstances(LocalTestCase):
-
-    def test_duplicate_instance(self):
-        instances = Instance.objects.all()
-        self.assertEqual(len(instances), 0)
-        self.instance = Instance.objects.create(
-            name='Hello',
-            address='192.168.0.1',
-        )
-        pingcheck = ICMPStatusCheck.objects.create(
-            name='Hello check',
-        )
-        self.instance.status_checks.add(pingcheck)
-        self.instance.duplicate()
-        instances = Instance.objects.all()
-        self.assertEqual(len(instances), 2)
-        new = instances.filter(name__icontains='Copy of')[0]
-        self.assertEqual(new.name, 'Copy of Hello')
-        old = instances.exclude(name__icontains='Copy of')[0]
-        self.assertEqual(len(new.status_checks.all()), 1)
-        self.assertEqual(len(old.status_checks.all()), 1)
-        self.assertNotEqual(new.status_checks.all()[0], old.status_checks.all()[0])
-
-
 class TestWebInterface(LocalTestCase):
 
     def setUp(self):
@@ -425,23 +399,6 @@ class TestWebInterface(LocalTestCase):
         # Still the same
         self.assertEqual(reloaded.hackpad_id, snippet_link)
 
-    def test_create_instance(self):
-        instances = Instance.objects.all()
-        self.assertEqual(len(instances), 0)
-        self.client.login(username=self.username, password=self.password)
-        resp = self.client.post(
-            reverse('create-instance'),
-            data={
-                'name': 'My little instance',
-            },
-            follow=True,
-        )
-        self.assertEqual(resp.status_code, 200)
-        instances = Instance.objects.all()
-        self.assertEqual(len(instances), 1)
-        instance = instances[0]
-        self.assertEqual(len(instance.status_checks.all()), 1)
-
     def test_checks_report(self):
         form = StatusCheckReportForm({
             'service': self.service.id,
@@ -461,16 +418,6 @@ class TestAPI(LocalTestCase):
     def setUp(self):
         super(TestAPI, self).setUp()
 
-        self.instance = Instance.objects.create(
-            name='Hello',
-            address='192.168.0.1',
-        )
-        pingcheck = ICMPStatusCheck.objects.create(
-            id=10104,
-            name='Hello check',
-        )
-        self.instance.status_checks.add(pingcheck)
-
         self.basic_auth = 'Basic {}'.format(
             base64.b64encode(
                 '{}:{}'.format(self.username, self.password).encode(HTTP_HEADER_ENCODING)
@@ -486,21 +433,8 @@ class TestAPI(LocalTestCase):
                     'status_checks': [10101, 10102, 10103],
                     'alerts': [],
                     'hackpad_id': None,
-                    'instances': [],
                     'id': 2194,
                     'url': u''
-                },
-            ],
-            'instance': [
-                {
-                    'name': u'Hello',
-                    'users_to_notify': [],
-                    'alerts_enabled': True,
-                    'status_checks': [10104],
-                    'alerts': [],
-                    'hackpad_id': None,
-                    'address': u'192.168.0.1',
-                    'id': 2
                 },
             ],
             'statuscheck': [
@@ -527,14 +461,6 @@ class TestAPI(LocalTestCase):
                     'frequency': 5,
                     'retries': 0,
                     'id': 10103
-                },
-                {
-                    'name': u'Hello check',
-                    'active': True,
-                    'importance': u'ERROR',
-                    'frequency': 5,
-                    'retries': 0,
-                    'id': 10104
                 },
             ],
             'graphitestatuscheck': [
@@ -580,16 +506,6 @@ class TestAPI(LocalTestCase):
                     'id': 10102
                 },
             ],
-            'icmpstatuscheck': [
-                {
-                    'name': u'Hello check',
-                    'active': True,
-                    'importance': u'ERROR',
-                    'frequency': 5,
-                    'retries': 0,
-                    'id': 10104
-                },
-            ],
         }
         self.post_data = {
             'service': [
@@ -600,21 +516,8 @@ class TestAPI(LocalTestCase):
                     'status_checks': [],
                     'alerts': [],
                     'hackpad_id': None,
-                    'instances': [],
                     'id': 2194,
                     'url': u'',
-                },
-            ],
-            'instance': [
-                {
-                    'name': u'posted instance',
-                    'users_to_notify': [],
-                    'alerts_enabled': True,
-                    'status_checks': [],
-                    'alerts': [],
-                    'hackpad_id': None,
-                    'address': u'255.255.255.255',
-                    'id': 2
                 },
             ],
             'graphitestatuscheck': [
@@ -658,16 +561,6 @@ class TestAPI(LocalTestCase):
                     'retries': 0,
                     'max_queued_build_time': 37,
                     'id': 10102
-                },
-            ],
-            'icmpstatuscheck': [
-                {
-                    'name': u'posted icmp check',
-                    'active': True,
-                    'importance': u'CRITICAL',
-                    'frequency': 5,
-                    'retries': 0,
-                    'id': 10104
                 },
             ],
         }
@@ -724,15 +617,6 @@ class TestAPI(LocalTestCase):
 class TestAPIFiltering(LocalTestCase):
     def setUp(self):
         super(TestAPIFiltering, self).setUp()
-
-        self.instance = Instance.objects.create(
-            name='Hello',
-            address='192.168.0.1',
-        )
-        pingcheck = ICMPStatusCheck.objects.create(
-            name='Hello check',
-        )
-        self.instance.status_checks.add(pingcheck)
 
         self.expected_filter_result = JenkinsStatusCheck.objects.create(
             name='Filter test 1',

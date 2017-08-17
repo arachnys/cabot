@@ -60,14 +60,6 @@ router.register(r'services', create_viewset(
     arg_model=models.Service,
     arg_fields=check_group_mixin_fields + (
         'url',
-        'instances',
-    ),
-))
-
-router.register(r'instances', create_viewset(
-    arg_model=models.Instance,
-    arg_fields=check_group_mixin_fields + (
-        'address',
     ),
 ))
 
@@ -83,11 +75,6 @@ router.register(r'status_checks', create_viewset(
     arg_model=models.StatusCheck,
     arg_fields=status_check_fields,
     no_create=True,
-))
-
-router.register(r'icmp_checks', create_viewset(
-    arg_model=models.ICMPStatusCheck,
-    arg_fields=status_check_fields,
 ))
 
 router.register(r'graphite_checks', create_viewset(

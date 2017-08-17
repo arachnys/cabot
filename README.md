@@ -68,7 +68,7 @@ To rebuild the virtualenv (after changing requirements), use
 
 .. code-block:: console
 
-    tox -re develop 
+    tox -re develop
 
 ## Testing
 
@@ -90,7 +90,7 @@ It's just a lucky coincidence that his name sounds like he could be an automatio
 
 ## API
 
-The API has automatically generated documentation available by browsing https://cabot.yourcompany.com/api.  The browsable documentation displays example GET requests and lists other allowed HTTP methods.  
+The API has automatically generated documentation available by browsing https://cabot.yourcompany.com/api.  The browsable documentation displays example GET requests and lists other allowed HTTP methods.
 
 To view individual items, append the item `id` to the url.  For example, to view `graphite_check` 1, browse:
 ```
@@ -107,7 +107,6 @@ As an example, for POST access to all `status_check` subclasses, add the followi
 ```
 cabotapp | status check | Can add graphite status check
 cabotapp | status check | Can add http status check
-cabotapp | status check | Can add icmp status check
 cabotapp | status check | Can add jenkins status check
 ```
 

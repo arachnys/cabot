@@ -7,7 +7,7 @@ from celery.exceptions import SoftTimeLimitExceeded
 from .jenkins import get_job_status
 from .alert import (send_alert, AlertPluginUserData)
 from .influx import parse_metric
-from .tasks import update_service, update_instance
+from .tasks import update_service
 from cabot.cabotapp.models_plugins import HipchatInstance
 
 from collections import defaultdict
@@ -300,12 +300,6 @@ class Service(CheckGroupMixin):
         if not (self.overall_status == Service.PASSING_STATUS and self.old_overall_status == Service.PASSING_STATUS):
             self.alert()
 
-    instances = models.ManyToManyField(
-        'Instance',
-        blank=True,
-        help_text='Instances this service is running on.',
-    )
-
     url = models.TextField(
         blank=True,
         help_text="URL of service."
@@ -313,58 +307,6 @@ class Service(CheckGroupMixin):
 
     class Meta:
         ordering = ['name']
-
-
-class Instance(CheckGroupMixin):
-
-    def duplicate(self):
-        checks = self.status_checks.all()
-        new_instance = self
-        new_instance.pk = None
-        new_instance.id = None
-        new_instance.name = u"Copy of %s" % self.name
-
-        new_instance.save()
-
-        for check in checks:
-            check.duplicate(inst_set=(new_instance,), serv_set=())
-
-        return new_instance.pk
-
-    def update_status(self):
-        self.old_overall_status = self.overall_status
-        # Only active checks feed into our calculation
-        status_checks_failed_count = self.all_failing_checks().count()
-        self.overall_status = self.most_severe(self.all_failing_checks())
-        self.snapshot = InstanceStatusSnapshot(
-            instance=self,
-            num_checks_active=self.active_status_checks().count(),
-            num_checks_passing=self.active_status_checks(
-            ).count() - status_checks_failed_count,
-            num_checks_failing=status_checks_failed_count,
-            overall_status=self.overall_status,
-            time=timezone.now(),
-        )
-        self.snapshot.save()
-        self.save()
-
-    class Meta:
-        ordering = ['name']
-
-    address = models.TextField(
-        blank=True,
-        help_text="Address (IP/Hostname) of service."
-    )
-
-    def icmp_status_checks(self):
-        return self.status_checks.filter(polymorphic_ctype__model='icmpstatuscheck')
-
-    def active_icmp_status_checks(self):
-        return self.icmp_status_checks().filter(active=True)
-
-    def delete(self, *args, **kwargs):
-        self.icmp_status_checks().delete()
-        return super(Instance, self).delete(*args, **kwargs)
 
 
 class Snapshot(models.Model):
@@ -385,13 +327,6 @@ class ServiceStatusSnapshot(Snapshot):
 
     def __unicode__(self):
         return u"%s: %s" % (self.service.name, self.overall_status)
-
-
-class InstanceStatusSnapshot(Snapshot):
-    instance = models.ForeignKey(Instance, related_name='snapshots')
-
-    def __unicode__(self):
-        return u"%s: %s" % (self.instance.name, self.overall_status)
 
 
 class StatusCheck(PolymorphicModel):
@@ -496,7 +431,6 @@ class StatusCheck(PolymorphicModel):
             self.calculated_status = Service.CALCULATED_PASSING_STATUS
         ret = super(StatusCheck, self).save(*args, **kwargs)
         self.update_related_services()
-        self.update_related_instances()
         return ret
 
     def duplicate(self, inst_set=(), serv_set=()):
@@ -515,11 +449,6 @@ class StatusCheck(PolymorphicModel):
         for service in services:
             update_service.apply_async(args=[service.id])
 
-    def update_related_instances(self):
-        instances = self.instance_set.all()
-        for instance in instances:
-            update_instance.apply_async(args=[instance.id])
-
     def get_status_image(self):
         """Return a related image for the check (if it exists)"""
         return None
@@ -527,46 +456,6 @@ class StatusCheck(PolymorphicModel):
     def get_status_link(self):
         """Return a link with more information about the check"""
         return None
-
-
-class ICMPStatusCheck(StatusCheck):
-
-    @property
-    def check_category(self):
-        return "ICMP/Ping Check"
-
-    @property
-    def description(self):
-        instances = self.instance_set.all()
-        if len(instances) > 0:
-            return 'ICMP Reply from {}'.format(self.instance_set.all()[0].address)
-        return 'ICMP Reply'
-
-    update_url = 'update-icmp-check'
-
-    icon = 'glyphicon glyphicon-transfer'
-
-    def _run(self):
-        result = StatusCheckResult(check=self)
-        instances = self.instance_set.all()
-        target = self.instance_set.get().address
-
-        # We need to read both STDOUT and STDERR because ping can write to both, depending on the kind of error.
-        # Thanks a lot, ping.
-        ping_process = subprocess.Popen("ping -c 1 " + target,
-                                        stdout=subprocess.PIPE,
-                                        stderr=subprocess.STDOUT,
-                                        shell=True)
-        response = ping_process.wait()
-
-        if response == 0:
-            result.succeeded = True
-        else:
-            output = ping_process.stdout.read()
-            result.succeeded = False
-            result.error = output
-
-        return result
 
 
 class GraphiteStatusCheck(StatusCheck):
