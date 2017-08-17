@@ -7,6 +7,7 @@ from cabot.cabotapp import jenkins
 from django.utils import timezone
 from datetime import timedelta
 import jenkinsapi
+from jenkinsapi.custom_exceptions import UnknownJob
 
 class TestGetStatus(unittest.TestCase):
 
@@ -78,5 +79,21 @@ class TestGetStatus(unittest.TestCase):
             'job_number': 12,
             'blocked_build_time': 600,
             'status_code': 200
+        }
+        self.assertEqual(status, expected)
+
+    @patch("cabot.cabotapp.jenkins._get_jenkins_client")
+    def test_job_unknown(self, mock_jenkins):
+        self.mock_client.get_job.side_effect = UnknownJob()
+        mock_jenkins.return_value = self.mock_client
+
+        status = jenkins.get_job_status('unknown-job')
+
+        expected = {
+            'active': None,
+            'succeeded': None,
+            'job_number': None,
+            'blocked_build_time': None,
+            'status_code': 404
         }
         self.assertEqual(status, expected)
