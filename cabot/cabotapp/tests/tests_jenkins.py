@@ -17,6 +17,9 @@ class TestGetStatus(unittest.TestCase):
         self.job = {
             u'inQueue': False,
             u'queueItem': None,
+            u'lastSuccessfulBuild': {
+                u'number': 12,
+            },
             u'lastCompletedBuild': {
                 u'number': 12,
             },
@@ -49,6 +52,7 @@ class TestGetStatus(unittest.TestCase):
             'succeeded': True,
             'job_number': 12,
             'blocked_build_time': None,
+            'consecutive_failures': 0,
             'status_code': 200
         }
         self.assertEqual(status, expected)
@@ -58,6 +62,10 @@ class TestGetStatus(unittest.TestCase):
         mock_jenkins.return_value = self.mock_client
 
         self.build[u'result'] = u'FAILURE'
+        self.job[u'lastSuccessfulBuild'] = {
+            u'number': 11,
+            u'result': u'SUCCESS'
+        }
 
         status = cabot_jenkins.get_job_status(self.mock_config, 'foo')
 
@@ -66,6 +74,7 @@ class TestGetStatus(unittest.TestCase):
             'succeeded': False,
             'job_number': 12,
             'blocked_build_time': None,
+            'consecutive_failures': 1,
             'status_code': 200
         }
         self.assertEqual(status, expected)
@@ -90,6 +99,7 @@ class TestGetStatus(unittest.TestCase):
             'job_number': 12,
             'queued_job_number': 13,
             'blocked_build_time': 600,
+            'consecutive_failures': 0,
             'status_code': 200
         }
         self.assertEqual(status, expected)
@@ -114,6 +124,7 @@ class TestGetStatus(unittest.TestCase):
             'job_number': 12,
             'queued_job_number': 13,
             'blocked_build_time': 600,
+            'consecutive_failures': 0,
             'status_code': 200
         }
         self.assertEqual(status, expected)
@@ -139,6 +150,7 @@ class TestGetStatus(unittest.TestCase):
         unbuilt_job = {
             u'inQueue': False,
             u'queueItem': None,
+            u'lastSuccessfulBuild': None,
             u'lastCompletedBuild': None,
             u'lastBuild': None,
             u'color': u'notbuilt'
@@ -173,6 +185,7 @@ class TestGetStatus(unittest.TestCase):
             'succeeded': False,
             'job_number': 1,
             'blocked_build_time': None,
+            'consecutive_failures': 1,
             'status_code': 200
         }
         self.assertEqual(status, expected)

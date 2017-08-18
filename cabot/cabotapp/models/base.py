@@ -810,6 +810,7 @@ class StatusCheckResult(models.Model):
 
     # Jenkins specific
     job_number = models.PositiveIntegerField(null=True)
+    consecutive_failures = models.PositiveIntegerField(null=True)
 
     class Meta:
         ordering = ['-time_complete']

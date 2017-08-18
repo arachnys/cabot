@@ -30,10 +30,16 @@ def get_job_status(jenkins_config, jobname):
             raise Exception("job has no build")
         last_build = client.get_build_info(jobname, last_completed_build['number'])
 
+        if job['lastSuccessfulBuild']:
+            last_good_build_number = job['lastSuccessfulBuild']['number']
+        else:
+            last_good_build_number = 0
+
         ret['status_code'] = 200
         ret['job_number'] = last_build['number']
         ret['active'] = job['color'] != 'disabled'
         ret['succeeded'] = ret['active'] and last_build['result'] == 'SUCCESS'
+        ret['consecutive_failures'] = last_build['number'] - last_good_build_number
 
         if job['inQueue']:
             in_queued_since = job['queueItem']['inQueueSince']
