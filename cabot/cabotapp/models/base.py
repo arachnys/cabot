@@ -49,7 +49,7 @@ def serialize_recent_results(recent_results):
     return ','.join(vals)
 
 
-def calculate_debounced_passing(recent_results, debounce=0):
+def default_calculate_debounced_passing(recent_results, debounce=0):
     """
     `debounce` is the number of previous failures we need (not including this)
     to mark a search as passing or failing
@@ -556,7 +556,7 @@ class StatusCheck(PolymorphicModel):
     def save(self, *args, **kwargs):
         if self.last_run:
             recent_results = list(self.recent_results())
-            if calculate_debounced_passing(recent_results, self.debounce):
+            if self.calculate_debounced_passing(recent_results, self.debounce):
                 self.calculated_status = Service.CALCULATED_PASSING_STATUS
             else:
                 self.calculated_status = Service.CALCULATED_FAILING_STATUS
@@ -573,6 +573,9 @@ class StatusCheck(PolymorphicModel):
         self.update_related_services()
         self.update_related_instances()
         return ret
+
+    def calculate_debounced_passing(self, recent_results, debounce=0):
+        return default_calculate_debounced_passing(recent_results, debounce=debounce)
 
     def duplicate(self, inst_set=(), serv_set=()):
         new_check = self
