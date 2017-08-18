@@ -158,6 +158,7 @@ def fake_jenkins_response(*args, **kwargs):
         'active': True,
         'status_code': 200,
         'blocked_build_time': None,
+        'consecutive_failures': 0,
         'succeeded': False,
         'job_number': 176
     }
@@ -168,6 +169,7 @@ def jenkins_blocked_response(*args, **kwargs):
         'active': True,
         'status_code': 200,
         'blocked_build_time': 108616352.65387,
+        'consecutive_failures': 1,
         'succeeded': False,
         'job_number': 1999
     }
