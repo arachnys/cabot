@@ -57,12 +57,24 @@ class JenkinsStatusCheck(StatusCheck):
             else:
                 result.succeeded = status['succeeded']
             if not status['succeeded']:
+                message = u'Job "%s" failing on Jenkins (%s)' % (self.name, status['consecutive_failures'])
                 if result.error:
-                    result.error += u'; Job "%s" failing on Jenkins' % self.name
+                    result.error += u'; %s' % message
                 else:
-                    result.error = u'Job "%s" failing on Jenkins' % self.name
+                    result.error = message
                 result.raw_data = status
         return result
+
+    def calculate_debounced_passing(self, recent_results, debounce=0):
+        """
+        `debounce` is the number of previous job failures we need (not including this)
+        to mark a search as passing or failing
+        Returns:
+          True if passing given debounce factor
+          False if failing
+        """
+        last_result = recent_results[0]
+        return last_result.consecutive_failures <= debounce
 
 
 class JenkinsConfig(models.Model):
