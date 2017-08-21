@@ -4,7 +4,8 @@ services:
     extends:
       file: docker-compose-base.yml
       service: base
-    entrypoint: python manage.py test -v2
+    entrypoint: /usr/bin/python
+    command: manage.py test -v2
     env_file:
         - conf/test.env
   sut:

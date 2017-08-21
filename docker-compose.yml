@@ -42,10 +42,10 @@ services:
       - db
 
   redis:
-    image: redis
+    image: redis:alpine
 
   db:
-    image: postgres
+    image: postgres:alpine
     volumes:
       - datavolume:/var/lib/postgresql/data
 
