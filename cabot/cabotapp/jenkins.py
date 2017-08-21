@@ -1,26 +1,25 @@
 from datetime import datetime
 
-from jenkinsapi.jenkins import Jenkins
-from jenkinsapi.custom_exceptions import UnknownJob
 from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.utils import timezone
+from jenkinsapi.custom_exceptions import UnknownJob
+from jenkinsapi.jenkins import Jenkins
 
 logger = get_task_logger(__name__)
 
 
-def _get_jenkins_client():
-    return Jenkins(settings.JENKINS_API, username=settings.JENKINS_USER, password=settings.JENKINS_PASS)
+def _get_jenkins_client(jenkins_config):
+    return Jenkins(jenkins_config.jenkins_api, username=jenkins_config.jenkins_user, password=jenkins_config.jenkins_pass)
 
-
-def get_job_status(jobname):
+def get_job_status(jenkins_config, jobname):
     ret = {
         'active': None,
         'succeeded': None,
         'job_number': None,
         'blocked_build_time': None,
     }
-    client = _get_jenkins_client()
+    client = _get_jenkins_client(jenkins_config)
     try:
         job = client.get_job(jobname)
         last_build = job.get_last_build()

@@ -4,6 +4,7 @@ import unittest
 from freezegun import freeze_time
 from mock import patch, create_autospec
 from cabot.cabotapp import jenkins
+from cabot.cabotapp.models import JenkinsConfig
 from django.utils import timezone
 from datetime import timedelta
 import jenkinsapi
@@ -22,6 +23,8 @@ class TestGetStatus(unittest.TestCase):
         self.mock_client = create_autospec(jenkinsapi.jenkins.Jenkins)
         self.mock_client.get_job.return_value = self.mock_job
 
+        self.mock_config = create_autospec(JenkinsConfig)
+
     @patch("cabot.cabotapp.jenkins._get_jenkins_client")
     def test_job_passing(self, mock_jenkins):
         mock_jenkins.return_value = self.mock_client
@@ -29,7 +32,7 @@ class TestGetStatus(unittest.TestCase):
         self.mock_build.is_good.return_value = True
         self.mock_job.is_queued.return_value = False
 
-        status = jenkins.get_job_status('foo')
+        status = jenkins.get_job_status(self.mock_config, 'foo')
 
         expected = {
             'active': True,
@@ -47,7 +50,7 @@ class TestGetStatus(unittest.TestCase):
         self.mock_build.is_good.return_value = False
         self.mock_job.is_queued.return_value = False
 
-        status = jenkins.get_job_status('foo')
+        status = jenkins.get_job_status(self.mock_config, 'foo')
 
         expected = {
             'active': True,
@@ -71,7 +74,7 @@ class TestGetStatus(unittest.TestCase):
             }
         }
         with freeze_time(timezone.now() + timedelta(minutes=10)):
-            status = jenkins.get_job_status('foo')
+            status = jenkins.get_job_status(self.mock_config, 'foo')
 
         expected = {
             'active': True,
@@ -87,7 +90,7 @@ class TestGetStatus(unittest.TestCase):
         self.mock_client.get_job.side_effect = UnknownJob()
         mock_jenkins.return_value = self.mock_client
 
-        status = jenkins.get_job_status('unknown-job')
+        status = jenkins.get_job_status(self.mock_config, 'unknown-job')
 
         expected = {
             'active': None,

@@ -10,10 +10,10 @@ import requests
 from cabot.cabotapp.graphite import parse_metric
 from cabot.cabotapp.alert import update_alert_plugins, AlertPlugin
 from cabot.cabotapp.models import (
-    GraphiteStatusCheck, JenkinsStatusCheck,
+    GraphiteStatusCheck, JenkinsStatusCheck, JenkinsConfig,
     HttpStatusCheck, ICMPStatusCheck, Service, Instance,
     StatusCheckResult, minimize_targets, ServiceStatusSnapshot,
-    add_custom_check_plugins)
+    add_custom_check_plugins, create_default_jenkins_config)
 from cabot.cabotapp.calendar import get_events
 from cabot.cabotapp.views import StatusCheckReportForm
 from cabot.cabotapp import tasks
@@ -76,11 +76,13 @@ class LocalTestCase(APITestCase):
             created_by=self.user,
             importance=Service.ERROR_STATUS,
         )
+        create_default_jenkins_config()
         self.jenkins_check = JenkinsStatusCheck.objects.create(
             name='Jenkins Check',
             created_by=self.user,
             importance=Service.ERROR_STATUS,
             max_queued_build_time=10,
+            jenkins_config = JenkinsConfig.objects.first()
         )
         self.http_check = HttpStatusCheck.objects.create(
             name='Http Check',
@@ -394,7 +396,7 @@ class TestCheckRun(LocalTestCase):
         self.assertTrue(self.graphite_check.last_result().succeeded)
         self.assertGreater(list(checkresults)[-1].took, 0.0)
 
-    @patch('cabot.cabotapp.models.get_job_status')
+    @patch('cabot.cabotapp.models.jenkins_check_plugin.get_job_status')
     def test_jenkins_run(self, mock_get_job_status):
         mock_get_job_status.return_value = fake_jenkins_response()
         checkresults = self.jenkins_check.statuscheckresult_set.all()
@@ -406,7 +408,7 @@ class TestCheckRun(LocalTestCase):
         self.assertEqual(len(checkresults), 1)
         self.assertFalse(self.jenkins_check.last_result().succeeded)
 
-    @patch('cabot.cabotapp.models.get_job_status')
+    @patch('cabot.cabotapp.models.jenkins_check_plugin.get_job_status')
     def test_jenkins_blocked_build(self, mock_get_job_status):
         mock_get_job_status.return_value = jenkins_blocked_response()
         checkresults = self.jenkins_check.statuscheckresult_set.all()
@@ -764,6 +766,7 @@ class TestAPI(LocalTestCase):
                     'max_queued_build_time': 10,
                     'id': self.jenkins_check.id,
                     'calculated_status': u'passing',
+                    'jenkins_config': JenkinsConfig.objects.first().id,
                 },
             ],
             'icmpstatuscheck': [
@@ -850,6 +853,7 @@ class TestAPI(LocalTestCase):
                     'max_queued_build_time': 37,
                     'id': self.jenkins_check.id,
                     'calculated_status': u'passing',
+                    'jenkins_config': JenkinsConfig.objects.first().id,
                 },
             ],
             'icmpstatuscheck': [
@@ -930,16 +934,19 @@ class TestAPIFiltering(LocalTestCase):
             name='Filter test 1',
             debounce=True,
             importance=Service.CRITICAL_STATUS,
+            jenkins_config=JenkinsConfig.objects.first()
         )
         JenkinsStatusCheck.objects.create(
             name='Filter test 2',
             debounce=True,
             importance=Service.WARNING_STATUS,
+            jenkins_config=JenkinsConfig.objects.first()
         )
         JenkinsStatusCheck.objects.create(
             name='Filter test 3',
             debounce=False,
             importance=Service.CRITICAL_STATUS,
+            jenkins_config=JenkinsConfig.objects.first()
         )
 
         GraphiteStatusCheck.objects.create(
