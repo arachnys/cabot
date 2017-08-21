@@ -1,7 +1,9 @@
 from django.conf import settings
 from django.db import models
-from cabot.cabotapp.models import CHECK_TYPES, Service, StatusCheck
+from cabot.cabotapp.models import Service, StatusCheck
 from cabot.metricsapp.api import run_metrics_check
+from cabot.cabotapp.defs import CHECK_TYPES
+from cabot.metricsapp.defs import METRIC_STATUS_TIME_RANGE_DEFAULT
 
 
 class MetricsSourceBase(models.Model):
@@ -58,7 +60,7 @@ class MetricsStatusCheckBase(StatusCheck):
         help_text='If this expression evaluates to False, the check will fail with an error or critical level alert.'
     )
     time_range = models.IntegerField(
-        default=30,
+        default=METRIC_STATUS_TIME_RANGE_DEFAULT,
         help_text='Time range in minutes the check gathers data for.',
     )
     grafana_panel = models.ForeignKey(

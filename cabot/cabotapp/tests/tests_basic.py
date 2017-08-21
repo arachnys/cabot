@@ -11,14 +11,15 @@ from rest_framework.reverse import reverse as api_reverse
 from twilio import rest
 from django.core import mail
 from datetime import timedelta, date, datetime
+import base64
 import json
 import os
-import base64
+import socket
 from mock import Mock, patch
 
 from cabot.cabotapp.models import (
     get_duty_officers, get_all_duty_officers, update_shifts, GraphiteStatusCheck,
-    JenkinsStatusCheck, HttpStatusCheck,
+    JenkinsStatusCheck, HttpStatusCheck, TCPStatusCheck,
     Service, Schedule, StatusCheckResult)
 from cabot.cabotapp.views import StatusCheckReportForm
 
@@ -46,9 +47,10 @@ class LocalTestCase(APITestCase):
         self.user.set_password(self.password)
         self.user.user_permissions.add(
             Permission.objects.get(codename='add_service'),
-            Permission.objects.get(codename='add_httpstatuscheck'),
             Permission.objects.get(codename='add_graphitestatuscheck'),
+            Permission.objects.get(codename='add_httpstatuscheck'),
             Permission.objects.get(codename='add_jenkinsstatuscheck'),
+            Permission.objects.get(codename='add_tcpstatuscheck'),
         )
         self.user.save()
         self.graphite_check = GraphiteStatusCheck.objects.create(
@@ -77,6 +79,15 @@ class LocalTestCase(APITestCase):
             status_code='200',
             text_match=None,
         )
+        self.tcp_check = TCPStatusCheck.objects.create(
+            id=10104,
+            name='TCP Check',
+            created_by=self.user,
+            importance=Service.ERROR_STATUS,
+            address='github.com',
+            port=80,
+            timeout=6,
+        )
         # Set ical_url for schedule to filename we're using for mock response
         self.schedule = Schedule.objects.create(
             name='Principal',
@@ -95,9 +106,11 @@ class LocalTestCase(APITestCase):
         )
         self.service.save()
         self.service.schedules.add(self.schedule)
-
         self.service.status_checks.add(
-            self.graphite_check, self.jenkins_check, self.http_check)
+            self.graphite_check,
+            self.jenkins_check,
+            self.http_check,
+            self.tcp_check)
         # failing is second most recent
         self.older_result = StatusCheckResult(
             check=self.graphite_check,
@@ -171,6 +184,16 @@ def fake_http_404_response(*args, **kwargs):
     return resp
 
 
+def fake_tcp_success(*args, **kwargs):
+    resp = Mock()
+    resp.query.return_value = Mock()
+    return resp
+
+
+def fake_tcp_failure(*args, **kwargs):
+    raise socket.timeout
+
+
 def fake_calendar(*args, **kwargs):
     resp = Mock()
     resp.content = get_content(args)
@@ -190,6 +213,8 @@ class TestCheckRun(LocalTestCase):
         self.assertEqual(self.jenkins_check.calculated_status,
                          Service.CALCULATED_PASSING_STATUS)
         self.assertEqual(self.http_check.calculated_status,
+                         Service.CALCULATED_PASSING_STATUS)
+        self.assertEqual(self.tcp_check.calculated_status,
                          Service.CALCULATED_PASSING_STATUS)
         self.service.update_status()
         self.assertEqual(self.service.overall_status, Service.PASSING_STATUS)
@@ -328,6 +353,25 @@ class TestCheckRun(LocalTestCase):
         self.assertEqual(self.http_check.calculated_status,
                          Service.CALCULATED_FAILING_STATUS)
 
+    @patch('cabot.cabotapp.models.socket.create_connection', fake_tcp_success)
+    def test_tcp_success(self):
+        checkresults = self.tcp_check.statuscheckresult_set.all()
+        self.assertEqual(len(checkresults), 0)
+        self.tcp_check.run()
+        checkresults = self.tcp_check.statuscheckresult_set.all()
+        self.assertEqual(len(checkresults), 1)
+        self.assertTrue(self.tcp_check.last_result().succeeded)
+
+    @patch('cabot.cabotapp.models.socket.create_connection', fake_tcp_failure)
+    def test_tcp_failure(self):
+        checkresults = self.tcp_check.statuscheckresult_set.all()
+        self.assertEqual(len(checkresults), 0)
+        self.tcp_check.run()
+        checkresults = self.tcp_check.statuscheckresult_set.all()
+        self.assertEqual(len(checkresults), 1)
+        self.assertFalse(self.tcp_check.last_result().succeeded)
+        self.assertFalse(self.tcp_check.last_result().error, 'timed out')
+
 
 class TestStatusCheck(LocalTestCase):
 
@@ -430,7 +474,7 @@ class TestAPI(LocalTestCase):
                     'name': u'Service',
                     'users_to_notify': [],
                     'alerts_enabled': True,
-                    'status_checks': [10101, 10102, 10103],
+                    'status_checks': [10101, 10102, 10103, 10104],
                     'alerts': [],
                     'hackpad_id': None,
                     'id': 2194,
@@ -462,6 +506,14 @@ class TestAPI(LocalTestCase):
                     'retries': 0,
                     'id': 10103
                 },
+                {
+                    'name': u'TCP Check',
+                    'active': True,
+                    'importance': u'ERROR',
+                    'frequency': 5,
+                    'retries': 0,
+                    'id': 10104
+                },
             ],
             'graphitestatuscheck': [
                 {
@@ -476,6 +528,17 @@ class TestAPI(LocalTestCase):
                     'expected_num_hosts': 0,
                     'expected_num_metrics': 0,
                     'id': 10101
+                },
+            ],
+            'jenkinsstatuscheck': [
+                {
+                    'name': u'Jenkins Check',
+                    'active': True,
+                    'importance': u'ERROR',
+                    'frequency': 5,
+                    'retries': 0,
+                    'max_queued_build_time': 10,
+                    'id': 10102
                 },
             ],
             'httpstatuscheck': [
@@ -495,15 +558,17 @@ class TestAPI(LocalTestCase):
                     'id': 10103
                 },
             ],
-            'jenkinsstatuscheck': [
+            'tcpstatuscheck': [
                 {
-                    'name': u'Jenkins Check',
+                    'name': u'TCP Check',
                     'active': True,
                     'importance': u'ERROR',
                     'frequency': 5,
                     'retries': 0,
-                    'max_queued_build_time': 10,
-                    'id': 10102
+                    'address': 'github.com',
+                    'port': 80,
+                    'timeout': 6,
+                    'id': 10104
                 },
             ],
         }
@@ -535,6 +600,17 @@ class TestAPI(LocalTestCase):
                     'id': 10101
                 },
             ],
+            'jenkinsstatuscheck': [
+                {
+                    'name': u'posted jenkins check',
+                    'active': True,
+                    'importance': u'CRITICAL',
+                    'frequency': 5,
+                    'retries': 0,
+                    'max_queued_build_time': 37,
+                    'id': 10102
+                },
+            ],
             'httpstatuscheck': [
                 {
                     'name': u'posted http check',
@@ -552,15 +628,17 @@ class TestAPI(LocalTestCase):
                     'id': 10103
                 },
             ],
-            'jenkinsstatuscheck': [
+            'tcpstatuscheck': [
                 {
-                    'name': u'posted jenkins check',
+                    'name': u'posted tcp check',
                     'active': True,
-                    'importance': u'CRITICAL',
+                    'importance': u'ERROR',
                     'frequency': 5,
                     'retries': 0,
-                    'max_queued_build_time': 37,
-                    'id': 10102
+                    'address': 'github.com',
+                    'port': 80,
+                    'timeout': 6,
+                    'id': 10104
                 },
             ],
         }

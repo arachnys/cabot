@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y \
         libldap2-dev \
         libpq-dev \
         libmysqlclient-dev \
-        npm \ 
+        npm \
         wget
 
 RUN npm install -g \

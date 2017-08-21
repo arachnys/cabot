@@ -9,33 +9,24 @@ from .alert import (send_alert, AlertPluginUserData)
 from .influx import parse_metric
 from .tasks import update_service
 from cabot.cabotapp.models_plugins import HipchatInstance
+from cabot.cabotapp import defs
+from cabot.cabotapp.fields import PositiveIntegerMaxField
 
 from collections import defaultdict
 from datetime import timedelta
 from django.utils import timezone
 from icalendar import Calendar
 
-
 import json
 import re
+import socket
 import time
-import subprocess
 import yaml
 
 import requests
 from celery.utils.log import get_task_logger
 
-RAW_DATA_LIMIT = 500000
-
 logger = get_task_logger(__name__)
-
-CHECK_TYPES = (
-    ('>', 'Greater than'),
-    ('>=', 'Greater than or equal'),
-    ('<', 'Less than'),
-    ('<=', 'Less than or equal'),
-    ('==', 'Equal to'),
-)
 
 
 def serialize_recent_results(recent_results):
@@ -150,7 +141,7 @@ class CheckGroupMixin(models.Model):
         blank=True,
         help_text='Hipchat instance to send Hipchat alerts to (can be none if Hipchat alerts disabled).'
     )
-    hipchat_room_id = models.IntegerField(
+    hipchat_room_id = models.PositiveIntegerField(
         null=True,
         blank=True,
         help_text='Id of the Hipchat room to be alerted for this service (can be none).'
@@ -229,6 +220,9 @@ class CheckGroupMixin(models.Model):
     def jenkins_status_checks(self):
         return self.status_checks.filter(polymorphic_ctype__model='jenkinsstatuscheck')
 
+    def tcp_status_checks(self):
+        return self.status_checks.filter(polymorphic_ctype__model='tcpstatuscheck')
+
     def elasticsearch_status_checks(self):
         return self.status_checks.filter(polymorphic_ctype__model='elasticsearchstatuscheck')
 
@@ -240,6 +234,9 @@ class CheckGroupMixin(models.Model):
 
     def active_jenkins_status_checks(self):
         return self.jenkins_status_checks().filter(active=True)
+
+    def active_tcp_status_checks(self):
+        return self.tcp_status_checks().filter(active=True)
 
     def active_status_checks(self):
         return self.status_checks.filter(active=True)
@@ -330,7 +327,6 @@ class ServiceStatusSnapshot(Snapshot):
 
 
 class StatusCheck(PolymorphicModel):
-
     """
     Base class for polymorphic models. We're going to use
     proxy models for inheriting because it makes life much simpler,
@@ -355,12 +351,12 @@ class StatusCheck(PolymorphicModel):
                   'Errors are things you can sleep through but need to fix in the morning, '
                   'and warnings for less important things.'
     )
-    frequency = models.IntegerField(
-        default=5,
+    frequency = models.PositiveIntegerField(
+        default=defs.DEFAULT_CHECK_FREQUENCY,
         help_text='Minutes between each check.',
     )
-    retries = models.IntegerField(
-        default=0,
+    retries = models.PositiveIntegerField(
+        default=defs.DEFAULT_CHECK_RETRIES,
         null=True,
         help_text='Number of successive failures permitted before check will be marked as failed. '
                   'Default is 0, i.e. fail on first failure.'
@@ -493,7 +489,7 @@ class GraphiteStatusCheck(StatusCheck):
                   '"percentile(value, 90)" etc.',
     )
     check_type = models.CharField(
-        choices=CHECK_TYPES,
+        choices=defs.CHECK_TYPES,
         max_length=100,
         null=True,
     )
@@ -522,18 +518,18 @@ class GraphiteStatusCheck(StatusCheck):
         blank=True,
         help_text='The "where clause" for selecting the metric'
     )
-    expected_num_hosts = models.IntegerField(
-        default=0,
+    expected_num_hosts = models.PositiveIntegerField(
+        default=defs.DEFAULT_GRAPHITE_EXPECTED_NUM_HOSTS,
         null=True,
         help_text='The minimum number of data series (hosts) you expect to see.',
     )
-    expected_num_metrics = models.IntegerField(
-        default=0,
+    expected_num_metrics = models.PositiveIntegerField(
+        default=defs.DEFAULT_GRAPHITE_EXPECTED_NUM_METRICS,
         null=True,
         help_text='The minimum number of data series (metrics) you expect to satisfy given condition.',
     )
-    interval = models.IntegerField(
-        default=5,
+    interval = models.PositiveIntegerField(
+        default=defs.DEFAULT_GRAPHITE_INTERVAL,
         help_text='Time duration (in minutes) for checking metrics'
     )
 
@@ -777,17 +773,18 @@ class HttpStatusCheck(StatusCheck):
         help_text='Yaml representation of "header: regex" to match in '
                   'the results',
     )
-    timeout = models.IntegerField(
-        default=30,
+    timeout = PositiveIntegerMaxField(
+        default=defs.DEFAULT_HTTP_TIMEOUT,
+        max_value=defs.MAX_HTTP_TIMEOUT,
         null=True,
         help_text='Time out after this many seconds.',
-    )
+     )
     verify_ssl_certificate = models.BooleanField(
         default=True,
         help_text='Set to false to allow not try to verify ssl certificates (default True)',
     )
     status_code = models.TextField(
-        default=200,
+        default=defs.DEFAULT_HTTP_STATUS_CODE,
         null=True,
         help_text='Status code expected from endpoint.'
     )
@@ -876,7 +873,7 @@ class JenkinsStatusCheck(StatusCheck):
 
     icon ='glyphicon glyphicon-ok'
 
-    max_queued_build_time = models.IntegerField(
+    max_queued_build_time = models.PositiveIntegerField(
         null=True,
         blank=True,
         help_text='Alert if build queued for more than this many minutes.',
@@ -934,8 +931,51 @@ class JenkinsStatusCheck(StatusCheck):
         return result
 
 
-class StatusCheckResult(models.Model):
+class TCPStatusCheck(StatusCheck):
 
+    @property
+    def check_category(self):
+        return "TCP Check"
+
+    @property
+    def description(self):
+        return 'Monitoring connection of {0}:{1}'.format(self.address, self.port)
+
+    address = models.CharField(
+        max_length=1024,
+        help_text='IP address or hostname to monitor',)
+    port = models.PositiveIntegerField(
+        help_text='Port to listen on',)
+    timeout = PositiveIntegerMaxField(
+        default=defs.DEFAULT_TCP_TIMEOUT,
+        max_value=defs.MAX_TCP_TIMEOUT,
+        help_text='Time out on idle connection after this many seconds',)
+
+    update_url = 'update-tcp-check'
+
+    icon = 'glyphicon glyphicon-text-wide'
+
+    def _run(self):
+        """
+        We wish to provide a method to ensure a TCP endpoint is still up. To
+        achieve this, we use the python socket library to connect to the TCP
+        service listening on the specified address and port. In other words,
+        if this call succeeds (i.e. returns without raising an exception and/or
+        timeing out), we can conclude that the TCP endpoint is valid.
+        """
+        result = StatusCheckResult(check=self)
+
+        try:
+            socket.create_connection((self.address,self.port), self.timeout)
+            result.succeeded = True
+        except socket.error as e:
+            result.error = str(e)
+            result.succeeded = False
+
+        return result
+
+
+class StatusCheckResult(models.Model):
     """
     We use the same StatusCheckResult model for all check types,
     because really they are not so very different.
@@ -980,7 +1020,7 @@ class StatusCheckResult(models.Model):
 
     def save(self, *args, **kwargs):
         if isinstance(self.raw_data, basestring):
-            self.raw_data = self.raw_data[:RAW_DATA_LIMIT]
+            self.raw_data = self.raw_data[:defs.RAW_DATA_LIMIT]
         return super(StatusCheckResult, self).save(*args, **kwargs)
 
 

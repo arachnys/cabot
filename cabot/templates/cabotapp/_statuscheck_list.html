@@ -2,7 +2,7 @@
 
 <div class="row">
   <div class="col-xs-12">
-    <div class="col-xs-1"><h3><i class="{% if checks_type == "All" %}fa fa-cog{% else %}glyphicon glyphicon-{% if checks_type == "Http" %}arrow-up{% elif checks_type == "Jenkins" %}ok{% elif checks_type == 'Graphite' %}signal{% else %}stats{% endif %}{% endif %}"></i></h3></div>
+    <div class="col-xs-1"><h3><i class="{% if checks_type == "All" %}fa fa-cog{% else %}glyphicon glyphicon-{% if checks_type == 'Graphite' %}signal{% elif checks_type == "Http" %}arrow-up{% elif checks_type == "Jenkins" %}ok{% elif checks_type == "TCP" %}text-width{% else %}stats{% endif %}{% endif %}"></i></h3></div>
     <div class="col-xs-8"><h3>{{ checks_type }} checks</h3></div>
     <div class="col-xs-3 text-right">
       <h3>
@@ -14,6 +14,9 @@
       {% endif %}
       {% if checks_type == "All" or checks_type == "Jenkins" %}
       &nbsp;<a href="{% url "create-jenkins-check" %}?service={{ service.id }}" class="" title="Add new Jenkins check"><i class="glyphicon glyphicon-plus"></i><i class="glyphicon glyphicon-ok"></i></a>
+      {% endif %}
+      {% if checks_type == "All" or checks_type == "TCP" %}
+      &nbsp;<a href="{% url "create-tcp-check" %}?instance={{ instance.id }}&service={{ service.id }}" class="" title="Add new TCP check"><i class="glyphicon glyphicon-plus"></i><i class="glyphicon glyphicon-text-width"></i></a>
       {% endif %}
       </h3>
     </div>
