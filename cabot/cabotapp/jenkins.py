@@ -11,23 +11,23 @@ logger = get_task_logger(__name__)
 JENKINS_CLIENT = None
 
 
-def _get_jenkins_client():
+def _get_jenkins_client(jenkins_config):
     global JENKINS_CLIENT
     if JENKINS_CLIENT is None:
-        JENKINS_CLIENT = Jenkins(settings.JENKINS_API,
-                                 username=settings.JENKINS_USER,
-                                 password=settings.JENKINS_PASS,
+        JENKINS_CLIENT = Jenkins(jenkins_config.jenkins_api,
+                                 username=jenkins_config.jenkins_user,
+                                 password=jenkins_config.jenkins_pass,
                                  lazy=True)
     return JENKINS_CLIENT
 
-def get_job_status(jobname):
+def get_job_status(jenkins_config, jobname):
     ret = {
         'active': None,
         'succeeded': None,
         'job_number': None,
         'blocked_build_time': None,
     }
-    client = _get_jenkins_client()
+    client = _get_jenkins_client(jenkins_config)
     try:
         job = client.get_job(jobname)
         last_build = job.get_last_build()

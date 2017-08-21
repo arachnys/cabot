@@ -112,6 +112,7 @@ router.register(r'jenkins_checks', create_viewset(
     arg_model=models.JenkinsStatusCheck,
     arg_fields=status_check_fields + (
         'max_queued_build_time',
+        'jenkins_config',
     ),
 ))
 
