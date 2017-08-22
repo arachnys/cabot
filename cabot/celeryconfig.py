@@ -14,22 +14,26 @@ CELERY_ACCEPT_CONTENT = ['json', 'msgpack', 'yaml']
 CELERYD_TASK_SOFT_TIME_LIMIT = 120
 CELERYD_TASK_TIME_LIMIT = 240
 
+TIME_MINUTE_IN_SECONDS = 60
+TIME_HALF_HOUR_IN_SECONDS = 30 * TIME_MINUTE_IN_SECONDS
+TIME_DAY_IN_SECONDS = 24 * 60 * TIME_MINUTE_IN_SECONDS
+
 CELERYBEAT_SCHEDULE = {
     'run-all-checks': {
         'task': 'cabot.cabotapp.tasks.run_all_checks',
-        'schedule': timedelta(seconds=60),
+        'schedule': timedelta(seconds=TIME_MINUTE_IN_SECONDS),
     },
     'update-shifts': {
         'task': 'cabot.cabotapp.tasks.update_shifts',
-        'schedule': timedelta(seconds=1800),
+        'schedule': timedelta(seconds=TIME_HALF_HOUR_IN_SECONDS),
     },
     'clean-db': {
         'task': 'cabot.cabotapp.tasks.clean_db',
-        'schedule': timedelta(seconds=60*60*24),
+        'schedule': timedelta(seconds=TIME_DAY_IN_SECONDS),
     },
     'sync-all-grafana-checks': {
         'task': 'cabot.metricsapp.tasks.sync_all_grafana_checks',
-        'schedule': timedelta(seconds=GRAFANA_SYNC_TIMEDELTA_MINUTES * 60)
+        'schedule': timedelta(seconds=GRAFANA_SYNC_TIMEDELTA_MINUTES * TIME_MINUTE_IN_SECONDS)
     },
 }
 
