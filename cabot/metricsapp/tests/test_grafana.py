@@ -385,9 +385,8 @@ class TestGrafanaPanel(TestCase):
         mock_requests.side_effect = requests.exceptions.RequestException()
         image = self.panel.get_rendered_image()
 
-        mock_requests.assert_called_once_with('http://graf.graf/render/dashboard-solo/db/42?panelId=1&var-variable=x'
-                                              '&var-group_by=1y&width={}&height={}'.format(
-            defs.GRAFANA_RENDERED_IMAGE_WIDTH,
-            defs.GRAFANA_RENDERED_IMAGE_HEIGHT
-        ))
+        mock_requests.assert_called_once_with(
+            'http://graf.graf/render/dashboard-solo/db/42?panelId=1&var-variable=x'
+            '&var-group_by=1y&width={}&height={}'.format(defs.GRAFANA_RENDERED_IMAGE_WIDTH,
+                                                         defs.GRAFANA_RENDERED_IMAGE_HEIGHT))
         self.assertIsNone(image)

@@ -23,8 +23,13 @@ from models import (StatusCheck,
 from tasks import run_status_check as _run_status_check
 from .decorators import cabot_login_required
 from django.utils.decorators import method_decorator
-from django.views.generic import (
-    DetailView, CreateView, UpdateView, ListView, DeleteView, TemplateView, FormView, View)
+from django.views.generic import (DetailView,
+                                  CreateView,
+                                  UpdateView,
+                                  ListView,
+                                  DeleteView,
+                                  TemplateView,
+                                  View)
 from django import forms
 from .influx import get_data, get_matching_metrics
 from django.contrib.auth.models import User

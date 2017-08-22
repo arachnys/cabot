@@ -8,7 +8,7 @@ from .jenkins import get_job_status
 from .alert import (send_alert, AlertPluginUserData)
 from .influx import parse_metric
 from .tasks import update_service
-from cabot.cabotapp.models_plugins import HipchatInstance
+from cabot.cabotapp.models_plugins import HipchatInstance  # noqa
 from cabot.cabotapp import defs
 from cabot.cabotapp.fields import PositiveIntegerMaxField
 
@@ -418,7 +418,7 @@ class StatusCheck(PolymorphicModel):
                 self.calculated_status = Service.CALCULATED_FAILING_STATUS
             self.cached_health = serialize_recent_results(recent_results)
             try:
-                updated = StatusCheck.objects.get(pk=self.pk)
+                StatusCheck.objects.get(pk=self.pk)
             except StatusCheck.DoesNotExist:
                 logger.error('Cannot find myself (check %s) in the database, presumably have been deleted' % self.pk)
                 return
@@ -871,7 +871,7 @@ class JenkinsStatusCheck(StatusCheck):
 
     update_url = 'update-jenkins-check'
 
-    icon ='glyphicon glyphicon-ok'
+    icon = 'glyphicon glyphicon-ok'
 
     max_queued_build_time = models.PositiveIntegerField(
         null=True,
@@ -966,7 +966,7 @@ class TCPStatusCheck(StatusCheck):
         result = StatusCheckResult(check=self)
 
         try:
-            socket.create_connection((self.address,self.port), self.timeout)
+            socket.create_connection((self.address, self.port), self.timeout)
             result.succeeded = True
         except socket.error as e:
             result.error = str(e)
@@ -1029,7 +1029,7 @@ class UserProfile(models.Model):
 
     def user_data(self):
         for user_data_subclass in AlertPluginUserData.__subclasses__():
-            user_data = user_data_subclass.objects.get_or_create(user=self, title=user_data_subclass.name)
+            user_data_subclass.objects.get_or_create(user=self, title=user_data_subclass.name)
         return AlertPluginUserData.objects.filter(user=self)
 
     def __unicode__(self):
