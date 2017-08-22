@@ -1,6 +1,8 @@
 master
 ------
 
+* Add option to specify multiple Jenkins backends
+  > NOTE: This update will delete any recent status check results for jenkins checks
 * Add ability to add custom check plugins
   - See https://gitlab.com/as-public/cabot-check-skeleton for an example
 * Remove deprecated Fabfile and Shell scripts
