@@ -1,3 +1,3 @@
 # __init__.py
-import signals
-import cabot.metricsapp.signals
+import signals # noqa
+import cabot.metricsapp.signals # noqa

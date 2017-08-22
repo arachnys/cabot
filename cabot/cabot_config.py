@@ -24,8 +24,8 @@ METRIC_FETCH_LIMIT = int(os.environ.get('METRIC_FETCH_LIMIT', '20'))
 
 # Default plugins are used if the user has not specified.
 CABOT_PLUGINS_ENABLED = os.environ.get('CABOT_PLUGINS_ENABLED',
-    ','.join(['cabot_alert_hipchat',
-              'cabot_alert_twilio',
-              'cabot_alert_email',
-              'cabot_alert_pagerduty'
-    ]))
+                                       ','.join(['cabot_alert_hipchat',
+                                                 'cabot_alert_twilio',
+                                                 'cabot_alert_email',
+                                                 'cabot_alert_pagerduty'
+                                                ]))

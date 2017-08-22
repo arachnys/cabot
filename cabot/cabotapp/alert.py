@@ -45,7 +45,7 @@ def send_alert(service, duty_officers=[], fallback_officers=[]):
             if fallback_officers:
                 try:
                     alert.send_alert(service, users, fallback_officers)
-                except Exception as e:
+                except Exception:
                     logging.exception('Could not send {} alert to fallback officer'.format(alert.name))
 
 

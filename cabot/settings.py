@@ -1,11 +1,10 @@
 import os
 import dj_database_url
 import re
-from cabot.celeryconfig import *
-from cabot.cabot_config import *
+from cabot.cabot_config import * # noqa
 import logging
 import sys
-import xmlrunner
+import xmlrunner # noqa
 import pymysql
 pymysql.install_as_MySQLdb()
 
@@ -259,7 +258,7 @@ AUTHENTICATION_BACKENDS = (
 AUTH_LDAP = os.environ.get('AUTH_LDAP', 'false')
 
 if AUTH_LDAP.lower() == "true":
-    from settings_ldap import *
+    from settings_ldap import * # noqa
     AUTHENTICATION_BACKENDS += tuple(['django_auth_ldap.backend.LDAPBackend'])
 
 
