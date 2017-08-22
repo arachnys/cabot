@@ -8,7 +8,7 @@ from django.db import models
 from django.utils.html import escape
 from elasticsearch_dsl import MultiSearch, Search
 from cabot.metricsapp.api import create_es_client, validate_query
-from cabot.metricsapp.defs import HIDDEN_METRIC_SUFFIX
+from cabot.metricsapp import defs
 from .base import MetricsSourceBase, MetricsStatusCheckBase
 
 
@@ -146,6 +146,11 @@ class ElasticsearchStatusCheck(MetricsStatusCheckBase):
                 if raw_data['hits']['hits'] == []:
                     continue
 
+                # It's not possible to see how many series there are without parsing the json response,
+                # so use the response string length as a heuristic to guess the number of series.
+                if len(str(raw_data)) > defs.ES_MAX_RESPONSE_SIZE_BYTES:
+                    raise ValueError('Elasticsearch query response exceeded max size.')
+
                 data = self._parse_es_response([raw_data['aggregations']])
                 if data == []:
                     continue
@@ -233,7 +238,7 @@ class ElasticsearchStatusCheck(MetricsStatusCheckBase):
 
         for metric, value_dict in subseries.iteritems():
             # Ignore hidden metrics and things that are not actually the metric field--timestamp, doc_count, etc.
-            if type(value_dict) != dict or HIDDEN_METRIC_SUFFIX in metric:
+            if type(value_dict) != dict or defs.HIDDEN_METRIC_SUFFIX in metric:
                 continue
 
             if 'value' in value_dict:
