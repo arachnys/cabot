@@ -4,6 +4,8 @@ master
 * Jenkins support:
   - Fail Jenkins checks when job is unknown
   - Use [jenkinsapi](https://pypi.python.org/pypi/jenkinsapi) to talk to Jenkins
+  - Add option to specify multiple Jenkins backends
+  > NOTE: This update will delete any recent status check results for jenkins checks
 * Add view for public services
 * Add support for Google OAuth login
 * Add ability to add custom check plugins
