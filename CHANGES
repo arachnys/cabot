@@ -1,6 +1,11 @@
 master
 ------
 
+* Jenkins support:
+  - Fail Jenkins checks when job is unknown
+  - Use [jenkinsapi](https://pypi.python.org/pypi/jenkinsapi) to talk to Jenkins
+* Add view for public services
+* Add support for Google OAuth login
 * Add ability to add custom check plugins
   - See https://gitlab.com/as-public/cabot-check-skeleton for an example
 * Remove deprecated Fabfile and Shell scripts
