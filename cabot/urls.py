@@ -73,7 +73,7 @@ urlpatterns = patterns(
         view=password_reset_confirm,
         name='password-reset-confirm'),
 
-    url(r'^services/',
+    url(r'^services/$',
         view=ServiceListView.as_view(),
         name='services'),
     url(r'^service/create/',
@@ -142,7 +142,7 @@ urlpatterns = patterns(
     url(r'^result/(?P<pk>\d+)/',
         view=StatusCheckResultDetailView.as_view(),
         name='result'),
-    url(r'^shifts/',
+    url(r'^shifts/$',
         view=ScheduleListView.as_view(),
         name='shifts'),
     url(r'^shifts/(?P<pk>\d+)/',
