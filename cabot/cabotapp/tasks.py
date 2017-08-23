@@ -7,7 +7,6 @@ from celery._state import set_default_app
 from celery.task import task
 
 from django.conf import settings
-from django.db import transaction
 from django.utils import timezone
 
 import models

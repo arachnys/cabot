@@ -218,7 +218,6 @@ class ElasticsearchStatusCheck(MetricsStatusCheckBase):
             for result in results:
                 yield result
 
-
     def _valid_point(self, point):
         return point not in ['None', 'NaN', None]
 

@@ -8,7 +8,7 @@ class PositiveIntegerMaxField(models.PositiveIntegerField):
         models.PositiveIntegerField.__init__(self, verbose_name, name, **kwargs)
 
     def formfield(self, **kwargs):
-        defaults = {'max_value':self.max_value}
+        defaults = {'max_value': self.max_value}
         defaults.update(kwargs)
         return super(PositiveIntegerMaxField, self).formfield(**defaults)
 

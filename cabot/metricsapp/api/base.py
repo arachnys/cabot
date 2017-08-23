@@ -101,7 +101,9 @@ def run_metrics_check(check):
                 continue
 
             # If there's a failure for high alert, the check fails
-            if check.high_alert_value is not None and _point_failure_check(check.check_type, check.high_alert_value, value):
+            if check.high_alert_value is not None and _point_failure_check(check.check_type,
+                                                                           check.high_alert_value,
+                                                                           value):
                 # Set the importance so the check fails at the right level
                 check.importance = check.high_alert_importance
                 result.succeeded = False

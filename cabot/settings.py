@@ -1,11 +1,11 @@
 import os
 import dj_database_url
 import re
-from cabot.celeryconfig import *
-from cabot.cabot_config import *
+from cabot.cabot_config import *  # noqa
+from cabot.celeryconfig import *  # noqa
 import logging
 import sys
-import xmlrunner
+import xmlrunner  # noqa
 import pymysql
 pymysql.install_as_MySQLdb()
 
@@ -134,7 +134,7 @@ INSTALLED_APPS = (
 
 # Load additional apps from configuration file
 CABOT_PLUGINS_ENABLED_PARSED = []
-for plugin in CABOT_PLUGINS_ENABLED.split(","):
+for plugin in CABOT_PLUGINS_ENABLED.split(","):  # noqa
     # Hack to clean up if versions of plugins specified
     exploded = re.split(r'[<>=]+', plugin)
     CABOT_PLUGINS_ENABLED_PARSED.append(exploded[0])
@@ -259,7 +259,7 @@ AUTHENTICATION_BACKENDS = (
 AUTH_LDAP = os.environ.get('AUTH_LDAP', 'false')
 
 if AUTH_LDAP.lower() == "true":
-    from settings_ldap import *
+    from settings_ldap import *  # noqa
     AUTHENTICATION_BACKENDS += tuple(['django_auth_ldap.backend.LDAPBackend'])
 
 

@@ -88,7 +88,6 @@ def get_data(pattern, selector='value',
     query = 'select %s from /%s/ %s %s %s %s order asc' % \
         (selector, pattern, group_by, fill_str, where_str, limit_str)
 
-
     logging.debug('Make influxdb query %s' % query)
 
     client = _get_influxdb_client()
