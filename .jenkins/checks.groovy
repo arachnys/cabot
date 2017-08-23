@@ -106,7 +106,7 @@ freeStyleJob('cabot.flake8') { job ->
   jobTemplate(job, "Runs tests against Affirm/cabot.git using flake8", 'flake8').call()
   publishers {
     violations {
-      pep8(0, 0, 0, 'build/flake8/flake8.txt')
+      pep8(1, 1, 1, 'build/flake8/flake8.txt')
     }
   }
 }
