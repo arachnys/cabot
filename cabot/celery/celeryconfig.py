@@ -1,7 +1,7 @@
 import os
 from datetime import timedelta
 from kombu import Exchange, Queue
-from cabot.metricsapp.defs import GRAFANA_SYNC_TIMEDELTA_MINUTES
+from cabot.celery import defs
 
 BROKER_URL = os.environ['CELERY_BROKER_URL']
 CELERY_IMPORTS = (
@@ -14,31 +14,29 @@ CELERY_ACCEPT_CONTENT = ['json', 'msgpack', 'yaml']
 CELERYD_TASK_SOFT_TIME_LIMIT = 120
 CELERYD_TASK_TIME_LIMIT = 240
 
-TIME_MINUTE_IN_SECONDS = 60
-TIME_HALF_HOUR_IN_SECONDS = 30 * TIME_MINUTE_IN_SECONDS
-TIME_DAY_IN_SECONDS = 24 * 60 * TIME_MINUTE_IN_SECONDS
 
 CELERYBEAT_SCHEDULE = {
     'run-all-checks': {
         'task': 'cabot.cabotapp.tasks.run_all_checks',
-        'schedule': timedelta(seconds=TIME_MINUTE_IN_SECONDS),
+        'schedule': timedelta(seconds=defs.RUN_ALL_CHECKS_FREQUENCY),
     },
     'update-shifts': {
         'task': 'cabot.cabotapp.tasks.update_shifts',
-        'schedule': timedelta(seconds=TIME_HALF_HOUR_IN_SECONDS),
+        'schedule': timedelta(seconds=defs.UPDATE_SHIFTS_FREQUENCY),
     },
     'clean-db': {
         'task': 'cabot.cabotapp.tasks.clean_db',
-        'schedule': timedelta(seconds=TIME_DAY_IN_SECONDS),
+        'schedule': timedelta(seconds=defs.CLEAN_DB_FREQUENCY),
     },
     'sync-all-grafana-checks': {
         'task': 'cabot.metricsapp.tasks.sync_all_grafana_checks',
-        'schedule': timedelta(seconds=GRAFANA_SYNC_TIMEDELTA_MINUTES * TIME_MINUTE_IN_SECONDS)
+        'schedule': timedelta(seconds=defs.SYNC_ALL_GRAFANA_CHECKS_FREQUENCY)
     },
 }
 
 CELERY_QUEUES = (
-    Queue('checks', Exchange('checks', type='direct'), routing_key='checks'),
+    Queue('normal_checks', Exchange('normal_checks', type='direct'), routing_key='normal_checks'),
+    Queue('critical_checks', Exchange('critical_checks', type='direct'), routing_key='critical_checks'),
     Queue('service', Exchange('service', type='direct'), routing_key='service'),
     Queue('batch', Exchange('batch', type='direct'), routing_key='batch'),
     Queue('maintenance', Exchange('maintenance', type='direct'), routing_key='maintenance'),
@@ -46,12 +44,12 @@ CELERY_QUEUES = (
 
 CELERY_ROUTES = {
     'cabot.cabotapp.tasks.run_all_checks': {
-        'queue': 'checks',
-        'routing_key': 'checks',
+        'queue': 'normal_checks',
+        'routing_key': 'normal_checks',
     },
     'cabot.cabotapp.tasks.run_status_check': {
-        'queue': 'checks',
-        'routing_key': 'checks',
+        'queue': 'normal_checks',
+        'routing_key': 'normal_checks',
     },
     'cabot.cabotapp.tasks.update_service': {
         'queue': 'service',

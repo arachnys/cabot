@@ -2,7 +2,7 @@ import os
 import dj_database_url
 import re
 from cabot.cabot_config import *  # noqa
-from cabot.celeryconfig import *  # noqa
+from cabot.celery.celeryconfig import *  # noqa
 import logging
 import sys
 import xmlrunner  # noqa
