@@ -77,7 +77,7 @@ def subscriptions(request):
 @cabot_login_required
 def run_status_check(request, pk):
     """Runs a specific check"""
-    _run_status_check(check_or_id=pk)
+    _run_status_check(pk=pk)
     return HttpResponseRedirect(reverse('check', kwargs={'pk': pk}))
 
 

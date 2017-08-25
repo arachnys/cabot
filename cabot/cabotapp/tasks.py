@@ -25,12 +25,8 @@ logger = logging.getLogger(__name__)
 
 
 @task(ignore_result=True)
-def run_status_check(check_or_id):
-    if not isinstance(check_or_id, models.StatusCheck):
-        check = models.StatusCheck.objects.get(id=check_or_id)
-    else:
-        check = check_or_id
-    # This will call the subclass method
+def run_status_check(pk):
+    check = models.StatusCheck.objects.get(pk=pk)
     check.run()
 
 
@@ -41,7 +37,7 @@ def run_all_checks():
         if check.last_run:
             next_schedule = check.last_run + timedelta(minutes=check.frequency)
         if (not check.last_run) or timezone.now() > next_schedule:
-            run_status_check.apply_async((check.id,))
+            run_status_check.apply_async((check.pk,))
 
 
 @task(ignore_result=True)
