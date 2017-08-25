@@ -935,7 +935,7 @@ class TCPStatusCheck(StatusCheck):
 
     @property
     def check_category(self):
-        return "TCP Check"
+        return "TCP check"
 
     @property
     def description(self):
