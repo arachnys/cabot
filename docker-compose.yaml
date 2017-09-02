@@ -11,7 +11,7 @@ services:
     volumes:
      - .:/code
     links:
-     - redis
+     - rabbitmq
      - db_psql
      - db_mysql
 
@@ -19,16 +19,20 @@ services:
     env_file:
      - conf/development.env
     image: cabot:web
-    command: python manage.py celery worker -B -A cabot --loglevel=DEBUG --concurrency=16 -Ofair
+    command: bash -euc "dockerize -wait tcp://db_psql:5432 -timeout 60s; dockerize -wait tcp://root:test@db_mysql:3306 -timeout 60s; python manage.py celery worker -B -A cabot --loglevel=DEBUG --concurrency=16 --logfile=/var/log/cabot-celery.log -Ofair"
     volumes:
      - .:/code
     links:
-     - redis
+     - rabbitmq
      - db_psql
      - db_mysql
+    depends_on:
+     - db_psql
+     - db_mysql
+     - rabbitmq
 
-  redis:
-    image: redis
+  rabbitmq:
+    image: rabbitmq
 
   db_psql:
     image: postgres
