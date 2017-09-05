@@ -1,3 +1,9 @@
+master
+------
+
+* Reduce time to store old check results to 7 days
+  - Currently stores for 2 months, but there's no actual way to view the old data.
+
 Version 0.11.0
 --------------
 

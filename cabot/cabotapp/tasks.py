@@ -68,7 +68,7 @@ def update_shifts():
 
 
 @task(ignore_result=True)
-def clean_db(days_to_retain=60, batch_size=10000):
+def clean_db(days_to_retain=7, batch_size=10000):
     """
     Clean up database otherwise it gets overwhelmed with StatusCheckResults.
 
