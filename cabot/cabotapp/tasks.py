@@ -76,8 +76,12 @@ def clean_db(days_to_retain=7, batch_size=10000):
     """
     from .models import StatusCheckResult, ServiceStatusSnapshot
 
-    to_discard_results = StatusCheckResult.objects.filter(time_complete__lte=timezone.now() - timedelta(days=days_to_retain))
-    to_discard_snapshots = ServiceStatusSnapshot.objects.order_by('time').filter(time__lte=timezone.now() - timedelta(days=days_to_retain))
+    to_discard_results = StatusCheckResult.objects.order_by('time_complete').filter(
+        time_complete__lte=timezone.now() - timedelta(days=days_to_retain)
+    )
+    to_discard_snapshots = ServiceStatusSnapshot.objects.order_by('time').filter(
+        time__lte=timezone.now() - timedelta(days=days_to_retain)
+    )
 
     result_ids = to_discard_results[:batch_size].values_list('id', flat=True)
     snapshot_ids = to_discard_snapshots[:batch_size].values_list('id', flat=True)
