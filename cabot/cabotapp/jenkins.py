@@ -42,6 +42,7 @@ def get_job_status(jenkins_config, jobname):
             time_blocked_since = datetime.utcfromtimestamp(
                 float(in_queued_since) / 1000).replace(tzinfo=timezone.utc)
             ret['blocked_build_time'] = (timezone.now() - time_blocked_since).total_seconds()
+            ret['queued_job_number'] = job.get_last_buildnumber()
         return ret
     except UnknownJob:
         ret['status_code'] = 404

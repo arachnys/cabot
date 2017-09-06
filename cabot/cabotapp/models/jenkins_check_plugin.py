@@ -51,6 +51,7 @@ class JenkinsStatusCheck(StatusCheck):
                         int(status['blocked_build_time']),
                         self.max_queued_build_time,
                     )
+                    result.job_number = status['queued_job_number']
                 else:
                     result.succeeded = status['succeeded']
             else:
