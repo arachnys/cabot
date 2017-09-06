@@ -30,12 +30,12 @@ def get_job_status(jenkins_config, jobname):
     client = _get_jenkins_client(jenkins_config)
     try:
         job = client.get_job(jobname)
-        last_build = job.get_last_build()
+        last_build = job.get_last_completed_build()
 
         ret['status_code'] = 200
         ret['job_number'] = last_build.get_number()
         ret['active'] = job.is_enabled()
-        ret['succeeded'] = (job.is_enabled()) and last_build.is_good()
+        ret['succeeded'] = job.is_enabled() and last_build.is_good()
 
         if job.is_queued():
             in_queued_since = job._data['queueItem']['inQueueSince']  # job.get_queue_item() crashes
