@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 import os
 
 import django.db.models.deletion
+from django.contrib.contenttypes.models import ContentType
 from django.db import migrations, models
 
 
@@ -15,17 +16,26 @@ def move_old_jenkins_checks(apps, schema_editor):
     JenkinsCheck = apps.get_model("cabotapp", "JenkinsCheck")
     JenkinsConfig = apps.get_model("cabotapp", "JenkinsConfig")
 
+    # Due to a polymorphic bug, JenkinsStatusCheck actually returns all status checks
+    # Use this to filter out the other checks.
+    jenkins_content_type = ContentType.objects.filter(model="jenkinsstatuscheck").first()
+
+    if jenkins_content_type and not JenkinsStatusCheck.objects.filter(polymorphic_ctype_id=jenkins_content_type.id).exists():
+        return
+
     if not JenkinsConfig.objects.exists():
         JenkinsConfig.objects.create(
             name="Default Jenkins",
-            jenkins_api=os.environ.get("JENKINS_API"),
-            jenkins_user=os.environ.get("JENKINS_USER"),
-            jenkins_pass=os.environ.get("JENKINS_PASS"),
+            jenkins_api=os.environ.get("JENKINS_API", "http://jenkins.example.com"),
+            jenkins_user=os.environ.get("JENKINS_USER", ""),
+            jenkins_pass=os.environ.get("JENKINS_PASS", ""),
         )
 
     default_config = JenkinsConfig.objects.first()
 
     for old_check in JenkinsStatusCheck.objects.all():
+        if old_check.polymorphic_ctype_id != jenkins_content_type.id:
+            continue
         new_check = JenkinsCheck(
             active=old_check.active,
             allowed_num_failures=old_check.allowed_num_failures,
@@ -54,6 +64,9 @@ def move_old_jenkins_checks(apps, schema_editor):
             # id stays consistent.
             polymorphic_ctype_id=old_check.polymorphic_ctype_id
         )
+        new_check.save(using=db_alias)
+        new_check.service_set.add(*old_check.service_set.all())
+        new_check.instance_set.add(*old_check.instance_set.all())
         new_check.save(using=db_alias)
         old_check.delete(using=db_alias)
 
