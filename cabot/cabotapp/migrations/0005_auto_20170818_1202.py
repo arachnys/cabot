@@ -57,6 +57,7 @@ def move_old_jenkins_checks(apps, schema_editor):
             # id stays consistent.
             polymorphic_ctype_id=old_check.polymorphic_ctype_id
         )
+        new_check.save(using=db_alias)
         new_check.service_set.add(*old_check.service_set.all())
         new_check.instance_set.add(*old_check.instance_set.all())
         new_check.save(using=db_alias)
