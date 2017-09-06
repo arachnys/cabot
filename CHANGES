@@ -1,12 +1,15 @@
-master
-------
+Version 0.11.1
+--------------
 
+* Fix migration disassociating checks from services/instances
 * Fix migration requiring jenkins environment variables are set
 * Reduce time to store old check results to 7 days
   - Currently stores for 2 months, but there's no actual way to view the old data.
 
 Version 0.11.0
 --------------
+
+*** BROKEN RELEASE - MIGRATIONS DON'T WORK CORRECTLY ***
 
 * Jenkins support:
   - Fail Jenkins checks when job is unknown
