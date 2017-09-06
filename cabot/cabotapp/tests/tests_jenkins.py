@@ -68,6 +68,7 @@ class TestGetStatus(unittest.TestCase):
 
         self.mock_build.is_good.return_value = True
         self.mock_job.is_queued.return_value = True
+        self.mock_job.get_last_buildnumber.return_value = 13
         self.mock_job._data = {
             'queueItem': {
                 'inQueueSince': float(timezone.now().strftime('%s')) * 1000
@@ -81,6 +82,7 @@ class TestGetStatus(unittest.TestCase):
             'active': True,
             'succeeded': True,
             'job_number': 12,
+            'queued_job_number': 13,
             'blocked_build_time': 600,
             'status_code': 200
         }
@@ -93,6 +95,7 @@ class TestGetStatus(unittest.TestCase):
 
         self.mock_build.is_good.return_value = False
         self.mock_job.is_queued.return_value = True
+        self.mock_job.get_last_buildnumber.return_value = 13
         self.mock_job._data = {
             'queueItem': {
                 'inQueueSince': float(timezone.now().strftime('%s')) * 1000
@@ -106,6 +109,7 @@ class TestGetStatus(unittest.TestCase):
             'active': True,
             'succeeded': False,
             'job_number': 12,
+            'queued_job_number': 13,
             'blocked_build_time': 600,
             'status_code': 200
         }
