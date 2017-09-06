@@ -15,12 +15,15 @@ def move_old_jenkins_checks(apps, schema_editor):
     JenkinsCheck = apps.get_model("cabotapp", "JenkinsCheck")
     JenkinsConfig = apps.get_model("cabotapp", "JenkinsConfig")
 
+    if not JenkinsStatusCheck.objects.exists():
+        return
+
     if not JenkinsConfig.objects.exists():
         JenkinsConfig.objects.create(
             name="Default Jenkins",
-            jenkins_api=os.environ.get("JENKINS_API"),
-            jenkins_user=os.environ.get("JENKINS_USER"),
-            jenkins_pass=os.environ.get("JENKINS_PASS"),
+            jenkins_api=os.environ.get("JENKINS_API", "http://jenkins.example.com"),
+            jenkins_user=os.environ.get("JENKINS_USER", ""),
+            jenkins_pass=os.environ.get("JENKINS_PASS", ""),
         )
 
     default_config = JenkinsConfig.objects.first()
