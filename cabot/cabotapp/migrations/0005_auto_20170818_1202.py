@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 import os
 
 import django.db.models.deletion
+from django.contrib.contenttypes.models import ContentType
 from django.db import migrations, models
 
 
@@ -27,8 +28,13 @@ def move_old_jenkins_checks(apps, schema_editor):
         )
 
     default_config = JenkinsConfig.objects.first()
+    jenkins_content_type = ContentType.objects.filter(model="jenkinsstatuscheck").first()
 
     for old_check in JenkinsStatusCheck.objects.all():
+        # Due to a polymorphic bug, JenkinsStatusCheck actually returns all status checks
+        # Use this to filter out the other checks.
+        if old_check.polymorphic_ctype_id != jenkins_content_type.id:
+            continue
         new_check = JenkinsCheck(
             active=old_check.active,
             allowed_num_failures=old_check.allowed_num_failures,
