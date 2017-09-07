@@ -14,6 +14,7 @@ RUN apk add --no-cache \
         musl-dev \
         libffi-dev \
         openldap-dev \
+        ca-certificates \
         bash
 
 RUN npm install -g \

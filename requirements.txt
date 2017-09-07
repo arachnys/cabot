@@ -20,7 +20,7 @@ gunicorn==19.7.1
 httplib2==0.10.3
 icalendar==3.11.3
 itypes==1.1.0
-jenkinsapi==0.3.4
+python-jenkins==0.4.15
 Jinja2==2.9.6
 kombu==4.0.2
 Markdown==2.6.8
