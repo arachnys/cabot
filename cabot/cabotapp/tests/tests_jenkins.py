@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from freezegun import freeze_time
-from mock import patch, create_autospec
+from datetime import timedelta
+
+import jenkins
 from cabot.cabotapp import jenkins
 from cabot.cabotapp.models import JenkinsConfig
 from django.utils import timezone
-from datetime import timedelta
-import jenkinsapi
-from jenkinsapi.custom_exceptions import UnknownJob
+from freezegun import freeze_time
+from mock import create_autospec, patch
+
 
 class TestGetStatus(unittest.TestCase):
 
@@ -20,7 +21,7 @@ class TestGetStatus(unittest.TestCase):
         self.mock_job.is_enabled.return_value = True
         self.mock_job.get_last_completed_build.return_value = self.mock_build
 
-        self.mock_client = create_autospec(jenkinsapi.jenkins.Jenkins)
+        self.mock_client = create_autospec(jenkins.Jenkins)
         self.mock_client.get_job.return_value = self.mock_job
 
         self.mock_config = create_autospec(JenkinsConfig)
