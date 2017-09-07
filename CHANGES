@@ -1,5 +1,5 @@
-master
-------
+Version 0.11.3
+--------------
 
 * [[#551](https://github.com/arachnys/cabot/issues/551)] Fix in-progress jenkins jobs being marked as failing
 
