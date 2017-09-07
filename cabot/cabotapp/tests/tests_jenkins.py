@@ -26,7 +26,6 @@ class TestGetStatus(unittest.TestCase):
             u'color': 'blue'
         }
 
-
         self.build = {
             u'number': 12,
             u'result': u'SUCCESS'
