@@ -4,7 +4,7 @@ import unittest
 from datetime import timedelta
 
 import jenkins
-from cabot.cabotapp import jenkins
+from cabot.cabotapp import jenkins as cabot_jenkins
 from cabot.cabotapp.models import JenkinsConfig
 from django.utils import timezone
 from freezegun import freeze_time
@@ -14,15 +14,28 @@ from mock import create_autospec, patch
 class TestGetStatus(unittest.TestCase):
 
     def setUp(self):
-        self.mock_build = create_autospec(jenkinsapi.build.Build)
-        self.mock_build.get_number.return_value = 12
+        self.job = {
+            u'inQueue': False,
+            u'queueItem': None,
+            u'lastCompletedBuild': {
+                u'number': 12,
+            },
+            u'lastBuild': {
+                u'number': 12,
+            },
+            u'color': 'blue'
+        }
 
-        self.mock_job = create_autospec(jenkinsapi.job.Job)
-        self.mock_job.is_enabled.return_value = True
-        self.mock_job.get_last_completed_build.return_value = self.mock_build
+
+        self.build = {
+            u'number': 12,
+            u'result': u'SUCCESS'
+
+        }
 
         self.mock_client = create_autospec(jenkins.Jenkins)
-        self.mock_client.get_job.return_value = self.mock_job
+        self.mock_client.get_job_info.return_value = self.job
+        self.mock_client.get_build_info.return_value = self.build
 
         self.mock_config = create_autospec(JenkinsConfig)
 
@@ -30,10 +43,7 @@ class TestGetStatus(unittest.TestCase):
     def test_job_passing(self, mock_jenkins):
         mock_jenkins.return_value = self.mock_client
 
-        self.mock_build.is_good.return_value = True
-        self.mock_job.is_queued.return_value = False
-
-        status = jenkins.get_job_status(self.mock_config, 'foo')
+        status = cabot_jenkins.get_job_status(self.mock_config, 'foo')
 
         expected = {
             'active': True,
@@ -48,10 +58,9 @@ class TestGetStatus(unittest.TestCase):
     def test_job_failing(self, mock_jenkins):
         mock_jenkins.return_value = self.mock_client
 
-        self.mock_build.is_good.return_value = False
-        self.mock_job.is_queued.return_value = False
+        self.build[u'result'] = u'FAILURE'
 
-        status = jenkins.get_job_status(self.mock_config, 'foo')
+        status = cabot_jenkins.get_job_status(self.mock_config, 'foo')
 
         expected = {
             'active': True,
@@ -66,18 +75,15 @@ class TestGetStatus(unittest.TestCase):
     @patch("cabot.cabotapp.jenkins._get_jenkins_client")
     def test_job_queued_last_succeeded(self, mock_jenkins):
         mock_jenkins.return_value = self.mock_client
+        self.job[u'lastBuild'] = {u'number': 13}
 
-        self.mock_build.is_good.return_value = True
-        self.mock_job.is_queued.return_value = True
-        self.mock_job.get_last_buildnumber.return_value = 13
-        self.mock_job._data = {
-            'queueItem': {
-                'inQueueSince': float(timezone.now().strftime('%s')) * 1000
-            }
+        self.job[u'inQueue'] = True
+        self.job['queueItem'] = {
+            'inQueueSince': float(timezone.now().strftime('%s')) * 1000
         }
 
         with freeze_time(timezone.now() + timedelta(minutes=10)):
-            status = jenkins.get_job_status(self.mock_config, 'foo')
+            status = cabot_jenkins.get_job_status(self.mock_config, 'foo')
 
         expected = {
             'active': True,
@@ -93,18 +99,15 @@ class TestGetStatus(unittest.TestCase):
     @patch("cabot.cabotapp.jenkins._get_jenkins_client")
     def test_job_queued_last_failed(self, mock_jenkins):
         mock_jenkins.return_value = self.mock_client
-
-        self.mock_build.is_good.return_value = False
-        self.mock_job.is_queued.return_value = True
-        self.mock_job.get_last_buildnumber.return_value = 13
-        self.mock_job._data = {
-            'queueItem': {
-                'inQueueSince': float(timezone.now().strftime('%s')) * 1000
-            }
+        self.job[u'lastBuild'] = {u'number': 13}
+        self.job[u'inQueue'] = True
+        self.job['queueItem'] = {
+            'inQueueSince': float(timezone.now().strftime('%s')) * 1000
         }
+        self.build[u'result'] = u'FAILURE'
 
         with freeze_time(timezone.now() + timedelta(minutes=10)):
-            status = jenkins.get_job_status(self.mock_config, 'foo')
+            status = cabot_jenkins.get_job_status(self.mock_config, 'foo')
 
         expected = {
             'active': True,
@@ -118,10 +121,10 @@ class TestGetStatus(unittest.TestCase):
 
     @patch("cabot.cabotapp.jenkins._get_jenkins_client")
     def test_job_unknown(self, mock_jenkins):
-        self.mock_client.get_job.side_effect = UnknownJob()
+        self.mock_client.get_job_info.side_effect = jenkins.NotFoundException()
         mock_jenkins.return_value = self.mock_client
 
-        status = jenkins.get_job_status(self.mock_config, 'unknown-job')
+        status = cabot_jenkins.get_job_status(self.mock_config, 'unknown-job')
 
         expected = {
             'active': None,

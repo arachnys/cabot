@@ -420,7 +420,7 @@ class TestCheckRun(LocalTestCase):
         self.assertEqual(len(checkresults), 1)
         self.assertFalse(self.jenkins_check.last_result().succeeded)
 
-    @patch('cabot.cabotapp.models.requests.get', throws_timeout)
+    @patch('cabot.cabotapp.models.jenkins_check_plugin.get_job_status', throws_timeout)
     def test_timeout_handling_in_jenkins(self):
         """This works because we are effectively patching requests.get globally, including in jenkinsapi."""
         checkresults = self.jenkins_check.statuscheckresult_set.all()
