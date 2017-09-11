@@ -9,16 +9,11 @@ from django.utils import timezone
 
 logger = get_task_logger(__name__)
 
-JENKINS_CLIENT = None
-
 
 def _get_jenkins_client(jenkins_config):
-    global JENKINS_CLIENT
-    if JENKINS_CLIENT is None:
-        JENKINS_CLIENT = jenkins.Jenkins(jenkins_config.jenkins_api,
-                                 username=jenkins_config.jenkins_user,
-                                 password=jenkins_config.jenkins_pass)
-    return JENKINS_CLIENT
+    return jenkins.Jenkins(jenkins_config.jenkins_api,
+                           username=jenkins_config.jenkins_user,
+                           password=jenkins_config.jenkins_pass)
 
 def get_job_status(jenkins_config, jobname):
     ret = {
