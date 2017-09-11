@@ -146,10 +146,7 @@ class ElasticsearchStatusCheck(MetricsStatusCheckBase):
                 if raw_data['hits']['hits'] == []:
                     continue
 
-                # It's not possible to see how many series there are without parsing the json response,
-                # so use the response string length as a heuristic to guess the number of series.
-                if len(str(raw_data)) > defs.ES_MAX_RESPONSE_SIZE_BYTES:
-                    raise ValueError('Elasticsearch query response exceeded max size.')
+                self._check_response_size(raw_data)
 
                 data = self._parse_es_response([raw_data['aggregations']])
                 if data == []:
@@ -169,6 +166,25 @@ class ElasticsearchStatusCheck(MetricsStatusCheckBase):
             parsed_data['data'].append(dict(series='no_data_fill_0', datapoints=[[int(time.time()), 0]]))
 
         return parsed_data
+
+    def _check_response_size(self, raw_data, soft_max=defs.ES_SOFT_MAX_RESPONSE_SIZE_BYTES,
+                             hard_max=defs.ES_HARD_MAX_RESPONSE_SIZE_BYTES):
+        """
+        Throw an exception if the response returned by Elasticsearch is too big.
+        :param raw_data: Raw data returned by Elasticsearch
+        :param soft_max: Soft maximum data size (check will fail, but the check won't be disabled
+        :param hard_max: Hard maximum data size (will disable the check)
+        :return: None
+        """
+        # It's not possible to see how many series there are without parsing the json response,
+        # so use the response string length as a heuristic to guess the number of series.
+        data_length = len(str(raw_data))
+        if data_length > soft_max:
+            if data_length > hard_max:
+                self.active = False
+                self.save()
+
+            raise ValueError('Elasticsearch query response exceeded max size.')
 
     def _parse_es_response(self, series):
         """
