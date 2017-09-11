@@ -1,5 +1,5 @@
-master
-------
+Version 0.11.5
+--------------
 
 * Fix multiple jenkins configs not working properly
   - Due to caching on the client, the first config to be checked would always be used
