@@ -562,6 +562,9 @@ class UserProfileUpdateAlert(LoginRequiredMixin, View):
     model = AlertPluginUserData
 
     def get(self, request, pk, alerttype):
+        if request.user.id != int(pk) and not request.user.is_superuser:
+            return HttpResponse(status=403)
+
         try:
             profile = UserProfile.objects.get(user=pk)
         except UserProfile.DoesNotExist:
@@ -590,6 +593,9 @@ class UserProfileUpdateAlert(LoginRequiredMixin, View):
         return HttpResponse(self.template.render(c))
 
     def post(self, request, pk, alerttype):
+        if request.user.id != int(pk) and not request.user.is_superuser:
+            return HttpResponse(status=403)
+
         profile = UserProfile.objects.get(user=pk)
         if (alerttype == u'General'):
             form = GeneralSettingsForm(request.POST)
