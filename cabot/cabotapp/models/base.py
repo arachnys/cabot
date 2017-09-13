@@ -65,15 +65,27 @@ def calculate_debounced_passing(recent_results, debounce=0):
             return True
     return False
 
-def add_custom_check_plugins():
+def get_custom_check_plugins():
     custom_check_types = []
-    if len(settings.CABOT_CUSTOM_CHECK_PLUGINS_PARSED) > 0:
-        for plugin_name in settings.CABOT_CUSTOM_CHECK_PLUGINS_PARSED:
-            check_name = plugin_name.replace('cabot_check_', '')
-            custom_check = {}
-            custom_check['creation_url'] = "create-" + check_name + "-check"
-            custom_check['check_name'] = check_name
-            custom_check_types.append(custom_check)
+    check_subclasses = StatusCheck.__subclasses__()
+
+    # Checks that aren't using the plugin system
+    legacy_checks = [
+        "JenkinsStatusCheck",
+        "HttpStatusCheck",
+        "ICMPStatusCheck",
+        "GraphiteStatusCheck",
+    ]
+
+    for check in check_subclasses:
+        if check.__name__ in legacy_checks:
+            continue
+
+        check_name = check.check_name
+        custom_check = {}
+        custom_check['creation_url'] = "create-" + check_name + "-check"
+        custom_check['check_name'] = check_name
+        custom_check_types.append(custom_check)
 
     return custom_check_types
 
