@@ -1,5 +1,4 @@
 from datetime import timedelta
-import random
 import logging
 
 from celery import Celery
@@ -38,14 +37,11 @@ def run_status_check(check_or_id):
 @task(ignore_result=True)
 def run_all_checks():
     checks = models.StatusCheck.objects.filter(active=True).all()
-    seconds = range(60)
     for check in checks:
         if check.last_run:
             next_schedule = check.last_run + timedelta(minutes=check.frequency)
         if (not check.last_run) or timezone.now() > next_schedule:
-            delay = random.choice(seconds)
-            logger.debug('Scheduling task for %s seconds from now' % delay)
-            run_status_check.apply_async((check.id,), countdown=delay)
+            run_status_check.apply_async((check.id,))
 
 
 @task(ignore_result=True)
