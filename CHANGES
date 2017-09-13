@@ -1,3 +1,9 @@
+master
+------
+
+* Add cloudwatch check plugin to dockerfile by default
+  - Can be enabled by adding "cabot_check_cloudwatch" to CABOT_PLUGINS_ENABLED
+
 Version 0.11.5
 --------------
 

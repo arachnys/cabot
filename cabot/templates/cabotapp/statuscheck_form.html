@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static from staticfiles %}
 
 {% block content %}
 <div class="row">
@@ -115,5 +116,6 @@ removeMorris = () ->
   $('#graph').hide()
 
 </script>
+{{ form.media }}
 {% endcompress %}
 {% endblock %}

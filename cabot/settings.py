@@ -135,8 +135,6 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # Uncomment the next line to enable the admin:
-    'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
     'django_filters',
@@ -145,6 +143,9 @@ INSTALLED_APPS = (
     'jsonify',
     'cabot.cabotapp',
     'rest_framework',
+    'dal',
+    'dal_select2',
+    'django.contrib.admin',
 )
 
 AUTH_USER_MODEL = 'auth.User'
