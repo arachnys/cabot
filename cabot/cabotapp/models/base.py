@@ -85,6 +85,7 @@ def get_custom_check_plugins():
         custom_check = {}
         custom_check['creation_url'] = "create-" + check_name + "-check"
         custom_check['check_name'] = check_name
+        custom_check['icon_class'] = getattr(check, "icon_class", "glyphicon-ok")
         custom_check_types.append(custom_check)
 
     return custom_check_types

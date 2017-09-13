@@ -20,7 +20,7 @@
       {% endif %}
       <!-- Custom check plugins buttons-->
       {% for checktype in custom_check_types %}
-        &nbsp;<a href="{% url checktype.creation_url %}?instance={{ instance.id }}&service={{ service.id }}" class="" title="Add new {{checktype.check_name|capfirst}} check"><i class="glyphicon glyphicon-plus"></i><i class="glyphicon glyphicon-ok"></i></a>
+        &nbsp;<a href="{% url checktype.creation_url %}?instance={{ instance.id }}&service={{ service.id }}" class="" title="Add new {{checktype.check_name|capfirst}} check"><i class="glyphicon glyphicon-plus"></i><i class="glyphicon {{checktype.icon_class|default:"glyphicon-ok"}}"></i></a>
       {% endfor %}
       </h3>
     </div>
