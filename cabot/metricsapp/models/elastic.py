@@ -8,7 +8,7 @@ from django.db import models
 from django.utils.html import escape
 from elasticsearch_dsl import MultiSearch, Search
 from cabot.metricsapp.api import create_es_client, validate_query
-from cabot.metricsapp.defs import HIDDEN_METRIC_SUFFIX
+from cabot.metricsapp import defs
 from .base import MetricsSourceBase, MetricsStatusCheckBase
 
 
@@ -146,6 +146,8 @@ class ElasticsearchStatusCheck(MetricsStatusCheckBase):
                 if raw_data['hits']['hits'] == []:
                     continue
 
+                self._check_response_size(raw_data)
+
                 data = self._parse_es_response([raw_data['aggregations']])
                 if data == []:
                     continue
@@ -164,6 +166,25 @@ class ElasticsearchStatusCheck(MetricsStatusCheckBase):
             parsed_data['data'].append(dict(series='no_data_fill_0', datapoints=[[int(time.time()), 0]]))
 
         return parsed_data
+
+    def _check_response_size(self, raw_data, soft_max=defs.ES_SOFT_MAX_RESPONSE_SIZE_BYTES,
+                             hard_max=defs.ES_HARD_MAX_RESPONSE_SIZE_BYTES):
+        """
+        Throw an exception if the response returned by Elasticsearch is too big.
+        :param raw_data: Raw data returned by Elasticsearch
+        :param soft_max: Soft maximum data size (check will fail, but the check won't be disabled
+        :param hard_max: Hard maximum data size (will disable the check)
+        :return: None
+        """
+        # It's not possible to see how many series there are without parsing the json response,
+        # so use the response string length as a heuristic to guess the number of series.
+        data_length = len(str(raw_data))
+        if data_length > soft_max:
+            if data_length > hard_max:
+                self.active = False
+                self.save()
+
+            raise ValueError('Elasticsearch query response exceeded max size.')
 
     def _parse_es_response(self, series):
         """
@@ -233,7 +254,7 @@ class ElasticsearchStatusCheck(MetricsStatusCheckBase):
 
         for metric, value_dict in subseries.iteritems():
             # Ignore hidden metrics and things that are not actually the metric field--timestamp, doc_count, etc.
-            if type(value_dict) != dict or HIDDEN_METRIC_SUFFIX in metric:
+            if type(value_dict) != dict or defs.HIDDEN_METRIC_SUFFIX in metric:
                 continue
 
             if 'value' in value_dict:

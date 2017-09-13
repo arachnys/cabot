@@ -354,6 +354,13 @@ class TestElasticsearchStatusCheck(TestCase):
                            '"aggs": {"sum": {"sum": {"field": "count"}}}}}}}}]'
         self.assertEqual(self.es_check.queries, expected_queries)
 
+    def test_max_data_size_exceeded(self):
+        """If the hard max is exceeded, a ValidationError should be raised and the check should be deactivated"""
+        self.assertTrue(self.es_check.active)
+        with self.assertRaises(ValueError):
+            self.es_check._check_response_size('1234578987654321', soft_max=4, hard_max=5)
+        self.assertFalse(self.es_check.active)
+
 
 class TestQueryValidation(TestCase):
     def test_valid_query(self):

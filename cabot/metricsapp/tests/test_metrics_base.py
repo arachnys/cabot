@@ -129,7 +129,7 @@ class TestMetricsBase(TestCase):
         result = self.metrics_check._run()
         self.assertEqual(result.check, self.metrics_check)
         self.assertFalse(result.succeeded)
-        self.assertEqual(result.error, 'Error fetching metric from source')
+        self.assertEqual(result.error, 'Error fetching metric from source: None')
 
     @patch('cabot.metricsapp.models.MetricsStatusCheckBase.get_series', mock_get_series)
     def test_raw_data(self):
