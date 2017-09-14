@@ -18,9 +18,10 @@
       {% if checks_type == "All" or checks_type == "ICMP" %}
       &nbsp;<a href="{% url "create-icmp-check" %}?instance={{ instance.id }}&service={{ service.id }}" class="" title="Add new ICMP check"><i class="glyphicon glyphicon-plus"></i><i class="glyphicon glyphicon-transfer"></i></a>
       {% endif %}
-      <!-- Custom check plugins buttons-->
       {% for checktype in custom_check_types %}
+        {% if checks_type == "All" or checks_type == checktype.check_name %}
         &nbsp;<a href="{% url checktype.creation_url %}?instance={{ instance.id }}&service={{ service.id }}" class="" title="Add new {{checktype.check_name|capfirst}} check"><i class="glyphicon glyphicon-plus"></i><i class="glyphicon {{checktype.icon_class|default:"glyphicon-ok"}}"></i></a>
+        {% endif %}
       {% endfor %}
       </h3>
     </div>

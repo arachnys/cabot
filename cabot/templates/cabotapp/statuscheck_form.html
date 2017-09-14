@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static from staticfiles %}
 
 {% block content %}
 <div class="row">
@@ -116,4 +117,5 @@ removeMorris = () ->
 
 </script>
 {% endcompress %}
+{{ form.media }}
 {% endblock %}
