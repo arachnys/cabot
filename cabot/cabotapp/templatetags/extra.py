@@ -19,3 +19,7 @@ def echo_setting(setting):
 def format_timedelta(delta):
     # Getting rid of microseconds.
     return str(timedelta(days=delta.days, seconds=delta.seconds))
+
+@register.filter
+def for_service(objects, service):
+    return objects.filter(service=service)

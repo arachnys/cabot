@@ -1,3 +1,8 @@
+master
+------
+
+* Fix check plugins not displaying checks correctly on service details page
+
 Version 0.11.6
 --------------
 

@@ -103,11 +103,9 @@
 
 {% include 'cabotapp/_statuscheck_list.html' with checks=service.jenkins_status_checks.all service=service checks_type="Jenkins" %}
 
+{% for custom_check in custom_check_types %}
 <hr>
-
-{% for check_class in custom_check_types %}
-<hr>
-{% include 'cabotapp/_statuscheck_list.html' with checks=check_class.objects.all service=service checks_type=check_class.check_name %}
+{% include 'cabotapp/_statuscheck_list.html' with checks=custom_check.objects|for_service:service service=service checks_type=custom_check.check_name %}
 {% endfor %}
 <hr>
 
