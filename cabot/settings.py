@@ -112,6 +112,7 @@ TEMPLATES = [{
             'django.template.context_processors.request',
             'django.contrib.auth.context_processors.auth',
             'django.contrib.messages.context_processors.messages',
+            'cabot.context_processors.global_settings',
         ],
         'debug': force_bool(os.environ.get('TEMPLATE_DEBUG', False))
     },
@@ -315,3 +316,5 @@ if AUTH_GOOGLE_OAUTH2:
     SOCIAL_AUTH_GOOGLE_OAUTH2_WHITELISTED_DOMAINS = os.environ.get('AUTH_GOOGLE_OAUTH2_WHITELISTED_DOMAINS', '').split(',')
 
 EXPOSE_USER_API = force_bool(os.environ.get('EXPOSE_USER_API', False))
+ENABLE_SUBSCRIPTION = force_bool(os.environ.get('ENABLE_SUBSCRIPTION', False))
+ENABLE_DUTY_ROTA = force_bool(os.environ.get('ENABLE_DUTY_ROTA', False))
