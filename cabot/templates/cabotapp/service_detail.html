@@ -105,6 +105,12 @@
 
 <hr>
 
+{% for check_class in custom_check_types %}
+<hr>
+{% include 'cabotapp/_statuscheck_list.html' with checks=check_class.objects.all service=service checks_type=check_class.check_name %}
+{% endfor %}
+<hr>
+
 <div class="row">
   <div class="col-xs-12">
     <div class="col-xs-1"><h3><i class="fa fa-table"></i></h3></div>
