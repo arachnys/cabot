@@ -316,5 +316,5 @@ if AUTH_GOOGLE_OAUTH2:
     SOCIAL_AUTH_GOOGLE_OAUTH2_WHITELISTED_DOMAINS = os.environ.get('AUTH_GOOGLE_OAUTH2_WHITELISTED_DOMAINS', '').split(',')
 
 EXPOSE_USER_API = force_bool(os.environ.get('EXPOSE_USER_API', False))
-ENABLE_SUBSCRIPTION = force_bool(os.environ.get('ENABLE_SUBSCRIPTION', False))
-ENABLE_DUTY_ROTA = force_bool(os.environ.get('ENABLE_DUTY_ROTA', False))
+ENABLE_SUBSCRIPTION = force_bool(os.environ.get('ENABLE_SUBSCRIPTION', True))
+ENABLE_DUTY_ROTA = force_bool(os.environ.get('ENABLE_DUTY_ROTA', True))
