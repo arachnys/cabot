@@ -31,6 +31,3 @@ ACKNOWLEDGEMENT_EXPIRY = int(os.environ.get('ACKNOWLEDGEMENT_EXPIRY', 20))
 
 # Default plugins are used if the user has not specified.
 CABOT_PLUGINS_ENABLED = os.environ.get('CABOT_PLUGINS_ENABLED', 'cabot_alert_hipchat,cabot_alert_twilio,cabot_alert_email')
-
-# No custom check plugins are used if none specified
-CABOT_CUSTOM_CHECK_PLUGINS = os.environ.get('CABOT_CUSTOM_CHECK_PLUGINS', '')

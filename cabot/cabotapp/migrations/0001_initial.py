@@ -3,28 +3,7 @@ from __future__ import unicode_literals
 
 from django.db import models, migrations
 from django.conf import settings
-from cabot.settings import CABOT_CUSTOM_CHECK_PLUGINS_PARSED as CABOT_CUSTOM_CHECK_PLUGINS
-from functools import reduce
 
-def add_custom_check_plugins_models(operations, plugin_name):
-    name = plugin_name.replace('cabot_check_', '')
-    if plugin_name != '':
-        operation = migrations.CreateModel(
-            name=name.capitalize() + 'StatusCheck',
-            fields=[
-            ],
-            options={
-                'abstract': False,
-                'proxy': True,
-            },
-            bases=('cabotapp.statuscheck',),
-        )
-
-        operations += [
-            operation
-        ]
-
-    return operations
 
 class Migration(migrations.Migration):
 
@@ -33,7 +12,7 @@ class Migration(migrations.Migration):
         ('contenttypes', '0001_initial'),
     ]
 
-    operations = reduce(add_custom_check_plugins_models, [[
+    operations = [
         migrations.CreateModel(
             name='AlertAcknowledgement',
             fields=[
@@ -320,4 +299,4 @@ class Migration(migrations.Migration):
             },
             bases=('cabotapp.statuscheck',),
         ),
-    ]] + CABOT_CUSTOM_CHECK_PLUGINS)
+    ]

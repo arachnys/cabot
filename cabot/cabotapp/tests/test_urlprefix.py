@@ -34,7 +34,6 @@ class override_local_settings(override_settings):
             COMPRESS_URL="%s/static/" % urlprefix,
             COMPRESS_ENABLED=False,
             COMPRESS_PRECOMPILERS=(),
-            CABOT_CUSTOM_CHECK_PLUGINS_PARSED=custom_check_plugins,
             INSTALLED_APPS=installed_apps
         )
 
@@ -90,61 +89,3 @@ class URLPrefixTestCase(LocalTestCase):
             response_systemstatus = self.client.get(reverse('system-status'))
 
             self.assertEqual(response_systemstatus.status_code, before_systemstatus.status_code)
-
-    def test_custom_check_plugins_urls_without_plugin(self):
-        prefix = '/test'
-        self.client.login(username=self.username, password=self.password)
-
-        with self.set_url_prefix(prefix):
-            try:
-                response = self.client.get(reverse('create-skeleton-check'))
-                self.assertEqual(response.status_code, 500)
-            except Exception as e:
-                create_error = (u"Reverse for 'create-skeleton-check' not found. "
-                    "'create-skeleton-check' is not a valid view function or pattern name.")
-                self.assertEqual(e.message, create_error)
-
-            try:
-                response = self.client.get(reverse('update-skeleton-check'))
-                self.assertEqual(response.status_code, 500)
-            except Exception as e:
-                update_error = (u"Reverse for 'update-skeleton-check' not found. "
-                    "'update-skeleton-check' is not a valid view function or pattern name.")
-                self.assertEqual(e.message, update_error)
-
-            try:
-                response = self.client.get(reverse('duplicate-skeleton-check'))
-                self.assertEqual(response.status_code, 500)
-            except Exception as e:
-                duplicate_error = (u"Reverse for 'duplicate-skeleton-check' not found. "
-                    "'duplicate-skeleton-check' is not a valid view function or pattern name.")
-                self.assertEqual(e.message, duplicate_error)
-
-    def test_custom_check_plugins_urls(self):
-        sys.modules['cabot_check_skeleton'] = import_module("cabot.cabotapp.tests.fixtures.cabot_check_skeleton")
-        prefix = '/test'
-        custom_check_plugins = ['cabot_check_skeleton']
-        self.client.login(username=self.username, password=self.password)
-
-        with set_url_prefix_and_custom_check_plugins(prefix, custom_check_plugins):
-            response = self.client.get(reverse('create-skeleton-check'))
-
-            self.assertEqual(response.status_code, 200)
-
-            response = self.client.get(reverse('update-skeleton-check', args=[1]))
-
-            self.assertEqual(response.status_code, 200)
-
-            response = self.client.get(reverse('duplicate-skeleton-check', args=[1]))
-
-            self.assertEqual(response.status_code, 302)
-
-    def test_correct_custom_checks_template(self):
-        sys.modules['cabot_check_skeleton'] = import_module("cabot.cabotapp.tests.fixtures.cabot_check_skeleton")
-        prefix = '/test'
-        custom_check_plugins = ['cabot_check_skeleton']
-        self.client.login(username=self.username, password=self.password)
-
-        with set_url_prefix_and_custom_check_plugins(prefix, custom_check_plugins):
-            response = self.client.get(reverse('checks'))
-            self.assertIn(reverse('create-skeleton-check'), response.content)

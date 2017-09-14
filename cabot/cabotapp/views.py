@@ -30,7 +30,7 @@ from alert import AlertPlugin, AlertPluginUserData
 from models import (
     StatusCheck, GraphiteStatusCheck, JenkinsStatusCheck, HttpStatusCheck, ICMPStatusCheck,
     StatusCheckResult, UserProfile, Service, Instance, Shift, get_duty_officers,
-    add_custom_check_plugins)
+    get_custom_check_plugins)
 from tasks import run_status_check as _run_status_check
 from .graphite import get_data, get_matching_metrics
 
@@ -508,7 +508,7 @@ class StatusCheckListView(LoginRequiredMixin, ListView):
         context = super(StatusCheckListView, self).get_context_data(**kwargs)
         if context is None:
             context = {}
-        context['custom_check_types'] = add_custom_check_plugins()
+        context['custom_check_types'] = get_custom_check_plugins()
         context['checks'] = StatusCheck.objects.all().order_by('name').prefetch_related('service_set', 'instance_set')
         return super(StatusCheckListView, self).render_to_response(context, *args, **kwargs)
 
@@ -528,7 +528,7 @@ class StatusCheckDetailView(LoginRequiredMixin, DetailView):
     def render_to_response(self, context, *args, **kwargs):
         if context is None:
             context = {}
-        context['custom_check_types'] = add_custom_check_plugins()
+        context['custom_check_types'] = get_custom_check_plugins()
         context['checkresults'] = self.object.statuscheckresult_set.order_by(
             '-time_complete')[:100]
         return super(StatusCheckDetailView, self).render_to_response(context, *args, **kwargs)
@@ -822,7 +822,7 @@ class InstanceDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super(InstanceDetailView, self).get_context_data(**kwargs)
         date_from = date.today() - relativedelta(day=1)
-        context['custom_check_types'] = add_custom_check_plugins()
+        context['custom_check_types'] = get_custom_check_plugins()
         context['report_form'] = StatusCheckReportForm(initial={
             'checks': self.object.status_checks.all(),
             'service': self.object,
@@ -839,7 +839,7 @@ class ServiceDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super(ServiceDetailView, self).get_context_data(**kwargs)
         date_from = date.today() - relativedelta(day=1)
-        context['custom_check_types'] = add_custom_check_plugins()
+        context['custom_check_types'] = get_custom_check_plugins()
         context['report_form'] = StatusCheckReportForm(initial={
             'alerts': self.object.alerts.all(),
             'checks': self.object.status_checks.all(),
