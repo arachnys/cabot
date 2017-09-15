@@ -47,16 +47,6 @@ window.DATA = {{ result.raw_data|safe }};
 <script type="text/coffeescript">
 kvs = []
 labels = []
-{% if result.check.polymorphic_ctype.model == 'graphitestatuscheck' or result.check.polymorphic_ctype.model == 'influxdbstatuscheck' %}
-for series in window.DATA
-  label = series.target
-  labels.push label
-  for point in series.datapoints
-    tmp = {}
-    tmp['time'] = point[1]*1000
-    tmp[label] = point[0]
-    kvs.push tmp
-{% else %}
 i = 0
 for s in window.DATA
   label = s.series
@@ -73,7 +63,6 @@ for s in window.DATA
     tmp[label] = point[1]
     kvs.push tmp
   i++
-{% endif %}
 
 colors = ['#028E9B', '#2C17B1', '#A101A6', '#FF1E00', '#FFA400', '#FFEB00', '#84E900'
           '#00AF64', '#1533AD', '#6A0AAB', '#E9003A', '#FF8700', '#FFD300', '#BAF300'

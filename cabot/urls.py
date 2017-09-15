@@ -4,9 +4,7 @@ from importlib import import_module
 from django.conf.urls import patterns, include, url
 from django.conf import settings
 from cabot.cabotapp.views import (
-        run_status_check, graphite_api_data, checks_run_recently, duplicate_check,
-        GraphiteCheckCreateView, GraphiteCheckUpdateView,
-        InfluxDBCheckCreateView, InfluxDBCheckUpdateView,
+        run_status_check, checks_run_recently, duplicate_check,
         HttpCheckCreateView, HttpCheckUpdateView,
         JenkinsCheckCreateView, JenkinsCheckUpdateView,
         TCPCheckCreateView, TCPCheckUpdateView,
@@ -108,18 +106,6 @@ urlpatterns = patterns(
         view=run_status_check,
         name='run-check'),
 
-    url(r'^influxdbcheck/create/',
-        view=InfluxDBCheckCreateView.as_view(),
-        name='create-influxdb-check'),
-    url(r'^influxdbcheck/update/(?P<pk>\d+)/',
-        view=InfluxDBCheckUpdateView.as_view(),
-        name='update-influxdb-check'),
-    url(r'^graphitecheck/create/',
-        view=GraphiteCheckCreateView.as_view(),
-        name='create-graphite-check'),
-    url(r'^graphitecheck/update/(?P<pk>\d+)/',
-        view=GraphiteCheckUpdateView.as_view(),
-        name='update-graphite-check'),
     url(r'^httpcheck/create/',
         view=HttpCheckCreateView.as_view(),
         name='create-http-check'),
@@ -148,9 +134,6 @@ urlpatterns = patterns(
     url(r'^shifts/(?P<pk>\d+)/',
         view=ShiftListView.as_view(),
         name='shifts-detail'),
-    url(r'^graphite/',
-        view=graphite_api_data,
-        name='graphite-data'),
 
     url(r'^user/(?P<pk>\d+)/profile/$',
         view=UserProfileUpdateView.as_view(),

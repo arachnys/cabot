@@ -5,10 +5,8 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.core.urlresolvers import reverse_lazy
 from django.conf import settings
 from models import (StatusCheck,
-                    GraphiteStatusCheck,
                     JenkinsStatusCheck,
                     HttpStatusCheck,
-                    InfluxDBStatusCheck,
                     TCPStatusCheck,
                     StatusCheckResult,
                     UserProfile,
@@ -31,7 +29,6 @@ from django.views.generic import (DetailView,
                                   TemplateView,
                                   View)
 from django import forms
-from .influx import get_data, get_matching_metrics
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.utils.timezone import utc
@@ -135,78 +132,6 @@ class StatusCheckForm(SymmetricalForm):
             },
         )
     )
-
-
-class GraphiteStatusCheckForm(StatusCheckForm):
-    class Meta:
-        model = GraphiteStatusCheck
-        fields = (
-            'name',
-            'metric',
-            'metric_selector',
-            'group_by',
-            'fill_empty',
-            'where_clause',
-            'check_type',
-            'value',
-            'frequency',
-            'active',
-            'importance',
-            'interval',
-            'expected_num_hosts',
-            'expected_num_metrics',
-            'retries',
-        )
-        widgets = dict(**base_widgets)
-        widgets.update({
-            'value': forms.TextInput(attrs={
-                'style': 'width: 100px',
-                'placeholder': 'threshold value',
-            }),
-            'metric': forms.TextInput(attrs={
-                'style': 'width: 100%',
-                'placeholder': 'graphite metric key'
-            }),
-            'check_type': forms.Select(attrs={
-                'data-rel': 'chosen',
-            })
-        })
-
-
-class InfluxDBStatusCheckForm(StatusCheckForm):
-    class Meta:
-        model = GraphiteStatusCheck
-        fields = (
-            'name',
-            'metric',
-            'metric_selector',
-            'group_by',
-            'fill_empty',
-            'where_clause',
-            'check_type',
-            'value',
-            'frequency',
-            'active',
-            'importance',
-            'interval',
-            'expected_num_hosts',
-            'expected_num_metrics',
-            'retries',
-        )
-        widgets = dict(**base_widgets)
-        widgets.update({
-            'value': forms.TextInput(attrs={
-                'style': 'width: 100px',
-                'placeholder': 'threshold value',
-            }),
-            'metric': forms.TextInput(attrs={
-                'style': 'width: 100%',
-                'placeholder': 'graphite metric key'
-            }),
-            'check_type': forms.Select(attrs={
-                'data-rel': 'chosen',
-            })
-        })
 
 
 class HttpStatusCheckForm(StatusCheckForm):
@@ -462,26 +387,6 @@ class CheckUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_success_url(self):
         return reverse('check', kwargs={'pk': self.object.id})
-
-
-class GraphiteCheckUpdateView(CheckUpdateView):
-    model = GraphiteStatusCheck
-    form_class = GraphiteStatusCheckForm
-
-
-class GraphiteCheckCreateView(CheckCreateView):
-    model = GraphiteStatusCheck
-    form_class = GraphiteStatusCheckForm
-
-
-class InfluxDBCheckUpdateView(CheckUpdateView):
-    model = InfluxDBStatusCheck
-    form_class = InfluxDBStatusCheckForm
-
-
-class InfluxDBCheckCreateView(CheckCreateView):
-    model = InfluxDBStatusCheck
-    form_class = InfluxDBStatusCheckForm
 
 
 class HttpCheckCreateView(CheckCreateView):
@@ -797,33 +702,6 @@ def checks_run_recently(request):
 
 def jsonify(d):
     return HttpResponse(json.dumps(d), content_type='application/json')
-
-
-@cabot_login_required
-def graphite_api_data(request):
-    metric = request.GET.get('metric')
-    data = None
-    matching_metrics = None
-
-    try:
-        matching_metrics = dict(metrics=get_matching_metrics(metric))
-    except Exception, exp:
-        return jsonify(dict(status='error', message=str(exp)))
-
-    # Fetch metric data only if the number of matching metrics is less
-    # than a pre-defined limit. If not, we could end up killing a
-    # few data stores (like influxdb) by querying the entire list of
-    # metrics
-    metric_list_limit = settings.METRIC_FETCH_LIMIT
-    if 1 <= len(matching_metrics['metrics']['metrics']) <= metric_list_limit:
-        try:
-            data = get_data(metric, fetchall=True)
-        except Exception, exp:
-            pass
-
-    return jsonify(dict(status='ok',
-                        data=data,
-                        matchingMetrics=matching_metrics))
 
 
 class AuthComplete(View):

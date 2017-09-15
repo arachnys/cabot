@@ -20,7 +20,7 @@ from cabot.cabotapp import tasks
 from mock import Mock, patch
 
 from cabot.cabotapp.models import (
-    get_duty_officers, get_all_duty_officers, update_shifts, GraphiteStatusCheck,
+    get_duty_officers, get_all_duty_officers, update_shifts,
     JenkinsStatusCheck, HttpStatusCheck, TCPStatusCheck,
     Service, Schedule, StatusCheckResult)
 from cabot.cabotapp.views import StatusCheckReportForm
@@ -49,30 +49,21 @@ class LocalTestCase(APITestCase):
         self.user.set_password(self.password)
         self.user.user_permissions.add(
             Permission.objects.get(codename='add_service'),
-            Permission.objects.get(codename='add_graphitestatuscheck'),
             Permission.objects.get(codename='add_httpstatuscheck'),
             Permission.objects.get(codename='add_jenkinsstatuscheck'),
             Permission.objects.get(codename='add_tcpstatuscheck'),
         )
         self.user.save()
-        self.graphite_check = GraphiteStatusCheck.objects.create(
-            id=10101,
-            name='Graphite Check',
-            metric='stats.fake.value',
-            check_type='<=',
-            value='9.0',
-            created_by=self.user,
-            importance=Service.ERROR_STATUS,
-        )
+
         self.jenkins_check = JenkinsStatusCheck.objects.create(
-            id=10102,
+            id=10101,
             name='Jenkins Check',
             created_by=self.user,
             importance=Service.ERROR_STATUS,
             max_queued_build_time=10,
         )
         self.http_check = HttpStatusCheck.objects.create(
-            id=10103,
+            id=10102,
             name='Http Check',
             created_by=self.user,
             importance=Service.CRITICAL_STATUS,
@@ -82,7 +73,7 @@ class LocalTestCase(APITestCase):
             text_match=None,
         )
         self.tcp_check = TCPStatusCheck.objects.create(
-            id=10104,
+            id=10103,
             name='TCP Check',
             created_by=self.user,
             importance=Service.ERROR_STATUS,
@@ -90,6 +81,7 @@ class LocalTestCase(APITestCase):
             port=80,
             timeout=6,
         )
+
         # Set ical_url for schedule to filename we're using for mock response
         self.schedule = Schedule.objects.create(
             name='Principal',
@@ -102,6 +94,7 @@ class LocalTestCase(APITestCase):
         )
         self.schedule.save()
         self.secondary_schedule.save()
+
         self.service = Service.objects.create(
             id=2194,
             name='Service',
@@ -109,13 +102,13 @@ class LocalTestCase(APITestCase):
         self.service.save()
         self.service.schedules.add(self.schedule)
         self.service.status_checks.add(
-            self.graphite_check,
             self.jenkins_check,
             self.http_check,
             self.tcp_check)
-        # failing is second most recent
+
+        # Failing is second most recent
         self.older_result = StatusCheckResult(
-            check=self.graphite_check,
+            check=self.http_check,
             time=timezone.now() - timedelta(seconds=60),
             time_complete=timezone.now() - timedelta(seconds=59),
             succeeded=False
@@ -123,30 +116,13 @@ class LocalTestCase(APITestCase):
         self.older_result.save()
         # Passing is most recent
         self.most_recent_result = StatusCheckResult(
-            check=self.graphite_check,
+            check=self.http_check,
             time=timezone.now() - timedelta(seconds=1),
             time_complete=timezone.now(),
             succeeded=True
         )
         self.most_recent_result.save()
-        self.graphite_check.save()  # Will recalculate status
-
-
-def fake_influx_client(*args, **kwargs):
-    resp = Mock()
-    resp.query.return_value = Mock()
-    return resp
-
-
-def fake_graphite_series(*args, **kwargs):
-    return json.loads(get_content('graphite_series.json'))["raw"]
-
-
-def fake_graphite_response(*args, **kwargs):
-    resp = Mock()
-    resp.json = lambda: json.loads(get_content('graphite_response.json'))
-    resp.status_code = 200
-    return resp
+        self.http_check.save()  # Will recalculate status
 
 
 def fake_jenkins_success(*args, **kwargs):
@@ -216,8 +192,6 @@ def throws_timeout(*args, **kwargs):
 class TestCheckRun(LocalTestCase):
 
     def test_calculate_service_status(self):
-        self.assertEqual(self.graphite_check.calculated_status,
-                         Service.CALCULATED_PASSING_STATUS)
         self.assertEqual(self.jenkins_check.calculated_status,
                          Service.CALCULATED_PASSING_STATUS)
         self.assertEqual(self.http_check.calculated_status,
@@ -230,52 +204,29 @@ class TestCheckRun(LocalTestCase):
         # Now two most recent are failing
         self.most_recent_result.succeeded = False
         self.most_recent_result.save()
-        self.graphite_check.last_run = timezone.now()
-        self.graphite_check.save()
-        self.assertEqual(self.graphite_check.calculated_status,
+        self.http_check.last_run = timezone.now()
+        self.http_check.save()
+        self.assertEqual(self.http_check.calculated_status,
                          Service.CALCULATED_FAILING_STATUS)
         self.service.update_status()
-        self.assertEqual(self.service.overall_status, Service.ERROR_STATUS)
+        self.assertEqual(self.service.overall_status, Service.CRITICAL_STATUS)
 
         # Will fail even if second one is working
         self.older_result.succeeded = True
         self.older_result.save()
-        self.graphite_check.save()
-        self.assertEqual(self.graphite_check.calculated_status,
+        self.http_check.save()
+        self.assertEqual(self.http_check.calculated_status,
                          Service.CALCULATED_FAILING_STATUS)
         self.service.update_status()
-        self.assertEqual(self.service.overall_status, Service.ERROR_STATUS)
+        self.assertEqual(self.service.overall_status, Service.CRITICAL_STATUS)
 
         # Changing the number of retries will change it up
-        self.graphite_check.retries = 1
-        self.graphite_check.save()
-        self.assertEqual(self.graphite_check.calculated_status,
+        self.http_check.retries = 1
+        self.http_check.save()
+        self.assertEqual(self.http_check.calculated_status,
                          Service.CALCULATED_PASSING_STATUS)
         self.service.update_status()
         self.assertEqual(self.service.overall_status, Service.PASSING_STATUS)
-
-    @patch('cabot.cabotapp.influx._get_influxdb_client', fake_influx_client)
-    @patch('cabot.cabotapp.influx._convert_influx_to_graphite', fake_graphite_series)
-    def test_graphite_run(self):
-        checkresults = self.graphite_check.statuscheckresult_set.all()
-        self.assertEqual(len(checkresults), 2)
-        self.graphite_check.run()
-        checkresults = self.graphite_check.statuscheckresult_set.all()
-        self.assertEqual(len(checkresults), 3)
-        # Most recent check failed
-        self.assertFalse(self.graphite_check.last_result().succeeded)
-        self.assertEqual(self.graphite_check.calculated_status,
-                         Service.CALCULATED_FAILING_STATUS)
-        # This should now pass
-        self.graphite_check.value = '11.0'
-        self.graphite_check.save()
-        checkresults = self.graphite_check.statuscheckresult_set.all()
-        self.assertEqual(len(checkresults), 3)
-        self.graphite_check.run()
-        checkresults = self.graphite_check.statuscheckresult_set.all()
-        self.assertEqual(len(checkresults), 4)
-        self.assertEqual(self.graphite_check.calculated_status,
-                         Service.CALCULATED_PASSING_STATUS)
 
     @patch('cabot.cabotapp.jenkins.requests.get', fake_jenkins_success)
     def test_jenkins_success(self):
@@ -318,10 +269,10 @@ class TestCheckRun(LocalTestCase):
     @patch('cabot.cabotapp.models.requests.get', fake_http_200_response)
     def test_http_run(self):
         checkresults = self.http_check.statuscheckresult_set.all()
-        self.assertEqual(len(checkresults), 0)
+        self.assertEqual(len(checkresults), 2)
         self.http_check.run()
         checkresults = self.http_check.statuscheckresult_set.all()
-        self.assertEqual(len(checkresults), 1)
+        self.assertEqual(len(checkresults), 3)
         self.assertTrue(self.http_check.last_result().succeeded)
         self.assertEqual(self.http_check.calculated_status,
                          Service.CALCULATED_PASSING_STATUS)
@@ -342,10 +293,10 @@ class TestCheckRun(LocalTestCase):
     @patch('cabot.cabotapp.models.requests.request', throws_timeout)
     def test_timeout_handling_in_http(self):
         checkresults = self.http_check.statuscheckresult_set.all()
-        self.assertEqual(len(checkresults), 0)
+        self.assertEqual(len(checkresults), 2)
         self.http_check.run()
         checkresults = self.http_check.statuscheckresult_set.all()
-        self.assertEqual(len(checkresults), 1)
+        self.assertEqual(len(checkresults), 3)
         self.assertFalse(self.http_check.last_result().succeeded)
         self.assertIn(u'Request error occurred: something bad happened',
                       self.http_check.last_result().error)
@@ -353,10 +304,10 @@ class TestCheckRun(LocalTestCase):
     @patch('cabot.cabotapp.models.requests.request', fake_http_404_response)
     def test_http_run_bad_resp(self):
         checkresults = self.http_check.statuscheckresult_set.all()
-        self.assertEqual(len(checkresults), 0)
+        self.assertEqual(len(checkresults), 2)
         self.http_check.run()
         checkresults = self.http_check.statuscheckresult_set.all()
-        self.assertEqual(len(checkresults), 1)
+        self.assertEqual(len(checkresults), 3)
         self.assertFalse(self.http_check.last_result().succeeded)
         self.assertEqual(self.http_check.calculated_status,
                          Service.CALCULATED_FAILING_STATUS)
@@ -458,7 +409,7 @@ class TestWebInterface(LocalTestCase):
     def test_checks_report(self):
         form = StatusCheckReportForm({
             'service': self.service.id,
-            'checks': [self.graphite_check.id],
+            'checks': [self.http_check.id],
             'date_from': date.today() - timedelta(days=1),
             'date_to': date.today(),
         })
@@ -486,7 +437,7 @@ class TestAPI(LocalTestCase):
                     'name': u'Service',
                     'users_to_notify': [],
                     'alerts_enabled': True,
-                    'status_checks': [10101, 10102, 10103, 10104],
+                    'status_checks': [10101, 10102, 10103],
                     'alerts': [],
                     'hackpad_id': None,
                     'id': 2194,
@@ -495,20 +446,12 @@ class TestAPI(LocalTestCase):
             ],
             'statuscheck': [
                 {
-                    'name': u'Graphite Check',
-                    'active': True,
-                    'importance': u'ERROR',
-                    'frequency': 5,
-                    'retries': 0,
-                    'id': 10101
-                },
-                {
                     'name': u'Jenkins Check',
                     'active': True,
                     'importance': u'ERROR',
                     'frequency': 5,
                     'retries': 0,
-                    'id': 10102
+                    'id': 10101
                 },
                 {
                     'name': u'Http Check',
@@ -516,7 +459,7 @@ class TestAPI(LocalTestCase):
                     'importance': u'CRITICAL',
                     'frequency': 5,
                     'retries': 0,
-                    'id': 10103
+                    'id': 10102
                 },
                 {
                     'name': u'TCP Check',
@@ -524,22 +467,7 @@ class TestAPI(LocalTestCase):
                     'importance': u'ERROR',
                     'frequency': 5,
                     'retries': 0,
-                    'id': 10104
-                },
-            ],
-            'graphitestatuscheck': [
-                {
-                    'name': u'Graphite Check',
-                    'active': True,
-                    'importance': u'ERROR',
-                    'frequency': 5,
-                    'retries': 0,
-                    'metric': u'stats.fake.value',
-                    'check_type': u'<=',
-                    'value': u'9.0',
-                    'expected_num_hosts': 0,
-                    'expected_num_metrics': 0,
-                    'id': 10101
+                    'id': 10103
                 },
             ],
             'jenkinsstatuscheck': [
@@ -550,7 +478,7 @@ class TestAPI(LocalTestCase):
                     'frequency': 5,
                     'retries': 0,
                     'max_queued_build_time': 10,
-                    'id': 10102
+                    'id': 10101
                 },
             ],
             'httpstatuscheck': [
@@ -567,7 +495,7 @@ class TestAPI(LocalTestCase):
                     'status_code': u'200',
                     'timeout': 10,
                     'verify_ssl_certificate': True,
-                    'id': 10103
+                    'id': 10102
                 },
             ],
             'tcpstatuscheck': [
@@ -580,7 +508,7 @@ class TestAPI(LocalTestCase):
                     'address': 'github.com',
                     'port': 80,
                     'timeout': 6,
-                    'id': 10104
+                    'id': 10103
                 },
             ],
         }
@@ -597,21 +525,6 @@ class TestAPI(LocalTestCase):
                     'url': u'',
                 },
             ],
-            'graphitestatuscheck': [
-                {
-                    'name': u'posted graphite check',
-                    'active': True,
-                    'importance': u'CRITICAL',
-                    'frequency': 5,
-                    'retries': 0,
-                    'metric': u'stats.fakeval2',
-                    'check_type': u'<',
-                    'value': u'2',
-                    'expected_num_hosts': 0,
-                    'expected_num_metrics': 0,
-                    'id': 10101
-                },
-            ],
             'jenkinsstatuscheck': [
                 {
                     'name': u'posted jenkins check',
@@ -620,7 +533,7 @@ class TestAPI(LocalTestCase):
                     'frequency': 5,
                     'retries': 0,
                     'max_queued_build_time': 37,
-                    'id': 10102
+                    'id': 10101
                 },
             ],
             'httpstatuscheck': [
@@ -637,7 +550,7 @@ class TestAPI(LocalTestCase):
                     'status_code': u'201',
                     'timeout': 30,
                     'verify_ssl_certificate': True,
-                    'id': 10103
+                    'id': 10102
                 },
             ],
             'tcpstatuscheck': [
@@ -650,7 +563,7 @@ class TestAPI(LocalTestCase):
                     'address': 'github.com',
                     'port': 80,
                     'timeout': 6,
-                    'id': 10104
+                    'id': 10103
                 },
             ],
         }
@@ -724,23 +637,7 @@ class TestAPIFiltering(LocalTestCase):
             importance=Service.CRITICAL_STATUS,
         )
 
-        GraphiteStatusCheck.objects.create(
-            name='Z check',
-            metric='stats.fake.value',
-            check_type='>',
-            value='9.0',
-            created_by=self.user,
-            importance=Service.ERROR_STATUS,
-        )
-        GraphiteStatusCheck.objects.create(
-            name='A check',
-            metric='stats.fake.value',
-            check_type='>',
-            value='9.0',
-            created_by=self.user,
-            importance=Service.ERROR_STATUS,
-        )
-        self.expected_sort_names = ['A check', 'Graphite Check', 'Z check']
+        self.expected_sort_names = [u'Filter test 1', u'Filter test 2', u'Filter test 3', u'Jenkins Check']
 
         self.basic_auth = 'Basic {}'.format(
             base64.b64encode(
@@ -767,7 +664,7 @@ class TestAPIFiltering(LocalTestCase):
     def test_positive_sort(self):
         response = self.client.get(
             '{}?ordering=name'.format(
-                api_reverse('graphitestatuscheck-list')
+                api_reverse('jenkinsstatuscheck-list')
             ),
             format='json',
             HTTP_AUTHORIZATION=self.basic_auth
@@ -781,7 +678,7 @@ class TestAPIFiltering(LocalTestCase):
     def test_negative_sort(self):
         response = self.client.get(
             '{}?ordering=-name'.format(
-                api_reverse('graphitestatuscheck-list')
+                api_reverse('jenkinsstatuscheck-list')
             ),
             format='json',
             HTTP_AUTHORIZATION=self.basic_auth

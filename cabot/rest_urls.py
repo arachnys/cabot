@@ -77,17 +77,6 @@ router.register(r'status_checks', create_viewset(
     no_create=True,
 ))
 
-router.register(r'graphite_checks', create_viewset(
-    arg_model=models.GraphiteStatusCheck,
-    arg_fields=status_check_fields + (
-        'metric',
-        'check_type',
-        'value',
-        'expected_num_hosts',
-        'expected_num_metrics',
-    ),
-))
-
 router.register(r'http_checks', create_viewset(
     arg_model=models.HttpStatusCheck,
     arg_fields=status_check_fields + (

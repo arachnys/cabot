@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from cabot.cabotapp.models import CheckGroupMixin, GraphiteStatusCheck, HttpStatusCheck, \
+from cabot.cabotapp.models import CheckGroupMixin, HttpStatusCheck, \
                                   JenkinsStatusCheck, TCPStatusCheck
 from cabot.metricsapp.models import ElasticsearchStatusCheck
 
@@ -11,12 +11,6 @@ DEFAULT_CHECK_QUEUE = NORMAL_CHECK_QUEUE
 
 STATUS_CHECK_TO_QUEUE = \
     defaultdict(lambda: defaultdict(lambda: DEFAULT_CHECK_QUEUE), {
-        GraphiteStatusCheck.check_category:
-            defaultdict(lambda: DEFAULT_CHECK_QUEUE, {
-                CheckGroupMixin.WARNING_STATUS: NORMAL_CHECK_QUEUE,
-                CheckGroupMixin.ERROR_STATUS: NORMAL_CHECK_QUEUE,
-                CheckGroupMixin.CRITICAL_STATUS: CRITICAL_CHECK_QUEUE,
-            }),
         HttpStatusCheck.check_category:
             defaultdict(lambda: DEFAULT_CHECK_QUEUE, {
                 CheckGroupMixin.WARNING_STATUS: NORMAL_CHECK_QUEUE,
