@@ -296,7 +296,10 @@ class InstanceForm(SymmetricalForm):
                 'data-rel': 'chosen',
                 'style': 'width: 70%',
             }),
-            'users_to_notify': forms.CheckboxSelectMultiple(),
+            'users_to_notify': forms.SelectMultiple(attrs={
+                'data-rel': 'chosen',
+                'style': 'width: 70%',
+            }),
         }
 
     def __init__(self, *args, **kwargs):
@@ -337,7 +340,10 @@ class ServiceForm(forms.ModelForm):
                 'data-rel': 'chosen',
                 'style': 'width: 70%',
             }),
-            'users_to_notify': forms.CheckboxSelectMultiple(),
+            'users_to_notify': forms.SelectMultiple(attrs={
+                'data-rel': 'chosen',
+                'style': 'width: 70%',
+            }),
             'hackpad_id': forms.TextInput(attrs={'style': 'width:70%;'}),
             'runbook_link': forms.TextInput(attrs={'style': 'width:70%;'}),
         }

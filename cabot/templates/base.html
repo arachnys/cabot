@@ -44,10 +44,10 @@
     </ul>
   </ul>
   <ul class="nav navbar-nav navbar-right">
-          <li>
+          <li class="{% if not ENABLE_SUBSCRIPTION%}hidden{%endif%}">
             <a href="{% url 'subscriptions' %}"><i class="fa fa-table"></i> Alert subscriptions</a>
           </li>
-          <li>
+          <li class="{% if not ENABLE_DUTY_ROTA%}hidden{%endif%}">
             <a href="{% url 'shifts' %}"><i class="glyphicon glyphicon-time"></i> Duty rota</a>
           </li>
           <li class="dropdown">
