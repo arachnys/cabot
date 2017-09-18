@@ -1265,9 +1265,8 @@ class TestHttpStatusCheck(TestCase):
     ]
 
     def test_check_content_pattern(self):
-        http_status_check = HttpStatusCheck()
         for item in self.PATTERN_DATASET:
-            if http_status_check._check_content_pattern(item["pattern"], item["content"]):
+            if HttpStatusCheck._check_content_pattern(item["pattern"], item["content"]):
                 self.assertTrue(item["result"])
             else:
                 self.assertFalse(item["result"])

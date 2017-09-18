@@ -751,6 +751,7 @@ class HttpStatusCheck(StatusCheck):
     def check_category(self):
         return "HTTP check"
 
+    @classmethod
     def _check_content_pattern(self, text_match, content):
         content = content if isinstance(content, unicode) else unicode(content, "UTF-8")
         return re.search(text_match, content)
