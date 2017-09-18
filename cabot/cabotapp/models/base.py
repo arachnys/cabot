@@ -751,6 +751,10 @@ class HttpStatusCheck(StatusCheck):
     def check_category(self):
         return "HTTP check"
 
+    def _check_content_pattern(self, text_match, content):
+        content = content if isinstance(content, unicode) else unicode(content, "UTF-8")
+        return re.search(text_match, content)
+
     def _run(self):
         result = StatusCheckResult(status_check=self)
 
@@ -778,9 +782,7 @@ class HttpStatusCheck(StatusCheck):
                 result.succeeded = False
                 result.raw_data = resp.content
             elif self.text_match:
-                # It will convert content to unicode if needed
-                content = resp.content if isinstance(resp.content, unicode) else unicode(resp.content, "UTF-8")
-                if not re.search(self.text_match, content):
+                if not self._check_content_pattern(self.text_match, resp.content):
                     result.error = u'Failed to find match regex /%s/ in response body' % self.text_match
                     result.raw_data = resp.content
                     result.succeeded = False
