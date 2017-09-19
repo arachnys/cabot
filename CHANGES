@@ -1,5 +1,5 @@
-master
-------
+Version 0.11.8
+--------------
 
 * Update LDAP dependencies
 * Add ENABLE_SUBSCRIPTION and ENABLE_DUTY_ROTA options
