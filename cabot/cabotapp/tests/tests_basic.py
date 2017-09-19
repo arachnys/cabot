@@ -1248,20 +1248,20 @@ class TestMinimizeTargets(LocalTestCase):
 class TestHttpStatusCheck(TestCase):
 
     PATTERN_DATASET = [
-        { "pattern": u"буюЯзйЪ",   "content": "буюЯзйЪ",   "result": True},
-        { "pattern": u"юЯз",       "content": "буюЯзйЪ",   "result": True},
-        { "pattern": u"юЯз1",      "content": "буюЯзйЪ",   "result": False},
-        { "pattern": u"sti",       "content": "testing",   "result": True},
-        { "pattern": u"testing",   "content": "testing",   "result": True},
-        { "pattern": u"test",      "content": "testing",   "result": True},
-        { "pattern": u"test",      "content": u"testing",  "result": True},
-        { "pattern": u"ting",      "content": "testing",   "result": True},
-        { "pattern": u"日出處天子", "content": "日出處天子",  "result": True},
-        { "pattern": u"出處",      "content": "日出處天子",  "result": True},
-        { "pattern": u"出處",      "content": u"日出處天子", "result": True},
-        { "pattern": u"日出天子",   "content": "日出處天子",  "result": False},
-        { "pattern": u"юЯз",       "content": "日出處天子",  "result": False},
-        { "pattern": u"юЯз",       "content": u"日出處天子", "result": False}
+        {"pattern": u"буюЯзйЪ", "content": "буюЯзйЪ", "result": True},
+        {"pattern": u"юЯз", "content": "буюЯзйЪ", "result": True},
+        {"pattern": u"юЯз1", "content": "буюЯзйЪ", "result": False},
+        {"pattern": u"sti", "content": "testing", "result": True},
+        {"pattern": u"testing", "content": "testing", "result": True},
+        {"pattern": u"test", "content": "testing", "result": True},
+        {"pattern": u"test", "content": u"testing", "result": True},
+        {"pattern": u"ting", "content": "testing", "result": True},
+        {"pattern": u"日出處天子", "content": "日出處天子", "result": True},
+        {"pattern": u"出處", "content": "日出處天子", "result": True},
+        {"pattern": u"出處", "content": u"日出處天子", "result": True},
+        {"pattern": u"日出天子", "content": "日出處天子", "result": False},
+        {"pattern": u"юЯз", "content": "日出處天子", "result": False},
+        {"pattern": u"юЯз", "content": u"日出處天子", "result": False}
     ]
 
     def test_check_content_pattern(self):
