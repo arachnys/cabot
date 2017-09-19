@@ -15,6 +15,8 @@ import base64
 import json
 import os
 import socket
+from celery.task import task
+from cabot.cabotapp import tasks
 from mock import Mock, patch
 
 from cabot.cabotapp.models import (
@@ -198,6 +200,12 @@ def fake_calendar(*args, **kwargs):
     resp = Mock()
     resp.content = get_content(args)
     resp.status_code = 200
+    return resp
+
+
+@task(ignore_result=True)
+def fake_run_status_check(*args, **kwargs):
+    resp = Mock()
     return resp
 
 
@@ -395,6 +403,10 @@ class TestStatusCheck(LocalTestCase):
         self.assertEqual(new.name, 'Copy of {}'.format(old.name))
         self.assertEqual(new.endpoint, old.endpoint)
         self.assertEqual(new.status_code, old.status_code)
+
+    @patch('cabot.cabotapp.tasks.run_status_check', fake_run_status_check)
+    def test_run_all(self):
+        tasks.run_all_checks()
 
 
 class TestWebInterface(LocalTestCase):
