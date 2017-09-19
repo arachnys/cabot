@@ -24,6 +24,7 @@ from django.core import mail
 from django.core.urlresolvers import reverse
 from django.test.client import Client
 from django.test.utils import override_settings
+from django.test import TestCase
 from django.utils import timezone
 from freezegun import freeze_time
 from mock import Mock, patch
@@ -1242,3 +1243,31 @@ class TestMinimizeTargets(LocalTestCase):
         result = minimize_targets(["prefix.prefix.a.suffix.suffix",
                                    "prefix.prefix.b.suffix.suffix",])
         self.assertEqual(result, ["a", "b"])
+
+
+class TestHttpStatusCheck(TestCase):
+
+    PATTERN_DATASET = [
+        {"pattern": u"буюЯзйЪ", "content": "буюЯзйЪ", "result": True},
+        {"pattern": u"юЯз", "content": "буюЯзйЪ", "result": True},
+        {"pattern": u"юЯз1", "content": "буюЯзйЪ", "result": False},
+        {"pattern": u"sti", "content": "testing", "result": True},
+        {"pattern": u"testing", "content": "testing", "result": True},
+        {"pattern": u"test", "content": "testing", "result": True},
+        {"pattern": u"test", "content": u"testing", "result": True},
+        {"pattern": u"ting", "content": "testing", "result": True},
+        {"pattern": u"日出處天子", "content": "日出處天子", "result": True},
+        {"pattern": u"出處", "content": "日出處天子", "result": True},
+        {"pattern": u"出處", "content": u"日出處天子", "result": True},
+        {"pattern": u"日出天子", "content": "日出處天子", "result": False},
+        {"pattern": u"юЯз", "content": "日出處天子", "result": False},
+        {"pattern": u"юЯз", "content": u"日出處天子", "result": False}
+    ]
+
+    def test_check_content_pattern(self):
+        for item in self.PATTERN_DATASET:
+            if HttpStatusCheck._check_content_pattern(item["pattern"], item["content"]):
+                self.assertTrue(item["result"])
+            else:
+                self.assertFalse(item["result"])
+
