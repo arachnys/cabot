@@ -26,6 +26,10 @@ class DummyStatusCheck(MetricsStatusCheckBase):
         app_label = 'dummyapp'
 
     @property
+    def check_category(self):
+        return "Dummy check"
+
+    @property
     def description(self):
         return 'Test check--should never fail'
 
