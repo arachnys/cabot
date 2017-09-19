@@ -8,7 +8,7 @@ coreschema==0.0.4
 dj-database-url==0.4.2
 Django==1.11
 django-appconf==1.0.2
-django-auth-ldap==1.2.11
+django-auth-ldap==1.2.15
 django-autocomplete-light==3.2.10
 django-compressor==2.1.1
 django-filter==1.0.2
@@ -29,7 +29,7 @@ MarkupSafe==1.0
 packaging==16.8
 psycopg2==2.7.1
 Pygments==2.2.0
-pyldap==2.4.28
+pyldap==2.4.37
 pyparsing==2.2.0
 PySocks==1.6.7
 python-dateutil==2.6.0
