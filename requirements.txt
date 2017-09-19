@@ -29,7 +29,7 @@ MarkupSafe==1.0
 packaging==16.8
 psycopg2==2.7.1
 Pygments==2.2.0
-pyldap==2.4.28
+pyldap==2.4.37
 pyparsing==2.2.0
 PySocks==1.6.7
 python-dateutil==2.6.0
