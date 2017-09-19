@@ -1,8 +1,8 @@
 master
 ------
 
+* Add ENABLE_SUBSCRIPTION and ENABLE_DUTY_ROTA options
 * [[#556](https://github.com/arachnys/cabot/issues/556)] Fix issue with HttpStatusCheck with unicode content
-
 
 Version 0.11.7
 --------------
