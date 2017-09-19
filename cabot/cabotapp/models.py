@@ -7,7 +7,6 @@ from celery.exceptions import SoftTimeLimitExceeded
 from .jenkins import get_job_status
 from .alert import (send_alert, AlertPluginUserData)
 from .influx import parse_metric
-from .tasks import update_service
 from cabot.cabotapp.models_plugins import HipchatInstance  # noqa
 from cabot.cabotapp import defs
 from cabot.cabotapp.fields import PositiveIntegerMaxField
@@ -441,6 +440,7 @@ class StatusCheck(PolymorphicModel):
         return new_check.pk
 
     def update_related_services(self):
+        from .tasks import update_service
         services = self.service_set.all()
         for service in services:
             update_service.apply_async(args=[service.id])
@@ -935,7 +935,7 @@ class TCPStatusCheck(StatusCheck):
 
     @property
     def check_category(self):
-        return "TCP Check"
+        return "TCP check"
 
     @property
     def description(self):

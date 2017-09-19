@@ -5,10 +5,14 @@ from celery import Celery
 from celery._state import set_default_app
 from celery.task import task
 
+from cabot.celery.celery_queue_config import STATUS_CHECK_TO_QUEUE
+
 from django.conf import settings
 from django.utils import timezone
 
-import models
+from cabot.cabotapp import models
+from cabot.metricsapp.models import MetricsStatusCheckBase
+
 
 celery = Celery(__name__)
 celery.config_from_object(settings)
@@ -24,13 +28,34 @@ set_default_app(celery)
 logger = logging.getLogger(__name__)
 
 
-@task(ignore_result=True)
-def run_status_check(check_or_id):
-    if not isinstance(check_or_id, models.StatusCheck):
-        check = models.StatusCheck.objects.get(id=check_or_id)
+def _classify_status_check(pk):
+    """
+    Maps the check to either normal or high priority based on the dict
+      cabot.celery.celery_queue_config.STATUS_CHECK_TO_QUEUE
+    """
+    check = models.StatusCheck.objects.get(pk=pk)
+
+    # If the status check we are running is an instance of MetricsStatusCheckBase
+    # (i.e. Grafana/Elasticsearch), then StatusCheck.importance is determined by
+    # the type of failure: If the 'high_alert_value' is set and the check fails,
+    # the importance is set to ERROR or CRITICAL. However, if this value is null
+    # or does not fail, and 'warning_value' is not null and fails instead, then
+    # the importance is set to WARNING. As such, we run all importance levels of
+    # MetricsStatusCheckBase based on their maximum importance.
+    if not isinstance(check, MetricsStatusCheckBase):
+        check_queue = STATUS_CHECK_TO_QUEUE[check.check_category][check.importance]
     else:
-        check = check_or_id
-    # This will call the subclass method
+        if check.high_alert_value is None:
+            check_queue = STATUS_CHECK_TO_QUEUE[check.check_category][models.CheckGroupMixin.WARNING_STATUS]
+        else:
+            check_queue = STATUS_CHECK_TO_QUEUE[check.check_category][check.high_alert_importance]
+
+    return check_queue
+
+
+@task(ignore_result=True)
+def run_status_check(pk):
+    check = models.StatusCheck.objects.get(pk=pk)
     check.run()
 
 
@@ -41,7 +66,8 @@ def run_all_checks():
         if check.last_run:
             next_schedule = check.last_run + timedelta(minutes=check.frequency)
         if (not check.last_run) or timezone.now() > next_schedule:
-            run_status_check.apply_async((check.id,))
+            check_queue = _classify_status_check(check.pk)
+            run_status_check.apply_async((check.pk,), queue=check_queue)
 
 
 @task(ignore_result=True)
