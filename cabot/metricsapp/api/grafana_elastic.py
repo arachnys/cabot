@@ -20,11 +20,18 @@ def _get_terms_settings(agg):
     terms_settings = dict(field=agg['field'])
 
     settings = agg['settings']
+
+    min_doc_count = settings.get('min_doc_count')
+    if min_doc_count:
+        terms_settings['min_doc_count'] = int(min_doc_count)
+
     order_by = settings.get('orderBy')
     if order_by:
-        # Grafana indicates sub-aggregation ordering by a number representing the aggregation
+        # Grafana indicates sub-aggregation ordering by a number representing the aggregation.
+        # In this case, we're going to ignore the size and order_by and just return all
+        # series.
         if order_by.isdigit():
-            raise ValidationError('Ordering by sub-aggregations not supported.')
+            return terms_settings
 
         terms_settings['order'] = {order_by: settings['order']}
 
@@ -32,10 +39,6 @@ def _get_terms_settings(agg):
     size = int(settings.get('size') or 0)
     if size and size > 0:
         terms_settings['size'] = int(size)
-
-    min_doc_count = settings.get('min_doc_count')
-    if min_doc_count:
-        terms_settings['min_doc_count'] = int(min_doc_count)
 
     return terms_settings
 
