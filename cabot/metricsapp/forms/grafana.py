@@ -25,6 +25,7 @@ class GrafanaInstanceForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         default_grafana_instance = kwargs.pop('default_grafana_instance')
+        super(GrafanaInstanceForm, self).__init__(*args, **kwargs)
         if default_grafana_instance is not None:
             self.fields['grafana_instance'].initial = default_grafana_instance
 
