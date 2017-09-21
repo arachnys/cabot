@@ -25,7 +25,10 @@ def get_job_status(jenkins_config, jobname):
     client = _get_jenkins_client(jenkins_config)
     try:
         job = client.get_job_info(jobname)
-        last_build = client.get_build_info(jobname, job['lastCompletedBuild']['number'])
+        last_completed_build = job['lastCompletedBuild']
+        if not last_completed_build:
+            raise Exception("job has no build")
+        last_build = client.get_build_info(jobname, last_completed_build['number'])
 
         ret['status_code'] = 200
         ret['job_number'] = last_build['number']
