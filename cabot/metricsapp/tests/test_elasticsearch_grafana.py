@@ -22,6 +22,14 @@ class TestGrafanaQueryBuilder(TestCase):
         self.assertEqual(expected_query, created_query)
         validate_query(created_query)
 
+    def test_order_by_sub_agg(self):
+        """Order by sub-aggregations"""
+        series = get_json_file('grafana/query_builder/grafana_series_order_sub_agg.json')
+        created_query = build_query(series, min_time='now-100m')
+        expected_query = get_json_file('grafana/query_builder/grafana_series_order_sub_agg_query.json')
+        self.assertEqual(expected_query, created_query)
+        validate_query(created_query)
+
     def test_count(self):
         """Count metrics get converted to value_count(timeField)"""
         series = get_json_file('grafana/query_builder/grafana_series_count.json')

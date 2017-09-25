@@ -1,0 +1,58 @@
+{
+  "bucketAggs": [
+    {
+      "fake": true,
+      "field": "grouper",
+      "id": "3",
+      "settings": {
+        "min_doc_count": 1,
+        "order": "desc",
+        "orderBy": "1",
+        "size": "20"
+      },
+      "type": "terms"
+    },
+    {
+      "field": "@timestamp",
+      "id": "2",
+      "settings": {
+        "interval": "20m",
+        "min_doc_count": 0,
+        "trimEdges": 0
+      },
+      "type": "date_histogram"
+    },
+    {
+      "fake": true,
+      "field": "flounder",
+      "id": "4",
+      "settings": {
+        "min_doc_count": 1,
+        "order": "desc",
+        "orderBy": "_term",
+        "size": "0"
+      },
+      "type": "terms"
+    }
+  ],
+  "column": "value",
+  "dsType": "elasticsearch",
+  "function": "mean",
+  "metrics": [
+    {
+      "field": "timing",
+      "id": "1",
+      "meta": {
+        
+      },
+      "settings": {
+        
+      },
+      "type": "avg"
+    }
+  ],
+  "query": "name:affirm.a.metric",
+  "refId": "A",
+  "series": "affirm.a.metric.timing",
+  "timeField": "@timestamp"
+}
