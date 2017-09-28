@@ -17,6 +17,26 @@ Cabot is key to that process. Jenkins can send email alerts on test failures but
 
 ### Getting started
 
+
+#### Define a JenkinsConfig
+
+Since 0.11.0, Cabot supports multiple Jenkins backends.
+
+To define a backend, add it in the Django admin, in `Home › Cabotapp › Jenkins configs › Add jenkins config`
+
+![Jenkins config](/images/jenkins-config.png)
+
+* `Name`: a mnemonic name for that Jenkins instance
+* `Jenkins api`: The URL to the Jenkins instance, eg `https://jenkins.example.com/`
+* `Jenkins user` / `Jenkins pass`: The Jenkins username and password for API access
+
+
+https://cabot.arachnys.com/admin/cabotapp/jenkinsconfig/
+
+
+#### Add a check
+
+
 To add a new check:
 
 Click **New ▾** and then **Jenkins check**.

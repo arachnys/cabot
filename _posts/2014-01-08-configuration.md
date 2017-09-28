@@ -52,7 +52,7 @@ These settings are required for [Graphite checks](graphite-checks.html).
 
 #### [Jenkins](jenkins-checks.html) integration
 
-These settings are required for [Jenkins checks](jenkins-checks.html).
+[Jenkins checks](jenkins-checks.html) use settings defined in Cabot user interface. For backwards compatibility, they can be seeded from:
 
 *   `JENKINS_API`
     *   URL of Jenkins server, e.g. `https://jenkins.mycompany.com/`
