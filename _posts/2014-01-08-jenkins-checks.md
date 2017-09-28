@@ -13,7 +13,7 @@ At Arachnys, we use Jenkins not just to build software and for continuous integr
 
 We regularly run API and Selenium tests against key parts of our infrastructure to ensure that failures that have slipped through other parts of our test defences are quickly caught and repaired.
 
-Cabot is key to that process. Jenkins can send email alerts on test failures but Cabot allows us to escalate those emails to Hipchat alerts, SMSs and even telephone alerts.
+Cabot is key to that process. Jenkins can send email alerts on test failures but Cabot allows us to escalate those emails to Slack alerts, SMSs and even telephone alerts.
 
 ### Getting started
 
