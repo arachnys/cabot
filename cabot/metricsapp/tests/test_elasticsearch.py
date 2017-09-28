@@ -361,6 +361,11 @@ class TestElasticsearchStatusCheck(TestCase):
             self.es_check._check_response_size('1234578987654321', soft_max=4, hard_max=5)
         self.assertFalse(self.es_check.active)
 
+    def test_duplicate(self):
+        self.assertEqual(len(ElasticsearchStatusCheck.objects.all()), 1)
+        self.es_check.duplicate()
+        self.assertEqual(len(ElasticsearchStatusCheck.objects.all()), 2)
+
 
 class TestQueryValidation(TestCase):
     def test_valid_query(self):
