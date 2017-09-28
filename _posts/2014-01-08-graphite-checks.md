@@ -6,7 +6,7 @@ date: 2014-01-08 22:53:18
 order: 6
 ---
 
-Graphite checks are a lightweight way of monitoring data that is already being fed into your [Graphite](https://graphite.readthedocs.org/en/latest/index.html) system for analysis, debugging and optimisation. Cabot makes it possible to alert on that data.
+Graphite checks are a lightweight way of monitoring data that is already being fed into your [Graphite](https://graphiteapp.org/) system for analysis, debugging and optimisation. Cabot makes it possible to alert on that data.
 
 ### Getting started
 
@@ -43,7 +43,7 @@ All other settings should be self-explanatory.
 
 ### Why Graphite?
 
-[Arachnys](https://www.arachnys.com) originally created Cabot to solve a specific problem: how to use the same metrics from metric collection and visualisation system [Graphite](https://graphite.readthedocs.org/en/latest/index.html) that we use for eyeball debugging and monitoring as input for an alerting system?
+[Arachnys](https://www.arachnys.com) originally created Cabot to solve a specific problem: how to use the same metrics from metric collection and visualisation system [Graphite](https://graphiteapp.org/) that we use for eyeball debugging and monitoring as input for an alerting system?
 
 Graphite still serves as our core source of alert data.
 
