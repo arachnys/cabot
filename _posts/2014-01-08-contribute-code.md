@@ -14,7 +14,6 @@ There are a number of things on our to-do list:
 *   More sophisticated statuses ("intermittent", etc)
 *   Track and report on uptime
 *   Adaptors for other services (Ganglia, Campfire, Travis CI)
-*   Improved user provisioning
 *   Better tests!
 
 If you have any questions about roadmap or plans, please [file an issue](https://github.com/arachnys/cabot/issues/new) on GitHub.
