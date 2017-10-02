@@ -19,6 +19,6 @@ script:
  - docker-compose run --rm web true
 
 after_success:
-  - pip install codecov
-  - pip install django_coverage_plugin==1.4.2
+  - sudo pip install codecov
+  - sudo pip install django_coverage_plugin==1.4.2
   - codecov
