@@ -29,6 +29,11 @@
         "size": 20
       },
       "aggs": {
+        "1": {
+          "avg": {
+            "field": "timing"
+          }
+        },
         "agg": {
           "terms": {
             "field": "flounder",
@@ -38,18 +43,13 @@
             "min_doc_count": 1
           },
           "aggs": {
-            "1": {
-              "avg": {
-                "field": "timing"
-              }
-            },
             "agg": {
               "date_histogram": {
                 "field": "@timestamp",
                 "interval": "20m",
                 "extended_bounds": {
-                  "min": "now-100m",
-                  "max": "now"
+                  "max": "now",
+                  "min": "now-100m"
                 }
               },
               "aggs": {

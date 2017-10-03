@@ -122,11 +122,6 @@ def _add_aggs(search_aggs, series, min_time, default_interval):
     """
     date_histogram = None
 
-    # Keep track of any sub-aggregations that we are ordering by so that we can add them as aggregations on the right
-    # nesting level to be ordered by. We know that we are ordering by a sub-aggregation when the value of orderBy is a
-    # number. This number is the id of the metric representing the sub-aggregation which we need to add.
-    order_by_ids = set()
-
     for agg in series['bucketAggs']:
         # date_histogram must be the final aggregation--save it to add after the other aggregations
         agg_type = agg['type']
@@ -137,10 +132,15 @@ def _add_aggs(search_aggs, series, min_time, default_interval):
         # Add extra settings for "terms" aggregation
         elif agg_type == 'terms':
             settings = _get_terms_settings(agg)
+            search_aggs = search_aggs.bucket('agg', A({'terms': settings}))
+            # If ordering by a sub-aggregation, add the sub-aggregation as an aggregation on the current nesting level.
+            # We know that we are ordering by a sub-aggregation when the value of orderBy is a number. This number is
+            # the id of the metric representing the sub-aggregation which we need to add.
             order_by = agg['settings'].get('orderBy')
             if order_by and order_by.isdigit():
-                order_by_ids.add(order_by)
-            search_aggs = search_aggs.bucket('agg', A({'terms': settings}))
+                metric = next(m for m in series['metrics'] if m['id'] == order_by)
+                settings = {'field': metric['field']}
+                search_aggs.bucket(metric['id'], A({metric['type']: settings}))
 
         # Filter functionality can be accomplished with multiple queries instead
         elif agg_type == 'filters':
@@ -157,11 +157,6 @@ def _add_aggs(search_aggs, series, min_time, default_interval):
 
     if not date_histogram:
         raise ValidationError('Dashboard must include a date histogram aggregation.')
-
-    for metric in series['metrics']:
-        if metric['id'] in order_by_ids:
-            settings = {'field': metric['field']}
-            search_aggs.bucket(metric['id'], A({metric['type']: settings}))
 
     settings = _get_date_histogram_settings(date_histogram, min_time, default_interval)
     search_aggs = search_aggs.bucket('agg', A({'date_histogram': settings}))
