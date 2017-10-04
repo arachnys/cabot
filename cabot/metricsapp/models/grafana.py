@@ -121,6 +121,6 @@ class GrafanaPanel(models.Model):
     grafana_instance = models.ForeignKey('GrafanaInstance')
     dashboard_uri = models.CharField(max_length=40)
     panel_id = models.IntegerField()
-    series_ids = models.CharField(max_length=20)
-    selected_series = models.CharField(max_length=20)
+    series_ids = models.CharField(max_length=50)
+    selected_series = models.CharField(max_length=50)
     panel_url = models.CharField(max_length=1024, null=True)
