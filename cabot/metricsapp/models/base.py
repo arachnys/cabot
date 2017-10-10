@@ -137,3 +137,16 @@ class MetricsStatusCheckBase(StatusCheck):
         if self.grafana_panel is not None:
             return self.grafana_panel.modifiable_url
         return None
+
+    def duplicate(self, inst_set=(), serv_set=()):
+        new_check = self
+        new_check.pk = None
+        new_check.id = None
+        new_check.statuscheck_ptr_id = None
+        new_check.metricsstatuscheckbase_ptr_id = None
+        new_check.name = 'Copy of {}'.format(self.name)
+        new_check.last_run = None
+        new_check.save()
+        for linked in list(inst_set) + list(serv_set):
+            linked.status_checks.add(new_check)
+        return new_check.pk
