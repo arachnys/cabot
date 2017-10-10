@@ -40,7 +40,8 @@
             "order": {
               "_term": "desc"
             },
-            "min_doc_count": 1
+            "min_doc_count": 1,
+            "size": 500
           },
           "aggs": {
             "agg": {

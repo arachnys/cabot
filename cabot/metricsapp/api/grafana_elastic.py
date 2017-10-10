@@ -29,10 +29,15 @@ def _get_terms_settings(agg):
     if order_by:
         terms_settings['order'] = {order_by: settings['order']}
 
-    # size 0 in Grafana is equivalent to no size setting in an Elasticsearch query
-    size = int(settings.get('size') or 0)
-    if size and size > 0:
-        terms_settings['size'] = int(size)
+    # size 0 in Grafana is equivalent represents "unlimited size," which actually
+    # means Grafana sets the size to 500 in their query.
+    size = settings.get('size')
+    if size:
+        size = int(size)
+        if size == 0:
+            terms_settings['size'] = defs.ES_MAX_TERMS_SIZE
+        else:
+            terms_settings['size'] = size
 
     return terms_settings
 
