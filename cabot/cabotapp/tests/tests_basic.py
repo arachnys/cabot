@@ -616,6 +616,32 @@ class TestWebInterface(LocalTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn('Version:', response.content)
 
+    def test_public_page_empty(self):
+        response = self.client.get(reverse('public'))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('No available services monitoring', response.content)
+
+    def test_public_page_with_public_service(self):
+        Service.objects.create(
+            name='Public service without url',
+            is_public=True,
+        )
+        response = self.client.get(reverse('public'))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('Public service without url', response.content)
+
+    def test_public_page_with_public_service_with_url(self):
+        Service.objects.create(
+            name='Public service with url',
+            url='http://example.com/',
+            is_public=True,
+        )
+        response = self.client.get(reverse('public'))
+        self.assertEqual(response.status_code, 200)
+        expected = '<a href="http://example.com/" title="http://example.com/" target="_blank">Public service with url</a>'
+        self.assertIn(expected, response.content)
+
+
 class TestAPI(LocalTestCase):
     def setUp(self):
         super(TestAPI, self).setUp()
