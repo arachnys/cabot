@@ -353,6 +353,19 @@ class TestCheckRun(LocalTestCase):
         result = checkresults.order_by('-time')[0]
         self.assertEqual(result.error, u'PROD: 9.16092 > 9.0')
 
+    @patch('cabot.cabotapp.graphite.requests.get')
+    def test_graphite_series_run_exception(self, fake_graphite_series_response):
+        fake_graphite_series_response.side_effect = requests.exceptions.RequestException("some error")
+        jsn = parse_metric('fake.pattern', utcnow=1387818601)
+        expected = {
+            'series': [],
+            'raw': 'Error getting data from Graphite: some error',
+            'num_series_with_data': 0,
+            'error': 'Error getting data from Graphite: some error',
+            'num_series_no_data': 0
+        }
+        self.assertEqual(jsn, expected)
+
     @patch('cabot.cabotapp.graphite.requests.get', fake_graphite_series_response)
     def test_graphite_series_run(self):
         jsn = parse_metric('fake.pattern', utcnow=1387818601)
