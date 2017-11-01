@@ -1,5 +1,6 @@
 import logging
 import json
+import requests
 import os
 from celery.task import task
 from datetime import datetime, timedelta
@@ -11,7 +12,8 @@ from cabot.metricsapp.api import get_dashboard_info, get_updated_datetime, get_p
     create_generic_templating_dict, get_es_status_check_fields, get_series_ids, \
     get_status_check_name
 from cabot.metricsapp.defs import GRAFANA_SYNC_TIMEDELTA_MINUTES
-from cabot.metricsapp.models import MetricsStatusCheckBase, ElasticsearchStatusCheck, GrafanaDataSource
+from cabot.metricsapp.models import MetricsStatusCheckBase, ElasticsearchStatusCheck, GrafanaDataSource, \
+    GrafanaInstance, GrafanaPanel
 from cabot.metricsapp.templates import NAME_CHANGED, SOURCE_CHANGED_EXISTING, SOURCE_CHANGED_NONEXISTING, \
     SERIES_CHANGED, ES_QUERIES_CHANGED
 
@@ -62,11 +64,23 @@ def _panel_deleted_handler(check, panel, dashboard_meta):
 
 
 @task(ignore_result=True)
-def sync_all_grafana_checks():
+def sync_all_grafana_checks(validate_sites=True):
     """Task to sync all status checks with auto_sync set to their Grafana dashbaords"""
     sync_time = datetime.now()
+
+    # Check if any Grafana sites are down and if so, exclude checks for that instance
+    inaccessible_panels = []
+    if validate_sites:
+        for site in GrafanaInstance.objects.all():
+            response = site.get_request()
+            try:
+                response.raise_for_status()
+            except requests.exceptions.HTTPError as e:
+                logger.exception('Request to Grafana site {} failed with {}'.format(site.url, e))
+                inaccessible_panels.extend(GrafanaPanel.objects.filter(grafana_instance=site))
+
     for check in MetricsStatusCheckBase.objects.filter(auto_sync=True).filter(active=True)\
-            .exclude(grafana_panel__isnull=True):
+            .exclude(grafana_panel__isnull=True).exclude(grafana_panel__in=inaccessible_panels):
         sync_grafana_check.apply_async(args=(check.id, str(sync_time)))
 
 

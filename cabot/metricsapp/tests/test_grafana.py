@@ -256,7 +256,7 @@ class TestDashboardSync(TestCase):
         """We don't check checks without associated Grafana panels"""
         self.check.grafana_panel = None
         self.check.save()
-        sync_all_grafana_checks()
+        sync_all_grafana_checks(validate_sites=False)
         self.assertFalse(sync_check.called)
 
     @patch('cabot.metricsapp.tasks.get_dashboard_info', fake_get_dashboard_info)
