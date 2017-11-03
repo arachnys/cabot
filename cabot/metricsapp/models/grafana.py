@@ -58,7 +58,7 @@ class GrafanaInstance(models.Model):
 
         return session
 
-    def get_request(self, uri):
+    def get_request(self, uri=''):
         """Make a request to the Grafana instance"""
         return self.session.get(urlparse.urljoin(self.url, uri))
 

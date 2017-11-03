@@ -256,6 +256,17 @@ class TestDashboardSync(TestCase):
         """We don't check checks without associated Grafana panels"""
         self.check.grafana_panel = None
         self.check.save()
+        sync_all_grafana_checks(validate_sites=False)
+        self.assertFalse(sync_check.called)
+
+    @patch('requests.Session.get')
+    @patch('cabot.metricsapp.tasks.sync_grafana_check.apply_async')
+    def test_site_down(self, sync_check, get_request):
+        """If the site is down, we shouldn't try to sync anything"""
+        fake_response = requests.models.Response()
+        fake_response.status_code = 404
+        get_request.return_value = fake_response
+        self.check.save()
         sync_all_grafana_checks()
         self.assertFalse(sync_check.called)
 
