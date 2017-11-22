@@ -77,9 +77,10 @@ class JenkinsConfig(models.Model):
 
 def create_default_jenkins_config():
     if not JenkinsConfig.objects.exists():
-        JenkinsConfig.objects.create(
-            name="Default Jenkins",
-            jenkins_api=os.environ.get("JENKINS_API"),
-            jenkins_user=os.environ.get("JENKINS_USER"),
-            jenkins_pass=os.environ.get("JENKINS_PASS"),
-        )
+        if os.environ.get("JENKINS_API"):
+            JenkinsConfig.objects.create(
+                name="Default Jenkins",
+                jenkins_api=os.environ.get("JENKINS_API", "http://jenkins.example.com"),
+                jenkins_user=os.environ.get("JENKINS_USER", ""),
+                jenkins_pass=os.environ.get("JENKINS_PASS", ""),
+            )
