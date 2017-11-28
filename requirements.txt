@@ -43,7 +43,6 @@ twilio==3.4.1
 wsgiref==0.1.2
 python-dateutil==2.1
 django-auth-ldap==1.2.6
-influxdb==2.7.1
 PyYAML==3.11
 python-social-auth==0.2.12
 boto==2.38.0

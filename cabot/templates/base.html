@@ -66,12 +66,6 @@
                       <a href="{% url "grafana-instance-select" %}" class=""><i class="glyphicon glyphicon-stats" title="Add new Grafana check"></i> Grafana</a>
                     </li>
                     <li>
-                      <a href="{% url "create-influxdb-check" %}?service={{ service.id }}" class=""><i class="glyphicon glyphicon-signal" title="Add new metric check"></i> InfluxDB</a>
-                    </li>
-                    <li>
-                      <a href="{% url "create-graphite-check" %}?service={{ service.id }}" class=""><i class="glyphicon glyphicon-signal" title="Add new metric check"></i> Graphite</a>
-                    </li>
-                    <li>
                       <a href="{% url "create-http-check" %}?service={{ service.id }}" class="" title="Add new Http check"><i class="glyphicon glyphicon-arrow-up"></i> Http</a>
                     </li>
                     <li>

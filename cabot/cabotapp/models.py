@@ -1,12 +1,11 @@
-from django.db import models
-from django.conf import settings
-from polymorphic import PolymorphicModel
-from django.contrib.auth.models import User
 from celery.exceptions import SoftTimeLimitExceeded
+from django.conf import settings
+from django.contrib.auth.models import User
+from django.db import models
+from polymorphic import PolymorphicModel
 
 from .jenkins import get_job_status
 from .alert import (send_alert, AlertPluginUserData)
-from .influx import parse_metric
 from cabot.cabotapp.models_plugins import HipchatInstance  # noqa
 from cabot.cabotapp import defs
 from cabot.cabotapp.fields import PositiveIntegerMaxField
@@ -16,7 +15,6 @@ from datetime import timedelta
 from django.utils import timezone
 from icalendar import Calendar
 
-import json
 import re
 import socket
 import time
@@ -210,9 +208,6 @@ class CheckGroupMixin(models.Model):
             s['time'] = time.mktime(s['time'].timetuple())
         return snapshots
 
-    def graphite_status_checks(self):
-        return self.status_checks.filter(polymorphic_ctype__model='graphitestatuscheck')
-
     def http_status_checks(self):
         return self.status_checks.filter(polymorphic_ctype__model='httpstatuscheck')
 
@@ -224,9 +219,6 @@ class CheckGroupMixin(models.Model):
 
     def elasticsearch_status_checks(self):
         return self.status_checks.filter(polymorphic_ctype__model='elasticsearchstatuscheck')
-
-    def active_graphite_status_checks(self):
-        return self.graphite_status_checks().filter(active=True)
 
     def active_http_status_checks(self):
         return self.http_status_checks().filter(active=True)
@@ -452,259 +444,6 @@ class StatusCheck(PolymorphicModel):
     def get_status_link(self):
         """Return a link with more information about the check"""
         return None
-
-
-class GraphiteStatusCheck(StatusCheck):
-    """
-    Uses influx, not graphite
-    """
-
-    @property
-    def check_category(self):
-        return "Metric check"
-
-    @property
-    def description(self):
-        desc = ['{} {} {}'.format(self.metric[:70], self.check_type, self.value)]
-        if self.expected_num_hosts is not None:
-            desc.append(' from {} hosts'.format(self.expected_num_hosts))
-        return ''.join(desc)
-
-    update_url = 'update-graphite-check'
-
-    icon = 'glyphicon glyphicon-signal'
-
-    metric = models.TextField(
-        null=True,
-        help_text='fully.qualified.name of the metric you want to watch. '
-                  'This can be any valid expression, including wildcards, '
-                  'multiple hosts, etc.',
-    )
-    metric_selector = models.CharField(
-        max_length=50,
-        null=False,
-        default='value',
-        help_text='The selector for the metric. '
-                  'Can be specified as "value", "mean(value)", '
-                  '"percentile(value, 90)" etc.',
-    )
-    check_type = models.CharField(
-        choices=defs.CHECK_TYPES,
-        max_length=100,
-        null=True,
-    )
-    value = models.TextField(
-        null=True,
-        help_text='If this expression evaluates to False, the check will fail (possibly triggering an alert).',
-    )
-    group_by = models.CharField(
-        max_length=50,
-        null=False,
-        default='',
-        help_text='The "group by" clause for the metric. '
-                  'Can be specified as "time(1m)", '
-                  '"time(2m), host" etc.',
-    )
-    fill_empty = models.IntegerField(
-        default=None,
-        null=True,
-        blank=True,
-        help_text='Fill the sequence with this value, if required.'
-    )
-    where_clause = models.CharField(
-        max_length=256,
-        null=False,
-        default='',
-        blank=True,
-        help_text='The "where clause" for selecting the metric'
-    )
-    expected_num_hosts = models.PositiveIntegerField(
-        default=defs.DEFAULT_GRAPHITE_EXPECTED_NUM_HOSTS,
-        null=True,
-        help_text='The minimum number of data series (hosts) you expect to see.',
-    )
-    expected_num_metrics = models.PositiveIntegerField(
-        default=defs.DEFAULT_GRAPHITE_EXPECTED_NUM_METRICS,
-        null=True,
-        help_text='The minimum number of data series (metrics) you expect to satisfy given condition.',
-    )
-    interval = models.PositiveIntegerField(
-        default=defs.DEFAULT_GRAPHITE_INTERVAL,
-        help_text='Time duration (in minutes) for checking metrics'
-    )
-
-    def format_error_message(self, failure_value, actual_hosts,
-                             actual_metrics, name):
-        """
-        A summary of why the check is failing for inclusion in short
-        alert messages
-
-        Returns something like:
-        "5.0 > 4 | 1/2 hosts"
-        """
-        hosts_string = u''
-        if self.expected_num_hosts > 0:
-            hosts_string = u' | %s/%s hosts' % (actual_hosts,
-                                                self.expected_num_hosts)
-            if self.expected_num_hosts > actual_hosts:
-                return u'Hosts missing%s' % hosts_string
-        if self.expected_num_metrics > 0:
-            metrics_string = u'%s | %s/%s metrics' % (name,
-                                                      actual_metrics,
-                                                      self.expected_num_metrics)
-            if self.expected_num_metrics > actual_metrics:
-                return u'Metrics condition missed for %s' % metrics_string
-        if failure_value is None:
-            return "Failed to get metric from Graphite"
-        return u"%0.1f %s %0.1f%s" % (
-            failure_value,
-            self.check_type,
-            float(self.value),
-            hosts_string
-        )
-
-    def _run(self):
-        series = parse_metric(self.metric,
-                              selector=self.metric_selector,
-                              group_by=self.group_by,
-                              fill_empty=self.fill_empty,
-                              where_clause=self.where_clause,
-                              time_delta=self.interval * 6)
-
-        result = StatusCheckResult(
-            check=self,
-        )
-
-        if series['error']:
-            result.succeeded = False
-            result.error = 'Error fetching metric from source'
-            return result
-        else:
-            failed = None
-
-        # Add a threshold in the graph
-        threshold = None
-        if series['raw'] and series['raw'][0]['datapoints']:
-            start = series['raw'][0]['datapoints'][0]
-            end = series['raw'][0]['datapoints'][-1]
-            threshold = dict(target='alert.threshold',
-                             datapoints=[(self.value, start[1]),
-                                         (self.value, end[1])])
-
-        failure_value = 0
-        failed_metric_name = None
-        matched_metrics = 0
-
-        # First do some crazy average checks (if we expect more than 1 metric)
-        if series['num_series_with_data'] > 0:
-            result.average_value = series['average_value']
-            if self.check_type == '<':
-                failed = not float(series['min']) < float(self.value)
-                if failed:
-                    failure_value = series['min']
-            elif self.check_type == '<=':
-                failed = not float(series['min']) <= float(self.value)
-                if failed:
-                    failure_value = series['min']
-            elif self.check_type == '>':
-                failed = not float(series['max']) > float(self.value)
-                if failed:
-                    failure_value = series['max']
-            elif self.check_type == '>=':
-                failed = not float(series['max']) >= float(self.value)
-                if failed:
-                    failure_value = series['max']
-            elif self.check_type == '==':
-                failed = not float(self.value) in series['all_values']
-                if failed:
-                    failure_value = float(self.value)
-            else:
-                raise Exception(u'Check type %s not supported' %
-                                self.check_type)
-
-        if series['num_series_with_data'] < self.expected_num_hosts:
-            failed = True
-
-        reference_point = time.time() - ((self.interval + 2) * 60)
-
-        if self.expected_num_metrics > 0:
-            json_series = series['raw']
-            logger.info("Processing series " + str(json_series))
-            for line in json_series:
-                matched_metrics = 0
-
-                for point in line['datapoints']:
-
-                    last_value = point[0]
-                    time_stamp = point[1]
-
-                    if time_stamp <= reference_point:
-                        logger.debug('Point %s is older than ref ts %d' %
-                                     (str(point), reference_point))
-                        continue
-
-                    if last_value is not None:
-                        if self.check_type == '<':
-                            metric_failed = not last_value < float(self.value)
-                        elif self.check_type == '<=':
-                            metric_failed = not last_value <= float(self.value)
-                        elif self.check_type == '>':
-                            metric_failed = not last_value > float(self.value)
-                        elif self.check_type == '>=':
-                            metric_failed = not last_value >= float(self.value)
-                        elif self.check_type == '==':
-                            metric_failed = not last_value == float(self.value)
-                        else:
-                            raise Exception(u'Check type %s not supported' %
-                                            self.check_type)
-                        if metric_failed:
-                            failure_value = last_value
-                            failed_metric_name = line['target']
-                        else:
-                            matched_metrics += 1
-                            logger.info("Metrics matched: " + str(matched_metrics))
-                            logger.info("Required metrics: " + str(self.expected_num_metrics))
-                    else:
-                        failed = True
-
-                logger.info("Processing series ...")
-
-                if matched_metrics < self.expected_num_metrics:
-                    failed = True
-                    failure_value = None
-                    failed_metric_name = line['target']
-                    break
-                else:
-                    failed = False
-
-        try:
-            if threshold is not None:
-                series['raw'].append(threshold)
-            result.raw_data = json.dumps(series['raw'], indent=2)
-        except:
-            result.raw_data = series['raw']
-        result.succeeded = not failed
-
-        if not result.succeeded:
-            result.error = self.format_error_message(
-                failure_value,
-                series['num_series_with_data'],
-                matched_metrics,
-                failed_metric_name,
-            )
-
-        result.actual_hosts = series['num_series_with_data']
-        result.actual_metrics = matched_metrics
-        result.failure_value = failure_value
-        return result
-
-
-class InfluxDBStatusCheck(GraphiteStatusCheck):
-    """
-    Duplicate of GraphiteStatusCheck
-    """
-    class Meta(GraphiteStatusCheck.Meta):
-        pass
 
 
 class HttpStatusCheck(StatusCheck):

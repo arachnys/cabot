@@ -4,11 +4,10 @@ Cabot
 
 Cabot is a free, open-source, self-hosted infrastructure monitoring platform that provides some of the best features of [PagerDuty](http://www.pagerduty.com), [Server Density](http://www.serverdensity.com), [Pingdom](http://www.pingdom.com) and [Nagios](http://www.nagios.org) without their cost and complexity. (Nagios, I'm mainly looking at you.)
 
-It provides a web interface that allows you to monitor services (e.g. "Stage Redis server", "Production ElasticSearch cluster") and send telephone, sms or hipchat/email alerts to your on-duty team if those services start misbehaving or go down - all without writing a line of code. Best of all, you can use data that you're already pushing to Graphite/statsd to generate alerts, rather than implementing and maintaining a whole new system of data collectors.
+It provides a web interface that allows you to monitor services (e.g. "Stage Redis server", "Production ElasticSearch cluster") and send telephone, sms or hipchat/email alerts to your on-duty team if those services start misbehaving or go down - all without writing a line of code. Best of all, you can use data that you're already pushing to statsd to generate alerts, rather than implementing and maintaining a whole new system of data collectors.
 
 You can alert based on:
 
-*   Metrics from [Graphite](https://github.com/graphite-project/graphite-web)
 *   Status code and response content of web endpoints
 *   [Jenkins](http://jenkins-ci.org) build statuses
 
@@ -43,7 +42,6 @@ Sections:
 *   [Configuration](http://cabotapp.com/use/configuration.html)
 *   [Deployment](http://cabotapp.com/use/deployment.html)
 *   [Services](http://cabotapp.com/use/services.html)
-*   [Graphite checks](http://cabotapp.com/use/graphite-checks.html)
 *   [Jenkins checks](http://cabotapp.com/use/jenkins-checks.html)
 *   [HTTP checks](http://cabotapp.com/use/http-checks.html)
 *   [Alerting](http://cabotapp.com/use/alerting.html)
@@ -92,9 +90,9 @@ It's just a lucky coincidence that his name sounds like he could be an automatio
 
 The API has automatically generated documentation available by browsing https://cabot.yourcompany.com/api.  The browsable documentation displays example GET requests and lists other allowed HTTP methods.
 
-To view individual items, append the item `id` to the url.  For example, to view `graphite_check` 1, browse:
+To view individual items, append the item `id` to the url.  For example, to view `http_check` 1, browse:
 ```
-/api/graphite_checks/1/
+/api/http_checks/1/
 ```
 
 ### Authentication
@@ -105,7 +103,6 @@ All resources are GETable by any authenticated user, but individual permissions 
 
 As an example, for POST access to all `status_check` subclasses, add the following permissions:
 ```
-cabotapp | status check | Can add graphite status check
 cabotapp | status check | Can add http status check
 cabotapp | status check | Can add jenkins status check
 cabotapp | status check | Can add tcp status check
@@ -122,14 +119,14 @@ Get all `jenkins_checks` with retries enabled and CRITICAL importance:
 https://cabot.yourcompany.com/api/jenkins_checks/?retries=1&importance=CRITICAL
 ```
 
-Sort `graphite_checks` by `name` field, ascending:
+Sort `http_checks` by `name` field, ascending:
 ```
-https://cabot.yourcompany.com/api/graphite_checks/?ordering=name
+https://cabot.yourcompany.com/api/http_checks/?ordering=name
 ```
 
 Sort by `name` field, descending:
 ```
-https://cabot.yourcompany.com/api/graphite_checks/?ordering=-name
+https://cabot.yourcompany.com/api/http_checks/?ordering=-name
 ```
 
 Other (non-Cabot specific) examples are available in the [Django REST Framework](http://www.django-rest-framework.org/api-guide/filtering#djangofilterbackend) documentation.
