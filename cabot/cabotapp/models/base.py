@@ -59,6 +59,9 @@ def calculate_debounced_passing(recent_results, debounce=0):
     """
     if not recent_results:
         return True
+    # fix when the first run, if the first 0 - debounce checks all error and mark result faild
+    if len(recent_results) < debounce:
+        return True
     debounce_window = recent_results[:debounce + 1]
     for r in debounce_window:
         if r.succeeded:
