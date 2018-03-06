@@ -266,7 +266,7 @@ class TestCheckRun(LocalTestCase):
         self.assertIn(u'Error fetching from Jenkins - something bad happened',
                       self.jenkins_check.last_result().error)
 
-    @patch('cabot.cabotapp.models.requests.get', fake_http_200_response)
+    @patch('cabot.cabotapp.models.requests.request', fake_http_200_response)
     def test_http_run(self):
         checkresults = self.http_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 2)
@@ -729,6 +729,15 @@ class TestSchedules(LocalTestCase):
         self.assertEqual(usernames, ['teddy@affirm.com'])
 
     @patch('cabot.cabotapp.models.requests.get', fake_calendar)
+    def test_update_schedule_twice(self):
+        """Make sure nothing changes if you update twice"""
+        for _ in range(2):
+            update_shifts(self.schedule)
+            officers = get_duty_officers(self.schedule, at_time=datetime(2016, 11, 6, 0, 0, 0))
+            usernames = [str(user.username) for user in officers]
+            self.assertEqual(usernames, ['dolores@affirm.com'])
+
+    @patch('cabot.cabotapp.models.requests.get', fake_calendar)
     def test_multiple_schedules(self):
         """
         Add a second calendar and make sure the correct duty officers are marked
@@ -768,3 +777,23 @@ class TestSchedules(LocalTestCase):
                             (officers[1][0].username, officers[1][1][0].name)]
         self.assertIn(('dolores@affirm.com', 'Principal'), officer_schedule)
         self.assertIn(('maeve@affirm.com', 'Secondary'), officer_schedule)
+
+    @patch('cabot.cabotapp.models.requests.get', fake_calendar)
+    def test_calendar_update_remove_oncall(self):
+        """
+        Test that an oncall officer gets removed if they aren't on the schedule
+        """
+        update_shifts(self.schedule)
+
+        officers = get_duty_officers(self.schedule, at_time=datetime(2016, 11, 8, 10, 0, 0))
+        usernames = [str(user.username) for user in officers]
+        self.assertEqual(usernames, ['teddy@affirm.com'])
+
+        # Change the schedule
+        self.schedule.ical_url = 'calendar_response_different.ics'
+        self.schedule.save()
+        update_shifts(self.schedule)
+
+        officers = get_duty_officers(self.schedule, at_time=datetime(2016, 11, 8, 10, 0, 0))
+        usernames = [str(user.username) for user in officers]
+        self.assertEqual(usernames, ['hector@affirm.com'])

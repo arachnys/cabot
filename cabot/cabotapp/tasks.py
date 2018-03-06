@@ -96,7 +96,6 @@ def update_shifts():
 def reset_shifts(schedule_id):
     try:
         schedule = models.Schedule.objects.get(id=schedule_id)
-        models.delete_shifts(schedule)
         models.update_shifts(schedule)
     except Exception as e:
         logger.exception('Error when resetting shifts: {}'.format(e))
