@@ -48,6 +48,9 @@ class AlertPluginUserData(PolymorphicModel):
     def __unicode__(self):
         return u'%s' % (self.title)
 
+    def serialize(self):
+        return {}
+
 
 def send_alert(service, duty_officers=None):
     users = service.users_to_notify.filter(is_active=True)

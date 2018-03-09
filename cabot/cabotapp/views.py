@@ -1006,6 +1006,29 @@ class SetupView(View):
         return HttpResponse(self.template.render({'form': form}, request), status=400)
 
 
+class OnCallView(LoginRequiredMixin, View):
+    def get(self, request):
+        users = get_duty_officers()
+
+        users_json = []
+        for user in users:
+            plugin_data = {}
+            for pluginuserdata in user.profile.alertpluginuserdata_set.all():
+                plugin_data[pluginuserdata.title] = pluginuserdata.serialize()
+
+            users_json.append({
+                    "username": user.username,
+                    "email": user.email,
+                    "mobile_number": user.profile.mobile_number,
+                    "plugin_data": plugin_data
+                })
+
+
+        return JsonResponse({
+            "users": users_json
+        })
+
+
 # Misc JSON api and other stuff
 
 
