@@ -1023,7 +1023,6 @@ class OnCallView(LoginRequiredMixin, View):
                     "plugin_data": plugin_data
                 })
 
-
         return JsonResponse({
             "users": users_json
         })
