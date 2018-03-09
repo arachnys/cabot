@@ -939,6 +939,14 @@ class TestAPI(LocalTestCase):
                                                format='json', HTTP_AUTHORIZATION=self.basic_auth)
                 self.assertEqual(self.normalize_dict(get_response.data), item)
 
+    def test_oncall(self):
+        response = self.client.get(api_reverse('oncall'),
+                                   # format='json',
+                                   HTTP_AUTHORIZATION=self.basic_auth)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # self.assertEqual(response.data, None)
+
+
 class TestAPIFiltering(LocalTestCase):
     def setUp(self):
         super(TestAPIFiltering, self).setUp()
