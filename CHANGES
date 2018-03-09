@@ -1,5 +1,5 @@
-master
-------
+Version 0.11.11
+---------------
 
 * Fix /api/oncall endpoint not working with basic auth
 
