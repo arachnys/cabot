@@ -19,6 +19,7 @@ class GrafanaElasticsearchStatusCheckForm(GrafanaStatusCheckForm):
             'time_range',
             'retries',
             'frequency',
+            'runbook',
         ]
         widgets = {
             'auto_sync': forms.CheckboxInput()
@@ -50,6 +51,7 @@ class GrafanaElasticsearchStatusCheckUpdateForm(GrafanaStatusCheckUpdateForm):
             'time_range',
             'retries',
             'frequency',
+            'runbook',
         ]
         widgets = {
             'auto_sync': forms.CheckboxInput()

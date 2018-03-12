@@ -357,6 +357,12 @@ class StatusCheck(PolymorphicModel):
         max_length=50, choices=Service.STATUSES, default=Service.CALCULATED_PASSING_STATUS, blank=True)
     last_run = models.DateTimeField(null=True)
     cached_health = models.TextField(editable=False, null=True)
+    runbook = models.TextField(
+        default=None,
+        null=True,
+        blank=True,
+        help_text='Notes for on-calls to correctly diagnose and resolve the alert. Supports HTML!',
+    )
 
     class Meta(PolymorphicModel.Meta):
         ordering = ['name']
