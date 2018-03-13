@@ -1,7 +1,7 @@
 from celery.exceptions import SoftTimeLimitExceeded
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.db import models
+from django.db import models, transaction
 from polymorphic import PolymorphicModel
 
 from .jenkins import get_job_status
@@ -903,44 +903,33 @@ def update_shifts(schedule):
     user_lookup = {}
     for u in users:
         user_lookup[u.username.lower()] = u
-    future_shifts = Shift.objects.filter(start__gt=timezone.now(),
-                                         schedule=schedule)
-    future_shifts.update(deleted=True)
 
-    for event in events:
-        summary = event['summary'].lower().strip()
-        attendee = event['attendee'].lower().strip()
+    with transaction.atomic():
+        # Set all shifts to deleted, ones that are still active will set deleted to False
+        shifts = Shift.objects.filter(schedule=schedule)
+        shifts.update(deleted=True)
 
-        if summary in user_lookup:
-            e = summary
-        elif attendee in user_lookup:
-            e = attendee
-        else:
-            e = None
+        for event in events:
+            summary = event['summary'].lower().strip()
+            attendee = event['attendee'].lower().strip()
 
-        if e is not None:
-            user = user_lookup[e]
-            try:
-                s = Shift.objects.get(uid=event['uid'],
-                                      schedule=schedule)
-            except Shift.DoesNotExist:
-                s = Shift(uid=event['uid'],
-                          schedule=schedule)
-            s.start = event['start']
-            s.end = event['end']
-            s.user = user
-            s.deleted = False
-            s.schedule = schedule
-            s.save()
+            if summary in user_lookup:
+                e = summary
+            elif attendee in user_lookup:
+                e = attendee
+            else:
+                e = None
 
+            if e is not None:
+                user = user_lookup[e]
+                s = Shift.objects.filter(uid=event['uid'], schedule=schedule).first()
+                if s is None:
+                    s = Shift(uid=event['uid'], schedule=schedule)
 
-def delete_shifts(schedule):
-    """
-    Delete oncall Shifts for a given schedule
-    :param schedule: the schedule
-    :return none
-    """
-    shifts = Shift.objects.filter(schedule=schedule)
-    for shift in shifts:
-        shift.deleted = True
-        shift.save()
+                s.start = event['start']
+                s.end = event['end']
+                s.user = user
+                s.deleted = False
+                s.schedule = schedule
+                s.updated = True
+                s.save()
