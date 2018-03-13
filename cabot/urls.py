@@ -10,7 +10,7 @@ from cabot.cabotapp.views import (
     JenkinsCheckCreateView, JenkinsCheckUpdateView,
     StatusCheckDeleteView, StatusCheckListView, StatusCheckDetailView,
     StatusCheckResultDetailView, StatusCheckReportView, UserProfileUpdateAlert,
-    PluginSettingsView, AlertTestView, AlertTestPluginView, SetupView)
+    PluginSettingsView, AlertTestView, AlertTestPluginView, SetupView, OnCallView)
 
 from cabot.cabotapp.views import (InstanceListView, InstanceDetailView,
     InstanceUpdateView, InstanceCreateView, InstanceDeleteView,
@@ -162,6 +162,7 @@ urlpatterns = [
      # Comment below line to disable browsable rest api
      url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
      url(r'^api/', include(rest_urls.router.urls)),
+     url(r'^api/oncall', view=OnCallView.as_view(), name='oncall'),
      url(r'^docs/', include_docs_urls(title="Cabot API", description="An API to create and view Cabot checks and services."))
 ]
 
