@@ -39,6 +39,7 @@ class ElasticsearchStatusCheckForm(StatusCheckForm):
             'frequency',
             'active',
             'retries',
+            'runbook',
         )
 
     def __init__(self, *args, **kwargs):

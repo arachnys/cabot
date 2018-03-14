@@ -110,6 +110,7 @@ class SymmetricalForm(forms.ModelForm):
             self.save_m2m()
         return instance
 
+
 base_widgets = {
     'name': forms.TextInput(attrs={
         'style': 'width:30%',
@@ -155,6 +156,7 @@ class HttpStatusCheckForm(StatusCheckForm):
             'importance',
             'active',
             'retries',
+            'runbook',
         )
         widgets = dict(**base_widgets)
         widgets.update({
@@ -187,6 +189,7 @@ class JenkinsStatusCheckForm(StatusCheckForm):
             'importance',
             'retries',
             'max_queued_build_time',
+            'runbook',
         )
         widgets = dict(**base_widgets)
 
@@ -203,6 +206,7 @@ class TCPStatusCheckForm(StatusCheckForm):
             'importance',
             'active',
             'retries',
+            'runbook',
         )
         widgets = dict(**base_widgets)
         widgets.update({
