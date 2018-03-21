@@ -1,3 +1,10 @@
+master
+------
+
+* Upgrade django to 1.11.11
+* Debounce JenkinsCheck on the number of job failures
+  - Previously it would fail after cabot checked the jenkins api N times, even if the jenkins job had only failed once
+
 Version 0.11.11
 ---------------
 
