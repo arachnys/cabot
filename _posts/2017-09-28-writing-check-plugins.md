@@ -14,3 +14,4 @@ You can get inspiration from these two check plugins:
 
 * ['Network' check plugin](https://github.com/cabotapp/cabot-check-network) is an extremely simple plugin, with a very narrow feature set.
 * ['CloudWatch' check plugin](https://github.com/cabotapp/cabot-check-cloudwatch) is a more advanced example, using more specific fields and advanced features like autocompletion.
+* ['SSLCert' check plugin](https://github.com/decryptus/cabot-check-sslcert) is a simple plugin to check SSL certificates, you can specify days before expiration.
