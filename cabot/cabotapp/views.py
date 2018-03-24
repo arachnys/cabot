@@ -53,6 +53,7 @@ def subscriptions(request):
         'services': services,
         'users': users,
         'duty_officers': get_duty_officers(),
+        'custom_check_types': get_custom_check_plugins(),
     })
 
 
@@ -93,7 +94,35 @@ def duplicate_jenkins_check(request, pk):
     return HttpResponseRedirect(reverse('update-jenkins-check', kwargs={'pk': npk}))
 
 
-class StatusCheckResultDetailView(LoginRequiredMixin, DetailView):
+class BaseCommonView(object):
+    def render_to_response(self, context, *args, **kwargs):
+        if context is None:
+            context = {}
+        context['custom_check_types'] = get_custom_check_plugins()
+        return super(BaseCommonView, self).render_to_response(context, *args, **kwargs)
+
+
+class CommonCreateView(BaseCommonView, CreateView):
+    pass
+
+
+class CommonUpdateView(BaseCommonView, UpdateView):
+    pass
+
+
+class CommonDeleteView(BaseCommonView, DeleteView):
+    pass
+
+
+class CommonDetailView(BaseCommonView, DetailView):
+    pass
+
+
+class CommonListView(BaseCommonView, ListView):
+    pass
+
+
+class StatusCheckResultDetailView(LoginRequiredMixin, CommonDetailView):
     model = StatusCheckResult
     context_object_name = 'result'
 
@@ -412,7 +441,7 @@ class StatusCheckReportForm(forms.Form):
         return checks
 
 
-class CheckCreateView(LoginRequiredMixin, CreateView):
+class CheckCreateView(LoginRequiredMixin, CommonCreateView):
     template_name = 'cabotapp/statuscheck_form.html'
 
     def form_valid(self, form):
@@ -454,7 +483,7 @@ class CheckCreateView(LoginRequiredMixin, CreateView):
         return reverse('checks')
 
 
-class CheckUpdateView(LoginRequiredMixin, UpdateView):
+class CheckUpdateView(LoginRequiredMixin, CommonUpdateView):
     template_name = 'cabotapp/statuscheck_form.html'
 
     def get_success_url(self):
@@ -509,26 +538,25 @@ class JenkinsCheckUpdateView(CheckUpdateView):
         return super(JenkinsCheckUpdateView, self).form_valid(form)
 
 
-class StatusCheckListView(LoginRequiredMixin, ListView):
+class StatusCheckListView(LoginRequiredMixin, CommonListView):
     model = StatusCheck
 
     def render_to_response(self, context, *args, **kwargs):
         context = super(StatusCheckListView, self).get_context_data(**kwargs)
         if context is None:
             context = {}
-        context['custom_check_types'] = get_custom_check_plugins()
         context['checks'] = StatusCheck.objects.all().order_by('name').prefetch_related('service_set', 'instance_set')
         return super(StatusCheckListView, self).render_to_response(context, *args, **kwargs)
 
 
-class StatusCheckDeleteView(LoginRequiredMixin, DeleteView):
+class StatusCheckDeleteView(LoginRequiredMixin, CommonDeleteView):
     model = StatusCheck
     success_url = reverse_lazy('checks')
     context_object_name = 'check'
     template_name = 'cabotapp/statuscheck_confirm_delete.html'
 
 
-class StatusCheckDetailView(LoginRequiredMixin, DetailView):
+class StatusCheckDetailView(LoginRequiredMixin, CommonDetailView):
     model = StatusCheck
     context_object_name = 'check'
     template_name = 'cabotapp/statuscheck_detail.html'
@@ -536,7 +564,6 @@ class StatusCheckDetailView(LoginRequiredMixin, DetailView):
     def render_to_response(self, context, *args, **kwargs):
         if context is None:
             context = {}
-        context['custom_check_types'] = get_custom_check_plugins()
         context['checkresults'] = self.object.statuscheckresult_set.order_by(
             '-time_complete')[:100]
         return super(StatusCheckDetailView, self).render_to_response(context, *args, **kwargs)
@@ -578,6 +605,7 @@ class UserProfileUpdateAlert(LoginRequiredMixin, View):
         return render(request, self.template.template.name, {
             'form': form,
             'alert_preferences': profile.user_data(),
+            'custom_check_types': get_custom_check_plugins(),
         })
 
     def post(self, request, pk, alerttype):
@@ -631,7 +659,8 @@ class PluginSettingsView(LoginRequiredMixin, View):
             'form': form,
             'plugins': AlertPlugin.objects.all(),
             'plugin_name': plugin_name,
-            'alert_test_form': alert_test_form
+            'alert_test_form': alert_test_form,
+            'custom_check_types': get_custom_check_plugins()
         })
 
     def post(self, request, plugin_name):
@@ -795,7 +824,7 @@ class GeneralSettingsForm(forms.Form):
     enabled = forms.BooleanField(label='Enabled', required=False)
 
 
-class InstanceListView(LoginRequiredMixin, ListView):
+class InstanceListView(LoginRequiredMixin, CommonListView):
     model = Instance
     context_object_name = 'instances'
 
@@ -803,7 +832,7 @@ class InstanceListView(LoginRequiredMixin, ListView):
         return Instance.objects.all().order_by('name').prefetch_related('status_checks')
 
 
-class ServiceListView(LoginRequiredMixin, ListView):
+class ServiceListView(LoginRequiredMixin, CommonListView):
     model = Service
     context_object_name = 'services'
 
@@ -823,14 +852,13 @@ class ServicePublicListView(TemplateView):
             .order_by('name').prefetch_related('status_checks')
         return context
 
-class InstanceDetailView(LoginRequiredMixin, DetailView):
+class InstanceDetailView(LoginRequiredMixin, CommonDetailView):
     model = Instance
     context_object_name = 'instance'
 
     def get_context_data(self, **kwargs):
         context = super(InstanceDetailView, self).get_context_data(**kwargs)
         date_from = date.today() - relativedelta(day=1)
-        context['custom_check_types'] = get_custom_check_plugins()
         context['report_form'] = StatusCheckReportForm(initial={
             'checks': self.object.status_checks.all(),
             'service': self.object,
@@ -840,14 +868,13 @@ class InstanceDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class ServiceDetailView(LoginRequiredMixin, DetailView):
+class ServiceDetailView(LoginRequiredMixin, CommonDetailView):
     model = Service
     context_object_name = 'service'
 
     def get_context_data(self, **kwargs):
         context = super(ServiceDetailView, self).get_context_data(**kwargs)
         date_from = date.today() - relativedelta(day=1)
-        context['custom_check_types'] = get_custom_check_plugins()
         context['report_form'] = StatusCheckReportForm(initial={
             'alerts': self.object.alerts.all(),
             'checks': self.object.status_checks.all(),
@@ -858,7 +885,7 @@ class ServiceDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class InstanceCreateView(LoginRequiredMixin, CreateView):
+class InstanceCreateView(LoginRequiredMixin, CommonCreateView):
     model = Instance
     form_class = InstanceForm
 
@@ -913,7 +940,7 @@ def remove_acknowledgement(request, pk):
     return HttpResponseRedirect(reverse('service', kwargs={'pk': pk}))
 
 
-class ServiceCreateView(LoginRequiredMixin, CreateView):
+class ServiceCreateView(LoginRequiredMixin, CommonCreateView):
     model = Service
     form_class = ServiceForm
 
@@ -924,7 +951,7 @@ class ServiceCreateView(LoginRequiredMixin, CreateView):
         return reverse('service', kwargs={'pk': self.object.id})
 
 
-class InstanceUpdateView(LoginRequiredMixin, UpdateView):
+class InstanceUpdateView(LoginRequiredMixin, CommonUpdateView):
     model = Instance
     form_class = InstanceForm
 
@@ -932,7 +959,7 @@ class InstanceUpdateView(LoginRequiredMixin, UpdateView):
         return reverse('instance', kwargs={'pk': self.object.id})
 
 
-class ServiceUpdateView(LoginRequiredMixin, UpdateView):
+class ServiceUpdateView(LoginRequiredMixin, CommonUpdateView):
     model = Service
     form_class = ServiceForm
 
@@ -940,21 +967,21 @@ class ServiceUpdateView(LoginRequiredMixin, UpdateView):
         return reverse('service', kwargs={'pk': self.object.id})
 
 
-class ServiceDeleteView(LoginRequiredMixin, DeleteView):
+class ServiceDeleteView(LoginRequiredMixin, CommonDeleteView):
     model = Service
     success_url = reverse_lazy('services')
     context_object_name = 'service'
     template_name = 'cabotapp/service_confirm_delete.html'
 
 
-class InstanceDeleteView(LoginRequiredMixin, DeleteView):
+class InstanceDeleteView(LoginRequiredMixin, CommonDeleteView):
     model = Instance
     success_url = reverse_lazy('instances')
     context_object_name = 'instance'
     template_name = 'cabotapp/instance_confirm_delete.html'
 
 
-class ShiftListView(LoginRequiredMixin, ListView):
+class ShiftListView(LoginRequiredMixin, CommonListView):
     model = Shift
     context_object_name = 'shifts'
 
