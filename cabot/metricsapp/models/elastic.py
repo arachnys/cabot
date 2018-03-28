@@ -222,7 +222,7 @@ class ElasticsearchStatusCheck(MetricsStatusCheckBase):
 
         for subseries in series:
             if isinstance(subseries, tuple):
-                series_name = '.'.join(filter(None, [original_series_name, subseries[0]]))
+                series_name = '.'.join(filter(None, [original_series_name, str(subseries[0])]))
                 subseries = subseries[1]
 
             if subseries.get('agg') is None:
@@ -231,7 +231,7 @@ class ElasticsearchStatusCheck(MetricsStatusCheckBase):
             else:
                 # New name is "series_name.subseries_name" (if they exist)
                 key = subseries.get('key')
-                if isinstance(key, float):
+                if key is not None:
                     key = str(key)
                 subseries_name = '.'.join(filter(None, [series_name, key]))
                 results = self._parse_series(subseries['agg']['buckets'], series_name=subseries_name)
