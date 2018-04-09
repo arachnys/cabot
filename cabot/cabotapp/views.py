@@ -15,6 +15,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.urlresolvers import reverse, reverse_lazy
 from django.core.validators import URLValidator
 from django.db import transaction
@@ -564,8 +565,20 @@ class StatusCheckDetailView(LoginRequiredMixin, CommonDetailView):
     def render_to_response(self, context, *args, **kwargs):
         if context is None:
             context = {}
-        context['checkresults'] = self.object.statuscheckresult_set.order_by(
-            '-time_complete')[:100]
+        checkresult_list = self.object.statuscheckresult_set.order_by(
+            '-time_complete').all()
+        paginator = Paginator(checkresult_list, 25)
+
+        page = self.request.GET.get('page')
+        try:
+            checkresults = paginator.page(page)
+        except PageNotAnInteger:
+            checkresults = paginator.page(1)
+        except EmptyPage:
+            checkresults = paginator.page(paginator.num_pages)
+
+        context['checkresults'] = checkresults
+
         return super(StatusCheckDetailView, self).render_to_response(context, *args, **kwargs)
 
 
