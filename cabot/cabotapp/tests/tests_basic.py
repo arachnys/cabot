@@ -86,7 +86,7 @@ class LocalTestCase(APITestCase):
             jenkins_config = JenkinsConfig.objects.first()
         )
         self.http_check = HttpStatusCheck.objects.create(
-            name='Http Check',
+            name='HTTP Check',
             created_by=self.user,
             importance=Service.CRITICAL_STATUS,
             endpoint='http://arachnys.com',
@@ -728,7 +728,7 @@ class TestAPI(LocalTestCase):
                     'calculated_status': u'passing',
                 },
                 {
-                    'name': u'Http Check',
+                    'name': u'HTTP Check',
                     'active': True,
                     'importance': u'CRITICAL',
                     'frequency': 5,
@@ -764,7 +764,7 @@ class TestAPI(LocalTestCase):
             ],
             'httpstatuscheck': [
                 {
-                    'name': u'Http Check',
+                    'name': u'HTTP Check',
                     'active': True,
                     'importance': u'CRITICAL',
                     'frequency': 5,
@@ -1047,7 +1047,7 @@ class TestAlerts(LocalTestCase):
         super(TestAlerts, self).setUp()
 
         self.warning_http_check = HttpStatusCheck.objects.create(
-            name='Http Check',
+            name='HTTP Check',
             created_by=self.user,
             importance=Service.WARNING_STATUS,
             endpoint='http://arachnys.com',
@@ -1056,7 +1056,7 @@ class TestAlerts(LocalTestCase):
             text_match=None,
         )
         self.error_http_check = HttpStatusCheck.objects.create(
-            name='Http Check',
+            name='HTTP Check',
             created_by=self.user,
             importance=Service.ERROR_STATUS,
             endpoint='http://arachnys.com',

@@ -10,7 +10,7 @@
       <a href="{% url "create-graphite-check" %}?instance={{ instance.id }}&service={{ service.id }}" class=""><i class="glyphicon glyphicon-plus" title="Add new metric check"></i><i class="glyphicon glyphicon-signal" title="Add new metric check"></i></a>
       {% endif %}
       {% if checks_type == "All" or checks_type == "Http" %}
-      &nbsp;<a href="{% url "create-http-check" %}?instance={{ instance.id }}&service={{ service.id }}" class="" title="Add new Http check"><i class="glyphicon glyphicon-plus"></i><i class="glyphicon glyphicon-arrow-up"></i></a>
+      &nbsp;<a href="{% url "create-http-check" %}?instance={{ instance.id }}&service={{ service.id }}" class="" title="Add new HTTP check"><i class="glyphicon glyphicon-plus"></i><i class="glyphicon glyphicon-arrow-up"></i></a>
       {% endif %}
       {% if checks_type == "All" or checks_type == "Jenkins" %}
       &nbsp;<a href="{% url "create-jenkins-check" %}?instance={{ instance.id }}&service={{ service.id }}" class="" title="Add new Jenkins check"><i class="glyphicon glyphicon-plus"></i><i class="glyphicon glyphicon-ok"></i></a>
