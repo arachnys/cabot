@@ -1050,6 +1050,7 @@ class SetupView(View):
 
 class OnCallView(APIView):
     queryset = User.objects
+
     def get(self, request):
         users = get_duty_officers()
 
