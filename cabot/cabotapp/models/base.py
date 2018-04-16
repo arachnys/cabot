@@ -782,7 +782,7 @@ class HttpStatusCheck(StatusCheck):
                 result.succeeded = False
                 result.raw_data = resp.content
             elif self.text_match:
-                if not self._check_content_pattern(self.text_match, resp.content):
+                if not self._check_content_pattern(self.text_match, resp.text):
                     result.error = u'Failed to find match regex /%s/ in response body' % self.text_match
                     result.raw_data = resp.content
                     result.succeeded = False
