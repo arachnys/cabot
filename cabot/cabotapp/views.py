@@ -258,6 +258,8 @@ class HttpStatusCheckForm(StatusCheckForm):
             }),
             'password': forms.PasswordInput(attrs={
                 'style': 'width: 30%',
+                # Prevent auto-fill with saved Cabot log-in credentials:
+                'autocomplete': 'new-password',
             }),
             'text_match': forms.TextInput(attrs={
                 'style': 'width: 100%',
