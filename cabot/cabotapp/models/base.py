@@ -760,7 +760,8 @@ class HttpStatusCheck(StatusCheck):
 
         auth = None
         if self.username or self.password:
-            auth = (self.username, self.password)
+            auth = (self.username if self.username is not None else '',
+                    self.password if self.password is not None else '')
 
         try:
             resp = requests.get(
