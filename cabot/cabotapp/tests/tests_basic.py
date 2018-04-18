@@ -178,6 +178,7 @@ def jenkins_blocked_response(*args, **kwargs):
 def fake_http_200_response(*args, **kwargs):
     resp = Mock()
     resp.content = get_content('http_response.html')
+    resp.text = unicode(resp.content, 'utf-8')
     resp.status_code = 200
     return resp
 
@@ -185,6 +186,7 @@ def fake_http_200_response(*args, **kwargs):
 def fake_http_404_response(*args, **kwargs):
     resp = Mock()
     resp.content = get_content('http_response.html')
+    resp.text = unicode(resp.content, 'utf-8')
     resp.status_code = 404
     return resp
 
