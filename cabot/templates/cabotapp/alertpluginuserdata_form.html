@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
 
+{% load bootstrap %}
+
 {% block content %}
 <div class="container-fluid">
   <div class="row">
@@ -18,7 +20,7 @@
         {% for field in form %}
         <div class="form-group">
           <label class="col-xs-2 control-label">{{ field.label_tag }}</label>
-          <div class="col-xs-10">{{ field }}</div>
+          <div class="col-xs-10">{{ field|bootstrap_inline }}</div>
         </div>
         {% endfor %}
         <div class="form-group">
