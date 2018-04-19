@@ -227,3 +227,35 @@ class TestMultipleThresholds(TestCase):
         self.assertFalse(result.succeeded)
         self.assertEqual(result.error, u'CRITICAL prod.good.data: 9.2 not <= 9.0')
         self.assertEqual(self.metrics_check.importance, Service.CRITICAL_STATUS)
+
+    @patch('cabot.metricsapp.models.MetricsStatusCheckBase.get_series', mock_get_series)
+    @patch('time.time', mock_time)
+    def test_consecutive_failures(self):
+        """
+        Check that if the series contains enough consecutive failed points, a
+        high alert is raised.
+        """
+        self.metrics_check.warning_value = 8.0
+        self.metrics_check.high_alert_value = 9.0
+        self.metrics_check.consecutive_failures = 2
+        result = self.metrics_check._run()
+        self.assertEqual(result.check, self.metrics_check)
+        self.assertFalse(result.succeeded)
+        self.assertEqual(result.error, u'CRITICAL prod.good.data: 2 adjacent points not <= 9.0')
+        self.assertEqual(self.metrics_check.importance, Service.CRITICAL_STATUS)
+
+    @patch('cabot.metricsapp.models.MetricsStatusCheckBase.get_series', mock_get_series)
+    @patch('time.time', mock_time)
+    def test_not_enough_consecutive_failures(self):
+        """
+        Check that if the series contains failed points, but not enough are
+        consecutive, that a high alert is NOT raised.
+        """
+        self.metrics_check.warning_value = 8.0
+        self.metrics_check.high_alert_value = 9.0
+        self.metrics_check.consecutive_failures = 3
+        result = self.metrics_check._run()
+        self.assertEqual(result.check, self.metrics_check)
+        self.assertFalse(result.succeeded)
+        self.assertEqual(result.error, u'WARNING prod.good.data: 8.1 not <= 8.0')
+        self.assertEqual(self.metrics_check.importance, Service.WARNING_STATUS)
