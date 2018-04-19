@@ -38,7 +38,7 @@ def _get_high_alert_message(check, series_name, value):
     if check.consecutive_failures == 1:
         fmt = u'{} {}: {:0.1f} not {} {:0.1f}'
         return fmt.format(check.high_alert_importance, series_name, value,
-                          check.check_type, check.warning_value)
+                          check.check_type, check.high_alert_value)
     else:
         fmt = u'{} {}: {} adjacent points not {} {:0.1f}'
         return fmt.format(check.high_alert_importance, series_name,

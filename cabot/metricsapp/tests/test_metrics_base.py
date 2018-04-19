@@ -44,7 +44,7 @@ class TestMetricsBase(TestCase):
         result = self.metrics_check._run()
         self.assertEqual(result.check, self.metrics_check)
         self.assertFalse(result.succeeded)
-        self.assertEqual(result.error, u'prod.good.data: 9.2 <= 9.0')
+        self.assertEqual(result.error, u'WARNING prod.good.data: 9.2 not <= 9.0')
 
     @patch('cabot.metricsapp.models.MetricsStatusCheckBase.get_series', mock_get_series)
     @patch('time.time', mock_time)
@@ -161,7 +161,7 @@ class TestMultipleThresholds(TestCase):
         """Test cases with both high alert and warning values"""
         result = self.metrics_check._run()
         self.assertFalse(result.succeeded)
-        self.assertEqual(result.error, u'prod.good.data: 9.2 <= 9.0')
+        self.assertEqual(result.error, u'WARNING prod.good.data: 9.2 not <= 9.0')
         self.assertEqual(self.metrics_check.importance, Service.WARNING_STATUS)
 
     @patch('cabot.metricsapp.models.MetricsStatusCheckBase.get_series', mock_get_series)
@@ -170,7 +170,7 @@ class TestMultipleThresholds(TestCase):
         self.metrics_check.high_alert_value = 9.5
         result = self.metrics_check._run()
         self.assertFalse(result.succeeded)
-        self.assertEqual(result.error, u'prod.good.data: 9.7 <= 9.5')
+        self.assertEqual(result.error, u'CRITICAL prod.good.data: 9.7 not <= 9.5')
         self.assertEqual(self.metrics_check.importance, Service.CRITICAL_STATUS)
 
     @patch('cabot.metricsapp.models.MetricsStatusCheckBase.get_series', mock_get_series)
@@ -180,7 +180,7 @@ class TestMultipleThresholds(TestCase):
         self.metrics_check.high_alert_importance = Service.ERROR_STATUS
         result = self.metrics_check._run()
         self.assertFalse(result.succeeded)
-        self.assertEqual(result.error, u'prod.good.data: 9.7 <= 9.5')
+        self.assertEqual(result.error, u'ERROR prod.good.data: 9.7 not <= 9.5')
         self.assertEqual(self.metrics_check.importance, Service.ERROR_STATUS)
 
     @patch('cabot.metricsapp.models.MetricsStatusCheckBase.get_series', mock_get_series)
@@ -213,7 +213,7 @@ class TestMultipleThresholds(TestCase):
         result = self.metrics_check._run()
         self.assertEqual(result.check, self.metrics_check)
         self.assertFalse(result.succeeded)
-        self.assertEqual(result.error, u'prod.good.data: 9.2 <= 9.0')
+        self.assertEqual(result.error, u'WARNING prod.good.data: 9.2 not <= 9.0')
         self.assertEqual(self.metrics_check.importance, Service.WARNING_STATUS)
 
     @patch('cabot.metricsapp.models.MetricsStatusCheckBase.get_series', mock_get_series)
@@ -225,5 +225,5 @@ class TestMultipleThresholds(TestCase):
         result = self.metrics_check._run()
         self.assertEqual(result.check, self.metrics_check)
         self.assertFalse(result.succeeded)
-        self.assertEqual(result.error, u'prod.good.data: 9.2 <= 9.0')
+        self.assertEqual(result.error, u'CRITICAL prod.good.data: 9.2 not <= 9.0')
         self.assertEqual(self.metrics_check.importance, Service.CRITICAL_STATUS)

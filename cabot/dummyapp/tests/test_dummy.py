@@ -29,5 +29,5 @@ class TestDummyCheck(TestCase):
 
         result = self.dummy_check._run()
         self.assertFalse(result.succeeded)
-        self.assertEqual(result.error, 'dummy: 1000.0 < 500.0')
+        self.assertEqual(result.error, 'WARNING dummy: 1000.0 not < 500.0')
         self.assertEqual(self.dummy_check.importance, 'WARNING')
