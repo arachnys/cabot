@@ -74,6 +74,14 @@ class MetricsStatusCheckBase(StatusCheck):
                   'update the check?'
     )
 
+    # TODO(evan): how to enforce consecutive_failures > 0 ?
+    consecutive_failures = models.IntegerField(
+        default=1,
+        help_text='Number of consecutive data points that must exceed the high alert '
+                  'threshold before an alert is triggered. This setting is ignored '
+                  'for warnings.',
+    )
+
     def _run(self):
         """Run a status check"""
         return run_metrics_check(self)
