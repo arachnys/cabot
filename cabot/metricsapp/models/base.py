@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.core.validators import MinValueValidator
 from cabot.cabotapp.models import Service, StatusCheck
 from cabot.metricsapp.api import run_metrics_check
 from cabot.cabotapp.defs import CHECK_TYPES
@@ -75,6 +76,7 @@ class MetricsStatusCheckBase(StatusCheck):
     )
     consecutive_failures = models.PositiveIntegerField(
         default=1,
+        validators=[MinValueValidator(1)],
         help_text='Number of consecutive data points that must exceed the high alert '
                   'threshold before an alert is triggered. This setting is ignored '
                   'for warnings.',
