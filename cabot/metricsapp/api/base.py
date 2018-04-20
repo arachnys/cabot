@@ -32,7 +32,7 @@ def _get_high_alert_message(check, series_name, value):
     For N consecutive failed points:
 
         Format:   <importance> <series_name>: <value> not <comparator> <threshold>
-        Example:  CRITICAL foo.service.errors: 10 adjacent points not < 50
+        Example:  CRITICAL foo.service.errors: 10 consecutive points not < 50
 
     """
     if check.consecutive_failures == 1:
@@ -40,7 +40,7 @@ def _get_high_alert_message(check, series_name, value):
         return fmt.format(check.high_alert_importance, series_name, value,
                           check.check_type, check.high_alert_value)
     else:
-        fmt = u'{} {}: {} adjacent points not {} {:0.1f}'
+        fmt = u'{} {}: {} consecutive points not {} {:0.1f}'
         return fmt.format(check.high_alert_importance, series_name,
                           check.consecutive_failures, check.check_type,
                           check.high_alert_value)
@@ -49,10 +49,9 @@ def _get_high_alert_message(check, series_name, value):
 def _point_failure_check(check_type, threshold, value):
     """
     Check whether a point fails the check.
-    :param metric_name: the metric name
-    :param value: the value we're checking success/failure for
     :param check_type: the type of status check (<, >, etc.)
     :param threshold: the failure threshold value
+    :param value: the value we're checking success/failure for
     :return: True if the check fails, False if it succeeds
     """
     if check_type == '<':

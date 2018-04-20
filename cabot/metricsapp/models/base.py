@@ -73,9 +73,7 @@ class MetricsStatusCheckBase(StatusCheck):
         help_text='For Grafana status checks--should Cabot poll Grafana for dashboard updates and automatically '
                   'update the check?'
     )
-
-    # TODO(evan): how to enforce consecutive_failures > 0 ?
-    consecutive_failures = models.IntegerField(
+    consecutive_failures = models.PositiveIntegerField(
         default=1,
         help_text='Number of consecutive data points that must exceed the high alert '
                   'threshold before an alert is triggered. This setting is ignored '

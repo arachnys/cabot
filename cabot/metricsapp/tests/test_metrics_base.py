@@ -241,7 +241,7 @@ class TestMultipleThresholds(TestCase):
         result = self.metrics_check._run()
         self.assertEqual(result.check, self.metrics_check)
         self.assertFalse(result.succeeded)
-        self.assertEqual(result.error, u'CRITICAL prod.good.data: 2 adjacent points not <= 9.0')
+        self.assertEqual(result.error, u'CRITICAL prod.good.data: 2 consecutive points not <= 9.0')
         self.assertEqual(self.metrics_check.importance, Service.CRITICAL_STATUS)
 
     @patch('cabot.metricsapp.models.MetricsStatusCheckBase.get_series', mock_get_series)
