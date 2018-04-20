@@ -10,7 +10,7 @@ class Migration(SchemaMigration):
     def forwards(self, orm):
         # Adding field 'MetricsStatusCheckBase.consecutive_failures'
         db.add_column(u'metricsapp_metricsstatuscheckbase', 'consecutive_failures',
-                      self.gf('django.db.models.fields.IntegerField')(default=1),
+                      self.gf('django.db.models.fields.PositiveIntegerField')(default=1),
                       keep_default=False)
 
 
@@ -118,7 +118,7 @@ class Migration(SchemaMigration):
             'Meta': {'ordering': "['name']", 'object_name': 'MetricsStatusCheckBase', '_ormbases': [u'cabotapp.StatusCheck']},
             'auto_sync': ('django.db.models.fields.NullBooleanField', [], {'default': 'True', 'null': 'True', 'blank': 'True'}),
             'check_type': ('django.db.models.fields.CharField', [], {'max_length': '30'}),
-            'consecutive_failures': ('django.db.models.fields.IntegerField', [], {'default': '1'}),
+            'consecutive_failures': ('django.db.models.fields.PositiveIntegerField', [], {'default': '1'}),
             'grafana_panel': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['metricsapp.GrafanaPanel']", 'null': 'True'}),
             'high_alert_importance': ('django.db.models.fields.CharField', [], {'default': "'ERROR'", 'max_length': '30'}),
             'high_alert_value': ('django.db.models.fields.FloatField', [], {'null': 'True', 'blank': 'True'}),
