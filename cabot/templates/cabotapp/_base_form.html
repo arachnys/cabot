@@ -1,3 +1,5 @@
+{% load bootstrap %}
+
 <div class="form-group">
   <div class="col-xs-10 col-xs-offset-2">
     {{ form.non_field_errors }}
@@ -9,10 +11,10 @@
   <div class="col-xs-12">
     <label class="col-xs-2 control-label">{{ field.label_tag }}</label>
     {% if field.errors %}
-    <div class="col-xs-7">{{ field }}</div>
+    <div class="col-xs-7">{{ field|bootstrap_inline }}</div>
     <div class="col-xs-3 alert alert-danger">{{ field.errors }}</div>
     {% else %}
-    <div class="col-xs-10">{{ field }}</div>
+    <div class="col-xs-10">{{ field|bootstrap_inline }}</div>
     {% endif %}
   </div>
   {% if field.name == 'metric' %}
@@ -23,11 +25,6 @@
     </div>
   </div>
   {% else %}
-  {% endif %}
-  {% if field.help_text %}
-  <div class="col-xs-12">
-    <div class="col-xs-7 col-xs-offset-2"><p class="help-block">{{ field.help_text }}</p></div>
-  </div>
   {% endif %}
 </div>
 {% endfor %}
