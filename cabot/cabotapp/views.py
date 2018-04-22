@@ -18,6 +18,7 @@ from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse, reverse_lazy
 from django.core.validators import URLValidator
 from django.db import transaction
+from django.db.models.functions import Lower
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect, render
 from django.template import RequestContext, loader
@@ -822,7 +823,7 @@ class ServicePublicListView(TemplateView):
         context = super(ServicePublicListView, self).get_context_data(**kwargs)
         context[self.context_object_name] = Service.objects\
             .filter(is_public=True, alerts_enabled=True)\
-            .order_by('name').prefetch_related('status_checks')
+            .order_by(Lower('name')).prefetch_related('status_checks')
         return context
 
 class InstanceDetailView(LoginRequiredMixin, DetailView):
