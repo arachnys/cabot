@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    name: cabot
+  name: cabot
+  namespace: kube-system
+spec:
+  selector:
+      name: cabot
+  type: LoadBalancer
+  loadBalancerSourceRanges:
+  - 41.222.142.178/32
+  - 41.193.234.222/32
+  - 105.30.18.129/27
+  ports:
+    - port: 80
+      targetPort: 5000

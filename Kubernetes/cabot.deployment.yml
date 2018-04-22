@@ -1,0 +1,44 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: cabot
+  namespace: kube-system
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: cabot
+    spec:
+      containers:
+        - image: cabotapp/cabot:latest
+          name: cabot
+          command:
+            - sh
+            - -c
+            - "cabot migrate && gunicorn cabot.wsgi:application -b 0.0.0.0:5000 --workers=5"
+          ports:
+            - containerPort: 5000
+          env:
+            - name: CABOT_PLUGINS_ENABLED
+              value: cabot_alert_hipchat,cabot_alert_twilio,cabot_alert_email,cabot_alert_slack
+            - name: DJANGO_SETTINGS_MODULE
+              value: cabot.settings
+            - name: DATABASE_URL
+              value: postgres://postgres@127.0.0.1:5432/postgres
+            - name: CELERY_BROKER_URL
+              value: amqp://guest:guest@rabbitmq:5672//
+            - name: LOG_FILE
+              value: /dev/null
+            - name: HTTP_USER_AGENT
+              value: Cabot
+        - image: postgres:9.6-alpine
+          name: postgres
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5432
+        - image: rabbitmq:3.6-alpine
+          name: rabbitmq
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5672
