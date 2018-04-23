@@ -178,6 +178,7 @@ def jenkins_blocked_response(*args, **kwargs):
 def fake_http_200_response(*args, **kwargs):
     resp = Mock()
     resp.content = get_content('http_response.html')
+    resp.text = unicode(resp.content, 'utf-8')
     resp.status_code = 200
     return resp
 
@@ -185,6 +186,7 @@ def fake_http_200_response(*args, **kwargs):
 def fake_http_404_response(*args, **kwargs):
     resp = Mock()
     resp.content = get_content('http_response.html')
+    resp.text = unicode(resp.content, 'utf-8')
     resp.status_code = 404
     return resp
 
@@ -459,6 +461,8 @@ class TestCheckRun(LocalTestCase):
         self.assertFalse(self.http_check.last_result().succeeded)
         self.assertEqual(self.http_check.calculated_status,
                          Service.CALCULATED_FAILING_STATUS)
+        self.assertIn(u'Failed to find match regex',
+            self.http_check.last_result().error)
 
     @patch('cabot.cabotapp.models.requests.get', throws_timeout)
     def test_timeout_handling_in_http(self):
