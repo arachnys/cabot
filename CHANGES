@@ -2,7 +2,8 @@ master
 ------
 
 * Style forms with django-bootstrap-form
-
+* [[#605](https://github.com/arachnys/cabot/issues/605)] Fix http check forms auto-filling username/password
+* [[#607](https://github.com/arachnys/cabot/issues/607)] Fix checks for websites service non utf-8 content
 
 Version 0.11.12
 ---------------
