@@ -53,3 +53,9 @@ services:
     command: dockerize -wait tcp://root:test@db_mysql:3306 -timeout 60s
     depends_on:
       - db_mysql
+
+  wait_rabbitmq:
+    image: cabot:web
+    command: dockerize -wait tcp://rabbitmq:5672 -timeout 60s
+    depends_on:
+      - rabbitmq
