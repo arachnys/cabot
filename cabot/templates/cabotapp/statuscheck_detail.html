@@ -60,7 +60,7 @@
             <a href="{% url "result" pk=result.id %}">{{ result.time }}</a>
           </td>
           <td>{{ result.time_complete }}</td>
-          <td>{{ result.took }}</td>
+          <td>{{ result.took }} ms</td>
           <td>{% autoescape off %}{{ result.error|default:"" }}{% endautoescape %}</td>
         </tr>
       {% endfor %}

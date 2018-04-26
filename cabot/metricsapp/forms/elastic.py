@@ -35,6 +35,7 @@ class ElasticsearchStatusCheckForm(StatusCheckForm):
             'warning_value',
             'high_alert_importance',
             'high_alert_value',
+            'consecutive_failures',
             'time_range',
             'frequency',
             'active',
