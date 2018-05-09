@@ -660,6 +660,10 @@ class TestWebInterface(LocalTestCase):
         expected = '<a href="http://example.com/" title="http://example.com/" target="_blank">Public service with url</a>'
         self.assertIn(expected, response.content)
 
+    def test_favicon_ico(self):
+        response = self.client.get('/favicon.ico')
+        self.assertEqual(response.status_code, 200)
+
 
 class TestAPI(LocalTestCase):
     def setUp(self):
