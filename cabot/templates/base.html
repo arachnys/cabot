@@ -1,5 +1,6 @@
 {% extends 'base_public.html' %}
 {% block header_navbar_menu %}
+  {% if user.is_authenticated %}
   <ul class="nav navbar-nav">
     <li>
       <a href="{% url 'instances' %}"><i class="fa fa-desktop"></i> Instances</a>
@@ -73,4 +74,7 @@
             </ul>
           </li>
         </ul>
+  {% else %}
+    {{ block.super }}
+  {% endif %}
 {% endblock header_navbar_menu %}
