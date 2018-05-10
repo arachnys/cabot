@@ -222,7 +222,7 @@ class HttpStatusCheckForm(StatusCheckForm):
         widgets.update({
             'endpoint': forms.TextInput(attrs={
                 'style': 'width: 100%',
-                'placeholder': 'https://www.arachnys.com',
+                'placeholder': 'https://www.example.org/',
             }),
             'username': forms.TextInput(attrs={
                 'style': 'width: 30%',
