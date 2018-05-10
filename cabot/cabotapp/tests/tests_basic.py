@@ -559,6 +559,19 @@ class TestWebInterface(LocalTestCase):
         super(TestWebInterface, self).setUp()
         self.client = Client()
 
+    def test_404_page_anonymous_user(self):
+        response = self.client.get('/not/found/for/sure')
+        self.assertIn('Page not found.', response.content)
+        self.assertNotIn('Profile Settings', response.content)
+        self.assertEqual(response.status_code, 404)
+
+    def test_404_page_logged_in_user(self):
+        self.client.login(username=self.username, password=self.password)
+        response = self.client.get('/not/found/for/sure')
+        self.assertIn('Page not found.', response.content)
+        self.assertIn('Profile Settings', response.content)
+        self.assertEqual(response.status_code, 404)
+
     def test_set_recovery_instructions(self):
         # Get service page - will get 200 from login page
         resp = self.client.get(reverse('update-service', kwargs={'pk':self.service.id}), follow=True)
