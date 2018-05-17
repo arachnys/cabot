@@ -1,6 +1,7 @@
 from rest_framework import status, HTTP_HEADER_ENCODING
 from rest_framework.reverse import reverse as api_reverse
 import base64
+import json
 from cabot.cabotapp.models import JenkinsStatusCheck, Service
 from .utils import LocalTestCase
 
@@ -272,3 +273,90 @@ class TestAPIFiltering(LocalTestCase):
             [item['name'] for item in response.data],
             self.expected_sort_names[::-1]
         )
+
+
+class TestActivityCounterAPI(LocalTestCase):
+    def setUp(self):
+        super(TestActivityCounterAPI, self).setUp()
+        # Use the HTTP check for testing
+        self.http_check.ensure_activity_counter_exists(save=False)
+        self.http_check.use_activity_counter = True
+        self.http_check.activity_counter.count = 1
+        self.http_check.activity_counter.save()
+        self.http_check.save()
+
+    def test_counter_get(self):
+        url = '/api/status-checks/activity-counter?'
+        expected_body = {
+            'check.id': 10102,
+            'check.name': 'Http Check',
+            'counter.count': 1,
+            'counter.enabled': True,
+        }
+        # Get by id
+        response = self.client.get(url + 'id=10102')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(json.loads(response.content), expected_body)
+        # Get by name
+        response = self.client.get(url + 'name=Http Check')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(json.loads(response.content), expected_body)
+
+    def test_counter_incr(self):
+        url = '/api/status-checks/activity-counter?id=10102&action=incr'
+        expected_body = {
+            'check.id': 10102,
+            'check.name': 'Http Check',
+            'counter.count': 2,
+            'counter.enabled': True,
+            'detail': 'counter incremented to 2',
+        }
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(json.loads(response.content), expected_body)
+
+    def test_counter_decr(self):
+        url = '/api/status-checks/activity-counter?id=10102&action=decr'
+        expected_body = {
+            'check.id': 10102,
+            'check.name': 'Http Check',
+            'counter.count': 0,
+            'counter.enabled': True,
+            'detail': 'counter decremented to 0',
+        }
+        # Decrement counter from one to zero
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(json.loads(response.content), expected_body)
+        # Decrementing when counter is zero has no effect
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(json.loads(response.content), expected_body)
+
+    def test_counter_reset(self):
+        url = '/api/status-checks/activity-counter?id=10102&action=reset'
+        expected_body = {
+            'check.id': 10102,
+            'check.name': 'Http Check',
+            'counter.count': 0,
+            'counter.enabled': True,
+            'detail': 'counter reset to 0',
+        }
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(json.loads(response.content), expected_body)
+
+    def test_check_should_run_when_activity_counter_disabled(self):
+        self.http_check.use_activity_counter = False
+        self.http_check.activity_counter.count = 0
+        self.assertTrue(self.http_check.should_run())
+
+    def test_check_should_run_when_activity_counter_positive(self):
+        self.http_check.use_activity_counter = True
+        self.http_check.activity_counter.count = 1
+        self.assertTrue(self.http_check.should_run())
+
+    def test_check_should_not_run_when_activity_counter_zero(self):
+        self.http_check.use_activity_counter = True
+        self.http_check.activity_counter.count = 0
+        self.assertFalse(self.http_check.should_run())

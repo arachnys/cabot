@@ -36,6 +36,7 @@ from cabot.cabotapp.views import (
     UserProfileUpdateView,
     ShiftListView,
     subscriptions,
+    ActivityCounterView,
 )
 
 from cabot.metricsapp.views import (
@@ -210,6 +211,10 @@ urlpatterns = patterns(
     url(r'^grafana/series/(?P<pk>\d+)/',
         view=GrafanaSeriesSelectView.as_view(),
         name='grafana-series-select'),
+
+    url(r'^api/status-checks/activity-counter(/?)',
+        view=ActivityCounterView.as_view(),
+        name='activity-counter'),
 
     # Comment below line to disable browsable rest api
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),

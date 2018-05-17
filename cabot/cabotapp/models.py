@@ -1,6 +1,7 @@
 from celery.exceptions import SoftTimeLimitExceeded
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models, transaction
 from polymorphic import PolymorphicModel
 
@@ -334,6 +335,15 @@ class StatusCheck(PolymorphicModel):
         default=True,
         help_text='If not active, check will not be used to calculate service status and will not trigger alerts.',
     )
+    use_activity_counter = models.BooleanField(
+        default=False,
+        help_text='When enabled, a check\'s \'activity counter\' is used to tell if '
+                  'the check can run. The activity counter starts at zero and may be '
+                  'incremented or decremented via API call. When incremented above '
+                  'zero, the check may run. When decremented to zero, the check will '
+                  'not run. This allows external processes to enable or disable a check '
+                  'as needed. (Note: the check must also be marked \'Active\' to run.)',
+    )
     importance = models.CharField(
         max_length=30,
         choices=Service.IMPORTANCES,
@@ -380,6 +390,21 @@ class StatusCheck(PolymorphicModel):
             return StatusCheckResult.objects.filter(check=self).order_by('-id').defer('raw_data')[0]
         except:
             return None
+
+    def should_run(self):
+        '''Returns true if the check should run, false otherwise.'''
+        # Do not run if the activity counter is enabled and zero
+        if self.use_activity_counter and self.activity_counter.count <= 0:
+            logger.info("Skipping check '{}', activity counter is zero".format(self.name))
+            return False
+
+        # Run if we haven't run at all
+        if not self.last_run:
+            return True
+
+        # Otherwise, determine if the check should run based on its frequency
+        next_run_time = self.last_run + timedelta(minutes=self.frequency)
+        return timezone.now() > next_run_time
 
     def run(self):
         start = timezone.now()
@@ -450,6 +475,32 @@ class StatusCheck(PolymorphicModel):
     def get_status_link(self):
         """Return a link with more information about the check"""
         return None
+
+    def ensure_activity_counter_exists(self, save=True):
+        '''
+        Create an ActivityCounter for this ServiceCheck.
+        - If 'save' is true, also save the ActivityCounter to the database.
+        - Returns the ActivityCounter object.
+        '''
+        try:
+            self.activity_counter
+        except ObjectDoesNotExist:
+            self.activity_counter = ActivityCounter.objects.create(status_check_id=self.id)
+            self.activity_counter.save()
+        return self.activity_counter
+
+
+class ActivityCounter(models.Model):
+    '''
+    Model containing the current activity-counter value for a check with
+    use_activity_counter set to True.
+    '''
+    status_check = models.OneToOneField(
+        StatusCheck,
+        on_delete=models.CASCADE,
+        related_name='activity_counter',
+    )
+    count = models.PositiveIntegerField(default=0)
 
 
 class HttpStatusCheck(StatusCheck):
@@ -690,7 +741,7 @@ class TCPStatusCheck(StatusCheck):
         max_length=1024,
         help_text='IP address or hostname to monitor',)
     port = models.PositiveIntegerField(
-        help_text='Port to listen on',)
+        help_text='Port to connect to',)
     timeout = PositiveIntegerMaxField(
         default=defs.DEFAULT_TCP_TIMEOUT,
         max_value=defs.MAX_TCP_TIMEOUT,
