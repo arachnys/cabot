@@ -1,6 +1,7 @@
 master
 ------
 
+* Fix bug where jenkins checks were always passing
 * Reduce Arachnys branding a bit
 * Fix 404 page for logged out users
 * Style forms with django-bootstrap-form
