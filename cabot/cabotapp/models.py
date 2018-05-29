@@ -907,8 +907,10 @@ def update_shifts(schedule):
     events = get_events(schedule)
     users = User.objects.filter(is_active=True)
     user_lookup = {}
+    email_lookup = {}
     for u in users:
         user_lookup[u.username.lower()] = u
+        email_lookup[u.email.lower()] = u
 
     with transaction.atomic():
         # Set all shifts to deleted, ones that are still active will set deleted to False
@@ -919,15 +921,22 @@ def update_shifts(schedule):
             summary = event['summary'].lower().strip()
             attendee = event['attendee'].lower().strip()
 
-            if summary in user_lookup:
+            if summary in user_lookup or summary in email_lookup:
                 e = summary
-            elif attendee in user_lookup:
+            elif attendee in user_lookup or attendee in email_lookup:
                 e = attendee
             else:
                 e = None
 
             if e is not None:
-                user = user_lookup[e]
+                user = user_lookup.get(e)
+                if user is None:
+                    user = email_lookup.get(e)
+
+                if user is None:
+                    logger.exception('Could not find user % for schedule %'.format(e, schedule.name))
+                    return
+
                 s = Shift.objects.filter(uid=event['uid'], schedule=schedule).first()
                 if s is None:
                     s = Shift(uid=event['uid'], schedule=schedule)

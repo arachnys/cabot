@@ -694,14 +694,16 @@ class TestSchedules(LocalTestCase):
     def setUp(self):
         super(TestSchedules, self).setUp()
         self.create_fake_users(['dolores@affirm.com', 'bernard@affirm.com', 'teddy@affirm.com',
-                                'maeve@affirm.com', 'hector@affirm.com', 'armistice@affirm.com'])
+                                'maeve@affirm.com', 'hector@affirm.com', 'armistice@affirm.com',
+                                'longnamelongnamelongnamelongname@affirm.com', 'shortname@affirm.com'])
 
     def create_fake_users(self, usernames):
         """Create fake Users with the listed usernames"""
         for user in usernames:
             User.objects.create(
-                username=user,
+                username=user[:30],
                 password='fakepassword',
+                email=user,
                 is_active=True,
             )
 
@@ -711,8 +713,8 @@ class TestSchedules(LocalTestCase):
         Make sure the correct person is marked as a duty officer
         if there's a single calendar
         """
-        # initial user plus new 6
-        self.assertEqual(len(User.objects.all()), 7)
+        # initial user plus new 8
+        self.assertEqual(len(User.objects.all()), 9)
 
         update_shifts(self.schedule)
 
@@ -743,7 +745,7 @@ class TestSchedules(LocalTestCase):
         Add a second calendar and make sure the correct duty officers are marked
         for each calendar
         """
-        self.assertEqual(len(User.objects.all()), 7)
+        self.assertEqual(len(User.objects.all()), 9)
 
         update_shifts(self.secondary_schedule)
         update_shifts(self.schedule)
@@ -761,7 +763,7 @@ class TestSchedules(LocalTestCase):
         """
         Make sure get_all_duty_officers works with multiple calendars
         """
-        self.assertEqual(len(User.objects.all()), 7)
+        self.assertEqual(len(User.objects.all()), 9)
 
         update_shifts(self.schedule)
         update_shifts(self.secondary_schedule)
@@ -797,3 +799,16 @@ class TestSchedules(LocalTestCase):
         officers = get_duty_officers(self.schedule, at_time=datetime(2016, 11, 8, 10, 0, 0))
         usernames = [str(user.username) for user in officers]
         self.assertEqual(usernames, ['hector@affirm.com'])
+
+    @patch('cabot.cabotapp.models.requests.get', fake_calendar)
+    def test_calendar_long_name(self):
+        """
+        Test that we can sync oncall schedules for users with emails > 30 characters
+        """
+        self.schedule.ical_url = 'calendar_response_long_name.ics'
+        self.schedule.save()
+        update_shifts(self.schedule)
+
+        officers = get_duty_officers(self.schedule, at_time=datetime(2016, 11, 7, 10, 0, 0))
+        emails = [str(user.email) for user in officers]
+        self.assertEqual(emails, ['longnamelongnamelongnamelongname@affirm.com'])
