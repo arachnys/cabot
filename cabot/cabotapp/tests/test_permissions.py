@@ -1,8 +1,7 @@
-from cabot.cabotapp.tests.tests_basic import LocalTestCase
-
 from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.reverse import reverse as api_reverse
+from .utils import LocalTestCase
 
 
 class TestUserPermissions(LocalTestCase):
