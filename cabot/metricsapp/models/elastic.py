@@ -95,6 +95,13 @@ class ElasticsearchStatusCheck(MetricsStatusCheckBase):
                   'the same as the metric types (e.g., "max", "min", "avg").'
     )
 
+    ignore_final_data_point = models.BooleanField(
+        default=True,
+        help_text='True to skip the final data point when calculating status for this '
+                  'check (since the data point is a partial bucket which may be incomplete and '
+                  'have skewed data). False to use all data points.'
+    )
+
     def clean(self, *args, **kwargs):
         """Validate the query"""
         try:
@@ -201,9 +208,13 @@ class ElasticsearchStatusCheck(MetricsStatusCheckBase):
                 data[metric].append([timestamp, value])
 
         for series, datapoints in data.iteritems():
-            # The last bucket may not have complete data, so we'll ignore it
             datapoints = sorted(datapoints, key=lambda x: x[0])
-            output.append(dict(series=series, datapoints=datapoints[:-1]))
+
+            # Ignore the last data point if specified in the source
+            if self.ignore_final_data_point:
+                datapoints = datapoints[:-1]
+
+            output.append(dict(series=series, datapoints=datapoints))
 
         return output
 
