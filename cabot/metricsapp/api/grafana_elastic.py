@@ -88,8 +88,9 @@ def _get_date_histogram_settings(agg, min_time, default_interval):
     :param default_interval: default for the group by interval
     :return: dict of {setting_name: setting_value}
     """
-    interval = agg['settings']['interval']
+    interval = str(agg['settings']['interval'])
     if interval == 'auto':
+        logger.info('auto interval used, setting to %s' % default_interval)
         interval = default_interval
 
     return dict(field=agg['field'], interval=interval, extended_bounds={'min': min_time, 'max': 'now'})
