@@ -37,7 +37,7 @@
           <!-- Custom check plugins buttons-->
           {% for checktype in custom_check_types %}
             <li>
-              <a href="{% url checktype.creation_url %}?service={{ service.id }}&instance={{ instance.id }}" class="" title="Add new {{checktype.check_name|capfirst}} check"><i class="glyphicon glyphicon-transfer"></i> {{checktype.check_name|capfirst}} check</a>
+              <a href="{% url checktype.creation_url %}?service={{ service.id }}&instance={{ instance.id }}" class="" title="Add new {{checktype.check_name|capfirst}} check"><i class="glyphicon {{checktype.icon_class|default:"glyphicon-ok"}}"></i> {{checktype.check_name|capfirst}} check</a>
             </li>
           {% endfor %}
         </ul>
