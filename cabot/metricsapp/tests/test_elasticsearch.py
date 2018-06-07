@@ -366,6 +366,25 @@ class TestElasticsearchStatusCheck(TestCase):
         self.es_check.duplicate()
         self.assertEqual(len(ElasticsearchStatusCheck.objects.all()), 2)
 
+    @patch('cabot.metricsapp.models.elastic.MultiSearch.execute', fake_es_response)
+    @patch('time.time', mock_time)
+    def test_ignore_final_datapoint(self):
+        self.es_check.ignore_final_data_point = False
+        self.es_check.save()
+        # Test output series
+        series = self.es_check.get_series()
+        self.assertFalse(series['error'])
+        self.assertEqual(series['raw'], get_json_file('es_response.json'))
+        data = series['data']
+        self.assertEqual(len(data), 1)
+
+        data = data[0]
+        self.assertEqual(str(data['series']), 'avg')
+        self.assertEqual(data['datapoints'], [[1491552000, 4.9238095238095], [1491555600, 4.7958115183246],
+                                              [1491559200, 3.53005464480873], [1491562800, 4.04651162790697],
+                                              [1491566400, 4.8390501319261], [1491570000, 4.51913477537437],
+                                              [1491573600, 4.4642857142857], [1491577200, 4.81336405529953]])
+
 
 class TestQueryValidation(TestCase):
     def test_valid_query(self):
