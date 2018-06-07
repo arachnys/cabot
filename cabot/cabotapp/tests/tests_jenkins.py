@@ -6,6 +6,7 @@ from datetime import timedelta
 import jenkins
 from cabot.cabotapp import jenkins as cabot_jenkins
 from cabot.cabotapp.models import JenkinsConfig
+from cabot.cabotapp.models.jenkins_check_plugin import JenkinsStatusCheck
 from django.utils import timezone
 from freezegun import freeze_time
 from mock import create_autospec, patch
@@ -67,17 +68,19 @@ class TestGetStatus(unittest.TestCase):
             u'result': u'SUCCESS'
         }
 
-        status = cabot_jenkins.get_job_status(self.mock_config, 'foo')
+        jenkins_check = JenkinsStatusCheck(
+            name="foo",
+            jenkins_config=JenkinsConfig(
+                name="name",
+                jenkins_api="a",
+                jenkins_user="u",
+                jenkins_pass="p"
+            )
+        )
+        result = JenkinsStatusCheck._run(jenkins_check)
 
-        expected = {
-            'active': True,
-            'succeeded': False,
-            'job_number': 12,
-            'blocked_build_time': None,
-            'consecutive_failures': 1,
-            'status_code': 200
-        }
-        self.assertEqual(status, expected)
+        self.assertEqual(result.consecutive_failures, 1)
+        self.assertFalse(result.succeeded)
 
     @freeze_time('2017-03-02 10:30')
     @patch("cabot.cabotapp.jenkins._get_jenkins_client")
