@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from cabot.cabotapp.alert import send_alert, AlertPlugin
 from cabot.cabotapp.models import Schedule, Service, UserProfile
-from cabot.cabotapp.tests.tests_basic import LocalTestCase
+from .utils import LocalTestCase
 
 
 class TestAlerts(LocalTestCase):

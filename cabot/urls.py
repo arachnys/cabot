@@ -4,35 +4,57 @@ from importlib import import_module
 from django.conf.urls import patterns, include, url
 from django.conf import settings
 from cabot.cabotapp.views import (
-        run_status_check, checks_run_recently, duplicate_check,
-        HttpCheckCreateView, HttpCheckUpdateView,
-        JenkinsCheckCreateView, JenkinsCheckUpdateView,
-        TCPCheckCreateView, TCPCheckUpdateView,
-        StatusCheckDeleteView, StatusCheckListView, StatusCheckDetailView,
-        AuthComplete, LoginError,
-        StatusCheckResultDetailView, StatusCheckReportView,
-        UserProfileUpdateAlert, ScheduleCreateView,
-        ScheduleListView, ScheduleUpdateView, ScheduleDeleteView
+    run_status_check,
+    checks_run_recently,
+    duplicate_check,
+    HttpCheckCreateView,
+    HttpCheckUpdateView,
+    JenkinsCheckCreateView,
+    JenkinsCheckUpdateView,
+    TCPCheckCreateView,
+    TCPCheckUpdateView,
+    StatusCheckDeleteView,
+    StatusCheckListView,
+    StatusCheckDetailView,
+    AuthComplete,
+    LoginError,
+    StatusCheckResultDetailView,
+    StatusCheckReportView,
+    UserProfileUpdateAlert,
+    ScheduleCreateView,
+    ScheduleListView,
+    ScheduleUpdateView,
+    ScheduleDeleteView,
 )
 
 from cabot.cabotapp.views import (
-    ServiceListView, ServiceDetailView,
-    ServiceUpdateView, ServiceCreateView, ServiceDeleteView,
-    UserProfileUpdateView, ShiftListView, subscriptions,
+    ServiceListView,
+    ServiceDetailView,
+    ServiceUpdateView,
+    ServiceCreateView,
+    ServiceDeleteView,
+    UserProfileUpdateView,
+    ShiftListView,
+    subscriptions,
 )
 
 from cabot.metricsapp.views import (
-    GrafanaInstanceSelectView, GrafanaDashboardSelectView,
-    GrafanaPanelSelectView, GrafanaSeriesSelectView,
-    GrafanaElasticsearchStatusCheckCreateView, GrafanaElasticsearchStatusCheckUpdateView,
-    GrafanaElasticsearchStatusCheckRefreshView, GrafanaEditView
+    GrafanaInstanceSelectView,
+    GrafanaDashboardSelectView,
+    GrafanaPanelSelectView,
+    GrafanaSeriesSelectView,
+    GrafanaElasticsearchStatusCheckCreateView,
+    GrafanaElasticsearchStatusCheckUpdateView,
+    GrafanaElasticsearchStatusCheckRefreshView,
+    GrafanaEditView,
 )
 from cabot import rest_urls
 
 from django.contrib import admin
 from django.views.generic.base import RedirectView
 from django.contrib.auth.views import (
-    login, logout,
+    login,
+    logout,
     password_reset,
     password_reset_done,
     password_reset_confirm,
