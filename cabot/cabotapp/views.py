@@ -48,6 +48,9 @@ import re
 from icalendar import Calendar
 from django.template.defaulttags import register
 
+from celery.utils.log import get_task_logger
+logger = get_task_logger(__name__)
+
 
 class LoginRequiredMixin(object):
 
@@ -796,14 +799,16 @@ class ActivityCounterView(View):
         - Returns a StatusCheck object.
         - Will raise a ViewError if no check is found.
         '''
-        check = None
+        checks = None
         if id:
-            check = StatusCheck.objects.filter(id=id).first()
-        if name and not check:
-            check = StatusCheck.objects.filter(name=name).first()
-        if check:
-            return check
-        raise ViewError('Check not found', 404)
+            checks = StatusCheck.objects.filter(id=id)
+        if name and not checks:
+            checks = StatusCheck.objects.filter(name=name)
+            if checks and len(checks) > 1:
+                raise ViewError("Multiple checks found with name '{}'".format(name), 500)
+        if not checks:
+            raise ViewError('Check not found', 404)
+        return checks.first()
 
     def _handle_action(self, check, action):
         '''

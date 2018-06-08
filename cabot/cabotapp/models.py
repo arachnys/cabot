@@ -27,6 +27,18 @@ from celery.utils.log import get_task_logger
 logger = get_task_logger(__name__)
 
 
+def clone_model(model):
+    '''
+    Utility function to clone a model. You must set both `id` and `pk` to
+    `None`, and then save it. It will store a new copy of the model in the
+    database, with a new primary key.
+    https://docs.djangoproject.com/en/2.0/topics/db/queries/#copying-model-instances
+    '''
+    model.id = None
+    model.pk = None
+    model.save()
+
+
 def serialize_recent_results(recent_results):
     if not recent_results:
         return ''

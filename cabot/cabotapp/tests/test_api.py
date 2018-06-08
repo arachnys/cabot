@@ -2,7 +2,12 @@ from rest_framework import status, HTTP_HEADER_ENCODING
 from rest_framework.reverse import reverse as api_reverse
 import base64
 import json
-from cabot.cabotapp.models import JenkinsStatusCheck, Service
+from cabot.cabotapp.models import (
+    StatusCheck,
+    JenkinsStatusCheck,
+    Service,
+    clone_model,
+)
 from .utils import LocalTestCase
 
 
@@ -301,6 +306,15 @@ class TestActivityCounterAPI(LocalTestCase):
         response = self.client.get(url + 'name=Http Check')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(json.loads(response.content), expected_body)
+
+    def test_counter_get_error_on_duplicate_names(self):
+        # If two checks have the same name, check that we error out.
+        # This should not be an issue once we enforce uniqueness on the name.
+        clone_model(self.http_check)
+        self.assertEqual(len(StatusCheck.objects.filter(name='Http Check')), 2)
+        url = '/api/status-checks/activity-counter?name=Http Check'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def test_counter_incr(self):
         url = '/api/status-checks/activity-counter?id=10102&action=incr'
