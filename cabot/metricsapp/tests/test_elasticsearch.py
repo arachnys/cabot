@@ -91,6 +91,10 @@ def fake_es_only_none(*args):
     return [Response(Search(), response) for response in get_json_file('es_only_none.json')]
 
 
+def fake_es_one_datapoint(*args):
+    return [Response(Search(), response) for response in get_json_file('es_one_datapoint.json')]
+
+
 def mock_time():
     return 1491577200.0
 
@@ -384,6 +388,24 @@ class TestElasticsearchStatusCheck(TestCase):
                                               [1491559200, 3.53005464480873], [1491562800, 4.04651162790697],
                                               [1491566400, 4.8390501319261], [1491570000, 4.51913477537437],
                                               [1491573600, 4.4642857142857], [1491577200, 4.81336405529953]])
+
+    @patch('cabot.metricsapp.models.elastic.MultiSearch.execute', fake_es_one_datapoint)
+    @patch('time.time', mock_time)
+    def test_one_datapoint(self):
+        """Test that we get rid of series with no data"""
+        series = self.es_check.get_series()
+        self.assertFalse(series['error'])
+        self.assertEqual(series['raw'], get_json_file('es_one_datapoint.json'))
+        data = series['data']
+        self.assertEqual(len(data), 1)
+
+        data = data[0]
+        self.assertEqual(str(data['series']), 'no_data_fill_0')
+        self.assertEqual(data['datapoints'], [[1491577200, 0]])
+
+        result = self.es_check._run()
+        self.assertFalse(result.succeeded)
+        self.assertEqual(result.error, 'CRITICAL no_data_fill_0: 0.0 not >= 3.0')
 
 
 class TestQueryValidation(TestCase):

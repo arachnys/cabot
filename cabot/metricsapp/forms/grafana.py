@@ -71,6 +71,7 @@ class GrafanaPanelForm(forms.Form):
         try:
             GrafanaDataSource.objects.get(grafana_source_name=datasource,
                                           grafana_instance_id=grafana_instance_id)
+
         except GrafanaDataSource.DoesNotExist:
             raise forms.ValidationError('No matching data source for {}.'.format(datasource))
 
