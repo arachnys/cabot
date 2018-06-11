@@ -56,11 +56,12 @@ def get_dashboard_info(grafana_instance, dashboard_uri):
     return _grafana_api_request(grafana_instance, 'api/dashboards/{}'.format(dashboard_uri))
 
 
-def get_panel_choices(dashboard_info, templating_dict):
+def get_panel_choices(dashboard_info, templating_dict, grafana_instance_id):
     """
     Get a list of graph panel choices (names and data)
     :param dashboard_info: Dashboard data from the Grafana API
     :param templating_dict: dictionary of {template_name, template_value}
+    :param grafana_instance_id: Grafana instance id
     :return list of ({panel_id, datasource, panel_info}, name) tuples for panels
     """
     panels = []
@@ -72,7 +73,8 @@ def get_panel_choices(dashboard_info, templating_dict):
                 datasource = 'default'
 
             title = template_response(panel['title'], templating_dict)
-            panels.append((dict(panel_id=panel['id'], datasource=datasource, panel_info=panel), title))
+            panels.append((dict(panel_id=panel['id'], datasource=datasource, panel_info=panel,
+                                grafana_instance_id=grafana_instance_id), title))
 
     return panels
 

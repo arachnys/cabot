@@ -66,9 +66,11 @@ class GrafanaPanelForm(forms.Form):
         """Make sure the data source for the panel is supported"""
         panel = eval(self.cleaned_data['panel'])
         datasource = panel['datasource']
+        grafana_instance_id = panel['grafana_instance_id']
 
         try:
-            GrafanaDataSource.objects.get(grafana_source_name=datasource)
+            GrafanaDataSource.objects.get(grafana_source_name=datasource,
+                                          grafana_instance_id=grafana_instance_id)
         except GrafanaDataSource.DoesNotExist:
             raise forms.ValidationError('No matching data source for {}.'.format(datasource))
 

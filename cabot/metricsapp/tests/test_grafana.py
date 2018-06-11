@@ -37,15 +37,15 @@ class TestGrafanaApiParsing(TestCase):
         self.assertEqual(choices, expected_choices)
 
     def test_get_panel_choices(self):
-        choices = get_panel_choices(self.dashboard_info, self.templating_dict)
+        choices = get_panel_choices(self.dashboard_info, self.templating_dict, 1)
         # Remove extended panel data from choices
-        choices = [(dict(panel_id=panel[0]['panel_id'], datasource=panel[0]['datasource']),
+        choices = [(dict(panel_id=panel[0]['panel_id'], datasource=panel[0]['datasource'], grafana_instance_id=1),
                     panel[1]) for panel in choices]
 
         # ({id, datasource}, title)
-        expected_choices = [(dict(panel_id=1, datasource='deep-thought'), '42'),
-                            (dict(panel_id=5, datasource='shallow-thought'), 'Pct 75'),
-                            (dict(panel_id=3, datasource='ds'), 'Panel 106')]
+        expected_choices = [(dict(panel_id=1, datasource='deep-thought', grafana_instance_id=1), '42'),
+                            (dict(panel_id=5, datasource='shallow-thought', grafana_instance_id=1), 'Pct 75'),
+                            (dict(panel_id=3, datasource='ds', grafana_instance_id=1), 'Panel 106')]
 
         self.assertEqual(choices, expected_choices)
 
@@ -235,6 +235,24 @@ class TestDashboardSync(TestCase):
             grafana_panel=self.panel,
             auto_sync=True
         )
+
+    @patch('cabot.metricsapp.tasks.get_dashboard_info')
+    @patch('cabot.metricsapp.tasks.send_grafana_sync_email.apply_async')
+    def test_sync_multiple_sources(self, send_email, fake_get_dashboard_info):
+        """If there are multiple sources with the same name, get data from the correct one"""
+        grafana_instance2 = GrafanaInstance.objects.create(
+            name='graf2',
+            url='graf2',
+            api_key='graf2'
+        )
+        self.panel.grafana_instance = grafana_instance2
+        self.panel.save()
+
+        fake_get_dashboard_info.side_effect = raise_validation_error
+
+        sync_grafana_check(self.check.id, str(datetime(2017, 2, 1, 0, 0, 1, 123)))
+        # Sync based on the correct Grafana instance
+        fake_get_dashboard_info.assert_called_once_with(grafana_instance2, 'db/42')
 
     @patch('cabot.metricsapp.tasks.get_dashboard_info', fake_get_dashboard_info)
     @patch('cabot.metricsapp.tasks.send_grafana_sync_email.apply_async')

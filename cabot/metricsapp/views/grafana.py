@@ -88,18 +88,22 @@ class GrafanaPanelSelectView(LoginRequiredMixin, View):
 
     def get(self, request, *args, **kwargs):
         pk = kwargs.get('pk')
+        grafana_instance_id = request.session['instance_id']
         default_panel_id = None
         if pk is not None and MetricsStatusCheckBase.objects.filter(id=pk).exists():
             default_panel_id = MetricsStatusCheckBase.objects.get(id=pk).grafana_panel.panel_id
 
         form = self.form_class(panels=get_panel_choices(request.session['dashboard_info'],
-                                                        request.session['templating_dict']),
+                                                        request.session['templating_dict'],
+                                                        grafana_instance_id),
                                default_panel_id=default_panel_id)
         return render(request, self.template_name, {'form': form})
 
     def post(self, request, *args, **kwargs):
+        grafana_instance_id = request.session['instance_id']
         form = self.form_class(request.POST, panels=get_panel_choices(request.session['dashboard_info'],
-                                                                      request.session['templating_dict']),
+                                                                      request.session['templating_dict'],
+                                                                      grafana_instance_id),
                                default_panel_id=None)
         if form.is_valid() and not form.errors:
             panel_dict = form.cleaned_data['panel']
