@@ -9,6 +9,7 @@ from models import (StatusCheck,
                     HttpStatusCheck,
                     TCPStatusCheck,
                     StatusCheckResult,
+                    ActivityCounter,
                     UserProfile,
                     Service,
                     Shift,
@@ -34,6 +35,7 @@ from django.utils import timezone
 from django.utils.timezone import utc
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ValidationError
+from django.db import transaction
 
 from cabot.cabotapp import alert
 from models import AlertPluginUserData
@@ -762,36 +764,40 @@ class ViewError(Exception):
 
 class ActivityCounterView(View):
 
+    # Enable transactions to prevent race conditions when multiple requests are
+    # reading and updating a counter.
+    @transaction.atomic
     def get(self, request, pk):
         '''Handle an HTTP GET request'''
+        id = request.GET.get('id', None)
+        name = request.GET.get('name', None)
+
+        # We require the name or id of a check
+        if not (id or name):
+            return json_error_response('Please provide a name or id', 400)
+
         try:
-            id = request.GET.get('id', None)
-            name = request.GET.get('name', None)
-
-            # We require the name or id of a check
-            if not (id or name):
-                return json_error_response('Please provide a name or id', 400)
-
             # Lookup the check and make sure it has a related ActivityCounter
             check = self._lookup_check(id, name)
-            check.ensure_activity_counter_exists()
+            ActivityCounter.objects.get_or_create(status_check=check)
 
             # Perform the action and return the result
             action = request.GET.get('action', 'read')
             pretty = request.GET.get('pretty') == 'true'
             message = self._handle_action(check, action)
-            data = {
-                'check.id': check.id,
-                'check.name': check.name,
-                'counter.count': check.activity_counter.count,
-                'counter.enabled': check.use_activity_counter,
-            }
-            if message:
-                data['detail'] = message
-            return json_response(data, 200, pretty=pretty)
 
         except ViewError as e:
             return json_error_response(e.message, e.code)
+
+        data = {
+            'check.id': check.id,
+            'check.name': check.name,
+            'counter.count': check.activity_counter.count,
+            'counter.enabled': check.use_activity_counter,
+        }
+        if message:
+            data['detail'] = message
+        return json_response(data, 200, pretty=pretty)
 
     def _lookup_check(self, id, name):
         '''
@@ -804,6 +810,7 @@ class ActivityCounterView(View):
             checks = StatusCheck.objects.filter(id=id)
         if name and not checks:
             checks = StatusCheck.objects.filter(name=name)
+            # TODO(evan): remove after making name unique
             if checks and len(checks) > 1:
                 raise ViewError("Multiple checks found with name '{}'".format(name), 500)
         if not checks:

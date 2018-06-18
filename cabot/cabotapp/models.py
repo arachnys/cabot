@@ -1,7 +1,6 @@
 from celery.exceptions import SoftTimeLimitExceeded
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.core.exceptions import ObjectDoesNotExist
 from django.db import models, transaction
 from polymorphic import PolymorphicModel
 
@@ -487,19 +486,6 @@ class StatusCheck(PolymorphicModel):
     def get_status_link(self):
         """Return a link with more information about the check"""
         return None
-
-    def ensure_activity_counter_exists(self, save=True):
-        '''
-        Create an ActivityCounter for this ServiceCheck.
-        - If 'save' is true, also save the ActivityCounter to the database.
-        - Returns the ActivityCounter object.
-        '''
-        try:
-            self.activity_counter
-        except ObjectDoesNotExist:
-            self.activity_counter = ActivityCounter.objects.create(status_check_id=self.id)
-            self.activity_counter.save()
-        return self.activity_counter
 
 
 class ActivityCounter(models.Model):
