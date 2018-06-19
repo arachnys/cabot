@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from datetime import timedelta
+from django.core.exceptions import ValidationError
 from django.utils import timezone
 from cabot.cabotapp import tasks
 from mock import patch
@@ -251,8 +252,23 @@ class TestStatusCheck(LocalTestCase):
         self.http_check.save()
         self.assertFalse(self.http_check.should_run())
 
-    def test_status_check_name_unique(self):
-        # TODO(evan): remove after making name unique
+    def test_clean_validates_unique_name(self):
+        self.http_check.use_activity_counter = True
+        self.http_check.save()
+
+        # Duplicate the check
         clone_model(self.http_check)
         models = HttpStatusCheck.objects.filter(name=self.http_check.name)
         self.assertEqual(len(models), 2)
+        check_1, check_2 = models
+
+        # If both have their activity counters enabled, then clean() should raise
+        self.assertTrue(check_1.use_activity_counter)
+        self.assertTrue(check_2.use_activity_counter)
+        with self.assertRaises(ValidationError):
+            check_1.clean()
+
+        # If one does not use activity counters, clean() should not raise
+        check_2.use_activity_counter = False
+        check_2.save()
+        check_1.clean()

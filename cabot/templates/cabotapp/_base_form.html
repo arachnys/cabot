@@ -1,6 +1,8 @@
 <div class="form-group">
   <div class="col-xs-10 col-xs-offset-2">
-    {{ form.non_field_errors }}
+    <div class="non-field-errors">
+      {{ form.non_field_errors }}
+    </div>
   </div>
 </div>
 {% csrf_token %}
