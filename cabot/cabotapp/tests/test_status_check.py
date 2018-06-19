@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
+from datetime import timedelta
 from django.utils import timezone
 from cabot.cabotapp import tasks
 from mock import patch
-from cabot.cabotapp.models import HttpStatusCheck, Service
+from cabot.cabotapp.models import HttpStatusCheck, Service, clone_model
 from .utils import (
     LocalTestCase,
     fake_jenkins_success,
@@ -188,3 +189,27 @@ class TestStatusCheck(LocalTestCase):
     def test_run_all(self):
         tasks.run_all_checks()
         # TODO: what does this even do?
+
+    def test_check_should_run_if_never_run_before(self):
+        self.assertEqual(self.http_check.last_run, None)
+        self.assertTrue(self.http_check.should_run())
+
+    def test_check_should_run_based_on_frequency(self):
+        freq_mins = 5
+
+        # The check should run if not run within the frequency
+        self.http_check.frequency = freq_mins
+        self.http_check.last_run = timezone.now() - timedelta(minutes=freq_mins+1)
+        self.http_check.save()
+        self.assertTrue(self.http_check.should_run())
+
+        # The check should NOT run if run within the frequency
+        self.http_check.last_run = timezone.now() - timedelta(minutes=freq_mins-1)
+        self.http_check.save()
+        self.assertFalse(self.http_check.should_run())
+
+    def test_status_check_name_unique(self):
+        # TODO(evan): remove after making name unique
+        clone_model(self.http_check)
+        models = HttpStatusCheck.objects.filter(name=self.http_check.name)
+        self.assertEqual(len(models), 2)

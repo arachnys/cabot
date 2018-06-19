@@ -41,6 +41,7 @@ class ElasticsearchStatusCheckForm(StatusCheckForm):
             'active',
             'retries',
             'ignore_final_data_point',
+            'use_activity_counter',
             'runbook',
         )
 

@@ -9,6 +9,7 @@ from models import (StatusCheck,
                     HttpStatusCheck,
                     TCPStatusCheck,
                     StatusCheckResult,
+                    ActivityCounter,
                     UserProfile,
                     Service,
                     Shift,
@@ -34,6 +35,7 @@ from django.utils import timezone
 from django.utils.timezone import utc
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ValidationError
+from django.db import transaction
 
 from cabot.cabotapp import alert
 from models import AlertPluginUserData
@@ -47,6 +49,9 @@ import json
 import re
 from icalendar import Calendar
 from django.template.defaulttags import register
+
+from celery.utils.log import get_task_logger
+logger = get_task_logger(__name__)
 
 
 class LoginRequiredMixin(object):
@@ -156,6 +161,7 @@ class HttpStatusCheckForm(StatusCheckForm):
             'importance',
             'active',
             'retries',
+            'use_activity_counter',
             'runbook',
         )
         widgets = dict(**base_widgets)
@@ -189,6 +195,7 @@ class JenkinsStatusCheckForm(StatusCheckForm):
             'importance',
             'retries',
             'max_queued_build_time',
+            'use_activity_counter',
             'runbook',
         )
         widgets = dict(**base_widgets)
@@ -206,6 +213,7 @@ class TCPStatusCheckForm(StatusCheckForm):
             'importance',
             'active',
             'retries',
+            'use_activity_counter',
             'runbook',
         )
         widgets = dict(**base_widgets)
@@ -708,6 +716,22 @@ def jsonify(d):
     return HttpResponse(json.dumps(d), content_type='application/json')
 
 
+def json_response(data, code, pretty=False):
+    '''
+    Return a JSON response containing some data. Supports pretty-printing.
+    '''
+    dump_opts = {}
+    if pretty:
+        dump_opts = {'sort_keys': True, 'indent': 4, 'separators': (',', ': ')}
+    content = json.dumps(data, **dump_opts)
+    return HttpResponse(content, status=code, content_type="application/json")
+
+
+def json_error_response(message, code):
+    '''Return a JSON response with an error message'''
+    return json_response({'detail': message}, code)
+
+
 class AuthComplete(View):
     def get(self, request, *args, **kwargs):
         backend = kwargs.pop('backend')
@@ -726,3 +750,97 @@ class LoginError(View):
 @register.filter
 def get_item(dictionary, key):
     return dictionary.get(key)
+
+
+class ViewError(Exception):
+    '''
+    A general-purpose HTTP request-processing exception that carries both an
+    error message and HTTP status code to be returned to the client.
+    '''
+    def __init__(self, message, code):
+        super(ViewError, self).__init__(message)
+        self.code = code
+
+
+class ActivityCounterView(View):
+
+    # Enable transactions to prevent race conditions when multiple requests are
+    # reading and updating a counter.
+    @transaction.atomic
+    def get(self, request, pk):
+        '''Handle an HTTP GET request'''
+        id = request.GET.get('id', None)
+        name = request.GET.get('name', None)
+
+        # We require the name or id of a check
+        if not (id or name):
+            return json_error_response('Please provide a name or id', 400)
+
+        try:
+            # Lookup the check and make sure it has a related ActivityCounter
+            check = self._lookup_check(id, name)
+            ActivityCounter.objects.get_or_create(status_check=check)
+
+            # Perform the action and return the result
+            action = request.GET.get('action', 'read')
+            pretty = request.GET.get('pretty') == 'true'
+            message = self._handle_action(check, action)
+
+        except ViewError as e:
+            return json_error_response(e.message, e.code)
+
+        data = {
+            'check.id': check.id,
+            'check.name': check.name,
+            'counter.count': check.activity_counter.count,
+            'counter.enabled': check.use_activity_counter,
+        }
+        if message:
+            data['detail'] = message
+        return json_response(data, 200, pretty=pretty)
+
+    def _lookup_check(self, id, name):
+        '''
+        Lookup the check by id or name. Id is preferred.
+        - Returns a StatusCheck object.
+        - Will raise a ViewError if no check is found.
+        '''
+        checks = None
+        if id:
+            checks = StatusCheck.objects.filter(id=id)
+        if name and not checks:
+            checks = StatusCheck.objects.filter(name=name)
+            # TODO(evan): remove after making name unique
+            if checks and len(checks) > 1:
+                raise ViewError("Multiple checks found with name '{}'".format(name), 500)
+        if not checks:
+            raise ViewError('Check not found', 404)
+        return checks.first()
+
+    def _handle_action(self, check, action):
+        '''
+        Perform the given action on the check.
+        - Return a message to be sent back in the response, or None.
+        - Raises a ViewError if given an invalid action.
+        '''
+        if action == 'read':
+            return None
+
+        if action == 'incr':
+            check.activity_counter.count += 1
+            check.activity_counter.save()
+            return 'counter incremented to {}'.format(check.activity_counter.count)
+
+        if action == 'decr':
+            if check.activity_counter.count > 0:
+                check.activity_counter.count -= 1
+                check.activity_counter.save()
+            return 'counter decremented to {}'.format(check.activity_counter.count)
+
+        if action == 'reset':
+            if check.activity_counter.count > 0:
+                check.activity_counter.count = 0
+                check.save()
+            return 'counter reset to 0'
+
+        raise ViewError("invalid action '{}'".format(action), 400)

@@ -63,9 +63,7 @@ def run_status_check(pk):
 def run_all_checks():
     checks = models.StatusCheck.objects.filter(active=True).all()
     for check in checks:
-        if check.last_run:
-            next_schedule = check.last_run + timedelta(minutes=check.frequency)
-        if (not check.last_run) or timezone.now() > next_schedule:
+        if check.should_run():
             check_queue = _classify_status_check(check.pk)
             run_status_check.apply_async((check.pk,), queue=check_queue)
 
