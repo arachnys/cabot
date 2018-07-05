@@ -84,6 +84,13 @@ def update_service(service_or_id):
 
 
 @task(ignore_result=True)
+def update_all_services():
+    services = models.Service.objects.filter(alerts_enabled=True)
+    for service in services:
+        update_service.apply_async((service.id,))
+
+
+@task(ignore_result=True)
 def update_shifts():
     schedules = models.Schedule.objects.all()
     for schedule in schedules:

@@ -13,7 +13,8 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_ACCEPT_CONTENT = ['json', 'msgpack', 'yaml']
 CELERYD_TASK_SOFT_TIME_LIMIT = 120
 CELERYD_TASK_TIME_LIMIT = 240
-
+# Execute all tasks synchronously in testing
+CELERY_ALWAYS_EAGER = os.environ.get('CELERY_ALWAYS_EAGER', False)
 
 CELERYBEAT_SCHEDULE = {
     'run-all-checks': {
@@ -31,6 +32,11 @@ CELERYBEAT_SCHEDULE = {
     'sync-all-grafana-checks': {
         'task': 'cabot.metricsapp.tasks.sync_all_grafana_checks',
         'schedule': timedelta(seconds=defs.SYNC_ALL_GRAFANA_CHECKS_FREQUENCY)
+    },
+    'update_service':
+    {
+        'task': 'cabot.cabotapp.tasks.update_all_services',
+        'schedule': timedelta(seconds=defs.UPDATE_SERVICE_FREQUENCY)
     },
 }
 

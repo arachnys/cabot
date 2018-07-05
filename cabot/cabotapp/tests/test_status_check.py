@@ -5,6 +5,7 @@ from django.utils import timezone
 from cabot.cabotapp import tasks
 from mock import patch
 from cabot.cabotapp.models import HttpStatusCheck, Service, clone_model
+from cabot.cabotapp.tasks import update_service, update_all_services
 from .utils import (
     LocalTestCase,
     fake_jenkins_success,
@@ -160,6 +161,48 @@ class TestCheckRun(LocalTestCase):
         self.assertEqual(len(checkresults), 1)
         self.assertFalse(self.tcp_check.last_result().succeeded)
         self.assertFalse(self.tcp_check.last_result().error, 'timed out')
+
+    def test_update_service(self):
+        service_id = self.service.id
+        self.assertEqual(self.jenkins_check.calculated_status,
+                         Service.CALCULATED_PASSING_STATUS)
+        self.assertEqual(self.http_check.calculated_status,
+                         Service.CALCULATED_PASSING_STATUS)
+        self.assertEqual(self.tcp_check.calculated_status,
+                         Service.CALCULATED_PASSING_STATUS)
+        update_service.apply((service_id,)).get()
+        self.assertEqual(Service.objects.get(id=service_id).overall_status, Service.PASSING_STATUS)
+
+        # Now two most recent are failing
+        self.most_recent_result.succeeded = False
+        self.most_recent_result.save()
+        self.http_check.last_run = timezone.now()
+        self.http_check.save()
+        self.assertEqual(self.http_check.calculated_status,
+                         Service.CALCULATED_FAILING_STATUS)
+        update_service.apply((service_id,)).get()
+        self.assertEqual(Service.objects.get(id=service_id).overall_status, Service.CRITICAL_STATUS)
+
+    def test_update_all_services(self):
+        service_id = self.service.id
+        self.assertEqual(self.jenkins_check.calculated_status,
+                         Service.CALCULATED_PASSING_STATUS)
+        self.assertEqual(self.http_check.calculated_status,
+                         Service.CALCULATED_PASSING_STATUS)
+        self.assertEqual(self.tcp_check.calculated_status,
+                         Service.CALCULATED_PASSING_STATUS)
+        update_all_services.apply().get()
+        self.assertEqual(Service.objects.get(id=service_id).overall_status, Service.PASSING_STATUS)
+
+        # Now two most recent are failing
+        self.most_recent_result.succeeded = False
+        self.most_recent_result.save()
+        self.http_check.last_run = timezone.now()
+        self.http_check.save()
+        self.assertEqual(self.http_check.calculated_status,
+                         Service.CALCULATED_FAILING_STATUS)
+        update_all_services.apply().get()
+        self.assertEqual(Service.objects.get(id=service_id).overall_status, Service.CRITICAL_STATUS)
 
 
 class TestStatusCheck(LocalTestCase):
