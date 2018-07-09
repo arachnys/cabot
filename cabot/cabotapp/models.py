@@ -459,7 +459,6 @@ class StatusCheck(PolymorphicModel):
             self.cached_health = ''
             self.calculated_status = Service.CALCULATED_PASSING_STATUS
         ret = super(StatusCheck, self).save(*args, **kwargs)
-        self.update_related_services()
         return ret
 
     def duplicate(self, inst_set=(), serv_set=()):
@@ -472,12 +471,6 @@ class StatusCheck(PolymorphicModel):
         for linked in list(inst_set) + list(serv_set):
             linked.status_checks.add(new_check)
         return new_check.pk
-
-    def update_related_services(self):
-        from .tasks import update_service
-        services = self.service_set.all()
-        for service in services:
-            update_service.apply_async(args=[service.id])
 
     def get_status_image(self):
         """Return a related image for the check (if it exists)"""
