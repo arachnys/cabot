@@ -134,8 +134,10 @@ def sync_grafana_check(check_id, sync_time):
 
         # Check datasource parity
         source_name = panel_info.get('datasource') or 'default'
-        old_source_possibilities = [source.grafana_source_name for source in
-                                    GrafanaDataSource.objects.filter(metrics_source_base=check.source)]
+        old_source_possibilities = [source.grafana_source_name for source in GrafanaDataSource.objects.filter(
+                                        metrics_source_base=check.source,
+                                        grafana_instance_id=grafana_instance.id
+                                    )]
         if source_name not in old_source_possibilities:
             context_dict['old_source'] = ' or '.join(old_source_possibilities)
             context_dict['new_source'] = source_name
