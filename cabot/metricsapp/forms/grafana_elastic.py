@@ -21,6 +21,7 @@ class GrafanaElasticsearchStatusCheckForm(GrafanaStatusCheckForm):
             'retries',
             'frequency',
             'ignore_final_data_point',
+            'use_activity_counter',
             'runbook',
         ]
         widgets = {
@@ -55,6 +56,7 @@ class GrafanaElasticsearchStatusCheckUpdateForm(GrafanaStatusCheckUpdateForm):
             'retries',
             'frequency',
             'ignore_final_data_point',
+            'use_activity_counter',
             'runbook',
         ]
         widgets = {

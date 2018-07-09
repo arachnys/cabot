@@ -63,9 +63,7 @@ def run_status_check(pk):
 def run_all_checks():
     checks = models.StatusCheck.objects.filter(active=True).all()
     for check in checks:
-        if check.last_run:
-            next_schedule = check.last_run + timedelta(minutes=check.frequency)
-        if (not check.last_run) or timezone.now() > next_schedule:
+        if check.should_run():
             check_queue = _classify_status_check(check.pk)
             run_status_check.apply_async((check.pk,), queue=check_queue)
 
@@ -83,6 +81,13 @@ def update_service(service_or_id):
     else:
         service = service_or_id
     service.update_status()
+
+
+@task(ignore_result=True)
+def update_all_services():
+    services = models.Service.objects.filter(alerts_enabled=True)
+    for service in services:
+        update_service.apply_async((service.id,))
 
 
 @task(ignore_result=True)
