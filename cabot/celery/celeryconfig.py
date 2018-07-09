@@ -33,7 +33,7 @@ CELERYBEAT_SCHEDULE = {
         'task': 'cabot.metricsapp.tasks.sync_all_grafana_checks',
         'schedule': timedelta(seconds=defs.SYNC_ALL_GRAFANA_CHECKS_FREQUENCY)
     },
-    'update_service':
+    'update-service':
     {
         'task': 'cabot.cabotapp.tasks.update_all_services',
         'schedule': timedelta(seconds=defs.UPDATE_SERVICE_FREQUENCY)
@@ -60,6 +60,10 @@ CELERY_ROUTES = {
     'cabot.cabotapp.tasks.update_service': {
         'queue': 'service',
         'routing_key': 'service',
+    },
+    'cabot.cabotapp.tasks.update_all_services': {
+        'queue': 'service',
+        'routing_key': 'service'
     },
     'cabot.cabotapp.tasks.update_shifts': {
         'queue': 'batch',
