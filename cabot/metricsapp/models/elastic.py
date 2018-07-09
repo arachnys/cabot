@@ -214,6 +214,9 @@ class ElasticsearchStatusCheck(MetricsStatusCheckBase):
             if self.ignore_final_data_point:
                 datapoints = datapoints[:-1]
 
+            if datapoints == []:
+                continue
+
             output.append(dict(series=series, datapoints=datapoints))
 
         return output
