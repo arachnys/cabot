@@ -28,17 +28,6 @@ except ImportError:
     CONNECTION = None
 
 
-if CONNECTION:
-    try:
-        import boto.utils
-        _instance = boto.utils.get_instance_metadata(num_retries=2)
-        DIMENSIONS = {
-            'instance-id': _instance['instance-id'],
-        }
-    except:
-        DIMENSIONS = {}
-
-
 def _notify_cloudwatch(task_name, state):
     '''
     Update cloudwatch with a metric alert about a task
@@ -50,8 +39,7 @@ def _notify_cloudwatch(task_name, state):
             metric = '%s.%s' % (task_name, state)
 
         try:
-            CONNECTION.put_metric_data(NAMESPACE, metric, 1,
-                                       dimensions=DIMENSIONS)
+            CONNECTION.put_metric_data(NAMESPACE, metric, 1)
         except:
             logger.exception('Error sending cloudwatch metric')
 
