@@ -9,12 +9,11 @@ from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.template import Context, Template
 from cabot.metricsapp.api import get_dashboard_info, get_updated_datetime, get_panel_info, \
-    create_generic_templating_dict, get_es_status_check_fields, get_series_ids, \
-    get_status_check_name
+    get_es_status_check_fields, get_series_ids, adjust_time_range
 from cabot.metricsapp.defs import GRAFANA_SYNC_TIMEDELTA_MINUTES
 from cabot.metricsapp.models import MetricsStatusCheckBase, ElasticsearchStatusCheck, GrafanaDataSource, \
     GrafanaInstance, GrafanaPanel
-from cabot.metricsapp.templates import NAME_CHANGED, SOURCE_CHANGED_EXISTING, SOURCE_CHANGED_NONEXISTING, \
+from cabot.metricsapp.templates import SOURCE_CHANGED_EXISTING, SOURCE_CHANGED_NONEXISTING, \
     SERIES_CHANGED, ES_QUERIES_CHANGED
 
 
@@ -116,21 +115,8 @@ def sync_grafana_check(check_id, sync_time):
             _panel_deleted_handler(check, panel, dashboard_info['meta'])
             return
 
-        templating_dict = create_generic_templating_dict(dashboard_info)
-
         context_dict = dict()
         changed_message = []
-
-        # Check name parity
-        name = get_status_check_name(dashboard_info, panel_info, templating_dict)
-        # Save old name to use in the email
-        old_name = check.name
-        if name != old_name:
-            changed_message.append(NAME_CHANGED)
-            context_dict['old_name'] = old_name
-            context_dict['new_name'] = name
-            check.name = name
-            check.save()
 
         # Check datasource parity
         source_name = panel_info.get('datasource') or 'default'
@@ -161,11 +147,12 @@ def sync_grafana_check(check_id, sync_time):
 
         # Check Elasticsearch query parity (if it's an Elasticsearch status check)
         if ElasticsearchStatusCheck.objects.filter(id=check_id).exists():
-            queries = json.dumps(
-                get_es_status_check_fields(dashboard_info, panel_info, panel.selected_series)['queries'])
+            queries = get_es_status_check_fields(dashboard_info, panel_info, panel.selected_series)['queries']
+            # Don't change the time range specified in the check
+            queries = adjust_time_range(queries, check.time_range)
 
             old_queries = check.queries
-            check.queries = queries
+            check.queries = json.dumps(queries)
             # Saving the check adjust the time range, so might change the queries
             check.save()
             if check.queries != old_queries:
@@ -188,7 +175,7 @@ def sync_grafana_check(check_id, sync_time):
                 if User.objects.filter(email=email).exists():
                     email_list.append(email)
 
-            send_grafana_sync_email.apply_async(args=(email_list, template.render(context), old_name))
+            send_grafana_sync_email.apply_async(args=(email_list, template.render(context), check.name))
 
 
 @task(ignore_result=True)
