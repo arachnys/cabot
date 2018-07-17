@@ -810,7 +810,6 @@ class ActivityCounterView(View):
             checks = StatusCheck.objects.filter(id=id)
         if name and not checks:
             checks = StatusCheck.objects.filter(name=name)
-            # TODO(evan): remove after making name unique
             if checks and len(checks) > 1:
                 raise ViewError("Multiple checks found with name '{}'".format(name), 500)
         if not checks:

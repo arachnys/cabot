@@ -1,6 +1,7 @@
 from celery.exceptions import SoftTimeLimitExceeded
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from polymorphic import PolymorphicModel
 
@@ -441,6 +442,20 @@ class StatusCheck(PolymorphicModel):
         Implement on subclasses. Should return a `CheckResult` instance.
         """
         raise NotImplementedError('Subclasses should implement')
+
+    def clean(self, *args, **kwargs):
+        '''
+        Validate the StatusCheck:
+        - Ensure all StatusChecks that use activity counters have unique names,
+          so that we can identify a check by name via the activity-counter api.
+        '''
+        if self.use_activity_counter:
+            others = StatusCheck.objects.filter(use_activity_counter=True)
+            for other in others:
+                if other.id != self.id and other.name == self.name:
+                    msg = "Names of checks that use activity counters must be " \
+                          "unique! This one matches check #{}.".format(other.id)
+                    raise ValidationError(msg)
 
     def save(self, *args, **kwargs):
         if self.last_run:
