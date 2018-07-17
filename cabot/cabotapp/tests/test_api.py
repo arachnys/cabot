@@ -311,7 +311,6 @@ class TestActivityCounterAPI(LocalTestCase):
     def test_counter_get_error_on_duplicate_names(self):
         # If two checks have the same name, check that we error out.
         # This should not be an issue once we enforce uniqueness on the name.
-        # TODO(evan): remove after making name unique
         clone_model(self.http_check)
         self.assertEqual(len(StatusCheck.objects.filter(name='Http Check')), 2)
         url = '/api/status-checks/activity-counter?name=Http Check'
