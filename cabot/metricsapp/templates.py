@@ -1,5 +1,3 @@
-NAME_CHANGED = 'The check name has changed from "{{ old_name }}" to "{{ new_name }}".'
-
 SOURCE_CHANGED_EXISTING = 'The Grafana data source has changed from "{{ old_source }}" to "{{ new_source }}".'
 
 SOURCE_CHANGED_NONEXISTING = SOURCE_CHANGED_EXISTING + ' The new source is not configured in Cabot, so the status ' \
