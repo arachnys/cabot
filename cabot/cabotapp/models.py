@@ -406,10 +406,11 @@ class StatusCheck(PolymorphicModel):
     def should_run(self):
         '''Returns true if the check should run, false otherwise.'''
 
-        # Do not run if the activity counter is enabled and zero
+        # Do not run if the activity counter is enabled and zero.
+        # - If the DB entry does not exist, we assume a value of zero.
         if self.use_activity_counter:
-            counter, _ = ActivityCounter.objects.get_or_create(status_check=self)
-            if counter.count <= 0:
+            counters = ActivityCounter.objects.filter(status_check=self)
+            if len(counters) == 0 or counters[0].count <= 0:
                 logger.info("Skipping check '{}', activity counter is zero".format(self.name))
                 return False
 
