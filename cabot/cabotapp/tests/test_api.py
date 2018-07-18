@@ -282,16 +282,14 @@ class TestAPIFiltering(LocalTestCase):
 
 
 class TestActivityCounterAPI(LocalTestCase):
-    def setUp(self):
-        super(TestActivityCounterAPI, self).setUp()
-        # Use the HTTP check for testing
-        ActivityCounter.objects.create(status_check=self.http_check)
-        self.http_check.use_activity_counter = True
-        self.http_check.activity_counter.count = 1
-        self.http_check.activity_counter.save()
+    def _set_activity_counter(self, enabled, count):
+        '''Utility function to set the activity counter for the http check'''
+        self.http_check.use_activity_counter = enabled
         self.http_check.save()
+        ActivityCounter.objects.create(status_check=self.http_check, count=count)
 
     def test_counter_get(self):
+        self._set_activity_counter(True, 1)
         url = '/api/status-checks/activity-counter?'
         expected_body = {
             'check.id': 10102,
@@ -309,6 +307,7 @@ class TestActivityCounterAPI(LocalTestCase):
         self.assertEqual(json.loads(response.content), expected_body)
 
     def test_counter_get_error_on_duplicate_names(self):
+        self._set_activity_counter(True, 1)
         # If two checks have the same name, check that we error out.
         # This should not be an issue once we enforce uniqueness on the name.
         clone_model(self.http_check)
@@ -318,6 +317,7 @@ class TestActivityCounterAPI(LocalTestCase):
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def test_counter_incr(self):
+        self._set_activity_counter(True, 1)
         url = '/api/status-checks/activity-counter?id=10102&action=incr'
         expected_body = {
             'check.id': 10102,
@@ -331,6 +331,7 @@ class TestActivityCounterAPI(LocalTestCase):
         self.assertEqual(json.loads(response.content), expected_body)
 
     def test_counter_decr(self):
+        self._set_activity_counter(True, 1)
         url = '/api/status-checks/activity-counter?id=10102&action=decr'
         expected_body = {
             'check.id': 10102,
@@ -349,6 +350,7 @@ class TestActivityCounterAPI(LocalTestCase):
         self.assertEqual(json.loads(response.content), expected_body)
 
     def test_counter_reset(self):
+        self._set_activity_counter(True, 1)
         url = '/api/status-checks/activity-counter?id=10102&action=reset'
         expected_body = {
             'check.id': 10102,
@@ -362,16 +364,21 @@ class TestActivityCounterAPI(LocalTestCase):
         self.assertEqual(json.loads(response.content), expected_body)
 
     def test_check_should_run_when_activity_counter_disabled(self):
-        self.http_check.use_activity_counter = False
-        self.http_check.activity_counter.count = 0
+        self._set_activity_counter(False, 0)
         self.assertTrue(self.http_check.should_run())
 
     def test_check_should_run_when_activity_counter_positive(self):
-        self.http_check.use_activity_counter = True
-        self.http_check.activity_counter.count = 1
+        self._set_activity_counter(True, 1)
         self.assertTrue(self.http_check.should_run())
 
     def test_check_should_not_run_when_activity_counter_zero(self):
+        self._set_activity_counter(True, 0)
+        self.assertFalse(self.http_check.should_run())
+
+    def test_check_should_not_run_when_activity_counter_missing(self):
+        # Set use_activity_counter=True, but do NOT create the actual activity
+        # counter DB entry. This used to cause a run_all_checks() to throw a
+        # DoesNotExist exception.
         self.http_check.use_activity_counter = True
-        self.http_check.activity_counter.count = 0
+        self.http_check.save()
         self.assertFalse(self.http_check.should_run())
