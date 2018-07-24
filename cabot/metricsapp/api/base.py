@@ -7,43 +7,29 @@ from cabot.cabotapp.models import Service, StatusCheckResult
 logger = get_task_logger(__name__)
 
 
-def _get_warning_message(check, series_name, value):
+def _get_error_message(check, threshold, importance, series_name, value):
     """
-    Construct a warning message:
-
-        Format:   WARNING <series_name>: <value> not <comparator> <threshold>
-        Example:  WARNING foo.service.errors: 100 not < 50
-
-    """
-    fmt = u'WARNING {}: {:0.1f} not {} {:0.1f}'
-    return fmt.format(series_name, value, check.check_type, check.warning_value)
-
-
-def _get_high_alert_message(check, series_name, value):
-    """
-    Construct a high-alert error message. The message will differ based on whether
-    the check requires N > 1 consecutive failed points.
+    Construct a check's error message, which will differ based on the number of
+    consecutive failed points.
 
     For a single failed point:
 
         Format:   <importance> <series_name>: <value> not <comparator> <threshold>
-        Example:  ERROR foo.service.errors: 100 not < 50
+        Example:  WARNING foo.service.errors: 100 not < 50
 
     For N consecutive failed points:
 
-        Format:   <importance> <series_name>: <value> not <comparator> <threshold>
+        Format:   <importance> <series_name>: <N> consecutive points not <comparator> <threshold>
         Example:  CRITICAL foo.service.errors: 10 consecutive points not < 50
 
     """
     if check.consecutive_failures == 1:
         fmt = u'{} {}: {:0.1f} not {} {:0.1f}'
-        return fmt.format(check.high_alert_importance, series_name, value,
-                          check.check_type, check.high_alert_value)
+        return fmt.format(importance, series_name, value, check.check_type, threshold)
     else:
         fmt = u'{} {}: {} consecutive points not {} {:0.1f}'
-        return fmt.format(check.high_alert_importance, series_name,
-                          check.consecutive_failures, check.check_type,
-                          check.high_alert_value)
+        return fmt.format(importance, series_name, check.consecutive_failures,
+                          check.check_type, threshold)
 
 
 def _point_failure_check(check_type, threshold, value):
@@ -100,74 +86,102 @@ def _add_threshold_data(check, series):
         return series['data']
 
 
+def _points_trigger_high_alert(result, series, series_name, datapoints, check):
+    threshold = check.high_alert_value
+    importance = check.high_alert_importance
+    return _points_trigger_alert(result, series, series_name, datapoints, check, threshold, importance)
+
+
+def _points_trigger_warning(result, series, series_name, datapoints, check):
+    threshold = check.warning_value
+    importance = Service.WARNING_STATUS
+    return _points_trigger_alert(result, series, series_name, datapoints, check, threshold, importance)
+
+
+def _points_trigger_alert(result, series, series_name, datapoints, check, threshold, importance):
+    '''
+    Process a set of points, looking to see if they breach the specified threshold
+    for the alert. If so, populate the result object and return True. Otherwise,
+    return False.
+    '''
+    # If there's no threshold set, then ignore
+    if threshold is None:
+        return False
+
+    # Examine each data point
+    consecutive_failures = 0
+
+    for point in datapoints:
+        timestamp, value = point
+        # If the point fails, increment the consecutive failure count, and
+        # then check if we have enough failed points to return an error.
+        if _point_failure_check(check.check_type, threshold, value):
+            consecutive_failures += 1
+            if consecutive_failures >= check.consecutive_failures:
+                # Set the importance so the check fails at the right level
+                check.importance = importance
+                result.succeeded = False
+                result.error = _get_error_message(check, threshold, importance, series_name, value)
+                result.raw_data = _add_threshold_data(check, series)
+                return True
+        else:
+            consecutive_failures = 0
+
+    # No problems found
+    return False
+
+
 def run_metrics_check(check):
     """
     Run the status check.
     :param check: the status check
     :return: a StatusCheckResult containing success/failure/error information
     """
-    result = StatusCheckResult(check=check)
-    # result.succeeded will be set to False when failures happen
-    result.succeeded = True
-
+    # Get the series data. If there was an error, return immediately.
     series = check.get_series()
 
     if series['error'] is True:
-        result.succeeded = False
         message = series.get('error_message')
-        result.error = 'Error fetching metric from source: {}'.format(message)
         logger.exception('Error fetching metrics: {}: {}'.format(series.get('error_code'), message))
-        return result
+        error = 'Error fetching metric from source: {}'.format(message)
+        return StatusCheckResult(check=check, succeeded=False, error=error)
 
-    # Oldest point we'll look at (time range is in seconds)
-    earliest_point = time.time() - check.time_range * 60
+    # Ignore all checks before the following start time
+    start_time = time.time() - check.time_range * 60
+
+    def filter_old_points(p):
+        timestamp = p[0]
+        if timestamp <= start_time:
+            logger.debug('Ignoring point {} older than {}'.format(str(p), str(start_time)))
+            return False
+        return True
+
+    # We'll populate and return these results objects when we find alerts
+    result = StatusCheckResult(check=check, succeeded=True)
+    warn_result = StatusCheckResult(check=check, succeeded=True)
 
     parsed_series = series['data']
     logger.info('Processing series {}'.format(str(parsed_series)))
 
+    # Process each series
     for series_data in parsed_series:
         series_name = series_data['series']
-        consecutive_failures = 0
+        datapoints = list(filter(filter_old_points, series_data['datapoints']))
 
-        for point in series_data['datapoints']:
-            timestamp, value = point
+        # If this series triggers a high alert, return the result immediately
+        if _points_trigger_high_alert(result, series, series_name, datapoints, check):
+            return result
 
-            # Ignore data outside the time frame
-            if timestamp <= earliest_point:
-                logger.debug('Point {} is older than reference timestamp {}'.format(
-                    str(point), str(earliest_point)
-                ))
-                continue
-
-            # For high alerts, we must consider consecutive failures
-            if check.high_alert_value is not None:
-                # If the point fails, increment the consecutive failure count, and
-                # then check if we have enough failed points to return an error.
-                if _point_failure_check(check.check_type, check.high_alert_value, value):
-                    consecutive_failures += 1
-                    if consecutive_failures >= check.consecutive_failures:
-                        # Set the importance so the check fails at the right level
-                        check.importance = check.high_alert_importance
-                        result.succeeded = False
-                        result.error = _get_high_alert_message(check, series_name, value)
-                        result.raw_data = _add_threshold_data(check, series)
-                        return result
-
-                # If the point is ok, reset the consecutive failure count
-                else:
-                    consecutive_failures = 0
-
-            # If there's a failure for low alert, keep looping in case another point is failing
-            # at the high alert level. Don't check for a warning if we've already found one
-            # (result.succeeded == False)
-            if result.succeeded and check.warning_value is not None and \
-                    _point_failure_check(check.check_type, check.warning_value, value):
-                # Set the importance so the check fails at the right level
-                check.importance = Service.WARNING_STATUS
-                result.succeeded = False
-                result.error = _get_warning_message(check, series_name, value)
+        # If we haven't found a warning yet, check this series for a warning
+        if warn_result.succeeded:
+            _points_trigger_warning(warn_result, series, series_name, datapoints, check)
 
         logger.info('Finished processing series {}'.format(series_name))
 
+    # If we found a warning, return it
+    if not warn_result.succeeded:
+        return warn_result
+
+    # No problems found, return success
     result.raw_data = _add_threshold_data(check, series)
     return result
