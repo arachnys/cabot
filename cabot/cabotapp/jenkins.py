@@ -18,7 +18,8 @@ def get_job_status(jobname):
         'active': True,
         'succeeded': False,
         'blocked_build_time': None,
-        'status_code': 200
+        'status_code': 200,
+        'consecutive_failures': 0
     }
     endpoint = urljoin(settings.JENKINS_API, 'job/{}/api/json'.format(jobname))
 
@@ -27,6 +28,8 @@ def get_job_status(jobname):
     status = resp.json()
     ret['status_code'] = resp.status_code
     ret['job_number'] = status['lastBuild'].get('number', None)
+    ret['consecutive_failures'] = status['lastCompletedBuild'].get('number') \
+                                  - status['lastSuccessfulBuild'].get('number')
     if status['color'].startswith('blue'):
         ret['active'] = True
         ret['succeeded'] = True

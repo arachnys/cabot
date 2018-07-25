@@ -197,6 +197,7 @@ class JenkinsStatusCheckForm(StatusCheckForm):
             'max_queued_build_time',
             'use_activity_counter',
             'runbook',
+            'max_build_failures'
         )
         widgets = dict(**base_widgets)
 

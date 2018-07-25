@@ -685,6 +685,12 @@ class JenkinsStatusCheck(StatusCheck):
         help_text='Alert if build queued for more than this many minutes.',
     )
 
+    max_build_failures = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text='Alert if more than this many consecutive failures (ignores other checks)'
+    )
+
     @property
     def failing_short_status(self):
         return 'Job failing on Jenkins'
@@ -727,6 +733,18 @@ class JenkinsStatusCheck(StatusCheck):
                     result.succeeded = status['succeeded']
             else:
                 result.succeeded = status['succeeded']
+
+            if self.max_build_failures and status['consecutive_failures']:
+                if status['consecutive_failures'] > self.max_build_failures:
+                    result.succeeded = False
+                    result.error = u'Job "%s" has failed %s times (> %s)' % (
+                        self.name,
+                        int(status['consecutive_failures']),
+                        self.max_build_failures,
+                    )
+                else:
+                    result.succeeded=True
+
             if not status['succeeded']:
                 if result.error:
                     result.error += u'; Job "%s" failing on Jenkins' % self.name
