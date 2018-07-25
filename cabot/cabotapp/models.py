@@ -742,6 +742,11 @@ class JenkinsStatusCheck(StatusCheck):
                         int(status['consecutive_failures']),
                         self.max_build_failures,
                     )
+                elif status['consecutive_failures'] < 0:
+                    result.succeeded = False
+                    result.error = u'Job "%s" Last Completed Build not Found' % (
+                        self.name
+                    )
                 else:
                     result.succeeded=True
 
