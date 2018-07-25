@@ -748,7 +748,7 @@ class JenkinsStatusCheck(StatusCheck):
                         self.name
                     )
                 else:
-                    result.succeeded=True
+                    result.succeeded = True
 
             if not status['succeeded']:
                 if result.error:

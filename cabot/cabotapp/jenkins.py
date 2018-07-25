@@ -28,8 +28,8 @@ def get_job_status(jobname):
     status = resp.json()
     ret['status_code'] = resp.status_code
     ret['job_number'] = status['lastBuild'].get('number', None)
-    ret['consecutive_failures'] = status['lastCompletedBuild'].get('number', 0) \
-                                  - status['lastSuccessfulBuild'].get('number', 0)
+    ret['consecutive_failures'] = status['lastCompletedBuild'].get('number', 0) - status['lastSuccessfulBuild'].get(
+        'number', 0)
     if status['color'].startswith('blue'):
         ret['active'] = True
         ret['succeeded'] = True
