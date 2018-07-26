@@ -288,3 +288,27 @@ class TestMultipleThresholds(TestCase):
         result = self.metrics_check._run()
         self.assertTrue(result.succeeded)
         self.assertIsNone(result.error)
+
+    @patch('cabot.metricsapp.models.MetricsStatusCheckBase.get_series', mock_get_series)
+    @patch('time.time', mock_time)
+    def test_thresholds_dont_cause_alerts(self):
+        """
+        Check that threshold data isn't treated as metrics data and thus causes
+        an alert.
+        """
+
+        # The danger is that _get_raw_data_with_thresholds() in cabot/metricsapp/api/base.py
+        # will modify the series data while we are still examining that data for
+        # alerts, and the threshold points themselves are found to be in violation.
+        # Note, our check-type cannot use equality, so we'll use less-than here.
+        self.metrics_check.check_type = '<'
+
+        # Our code should find
+        self.metrics_check.warning_value = 9.0
+        self.metrics_check.high_alert_value = 10.0
+        self.metrics_check.consecutive_failures = 2
+        result = self.metrics_check._run()
+        self.assertFalse(result.succeeded)
+        # If this fails, we might see:
+        # "CRITICAL alert.high_alert_threshold: 2 consecutive points not < 10.0"
+        self.assertEqual(result.error, u'WARNING prod.good.data: 2 consecutive points not < 9.0')

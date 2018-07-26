@@ -1,6 +1,7 @@
 from celery.utils.log import get_task_logger
 import json
 import time
+import copy
 from cabot.cabotapp.models import Service, StatusCheckResult
 
 
@@ -54,9 +55,10 @@ def _point_failure_check(check_type, threshold, value):
         raise ValueError(u'Check type {} not supported'.format(check_type))
 
 
-def _add_threshold_data(check, series):
+def _get_raw_data_with_thresholds(check, series):
     """
-    Add threshold values to a raw data series
+    Return the series data with thresholds added. This function does NOT modify
+    the `check` or `series` parameters.
     :param check: the status check
     :param series: the data series
     :return: the data series with high alert/warning thresholds
@@ -66,24 +68,26 @@ def _add_threshold_data(check, series):
         start_time, _ = first_series_data[0]
         end_time, _ = first_series_data[-1]
 
+        # Do a deepcopy of the series data intead of modifying it. This is safer
+        # as it doesn't risk updating the series data while we're checking it
+        # for errors.
+        series_data = copy.deepcopy(series['data'])
+
         # Add threshold line(s) for the graph
         if check.warning_value is not None:
-            warning_threshold = dict(series='alert.warning_threshold',
-                                     datapoints=[[start_time, check.warning_value],
-                                                 [end_time, check.warning_value]])
-            series['data'].append(warning_threshold)
+            points = [[start_time, check.warning_value], [end_time, check.warning_value]]
+            series_data.append(dict(series='alert.warning_threshold', datapoints=points))
 
         if check.high_alert_value is not None:
-            high_alert_threshold = dict(series='alert.high_alert_threshold',
-                                        datapoints=[[start_time, check.high_alert_value],
-                                                    [end_time, check.high_alert_value]])
-            series['data'].append(high_alert_threshold)
+            points = [[start_time, check.high_alert_value], [end_time, check.high_alert_value]]
+            series_data.append(dict(series='alert.high_alert_threshold', datapoints=points))
 
+    # Return the series data, as a JSON string
     try:
-        return json.dumps(series['data'], indent=2)
+        return json.dumps(series_data, indent=2)
     except TypeError:
         logger.exception('Error when serializing series to json. Series: {}'.format(series))
-        return series['data']
+        return series_data
 
 
 def _points_trigger_high_alert(result, series, series_name, datapoints, check):
@@ -122,7 +126,7 @@ def _points_trigger_alert(result, series, series_name, datapoints, check, thresh
                 check.importance = importance
                 result.succeeded = False
                 result.error = _get_error_message(check, threshold, importance, series_name, value)
-                result.raw_data = _add_threshold_data(check, series)
+                result.raw_data = _get_raw_data_with_thresholds(check, series)
                 return True
         else:
             consecutive_failures = 0
@@ -182,6 +186,6 @@ def run_metrics_check(check):
     if not warn_result.succeeded:
         return warn_result
 
-    # No problems found, return success
-    result.raw_data = _add_threshold_data(check, series)
+    # No problems found. Add thresholds and return.
+    result.raw_data = _get_raw_data_with_thresholds(check, series)
     return result
