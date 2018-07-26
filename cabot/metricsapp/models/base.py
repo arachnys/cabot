@@ -77,9 +77,9 @@ class MetricsStatusCheckBase(StatusCheck):
     consecutive_failures = models.PositiveIntegerField(
         default=1,
         validators=[MinValueValidator(1)],
-        help_text='Number of consecutive data points that must exceed the high alert '
-                  'threshold before an alert is triggered. This setting is ignored '
-                  'for warnings.',
+        help_text='Number of consecutive data points that must exceed the alert '
+                  'threshold before an alert is triggered. Applies to both warning '
+                  'and high-alert thresholds.',
     )
 
     def _run(self):

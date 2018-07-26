@@ -228,6 +228,15 @@ class TestMultipleThresholds(TestCase):
         self.assertEqual(result.error, u'CRITICAL prod.good.data: 9.2 not <= 9.0')
         self.assertEqual(self.metrics_check.importance, Service.CRITICAL_STATUS)
 
+        # It should also work for warnings
+        self.metrics_check.warning_value = 9.0
+        self.metrics_check.high_alert_value = 10.0
+        result = self.metrics_check._run()
+        self.assertEqual(result.check, self.metrics_check)
+        self.assertFalse(result.succeeded)
+        self.assertEqual(result.error, u'WARNING prod.good.data: 9.2 not <= 9.0')
+        self.assertEqual(self.metrics_check.importance, Service.WARNING_STATUS)
+
     @patch('cabot.metricsapp.models.MetricsStatusCheckBase.get_series', mock_get_series)
     @patch('time.time', mock_time)
     def test_consecutive_failures(self):
@@ -235,14 +244,25 @@ class TestMultipleThresholds(TestCase):
         Check that if the series contains enough consecutive failed points, a
         high alert is raised.
         """
+        self.metrics_check.consecutive_failures = 2
+
+        # Verify that it works for high alerts (error, critical)
         self.metrics_check.warning_value = 8.0
         self.metrics_check.high_alert_value = 9.0
-        self.metrics_check.consecutive_failures = 2
         result = self.metrics_check._run()
         self.assertEqual(result.check, self.metrics_check)
         self.assertFalse(result.succeeded)
         self.assertEqual(result.error, u'CRITICAL prod.good.data: 2 consecutive points not <= 9.0')
         self.assertEqual(self.metrics_check.importance, Service.CRITICAL_STATUS)
+
+        # It should also work for warnings
+        self.metrics_check.warning_value = 9.0
+        self.metrics_check.high_alert_value = 10.0
+        result = self.metrics_check._run()
+        self.assertEqual(result.check, self.metrics_check)
+        self.assertFalse(result.succeeded)
+        self.assertEqual(result.error, u'WARNING prod.good.data: 2 consecutive points not <= 9.0')
+        self.assertEqual(self.metrics_check.importance, Service.WARNING_STATUS)
 
     @patch('cabot.metricsapp.models.MetricsStatusCheckBase.get_series', mock_get_series)
     @patch('time.time', mock_time)
@@ -251,11 +271,44 @@ class TestMultipleThresholds(TestCase):
         Check that if the series contains failed points, but not enough are
         consecutive, that a high alert is NOT raised.
         """
+        self.metrics_check.consecutive_failures = 3
+
+        # Not enough points above the high-alert threshold, so we should get a warning
         self.metrics_check.warning_value = 8.0
         self.metrics_check.high_alert_value = 9.0
-        self.metrics_check.consecutive_failures = 3
         result = self.metrics_check._run()
         self.assertEqual(result.check, self.metrics_check)
         self.assertFalse(result.succeeded)
-        self.assertEqual(result.error, u'WARNING prod.good.data: 8.1 not <= 8.0')
+        self.assertEqual(result.error, u'WARNING prod.good.data: 3 consecutive points not <= 8.0')
         self.assertEqual(self.metrics_check.importance, Service.WARNING_STATUS)
+
+        # Not enough points above the warning threshold, so we shouldn't get an alert
+        self.metrics_check.warning_value = 9.0
+        self.metrics_check.high_alert_value = 10.0
+        result = self.metrics_check._run()
+        self.assertTrue(result.succeeded)
+        self.assertIsNone(result.error)
+
+    @patch('cabot.metricsapp.models.MetricsStatusCheckBase.get_series', mock_get_series)
+    @patch('time.time', mock_time)
+    def test_thresholds_dont_cause_alerts(self):
+        """
+        Check that threshold data isn't treated as metrics data and thus causes
+        an alert.
+        """
+
+        # The danger is that _get_raw_data_with_thresholds() in cabot/metricsapp/api/base.py
+        # will modify the series data while we are still examining that data for
+        # alerts, and the threshold points themselves are found to be in violation.
+        # Note, our check-type cannot use equality, so we'll use less-than here.
+        self.metrics_check.check_type = '<'
+
+        # Our code should find
+        self.metrics_check.warning_value = 9.0
+        self.metrics_check.high_alert_value = 10.0
+        self.metrics_check.consecutive_failures = 2
+        result = self.metrics_check._run()
+        self.assertFalse(result.succeeded)
+        # If this fails, we might see:
+        # "CRITICAL alert.high_alert_threshold: 2 consecutive points not < 10.0"
+        self.assertEqual(result.error, u'WARNING prod.good.data: 2 consecutive points not < 9.0')
