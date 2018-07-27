@@ -839,7 +839,7 @@ class ActivityCounterView(View):
         if action == 'reset':
             if check.activity_counter.count > 0:
                 check.activity_counter.count = 0
-                check.save()
+                check.activity_counter.save()
             return 'counter reset to 0'
 
         raise ViewError("invalid action '{}'".format(action), 400)

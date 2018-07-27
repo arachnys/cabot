@@ -329,6 +329,7 @@ class TestActivityCounterAPI(LocalTestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(json.loads(response.content), expected_body)
+        self.assertEqual(StatusCheck.objects.filter(id=10102)[0].activity_counter.count, 2)
 
     def test_counter_decr(self):
         self._set_activity_counter(True, 1)
@@ -344,13 +345,14 @@ class TestActivityCounterAPI(LocalTestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(json.loads(response.content), expected_body)
+        self.assertEqual(StatusCheck.objects.filter(id=10102)[0].activity_counter.count, 0)
         # Decrementing when counter is zero has no effect
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(json.loads(response.content), expected_body)
 
     def test_counter_reset(self):
-        self._set_activity_counter(True, 1)
+        self._set_activity_counter(True, 11)
         url = '/api/status-checks/activity-counter?id=10102&action=reset'
         expected_body = {
             'check.id': 10102,
@@ -362,6 +364,7 @@ class TestActivityCounterAPI(LocalTestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(json.loads(response.content), expected_body)
+        self.assertEqual(StatusCheck.objects.filter(id=10102)[0].activity_counter.count, 0)
 
     def test_check_should_run_when_activity_counter_disabled(self):
         self._set_activity_counter(False, 0)
