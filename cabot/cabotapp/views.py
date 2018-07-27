@@ -723,7 +723,7 @@ def json_response(data, code, pretty=False):
     dump_opts = {}
     if pretty:
         dump_opts = {'sort_keys': True, 'indent': 4, 'separators': (',', ': ')}
-    content = json.dumps(data, **dump_opts)
+    content = json.dumps(data, **dump_opts) + "\n"
     return HttpResponse(content, status=code, content_type="application/json")
 
 
