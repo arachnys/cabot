@@ -723,7 +723,7 @@ def json_response(data, code, pretty=False):
     dump_opts = {}
     if pretty:
         dump_opts = {'sort_keys': True, 'indent': 4, 'separators': (',', ': ')}
-    content = json.dumps(data, **dump_opts)
+    content = json.dumps(data, **dump_opts) + "\n"
     return HttpResponse(content, status=code, content_type="application/json")
 
 
@@ -839,7 +839,7 @@ class ActivityCounterView(View):
         if action == 'reset':
             if check.activity_counter.count > 0:
                 check.activity_counter.count = 0
-                check.save()
+                check.activity_counter.save()
             return 'counter reset to 0'
 
         raise ViewError("invalid action '{}'".format(action), 400)
