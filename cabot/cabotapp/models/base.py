@@ -774,22 +774,39 @@ class HttpStatusCheck(StatusCheck):
             auth = (self.username if self.username is not None else '',
                     self.password if self.password is not None else '')
 
-        body = {
-            username: self.username,
-            password: self.password,
-            grant_type: 'password',
-            name: 'WebMemberPortal',
-        }
+        bearer_auth = None
+        if self.bearer_endpoint or self.bearer_request_body:
+            bearer_body = None
+            try:
+                bearer_body = json.loads(self.bearer_request_body)
+            except ValueError as e:
+                result.error = e.message
+            else:
+                try:
+                    resp = requests.post(
+                        self.bearer_endpoint,
+                        data=bearer_body,
+                        headers={
+                            "User-Agent": settings.HTTP_USER_AGENT,
+                        },
+                    )
+                except requests.RequestException as e:
+                    result.error = u'Request error occurred: %s' % (e.message,)
+                else:
+                    bearer_auth = resp.json()['access_token']
+
         try:
-             resp = requests.post(
+            headers = {
+                "User-Agent": settings.HTTP_USER_AGENT,
+            }
+            if bearer_auth:
+                headers['authorization'] = u'Bearer %s' % bearer_auth
+            resp = requests.get(
                 self.endpoint,
                 timeout=self.timeout,
                 verify=self.verify_ssl_certificate,
                 auth=auth,
-                data=body,
-                headers={
-                    "User-Agent": settings.HTTP_USER_AGENT,
-                },
+                headers=headers,
             )
         except requests.RequestException as e:
             result.error = u'Request error occurred: %s' % (e.message,)
