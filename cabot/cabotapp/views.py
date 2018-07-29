@@ -239,6 +239,8 @@ class HttpStatusCheckForm(StatusCheckForm):
             'endpoint',
             'username',
             'password',
+            'bearer_endpoint',
+            'bearer_request_body',
             'text_match',
             'status_code',
             'timeout',
@@ -261,6 +263,13 @@ class HttpStatusCheckForm(StatusCheckForm):
                 'style': 'width: 30%',
                 # Prevent auto-fill with saved Cabot log-in credentials:
                 'autocomplete': 'new-password',
+            }),
+            'bearer_endpoint': forms.TextInput(attrs={
+                'style': 'width: 100%',
+                'placeholder': 'Your endpoint to get access token'
+            }),
+            'bearer_request_body': forms.Textarea(attrs={
+                'style': 'width: 100%',
             }),
             'text_match': forms.TextInput(attrs={
                 'style': 'width: 100%',

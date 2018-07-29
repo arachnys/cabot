@@ -483,6 +483,17 @@ class StatusCheck(PolymorphicModel):
         null=True,
         help_text='Basic auth password.',
     )
+    bearer_endpoint = models.TextField(
+        blank=True,
+        null=True,
+        help_text='If you are using Bearer Authentication, please define your endpoint to get your Bearer token.'
+    )
+    bearer_request_body = models.TextField(
+        blank=True,
+        null=True,
+        help_text='Define your credentials in json format to get access token. Learn to write json <a href="https://en.wikipedia.org/wiki/JSON" target="_blank">here</a>'
+    )
+
     text_match = models.TextField(
         blank=True,
         null=True,
@@ -763,15 +774,39 @@ class HttpStatusCheck(StatusCheck):
             auth = (self.username if self.username is not None else '',
                     self.password if self.password is not None else '')
 
+        bearer_auth = None
+        if self.bearer_endpoint or self.bearer_request_body:
+            bearer_body = None
+            try:
+                bearer_body = json.loads(self.bearer_request_body)
+            except ValueError as e:
+                pass
+            else:
+                try:
+                    resp = requests.post(
+                        self.bearer_endpoint,
+                        data=bearer_body,
+                        headers={
+                            "User-Agent": settings.HTTP_USER_AGENT,
+                        },
+                    )
+                except requests.RequestException as e:
+                    pass
+                else:
+                    bearer_auth = resp.json()['access_token']
+
         try:
+            headers = {
+                "User-Agent": settings.HTTP_USER_AGENT,
+            }
+            if bearer_auth:
+                headers['authorization'] = u'Bearer %s' % bearer_auth
             resp = requests.get(
                 self.endpoint,
                 timeout=self.timeout,
                 verify=self.verify_ssl_certificate,
                 auth=auth,
-                headers={
-                    "User-Agent": settings.HTTP_USER_AGENT,
-                },
+                headers=headers,
             )
         except requests.RequestException as e:
             result.error = u'Request error occurred: %s' % (e.message,)

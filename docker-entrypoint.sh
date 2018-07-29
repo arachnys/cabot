@@ -30,7 +30,6 @@ function wait_for_migrations {
   done
 }
 
-
 wait_for_broker
 wait_for_database
 
