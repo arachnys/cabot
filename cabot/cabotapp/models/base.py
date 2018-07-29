@@ -486,12 +486,12 @@ class StatusCheck(PolymorphicModel):
     bearer_endpoint = models.TextField(
         blank=True,
         null=True,
-        help_text='Bearer Authentication endpoint'
+        help_text='If you are using Bearer Authentication, please define your endpoint to get your Bearer token.'
     )
     bearer_request_body = models.TextField(
         blank=True,
         null=True,
-        help_text='Bearer Authentication request body'
+        help_text='Define your credentials in json format to get access token. Learn to write json <a href="https://en.wikipedia.org/wiki/JSON" target="_blank">here</a>'
     )
 
     text_match = models.TextField(
