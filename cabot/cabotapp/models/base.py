@@ -483,6 +483,17 @@ class StatusCheck(PolymorphicModel):
         null=True,
         help_text='Basic auth password.',
     )
+    bearer_endpoint = models.TextField(
+        blank=True,
+        null=True,
+        help_text='Bearer Authentication endpoint'
+    )
+    bearer_request_body = models.TextField(
+        blank=True,
+        null=True,
+        help_text='Bearer Authentication request body'
+    )
+
     text_match = models.TextField(
         blank=True,
         null=True,
@@ -763,12 +774,19 @@ class HttpStatusCheck(StatusCheck):
             auth = (self.username if self.username is not None else '',
                     self.password if self.password is not None else '')
 
+        body = {
+            username: self.username,
+            password: self.password,
+            grant_type: 'password',
+            name: 'WebMemberPortal',
+        }
         try:
-            resp = requests.get(
+             resp = requests.post(
                 self.endpoint,
                 timeout=self.timeout,
                 verify=self.verify_ssl_certificate,
                 auth=auth,
+                data=body,
                 headers={
                     "User-Agent": settings.HTTP_USER_AGENT,
                 },
