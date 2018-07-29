@@ -780,7 +780,7 @@ class HttpStatusCheck(StatusCheck):
             try:
                 bearer_body = json.loads(self.bearer_request_body)
             except ValueError as e:
-                result.error = e.message
+                pass
             else:
                 try:
                     resp = requests.post(
@@ -791,7 +791,7 @@ class HttpStatusCheck(StatusCheck):
                         },
                     )
                 except requests.RequestException as e:
-                    result.error = u'Request error occurred: %s' % (e.message,)
+                    pass
                 else:
                     bearer_auth = resp.json()['access_token']
 
