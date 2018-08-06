@@ -1,5 +1,6 @@
 {% extends 'base_public.html' %}
 {% block header_navbar_menu %}
+  {% if user.is_authenticated %}
   <ul class="nav navbar-nav">
     <li>
       <a href="{% url 'instances' %}"><i class="fa fa-desktop"></i> Instances</a>
@@ -25,7 +26,7 @@
             <a href="{% url 'create-graphite-check' %}?service={{ service.id }}&instance={{ instance.id }}" class=""><i class="glyphicon glyphicon-signal" title="Add new metric check"></i> Graphite check</a>
           </li>
           <li>
-            <a href="{% url 'create-http-check' %}?service={{ service.id }}&instance={{ instance.id }}" class="" title="Add new Http check"><i class="glyphicon glyphicon-arrow-up"></i> Http check</a>
+            <a href="{% url 'create-http-check' %}?service={{ service.id }}&instance={{ instance.id }}" class="" title="Add new HTTP check"><i class="glyphicon glyphicon-arrow-up"></i> HTTP check</a>
           </li>
           <li>
             <a href="{% url 'create-jenkins-check' %}?service={{ service.id }}&instance={{ instance.id }}" class="" title="Add new Jenkins check"><i class="glyphicon glyphicon-ok"></i> Jenkins check</a>
@@ -36,7 +37,7 @@
           <!-- Custom check plugins buttons-->
           {% for checktype in custom_check_types %}
             <li>
-              <a href="{% url checktype.creation_url %}?service={{ service.id }}&instance={{ instance.id }}" class="" title="Add new {{checktype.check_name|capfirst}} check"><i class="glyphicon glyphicon-transfer"></i> {{checktype.check_name|capfirst}} check</a>
+              <a href="{% url checktype.creation_url %}?service={{ service.id }}&instance={{ instance.id }}" class="" title="Add new {{checktype.check_name|capfirst}} check"><i class="glyphicon {{checktype.icon_class|default:"glyphicon-ok"}}"></i> {{checktype.check_name|capfirst}} check</a>
             </li>
           {% endfor %}
         </ul>
@@ -57,10 +58,10 @@
                 <a href="{% url "admin:auth_user_add" %}"><i class="glyphicon glyphicon-user"></i> Add user</a>
               </li>
               <li>
-                <a href="{% url "user-profile" user.id %}"><i class="glyphicon glyphicon-wrench"></i>Profile Settings</a>
+                <a href="{% url "user-profile" user.id %}"><i class="glyphicon glyphicon-wrench"></i> Profile Settings</a>
               </li>
               <li>
-                <a href="{% url "plugin-settings-global" %}"><i class="glyphicon glyphicon-equalizer"></i>Plugin Settings</a>
+                <a href="{% url "plugin-settings-global" %}"><i class="glyphicon glyphicon-equalizer"></i> Plugin Settings</a>
               </li>
               <li class="divider"></li>
               <li>
@@ -73,4 +74,7 @@
             </ul>
           </li>
         </ul>
+  {% else %}
+    {{ block.super }}
+  {% endif %}
 {% endblock header_navbar_menu %}

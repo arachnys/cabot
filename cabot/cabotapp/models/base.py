@@ -763,7 +763,8 @@ class HttpStatusCheck(StatusCheck):
 
         auth = None
         if self.username or self.password:
-            auth = (self.username, self.password)
+            auth = (self.username if self.username is not None else '',
+                    self.password if self.password is not None else '')
 
         try:
             resp = requests.get(
@@ -783,11 +784,11 @@ class HttpStatusCheck(StatusCheck):
                 result.error = u'Wrong code: got %s (expected %s)' % (
                     resp.status_code, int(self.status_code))
                 result.succeeded = False
-                result.raw_data = resp.content
+                result.raw_data = resp.text
             elif self.text_match:
-                if not self._check_content_pattern(self.text_match, resp.content):
+                if not self._check_content_pattern(self.text_match, resp.text):
                     result.error = u'Failed to find match regex /%s/ in response body' % self.text_match
-                    result.raw_data = resp.content
+                    result.raw_data = resp.text
                     result.succeeded = False
                 else:
                     result.succeeded = True

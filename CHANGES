@@ -1,4 +1,25 @@
-master
+Version 0.11.13
+---------------
+
+* Fix bug where jenkins checks were always passing
+* Reduce Arachnys branding a bit
+* Fix 404 page for logged out users
+* Style forms with django-bootstrap-form
+* [[#605](https://github.com/arachnys/cabot/issues/605)] Fix http check forms auto-filling username/password
+* [[#607](https://github.com/arachnys/cabot/issues/607)] Fix checks for websites service non utf-8 content
+
+Version 0.11.12
+---------------
+
+* Upgrade django to 1.11.11
+* Debounce JenkinsCheck on the number of job failures
+  - Previously it would fail after cabot checked the jenkins api N times, even if the jenkins job had only failed once
+
+Version 0.11.11
+---------------
+
+* Fix /api/oncall endpoint not working with basic auth
+
 Version 0.11.10
 ---------------
 

@@ -25,12 +25,14 @@ from rest_framework.documentation import include_docs_urls
 
 from django.contrib import admin
 from django.views.generic.base import RedirectView
+from django.views.static import serve
 from django.shortcuts import redirect
 from django.contrib.auth.views import login, logout, password_reset, password_reset_done, password_reset_confirm
 admin.autodiscover()
 
 from importlib import import_module
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +56,9 @@ def home_authentication_switcher(request, *args, **kwargs):
 urlpatterns = [
      # for the password reset views
      url('^', include('django.contrib.auth.urls')),
+
+     url(r'^(?P<path>favicon\.ico)$', serve, name='favicon',
+        kwargs={'document_root': os.path.join(settings.STATIC_ROOT, 'arachnys/img')}),
 
      url(r'^$', view=home_authentication_switcher,
         name='dashboard'),

@@ -10,6 +10,7 @@ Django==1.11.11
 django-appconf==1.0.2
 django-auth-ldap==1.2.16
 django-autocomplete-light==3.2.10
+django-bootstrap-form==3.4
 django-compressor==2.2
 django-filter==1.0.4
 django-jsonify==0.3.0

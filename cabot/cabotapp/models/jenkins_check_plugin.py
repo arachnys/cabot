@@ -23,6 +23,7 @@ class JenkinsStatusCheck(StatusCheck):
             status = get_job_status(self.jenkins_config, self.name)
             active = status['active']
             result.job_number = status['job_number']
+            result.consecutive_failures = status['consecutive_failures']
             if status['status_code'] == 404:
                 result.error = u'Job %s not found on Jenkins' % self.name
                 result.succeeded = False
@@ -74,7 +75,8 @@ class JenkinsStatusCheck(StatusCheck):
           False if failing
         """
         last_result = recent_results[0]
-        return last_result.consecutive_failures > debounce
+        return last_result.consecutive_failures <= debounce
+
 
 
 class JenkinsConfig(models.Model):
