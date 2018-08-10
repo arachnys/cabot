@@ -68,3 +68,6 @@ class GrafanaElasticsearchStatusCheckUpdateForm(GrafanaStatusCheckUpdateForm):
         self.fields['queries'].widget = forms.Textarea(attrs=dict(readonly='readonly',
                                                                   style='width:100%'))
         self.fields['queries'].help_text = None
+
+        self.fields['skip_review'] = forms.BooleanField(required=False)
+        self.fields['skip_review'].initial = False
