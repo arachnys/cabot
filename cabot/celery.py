@@ -23,6 +23,9 @@ app.conf.beat_schedule = {
     },
     'clean-db': {
         'task': 'cabot.cabotapp.tasks.clean_db',
+        'kwargs': {
+            'days_to_retain': os.environ.get('CABOT_RESULTS_RETENTION_DAYS', 7)
+        },
         'schedule': timedelta(seconds=60 * 60 * 24),
     },
 }
