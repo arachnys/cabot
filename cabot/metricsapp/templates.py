@@ -6,5 +6,5 @@ SOURCE_CHANGED_NONEXISTING = SOURCE_CHANGED_EXISTING + ' The new source is not c
 SERIES_CHANGED = 'The panel series ids have changed from {{ old_series }} to {{ new_series }}. ' \
                  'The check has not been changed.'
 
-ES_QUERIES_CHANGED = 'The queries have changed from\n{% autoescape off %}{{ old_queries }}\nto\n{{ new_queries }}' \
-                     '{% endautoescape %}.'
+ES_QUERIES_CHANGED = "The queries have changed from:\n\n{% autoescape off %}{{ old_queries }}\n\nto:\n\n" \
+                     "{{ new_queries }}\n\nDiff:\n{{ queries_diff }}{% endautoescape %}"

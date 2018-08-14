@@ -49,3 +49,4 @@ boto==2.38.0
 rollbar==0.9.12
 unittest-xml-reporting==2.1.0
 PyMySQL==0.8.0
+jsondiff==1.1.2

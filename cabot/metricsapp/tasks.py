@@ -15,7 +15,7 @@ from cabot.metricsapp.models import MetricsStatusCheckBase, ElasticsearchStatusC
     GrafanaInstance, GrafanaPanel
 from cabot.metricsapp.templates import SOURCE_CHANGED_EXISTING, SOURCE_CHANGED_NONEXISTING, \
     SERIES_CHANGED, ES_QUERIES_CHANGED
-
+import jsondiff
 
 logger = logging.getLogger(__name__)
 
@@ -81,6 +81,21 @@ def sync_all_grafana_checks(validate_sites=True):
     for check in MetricsStatusCheckBase.objects.filter(auto_sync=True).filter(active=True)\
             .exclude(grafana_panel__isnull=True).exclude(grafana_panel__in=inaccessible_panels):
         sync_grafana_check.apply_async(args=(check.id, str(sync_time)))
+
+
+def grafana_query_diff(old_queries, new_queries):
+    # type: (dict, dict) -> str
+    """returns human-readable diff between two Grafana query strings"""
+
+    # dump=True converts the result to a string and replaces the special keys
+    # jsondiff.delete and jsondiff.insert with the strings "$delete" and "$insert"
+    # if we don't do dump=True, json.dumps will sometimes barf because it doesn't know what to do with these symbols
+    diff = jsondiff.diff(old_queries, new_queries, dump=True)
+
+    # since we had to dump to string to fix the symbols, we have to re-parse the string in order to pretty-print it
+    diff = json.loads(diff)
+    diff = json.dumps(diff, indent=2, sort_keys=True)  # pretty-print it
+    return diff
 
 
 @task(ignore_result=True)
@@ -158,6 +173,7 @@ def sync_grafana_check(check_id, sync_time):
             if check.queries != old_queries:
                 context_dict['old_queries'] = str(old_queries)
                 context_dict['new_queries'] = str(check.queries)
+                context_dict['queries_diff'] = grafana_query_diff(json.loads(old_queries), queries)
                 changed_message.append(ES_QUERIES_CHANGED)
 
         # If anything has changed, send an email!

@@ -333,12 +333,55 @@ class TestDashboardSync(TestCase):
         self.check.queries = self.old_queries
         self.check.save()
 
+        # careful copy/pasting in an IDE - there is whitespace at the end of some lines
+        diff = u"""\
+{
+  "0": {
+    "aggs": {
+      "agg": {
+        "$delete": [
+          "terms"
+        ], 
+        "aggs": {
+          "$replace": {
+            "sum: 42": {
+              "sum": {
+                "field": "value"
+              }
+            }
+          }
+        }, 
+        "date_histogram": {
+          "extended_bounds": {
+            "max": "now", 
+            "min": "now-180m"
+          }, 
+          "field": "@timestamp", 
+          "interval": "1m"
+        }
+      }
+    }, 
+    "query": {
+      "bool": {
+        "must": {
+          "0": {
+            "query_string": {
+              "query": "query:life-the-universe-and-everything"
+            }
+          }
+        }
+      }
+    }
+  }
+}"""  # noqa: W291 (suppress trailing whitespace warning)
+
         sync_grafana_check(self.check.id, str(datetime(2017, 2, 1, 0, 0, 1, 123)))
+
         send_email.assert_called_once_with(args=(['hi@affirm.com', 'admin@affirm.com', 'enduser@affirm.com'],
                                                  'http://localhost/check/{}/\n\n'
-                                                 'The queries have changed from\n{}\nto\n{}.'.format(
-                                                     self.check.id, self.old_queries, self.queries
-                                                 ), 'Also Great Dashboard: 42'))
+                                                 'The queries have changed from:\n\n{}\n\nto:\n\n{}\n\nDiff:\n{}'
+                                                 .format(self.check.id, self.old_queries, self.queries, diff),
+                                                 'Also Great Dashboard: 42'))
         self.assertEqual(ElasticsearchStatusCheck.objects.get(id=self.check.id).queries, str(self.queries))
 
     @patch('cabot.metricsapp.tasks.get_dashboard_info', fake_get_dashboard_info)
@@ -349,12 +392,56 @@ class TestDashboardSync(TestCase):
         self.check.queries = self.old_queries
         self.check.save()
 
+        # careful copy/pasting in an IDE - there is whitespace at the end of some lines
+        diff = u"""\
+{
+  "0": {
+    "aggs": {
+      "agg": {
+        "$delete": [
+          "terms"
+        ], 
+        "aggs": {
+          "$replace": {
+            "sum: 42": {
+              "sum": {
+                "field": "value"
+              }
+            }
+          }
+        }, 
+        "date_histogram": {
+          "extended_bounds": {
+            "max": "now", 
+            "min": "now-180m"
+          }, 
+          "field": "@timestamp", 
+          "interval": "1m"
+        }
+      }
+    }, 
+    "query": {
+      "bool": {
+        "must": {
+          "0": {
+            "query_string": {
+              "query": "query:life-the-universe-and-everything"
+            }
+          }
+        }
+      }
+    }
+  }
+}"""  # noqa: W291 (suppress trailing whitespace warning)
+
         sync_grafana_check(self.check.id, str(datetime(2017, 2, 1, 0, 0, 1, 12312)))
+
         send_email.assert_called_once_with(args=(['hi@affirm.com', 'admin@affirm.com', 'enduser@affirm.com'],
                                                  'http://localhost/check/{}/\n\n'
                                                  'The panel series ids have changed from B,E to B. The check has '
-                                                 'not been changed.\n\nThe queries have changed from\n{}\nto\n{}.'
-                                                 .format(self.check.id, self.old_queries, self.queries),
+                                                 'not been changed.\n\nThe queries have changed from:\n\n{}\n\n'
+                                                 'to:\n\n{}\n\nDiff:\n{}'
+                                                 .format(self.check.id, self.old_queries, self.queries, diff),
                                                  'Also Great Dashboard: 42'))
         check = ElasticsearchStatusCheck.objects.get(id=self.check.id)
         panel = GrafanaPanel.objects.get(id=self.panel.id)
