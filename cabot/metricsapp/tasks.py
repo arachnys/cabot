@@ -89,13 +89,7 @@ def grafana_query_diff(old_queries, new_queries):
 
     # dump=True converts the result to a string and replaces the special keys
     # jsondiff.delete and jsondiff.insert with the strings "$delete" and "$insert"
-    # if we don't do dump=True, json.dumps will sometimes barf because it doesn't know what to do with these symbols
-    diff = jsondiff.diff(old_queries, new_queries, dump=True)
-
-    # since we had to dump to string to fix the symbols, we have to re-parse the string in order to pretty-print it
-    diff = json.loads(diff)
-    diff = json.dumps(diff, indent=2, sort_keys=True)  # pretty-print it
-    return diff
+    return jsondiff.diff(old_queries, new_queries, dump=True, dumper=jsondiff.JsonDumper(sort_keys=True, indent=2))
 
 
 @task(ignore_result=True)
