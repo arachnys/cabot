@@ -43,7 +43,6 @@ class TestMetricsReviewChanges(TestCase):
             'ignore_final_data_point': True,
             'use_activity_counter': False,
             'runbook': '',
-            'skip_review': False,
         }
 
         logged_in = self.client.login(username='user', password='password')
@@ -52,9 +51,9 @@ class TestMetricsReviewChanges(TestCase):
     def test_review_changes(self):
         data = self.base_check_data.copy()
         data['name'] = 'ultra cool test'
-        data['skip_review'] = False
 
         response = self.client.post(reverse('grafana-es-update', kwargs={'pk': self.metrics_check.pk}), data=data)
+        self.assertNotContains(response, "No changes were made.", status_code=200, msg_prefix=str(response))
         self.assertNotContains(response, "errorlist", status_code=200, msg_prefix=str(response))
 
         # DB should NOT be updated yet
@@ -63,7 +62,11 @@ class TestMetricsReviewChanges(TestCase):
 
         # now accept the changes by manually setting skip_review to True (which should be done in the response)
         # (would ideally do this by using a browser's normal submit routine on the response,
-        # but I don't think we can do that with just django's standard testing functions)
+        # but I don't think we can do that with just django's standard testing functions.
+        # we at least scan the HTML for the skip_review input to make sure it got set to True)
+        self.assertContains(response,
+                            '<input checked="checked" id="id_skip_review" name="skip_review" type="checkbox" />',
+                            status_code=200)
         data['skip_review'] = True
         response = self.client.post(reverse('grafana-es-update', kwargs={'pk': self.metrics_check.pk}), data=data)
 
@@ -75,16 +78,18 @@ class TestMetricsReviewChanges(TestCase):
         self.assertEqual(self.metrics_check.name, 'ultra cool test')
 
     def test_review_changes_no_changes(self):
+        """
+        check that if we submit the form with no changes, we still go through the review changes flow
+        """
         # no changes to the check
         data = self.base_check_data.copy()
-        data['skip_review'] = False
 
         response = self.client.post(reverse('grafana-es-update', kwargs={'pk': self.metrics_check.pk}), data=data)
-        # if this starts returning 200, there's a form error
-        self.assertNotContains(response, "errorlist", status_code=302, msg_prefix=str(response))
+        self.assertNotContains(response, "errorlist", status_code=200, msg_prefix=str(response))
+        self.assertContains(response, "No changes were made.", status_code=200, msg_prefix=str(response))
 
+        # submitting again (with skip_review=True) should take us back to the check page
+        data['skip_review'] = True
+        response = self.client.post(reverse('grafana-es-update', kwargs={'pk': self.metrics_check.pk}), data=data)
         # verify that we ended up at the success url (/check/<pk>)
         self.assertEqual(urlparse(response.url).path, reverse('check', kwargs={'pk': self.metrics_check.pk}))
-
-        new_metrics_check = ElasticsearchStatusCheck.objects.get(pk=self.metrics_check.pk)
-        self.assertEqual(self.metrics_check, new_metrics_check)

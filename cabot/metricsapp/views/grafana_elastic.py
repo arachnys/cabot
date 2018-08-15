@@ -66,7 +66,7 @@ class GrafanaElasticsearchStatusCheckUpdateView(LoginRequiredMixin, UpdateView):
 
     def form_valid(self, form):
         # review changed fields before saving changes
-        if form.has_changed() and not form.cleaned_data['skip_review']:
+        if not form.cleaned_data['skip_review']:
             # set skip_review to true for the user, then redisplay the form using the preview_changes template
             # form.data is immutable, so recreate form.data to change skip_review to True
             skip_review_data = self.request.POST.copy()
@@ -76,8 +76,10 @@ class GrafanaElasticsearchStatusCheckUpdateView(LoginRequiredMixin, UpdateView):
             # create a form with the original data so we can easily render old fields in the preview_changes template
             original_form = self.form_class(initial=form.initial)
 
+            changed = [(field, original_form[field.name]) for field in form
+                       if field.name in form.changed_data and field.name != 'skip_review']
             return render(self.request, 'metricsapp/grafana_preview_changes.html',
-                          {'form': form, 'original_form': original_form})
+                          {'form': form, 'changed_fields': changed})
 
         # else preview accepted, continue as usual
         return super(GrafanaElasticsearchStatusCheckUpdateView, self).form_valid(form)
