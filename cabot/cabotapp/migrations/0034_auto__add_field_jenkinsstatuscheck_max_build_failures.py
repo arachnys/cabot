@@ -10,7 +10,7 @@ class Migration(SchemaMigration):
     def forwards(self, orm):
         # Adding field 'JenkinsStatusCheck.max_build_failures'
         db.add_column(u'cabotapp_jenkinsstatuscheck', 'max_build_failures',
-                      self.gf('django.db.models.fields.PositiveIntegerField')(null=True, blank=True),
+                      self.gf('django.db.models.fields.PositiveIntegerField')(default=0),
                       keep_default=False)
 
 
@@ -94,7 +94,7 @@ class Migration(SchemaMigration):
         },
         u'cabotapp.jenkinsstatuscheck': {
             'Meta': {'ordering': "['name']", 'object_name': 'JenkinsStatusCheck', '_ormbases': [u'cabotapp.StatusCheck']},
-            'max_build_failures': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True', 'blank': 'True'}),
+            'max_build_failures': ('django.db.models.fields.PositiveIntegerField', [], {'default': '0'}),
             'max_queued_build_time': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True', 'blank': 'True'}),
             u'statuscheck_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['cabotapp.StatusCheck']", 'unique': 'True', 'primary_key': 'True'})
         },

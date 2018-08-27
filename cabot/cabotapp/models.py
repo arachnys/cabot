@@ -679,16 +679,15 @@ class JenkinsStatusCheck(StatusCheck):
 
     icon = 'glyphicon glyphicon-ok'
 
+    max_build_failures = models.PositiveIntegerField(
+        default=0,
+        help_text='Alert if more than this many consecutive failures (default=0)'
+    )
+
     max_queued_build_time = models.PositiveIntegerField(
         null=True,
         blank=True,
         help_text='Alert if build queued for more than this many minutes.',
-    )
-
-    max_build_failures = models.PositiveIntegerField(
-        null=True,
-        blank=True,
-        help_text='Alert if more than this many consecutive failures (ignores other checks)'
     )
 
     @property
@@ -750,11 +749,7 @@ class JenkinsStatusCheck(StatusCheck):
                 else:
                     result.succeeded = True
 
-            if not status['succeeded']:
-                if result.error:
-                    result.error += u'; Job "%s" failing on Jenkins' % self.name
-                else:
-                    result.error = u'Job "%s" failing on Jenkins' % self.name
+            if not result.succeeded:
                 result.raw_data = status
 
         return result
