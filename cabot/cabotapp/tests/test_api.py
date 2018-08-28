@@ -248,7 +248,8 @@ class TestAPIFiltering(LocalTestCase):
             importance=Service.CRITICAL_STATUS,
         )
 
-        self.expected_sort_names = [u'Filter test 1', u'Filter test 2', u'Filter test 3', u'Jenkins Check', u'Jenkins Check 2']
+        self.expected_sort_names = [u'Filter test 1', u'Filter test 2', u'Filter test 3', u'Jenkins Check',
+                                    u'Jenkins Check 2']
 
         self.basic_auth = 'Basic {}'.format(
             base64.b64encode(
