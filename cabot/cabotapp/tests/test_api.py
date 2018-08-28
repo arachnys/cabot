@@ -60,6 +60,14 @@ class TestAPI(LocalTestCase):
                     'retries': 0,
                     'id': 10103
                 },
+                {
+                    'name': u'Jenkins Check 2',
+                    'active': True,
+                    'importance': u'ERROR',
+                    'frequency': 5,
+                    'retries': 0,
+                    'id': 10104
+                },
             ],
             'jenkinsstatuscheck': [
                 {
@@ -69,7 +77,18 @@ class TestAPI(LocalTestCase):
                     'frequency': 5,
                     'retries': 0,
                     'max_queued_build_time': 10,
+                    'max_build_failures': 5,
                     'id': 10101
+                },
+                {
+                    'name': u'Jenkins Check 2',
+                    'active': True,
+                    'importance': u'ERROR',
+                    'frequency': 5,
+                    'retries': 0,
+                    'max_queued_build_time': 10,
+                    'max_build_failures': 0,
+                    'id': 10104
                 },
             ],
             'httpstatuscheck': [
@@ -124,6 +143,7 @@ class TestAPI(LocalTestCase):
                     'frequency': 5,
                     'retries': 0,
                     'max_queued_build_time': 37,
+                    'max_build_failures': 5,
                     'id': 10101
                 },
             ],
@@ -228,7 +248,7 @@ class TestAPIFiltering(LocalTestCase):
             importance=Service.CRITICAL_STATUS,
         )
 
-        self.expected_sort_names = [u'Filter test 1', u'Filter test 2', u'Filter test 3', u'Jenkins Check']
+        self.expected_sort_names = [u'Filter test 1', u'Filter test 2', u'Filter test 3', u'Jenkins Check', u'Jenkins Check 2']
 
         self.basic_auth = 'Basic {}'.format(
             base64.b64encode(

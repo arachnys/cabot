@@ -679,15 +679,15 @@ class JenkinsStatusCheck(StatusCheck):
 
     icon = 'glyphicon glyphicon-ok'
 
-    max_build_failures = models.PositiveIntegerField(
-        default=0,
-        help_text='Alert if more than this many consecutive failures (default=0)'
-    )
-
     max_queued_build_time = models.PositiveIntegerField(
         null=True,
         blank=True,
         help_text='Alert if build queued for more than this many minutes.',
+    )
+
+    max_build_failures = models.PositiveIntegerField(
+        default=0,
+        help_text='Alert if more than this many consecutive failures (default=0)'
     )
 
     @property
@@ -704,7 +704,7 @@ class JenkinsStatusCheck(StatusCheck):
                 result.error = u'Job %s not found on Jenkins' % self.name
                 result.succeeded = False
                 return result
-            elif status['status_code'] > 400:
+            elif status['status_code'] >= 400:
                 # Will fall through to next block
                 raise Exception(u'returned %s' % status['status_code'])
         except Exception as e:
@@ -720,6 +720,8 @@ class JenkinsStatusCheck(StatusCheck):
             result.error = u'Job "%s" disabled on Jenkins' % self.name
             result.succeeded = False
         else:
+            result.succeeded = True
+
             if self.max_queued_build_time and status['blocked_build_time']:
                 if status['blocked_build_time'] > self.max_queued_build_time * 60:
                     result.succeeded = False
@@ -728,12 +730,8 @@ class JenkinsStatusCheck(StatusCheck):
                         int(status['blocked_build_time']),
                         self.max_queued_build_time,
                     )
-                else:
-                    result.succeeded = status['succeeded']
-            else:
-                result.succeeded = status['succeeded']
 
-            if self.max_build_failures and status['consecutive_failures']:
+            if result.succeeded and status['consecutive_failures'] is not None:
                 if status['consecutive_failures'] > self.max_build_failures:
                     result.succeeded = False
                     result.error = u'Job "%s" has failed %s times (> %s)' % (
@@ -746,8 +744,6 @@ class JenkinsStatusCheck(StatusCheck):
                     result.error = u'Job "%s" Last Completed Build not Found' % (
                         self.name
                     )
-                else:
-                    result.succeeded = True
 
             if not result.succeeded:
                 result.raw_data = status
