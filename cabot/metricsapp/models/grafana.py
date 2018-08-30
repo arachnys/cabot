@@ -4,7 +4,7 @@ import urlparse
 from django.core.exceptions import ValidationError
 from django.db import models
 from cabot.metricsapp import defs
-
+from cabot.metricsapp.api import get_series_ids, get_panel_url
 
 logger = logging.getLogger(__name__)
 
@@ -124,3 +124,27 @@ class GrafanaPanel(models.Model):
     series_ids = models.CharField(max_length=50)
     selected_series = models.CharField(max_length=50)
     panel_url = models.CharField(max_length=1024, null=True)
+
+
+def build_grafana_panel_from_session(session):
+    """Returns an (unsaved!) GrafanaPanel model instance for use with rendering or to save to the DB"""
+    grafana_panel = GrafanaPanel()
+    set_grafana_panel_from_session(grafana_panel, session)
+    return grafana_panel
+
+
+def set_grafana_panel_from_session(grafana_panel, session):
+    """
+    Update a GrafanaPanel model with data based on session vars
+    Note that this does not update the DB - call grafana_panel.save() yourself if you want to do that
+    """
+    instance = GrafanaInstance.objects.get(id=session['instance_id'])
+    dashboard_uri = session['dashboard_uri']
+    panel_url = get_panel_url(instance.url, dashboard_uri, session['panel_id'], session['templating_dict'])
+
+    grafana_panel.grafana_instance = instance
+    grafana_panel.dashboard_uri = dashboard_uri
+    grafana_panel.panel_id = int(session['panel_id'])
+    grafana_panel.series_ids = get_series_ids(session['panel_info'])
+    grafana_panel.selected_series = '_'.join(session['series'])
+    grafana_panel.panel_url = panel_url

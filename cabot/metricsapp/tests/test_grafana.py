@@ -103,11 +103,13 @@ class TestGrafanaApiParsing(TestCase):
         grafana_data_source = Mock()
         grafana_data_source.metrics_source_base = 'datasource'
 
+        grafana_panel_model = GrafanaPanel()
+
         status_check_fields = []
         for row in self.dashboard_info['dashboard']['rows']:
             for panel in row['panels']:
                 status_check_fields.append(get_status_check_fields(self.dashboard_info, panel, grafana_data_source,
-                                                                   self.templating_dict, 1))
+                                                                   self.templating_dict, grafana_panel_model))
 
         expected_fields = [
             dict(name='Also Great Dashboard: 42',
@@ -115,19 +117,19 @@ class TestGrafanaApiParsing(TestCase):
                  time_range=180,
                  high_alert_value=1.0,
                  check_type='>',
-                 grafana_panel=1,
+                 grafana_panel=grafana_panel_model,
                  warning_value=0.0,
                  user=None),
             dict(name='Also Great Dashboard: Pct 75',
                  source='datasource',
                  time_range=180,
                  warning_value=100.0,
-                 grafana_panel=1,
+                 grafana_panel=grafana_panel_model,
                  check_type='<',
                  user=None),
             dict(name='Also Great Dashboard: Panel 106',
                  source='datasource',
-                 grafana_panel=1,
+                 grafana_panel=grafana_panel_model,
                  time_range=20,
                  user=None)
         ]
