@@ -78,6 +78,15 @@ class TestCheckRun(LocalTestCase):
         self.assertEqual(len(checkresults), 1)
         self.assertFalse(self.jenkins_check.last_result().succeeded)
 
+    @patch('cabot.cabotapp.jenkins.requests.get', fake_jenkins_success)
+    def test_jenkins_consecutive_failures(self):
+        checkresults = self.jenkins_check2.statuscheckresult_set.all()
+        self.assertEqual(len(checkresults), 0)
+        self.jenkins_check2.run()
+        checkresults = self.jenkins_check2.statuscheckresult_set.all()
+        self.assertEqual(len(checkresults), 1)
+        self.assertFalse(self.jenkins_check2.last_result().succeeded)
+
     @patch('cabot.cabotapp.jenkins.requests.get', jenkins_blocked_response)
     def test_jenkins_blocked_build(self):
         checkresults = self.jenkins_check.statuscheckresult_set.all()

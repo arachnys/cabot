@@ -196,6 +196,7 @@ class JenkinsStatusCheckForm(StatusCheckForm):
             'importance',
             'retries',
             'max_queued_build_time',
+            'max_build_failures',
             'use_activity_counter',
             'runbook',
         )

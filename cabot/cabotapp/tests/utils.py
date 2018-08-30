@@ -52,7 +52,18 @@ class LocalTestCase(APITestCase):
             created_by=self.user,
             importance=Service.ERROR_STATUS,
             max_queued_build_time=10,
+            max_build_failures=5
         )
+
+        self.jenkins_check2 = JenkinsStatusCheck.objects.create(
+            id=10104,
+            name='Jenkins Check 2',
+            created_by=self.user,
+            importance=Service.ERROR_STATUS,
+            max_queued_build_time=10,
+            max_build_failures=0
+        )
+
         self.http_check = HttpStatusCheck.objects.create(
             id=10102,
             name='Http Check',
