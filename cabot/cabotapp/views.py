@@ -4,6 +4,7 @@ from dateutil.relativedelta import relativedelta
 from django.http import HttpResponse, HttpResponseRedirect
 from django.core.urlresolvers import reverse_lazy
 from django.conf import settings
+
 from models import (StatusCheck,
                     JenkinsStatusCheck,
                     HttpStatusCheck,
@@ -30,7 +31,7 @@ from django.views.generic import (DetailView,
                                   TemplateView,
                                   View)
 from django import forms
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, AnonymousUser
 from django.utils import timezone
 from django.utils.timezone import utc
 from django.core.urlresolvers import reverse
@@ -366,7 +367,8 @@ class CheckCreateView(LoginRequiredMixin, CreateView):
     template_name = 'cabotapp/statuscheck_form.html'
 
     def form_valid(self, form):
-        form.instance.created_by = self.request.user
+        if self.request.user is not None and not isinstance(self.request.user, AnonymousUser):
+            form.instance.created_by = self.request.user
         return super(CheckCreateView, self).form_valid(form)
 
     def get_initial(self):

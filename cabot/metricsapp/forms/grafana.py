@@ -1,4 +1,6 @@
 from django import forms
+from django.contrib.auth.models import AnonymousUser
+
 from cabot.cabotapp.views import StatusCheckForm
 from cabot.metricsapp.models import GrafanaInstance, GrafanaDataSource, GrafanaPanel
 
@@ -133,7 +135,7 @@ class GrafanaStatusCheckForm(StatusCheckForm):
 
         model.source = self.source
         model.grafana_panel = self.grafana_panel
-        if self.user is not None:
+        if self.user is not None and not isinstance(self.user, AnonymousUser):
             model.created_by = self.user
 
         model.save()
