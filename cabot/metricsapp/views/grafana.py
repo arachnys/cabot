@@ -4,11 +4,10 @@ from django.shortcuts import render
 from django.views.generic import View, TemplateView
 from cabot.cabotapp.views import LoginRequiredMixin
 from cabot.metricsapp.api import get_dashboard_info, get_dashboards, get_dashboard_choices, get_panel_choices, \
-    get_series_choices, create_generic_templating_dict, get_series_ids, get_panel_url
+    get_series_choices, create_generic_templating_dict, get_panel_url
 from cabot.metricsapp.forms import GrafanaInstanceForm, GrafanaDashboardForm, GrafanaPanelForm, \
     GrafanaSeriesForm
-from cabot.metricsapp.models import GrafanaDataSource, ElasticsearchSource, GrafanaInstance, GrafanaPanel, \
-    MetricsStatusCheckBase
+from cabot.metricsapp.models import GrafanaDataSource, ElasticsearchSource, GrafanaInstance, MetricsStatusCheckBase
 
 
 class GrafanaInstanceSelectView(LoginRequiredMixin, View):
@@ -123,41 +122,33 @@ class GrafanaSeriesSelectView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         templating_dict = request.session['templating_dict']
         series = get_series_choices(request.session['panel_info'], templating_dict)
+        pk = kwargs.get('pk', None)
+
         # If there's only one series, skip the page and just select it
         if len(series) == 1:
             request.session['series'] = [series[0][0]]
 
-            instance_id = request.session['instance_id']
-            datasource = request.session['datasource']
-            url = self.get_url_for_check_type(instance_id, datasource)
-
-            pk = kwargs.get('pk')
-            existing_panel = None
             if pk is not None and MetricsStatusCheckBase.objects.filter(id=pk).exists():
                 check = MetricsStatusCheckBase.objects.get(id=pk)
-                existing_panel = check.grafana_panel
                 url = check.refresh_url
-
-            request.session['grafana_panel'] = self.get_grafana_panel_id(instance_id,
-                                                                         request.session['dashboard_uri'],
-                                                                         request.session['panel_id'],
-                                                                         get_series_ids(request.session['panel_info']),
-                                                                         series[0][0],
-                                                                         existing_panel,
-                                                                         templating_dict)
+            else:
+                instance_id = request.session['instance_id']
+                datasource = request.session['datasource']
+                url = self.get_url_for_check_type(instance_id, datasource)
 
             return HttpResponseRedirect(reverse(url, kwargs=kwargs))
 
-        pk = kwargs.get('pk')
         default_series = None
         if pk is not None and MetricsStatusCheckBase.objects.filter(id=pk).exists():
             default_series = MetricsStatusCheckBase.objects.get(id=pk).grafana_panel.selected_series.split('_')
 
         form = self.form_class(series=series, default_series=default_series)
+
         panel_url = get_panel_url(GrafanaInstance.objects.get(id=request.session['instance_id']).url,
                                   request.session['dashboard_uri'],
                                   request.session['panel_id'],
                                   templating_dict)
+
         return render(request, self.template_name, {'form': form, 'check_type': 'Elasticsearch',
                                                     'panel_url': panel_url})
 
@@ -175,19 +166,9 @@ class GrafanaSeriesSelectView(LoginRequiredMixin, View):
             url = self.get_url_for_check_type(instance_id, datasource)
 
             pk = kwargs.get('pk')
-            existing_panel = None
             if pk is not None and MetricsStatusCheckBase.objects.filter(id=pk).exists():
                 check = MetricsStatusCheckBase.objects.get(id=pk)
-                existing_panel = check.grafana_panel
                 url = check.refresh_url
-
-            request.session['grafana_panel'] = self.get_grafana_panel_id(instance_id,
-                                                                         request.session['dashboard_uri'],
-                                                                         request.session['panel_id'],
-                                                                         get_series_ids(request.session['panel_info']),
-                                                                         series,
-                                                                         existing_panel,
-                                                                         templating_dict)
 
             return HttpResponseRedirect(reverse(url, kwargs=kwargs))
 
@@ -216,39 +197,6 @@ class GrafanaSeriesSelectView(LoginRequiredMixin, View):
             raise NotImplementedError('Check type for data source {} not implemented'.format(datasource))
 
         return url
-
-    def get_grafana_panel_id(self, instance_id, dashboard_uri, panel_id, series_ids, selected_series, grafana_panel,
-                             templating_dict):
-        """
-        Create a GrafanaPanel object based on a dashboard_uri and panel_id
-        :param dashboard_uri: uri for the dashboard
-        :param panel_id: id for the panel
-        :param series_ids: list of all series ids possible for this panel
-        :param selected_series: series ids that were actually selected for the check
-        :param id: id of the existing GrafanaPanel object if it exists
-        :param templating_dict: dictionary of {template_name, template_value}
-        :return id of the created GrafanaPanel object
-        """
-        instance = GrafanaInstance.objects.get(id=instance_id)
-        if grafana_panel is None:
-            grafana_panel = GrafanaPanel.objects.create(
-                grafana_instance=instance,
-                dashboard_uri=dashboard_uri,
-                panel_id=int(panel_id),
-                series_ids=series_ids,
-                selected_series='_'.join(selected_series),
-                panel_url=get_panel_url(instance.url, dashboard_uri, panel_id, templating_dict)
-            )
-        else:
-            grafana_panel.grafana_instance = GrafanaInstance.objects.get(id=instance_id)
-            grafana_panel.dashboard_uri = dashboard_uri
-            grafana_panel.panel_id = int(panel_id)
-            grafana_panel.series_ids = series_ids
-            grafana_panel.selected_series = '_'.join(selected_series)
-            grafana_panel.panel_url = get_panel_url(instance.url, dashboard_uri, panel_id, templating_dict)
-            grafana_panel.save()
-
-        return grafana_panel.id
 
 
 class GrafanaEditView(LoginRequiredMixin, TemplateView):

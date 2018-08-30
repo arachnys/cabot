@@ -112,28 +112,6 @@ class MetricsStatusCheckBase(StatusCheck):
         """Get the url for viewing this check"""
         return '{}://{}/check/{}/'.format(settings.WWW_SCHEME, settings.WWW_HTTP_HOST, self.id)
 
-    def set_fields_from_grafana(self, fields):
-        self.name = fields['name']
-        self.source = fields['source']
-
-        time_range = fields.get('time_range')
-        if time_range is not None:
-            self.time_range = time_range
-
-        check_type = fields.get('check_type')
-        if check_type is not None:
-            self.check_type = check_type
-
-        warning_value = fields.get('warning_value')
-        if warning_value is not None:
-            self.warning_value = warning_value
-
-        high_alert_value = fields.get('high_alert_value')
-        if high_alert_value is not None:
-            self.high_alert_value = high_alert_value
-
-        self.save()
-
     def get_status_image(self):
         """Return a Grafana png image for the check if it exists"""
         if self.grafana_panel is not None:

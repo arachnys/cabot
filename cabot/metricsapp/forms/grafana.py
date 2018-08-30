@@ -1,6 +1,8 @@
 from django import forms
+from django.contrib.auth.models import AnonymousUser
+
 from cabot.cabotapp.views import StatusCheckForm
-from cabot.metricsapp.models import GrafanaInstance, GrafanaDataSource, GrafanaPanel
+from cabot.metricsapp.models import GrafanaInstance, GrafanaDataSource
 
 
 # Model forms for admin site
@@ -110,8 +112,6 @@ class GrafanaStatusCheckForm(StatusCheckForm):
         super(GrafanaStatusCheckForm, self).__init__(*args, **kwargs)
 
         self.fields['name'].initial = fields['name']
-
-        # Hide name field so users can't edit it.
         self.fields['name'].widget = forms.TextInput(attrs=dict(style='width:50%'))
         self.fields['name'].help_text = None
 
@@ -124,16 +124,20 @@ class GrafanaStatusCheckForm(StatusCheckForm):
 
         # Store fields that will be set in save()
         self.source = fields['source']
-        self.grafana_panel = GrafanaPanel.objects.get(id=fields['grafana_panel'])
+        self.grafana_panel = fields['grafana_panel']
         self.user = fields['user']
 
+    # TODO should probably take commit as an argument here
     def save(self):
         # set the MetricsSourceBase here so we don't have to display it
         model = super(GrafanaStatusCheckForm, self).save(commit=False)
 
+        # the grafana panel may have updated as well, so also save that
+        self.grafana_panel.save()
+
         model.source = self.source
         model.grafana_panel = self.grafana_panel
-        if self.user is not None:
+        if self.user is not None and not isinstance(self.user, AnonymousUser):
             model.created_by = self.user
 
         model.save()
@@ -141,6 +145,7 @@ class GrafanaStatusCheckForm(StatusCheckForm):
         # When commit is False, we just get the model, but the service/instance sets aren't saved
         # (since the model doesn't have a pk yet). Re-run to actually save the service and instance sets
         model = super(GrafanaStatusCheckForm, self).save()
+
         return model
 
 

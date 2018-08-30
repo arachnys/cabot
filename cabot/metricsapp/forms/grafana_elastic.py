@@ -68,3 +68,9 @@ class GrafanaElasticsearchStatusCheckUpdateForm(GrafanaStatusCheckUpdateForm):
         self.fields['queries'].widget = forms.Textarea(attrs=dict(readonly='readonly',
                                                                   style='width:100%'))
         self.fields['queries'].help_text = None
+
+    def save(self, commit=True):
+        if self.instance.grafana_panel is not None:
+            self.instance.grafana_panel.save()
+
+        return super(GrafanaElasticsearchStatusCheckUpdateForm, self).save(commit=commit)

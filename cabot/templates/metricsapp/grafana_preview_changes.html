@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+  <div class="col-xs-12">
+    <div class="col-xs-8 col-xs-offset-2">
+      {% if check_type %}
+        <h2>Review Changes to {{ check_type }} Status Check from Grafana</h2>
+      {% else %}
+        <h2>Review Changes to Status Check from Grafana</h2>
+      {% endif %}
+
+      {% if panel_url %}
+        <iframe src="{{ panel_url }}" width="100%" height="300" frameborder="0"></iframe>
+      {% else %}
+        <p>No panel url, you broke it :(</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<form class="form-horizontal" action="" method="post" role="form">
+  {% csrf_token %}
+
+  {# makes all input controls disabled (since they should be read-only at this step) #}
+  {# note we use disabled and not readonly because readonly checkboxes are screwy: https://stackoverflow.com/a/155301 #}
+  <fieldset disabled>
+    {% for new_field, old_field in changed_fields %}
+      <div class="form-group">
+          <div class="col-xs-12">
+            <label class="col-xs-2 control-label">{{ new_field.label_tag }}</label>
+            <div class="col-xs-4">{{ old_field }}</div>
+            {# leaving a space in the span fixes width issues (glyphicon:empty does some weird CSS stuff) #}
+            <span class="col-xs-2 text-center glyphicon glyphicon-arrow-right"> </span>
+            <div class="col-xs-4 text-right">{{ new_field }}</div>
+          </div>
+      </div>
+    {% empty %}
+      <div class="form-group">
+        <div class="col-xs-12">
+          <p class="text-center"><b>No changes were made.</b></p>
+        </div>
+      </div>
+    {% endfor %}
+  </fieldset>
+
+  {# Since disabled fields don't get submitted, we add all fields again but hidden #}
+  {% for field in form %}
+    <div class="hidden">{{ field }}</div>
+  {% endfor %}
+
+  {# this is what makes the submission (to the same endpoint) actually update the DB #}
+  <div class="hidden"><input id="skip_review" name="skip_review" type="checkbox" checked="checked" /></div>
+
+  <div class="colx-xs-12">
+    <div class="form-group">
+      <div class="col-xs-6 col-xs-offset-2">
+        <button type="submit" class="btn btn-primary">Submit</button>
+      </div>
+      <div class="col-xs-4">
+        {# using back instead of re-GETing this page preserves changed values in the form (at least on Chrome) #}
+        <a class="btn btn-default" href="javascript:window.history.back()">Back</a>
+      </div>
+    </div>
+  </div>
+</form>
+{% endblock %}

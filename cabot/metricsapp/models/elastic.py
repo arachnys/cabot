@@ -286,7 +286,3 @@ class ElasticsearchStatusCheck(MetricsStatusCheckBase):
 
             else:
                 raise NotImplementedError('Unsupported metric: {}.'.format(metric))
-
-    def set_fields_from_grafana(self, fields):
-        self.queries = json.dumps(fields['queries'])
-        super(ElasticsearchStatusCheck, self).set_fields_from_grafana(fields)

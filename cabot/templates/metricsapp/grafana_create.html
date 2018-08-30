@@ -3,15 +3,12 @@
 {% block content %}
 <div class="row">
   <div class="col-xs-12">
-    <div class="col-xs-10 col-xs-offset-2">
+    <div class="col-xs-8 col-xs-offset-2">
       {% if form.instance.id %}
         {% if check_type %}
           <h2>Update {{ check_type }} Status Check from Grafana</h2>
         {% else %}
           <h2>Update Status Check from Grafana</h2>
-        {% endif %}
-        {% if form.instance.grafana_panel and form.instance.grafana_panel.panel_url %}
-        <iframe src="{{ form.instance.grafana_panel.panel_url }}" width="100%" height="300" frameborder="0"></iframe>
         {% endif %}
       {% else %}
         {% if check_type %}
@@ -29,10 +26,21 @@
 
 <form class="form-horizontal" action="" method="post" role="form">
   {% include "cabotapp/_base_form.html" %}
+
+  {# Hidden checkbox used by the "Submit Without Reviewing" button to add skip_review=True to our POST request. #}
+  <div class="hidden"><input id="skip_review" name="skip_review" type="checkbox" /></div>
+
   <div class="colx-xs-12">
     <div class="form-group">
       <div class="col-xs-6 col-xs-offset-2">
-        <button type="submit" class="btn btn-primary">Submit</button>
+        <button type="submit" class="btn btn-primary" onclick="set_skip_preview(false)">
+          {% if form.instance.id %}Review changes{% else %}Submit{% endif %}
+        </button>
+
+        {% if form.instance.id %}
+          <button type="submit" class="btn btn-link" onclick="set_skip_preview(true)">Submit Without Reviewing</button>
+        {% endif %}
+
         <a href="{% url "dashboard" %}" class="btn">Back to dashboard</a>
       </div>
       {% if form.instance.id %}
@@ -43,4 +51,10 @@
     </div>
   </div>
 </form>
+
+<script type="text/javascript">
+function set_skip_preview(val) {
+  document.getElementById("skip_review").checked = (val ? "checked" : "");
+}
+</script>
 {% endblock %}
