@@ -76,7 +76,9 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   $('a[data-toggle="dropdown"]').dropdown();
-  $('a[title]').tooltip();
+  $('a[title]').tooltip({
+      container: 'body'  // fixes positioning problems
+  });
 }, false);
 </script>
 {% endblock %}
