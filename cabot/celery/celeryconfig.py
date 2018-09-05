@@ -22,7 +22,7 @@ CELERYBEAT_SCHEDULE = {
         'schedule': timedelta(seconds=defs.RUN_ALL_CHECKS_FREQUENCY),
     },
     'update-shifts': {
-        'task': 'cabot.cabotapp.tasks.update_shifts',
+        'task': 'cabot.cabotapp.tasks.update_shifts_and_problems',
         'schedule': timedelta(seconds=defs.UPDATE_SHIFTS_FREQUENCY),
     },
     'clean-db': {
@@ -65,11 +65,11 @@ CELERY_ROUTES = {
         'queue': 'service',
         'routing_key': 'service'
     },
-    'cabot.cabotapp.tasks.update_shifts': {
+    'cabot.cabotapp.tasks.update_shifts_and_problems': {
         'queue': 'batch',
         'routing_key': 'batch',
     },
-    'cabot.cabotapp.tasks.reset_shifts': {
+    'cabot.cabotapp.tasks.reset_shifts_and_problems': {
         'queue': 'batch',
         'routing_key': 'batch',
     },

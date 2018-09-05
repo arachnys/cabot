@@ -1,7 +1,8 @@
-from django.conf import settings
+from django.core.urlresolvers import reverse
 from django.db import models
 from django.core.validators import MinValueValidator
 from cabot.cabotapp.models import Service, StatusCheck
+from cabot.cabotapp.utils import build_absolute_url
 from cabot.metricsapp.api import run_metrics_check
 from cabot.cabotapp.defs import CHECK_TYPES
 from cabot.metricsapp.defs import METRIC_STATUS_TIME_RANGE_DEFAULT
@@ -110,7 +111,7 @@ class MetricsStatusCheckBase(StatusCheck):
 
     def get_url_for_check(self):
         """Get the url for viewing this check"""
-        return '{}://{}/check/{}/'.format(settings.WWW_SCHEME, settings.WWW_HTTP_HOST, self.id)
+        return build_absolute_url(reverse('check', kwargs={'pk': self.pk}))
 
     def get_status_image(self):
         """Return a Grafana png image for the check if it exists"""

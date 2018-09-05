@@ -25,7 +25,7 @@ from cabot.cabotapp.views import (
     ScheduleListView,
     ScheduleUpdateView,
     ScheduleDeleteView,
-)
+    ScheduleSnoozeWarningsView)
 
 from cabot.cabotapp.views import (
     ServiceListView,
@@ -174,6 +174,9 @@ urlpatterns = patterns(
     url(r'^schedule/delete/(?P<pk>\d+)/',
         view=ScheduleDeleteView.as_view(),
         name='delete-schedule'),
+    url(r'^schedule/snooze/(?P<pk>\d+)/hours/(?P<hours>\d+)/',
+        view=ScheduleSnoozeWarningsView.as_view(),
+        name='snooze-schedule-warnings'),
 
     url(r'^grafana/instance/$',
         view=GrafanaInstanceSelectView.as_view(),

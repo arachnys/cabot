@@ -2,6 +2,7 @@ from celery.exceptions import SoftTimeLimitExceeded
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from django.core.urlresolvers import reverse
 from django.db import models, transaction
 from polymorphic import PolymorphicModel
 
@@ -268,6 +269,13 @@ class Schedule(models.Model):
         help_text='Fallback officer to alert if the duty officer is unavailable.'
     )
 
+    def get_edit_url(self):
+        """Returns the relative URL for modifying this schedule"""
+        return reverse('update-schedule', kwargs={'pk': self.pk})
+
+    def has_problems(self):
+        return ScheduleProblems.objects.filter(schedule=self).exists()
+
     def get_calendar_data(self):
         """
         Parse icalendar data
@@ -278,6 +286,31 @@ class Schedule(models.Model):
 
     def __unicode__(self):
         return self.name
+
+
+class ScheduleProblems(models.Model):
+    schedule = models.OneToOneField(
+        Schedule,
+        primary_key=True,
+        on_delete=models.CASCADE,
+        related_name='problems',
+    )
+    silence_warnings_until = models.DateTimeField(
+        help_text="Silence configuration warning emails to the fallback officer (e.g. about gaps in the schedule) "
+                  "until this time. This will also display a warning in the schedules list.",
+        null=True,
+    )
+    text = models.TextField(
+        help_text="Description of the problems with this schedule.",
+        blank=False,
+        null=False,
+    )
+
+    def is_silenced(self, now=None):
+        if now is None:
+            now = timezone.now()
+
+        return self.silence_warnings_until is not None and self.silence_warnings_until > now
 
 
 class Service(CheckGroupMixin):

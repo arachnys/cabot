@@ -18,7 +18,7 @@ from models import (StatusCheck,
                     get_all_duty_officers,
                     get_single_duty_officer,
                     get_all_fallback_officers,
-                    update_shifts)
+                    update_shifts, ScheduleProblems)
 
 from tasks import run_status_check as _run_status_check
 from .decorators import cabot_login_required
@@ -305,7 +305,7 @@ class ScheduleForm(SymmetricalForm):
         widgets = {
             'name': forms.TextInput(attrs={'style': 'width: 80%;'}),
             'ical_url': forms.TextInput(attrs={'style': 'width: 80%;'}),
-            'fallback_officer': forms.Select()
+            'fallback_officer': forms.Select(),
         }
 
     def clean_ical_url(self):
@@ -322,7 +322,8 @@ class ScheduleForm(SymmetricalForm):
             raise ValidationError('Invalid ical url {}'.format(self.cleaned_data['ical_url']))
 
     def __init__(self, *args, **kwargs):
-        return super(ScheduleForm, self).__init__(*args, **kwargs)
+        super(ScheduleForm, self).__init__(*args, **kwargs)
+
         self.fields['fallback_officer'].queryset = User.objects.filter(is_active=True) \
             .order_by('username')
 
@@ -655,6 +656,23 @@ class ScheduleDeleteView(LoginRequiredMixin, DeleteView):
     success_url = reverse_lazy('shifts')
     context_object_name = 'schedule'
     template_name = 'cabotapp/schedule_confirm_delete.html'
+
+
+class ScheduleSnoozeWarningsView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        hours = int(kwargs['hours'])
+        if hours < 0 or hours > 24:
+            messages.error(request, "Invalid number of hours to snooze for.")
+        else:
+            try:
+                schedule = Schedule.objects.get(pk=kwargs['pk'])
+                schedule.problems.silence_warnings_until = timezone.now() + timedelta(hours=hours)
+                schedule.problems.save()
+            except Schedule.DoesNotExist, ScheduleProblems.DoesNotExist:
+                pass
+
+        # user will see the result on the schedules list page, so redirect there
+        return HttpResponseRedirect(reverse('shifts'))
 
 
 class ScheduleListView(LoginRequiredMixin, ListView):

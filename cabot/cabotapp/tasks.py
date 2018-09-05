@@ -1,16 +1,22 @@
+import os
 from datetime import timedelta
 import logging
 
 from celery import Celery
 from celery._state import set_default_app
 from celery.task import task
+from django.core.mail import send_mail
+from django.core.urlresolvers import reverse
 
+from cabot.cabotapp.schedule_validation import update_schedule_problems
+from cabot.cabotapp.utils import build_absolute_url
 from cabot.celery.celery_queue_config import STATUS_CHECK_TO_QUEUE
 
 from django.conf import settings
 from django.utils import timezone
 
 from cabot.cabotapp import models
+from cabot.metricsapp.defs import SCHEDULE_PROBLEMS_EMAIL_SNOOZE_HOURS
 from cabot.metricsapp.models import MetricsStatusCheckBase
 
 
@@ -91,17 +97,27 @@ def update_all_services():
 
 
 @task(ignore_result=True)
-def update_shifts():
+def update_shifts_and_problems():
     schedules = models.Schedule.objects.all()
     for schedule in schedules:
         models.update_shifts(schedule)
+        update_schedule_problems(schedule)  # must happen after update_shifts()
+
+        # if there are any problems, queue an email to go out
+        if schedule.has_problems() and not schedule.problems.is_silenced():
+            send_schedule_problems_email.apply_async((schedule.pk,))
 
 
 @task(ignore_result=True)
-def reset_shifts(schedule_id):
+def reset_shifts_and_problems(schedule_id):
+    """
+    Update shifts & problems for a schedule, called by the Schedule post_save signal handler.
+    Does not send schedule problems warning emails.
+    """
     try:
         schedule = models.Schedule.objects.get(id=schedule_id)
         models.update_shifts(schedule)
+        update_schedule_problems(schedule)
     except Exception as e:
         logger.exception('Error when resetting shifts: {}'.format(e))
 
@@ -139,3 +155,49 @@ def clean_db(days_to_retain=60):
 
     clean_db.apply_async(kwargs={'days_to_retain': days_to_retain},
                          countdown=3)
+
+
+@task(ignore_result=True)
+def send_schedule_problems_email(schedule_id):
+    """
+    Send off an email as a celery task
+    :param schedule_id schedule ID
+    """
+    try:
+        schedule = models.Schedule.objects.get(pk=schedule_id)
+        problems = schedule.problems
+    except models.Schedule.DoesNotExist, models.ScheduleProblems.DoesNotExist:
+        # if the schedule or problems got deleted, nothing to do
+        return
+
+    # check if problems became silenced since the email got queued
+    if problems.is_silenced():
+        return
+
+    # build the message
+    # make the schedule link absolute (add domain name) because this is going into an email
+    cabot_schedule_url = build_absolute_url(schedule.get_edit_url())
+
+    # build links to snooze email alerts
+    snooze_hours = SCHEDULE_PROBLEMS_EMAIL_SNOOZE_HOURS
+    snooze_links = [build_absolute_url(reverse('snooze-schedule-warnings',
+                                               kwargs={'pk': schedule.pk, 'hours': hours})) for hours in snooze_hours]
+    snoozes = ['<a href="{}">{} hours</a>'.format(link, hours) for link, hours in zip(snooze_links, snooze_hours)]
+
+    message = 'The schedule <a href="{}">{}</a> has some issues:\n\n{}\n\n' \
+              'Click <a href="{}">here</a> to review the schedule\'s configuration.\n' \
+              'If you don\'t want to deal with this right now, you can silence these alerts for {}.' \
+        .format(cabot_schedule_url, schedule.name, problems.text, cabot_schedule_url, ' | '.join(snoozes))
+
+    # figure out who to send it to (on-call + fallback)
+    recipients = models.get_duty_officers(schedule) + models.get_fallback_officers(schedule)
+    recipients = [r.email for r in recipients if r.email]
+
+    if len(recipients) > 0:
+        send_mail(subject="Cabot Schedule '{}' Has Problems".format(schedule.name),
+                  message=message,
+                  from_email='Cabot Updates<{}>'.format(os.environ.get('CABOT_FROM_EMAIL')),
+                  recipient_list=recipients)
+
+    # for extra visibility, also log a warning
+    logging.warn("Sending schedule problems email to {}:\n\n{}".format(recipients, message))

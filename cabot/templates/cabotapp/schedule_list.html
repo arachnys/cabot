@@ -17,6 +17,7 @@
           <th>Schedule</th>
           <th>Duty officer</th>
           <th>Fallback officer</th>
+          <th>Status</th>
           <th></th>
         </tr>
       </thead>
@@ -36,6 +37,29 @@
         <td>
           {{ schedule.fallback_officer }}
         </td>
+        <td>
+          {% if schedule.has_problems %}
+            {# a label that says "Problems" (label-danger, label-warning if silenced) #}
+            {# with a dropdown menu that has links to temporarily silence email warnings #}
+            <div class="dropdown">
+              <a class="dropdown-toggle label {% if schedule.problems.is_silenced %}label-warning{% else %}label-danger{% endif %}"
+                 href="#" data-toggle="dropdown" data-html="true" data-placement="left"
+                 title="{{ schedule.problems.text|linebreaksbr }}{% if schedule.problems.is_silenced %}<br/><br/>Emails about these problems are silenced until {{ schedule.problems.silence_warnings_until }}{% endif %}">
+                Problems <span class="caret"></span></a>
+
+              <ul class="dropdown-menu">
+                <li class="{% if not schedule.problems.is_silenced %}disabled{% endif %}">
+                  <a href="{% url 'snooze-schedule-warnings' pk=schedule.pk hours=0 %}">Clear snooze</a>
+                </li>
+                <li><a href="{% url 'snooze-schedule-warnings' pk=schedule.pk hours=4 %}">Snooze warning emails for 4h</a></li>
+                <li><a href="{% url 'snooze-schedule-warnings' pk=schedule.pk hours=12 %}">Snooze warning emails for 12h</a></li>
+                <li><a href="{% url 'snooze-schedule-warnings' pk=schedule.pk hours=24 %}">Snooze warning emails for 24h</a></li>
+              </ul>
+            </div>
+          {% else %}
+              <span class="label label-success">OK</span>
+          {% endif %}
+        </td>
         <td class="text-right">
           <a class="btn btn-xs" href="{% url "update-schedule" pk=schedule.id %} role="button">
             <i class="glyphicon glyphicon-edit"></i>
@@ -46,4 +70,14 @@
     </table>
   </div>
 </div>
+
+{# for schedule problems tooltips - note jquery is loaded at the end of the page #}
+{# so we do document.addEventListener instead of the typical $.ready since $ isn't defined yet #}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  $('a[data-toggle="dropdown"]').dropdown();
+  $('a[title]').tooltip();
+}, false);
+</script>
 {% endblock %}
+
