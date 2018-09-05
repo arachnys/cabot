@@ -174,7 +174,7 @@ class TestScheduleValidation(LocalTestCase):
         self.secondary_schedule = None
 
     @patch('cabot.cabotapp.models.requests.get', fake_calendar)
-    @patch('cabot.cabotapp.tasks.send_mail')
+    @patch('cabot.cabotapp.tasks._send_mail_html')
     @patch('cabot.cabotapp.models.timezone.now')
     def test_validate_schedule_no_gaps(self, fake_now, fake_send_mail):
         fake_now.return_value = datetime(2018, 8, 15, 0, 3, 54, 598552, tzinfo=timezone.utc)
@@ -189,13 +189,13 @@ class TestScheduleValidation(LocalTestCase):
         self.assertFalse(self.schedule.has_problems())
 
     @patch('cabot.cabotapp.models.requests.get', fake_calendar)
-    @patch('cabot.cabotapp.tasks.send_mail')
+    @patch('cabot.cabotapp.tasks._send_mail_html')
     @patch('cabot.cabotapp.models.timezone.now')
     def test_validate_schedule_with_gaps(self, fake_now, fake_send_mail):
         fake_now.return_value = datetime(2018, 8, 15, 0, 3, 54, 598552, tzinfo=timezone.utc)
 
         self.schedule.ical_url = 'calendar_with_gaps.ics'
-        self.schedule.fallback_officer = User.objects.filter(email='dolores@affirm.com').first()
+        self.schedule.fallback_officer = User.objects.get(email='dolores@affirm.com')
         self.schedule.save()
         tasks.update_shifts_and_problems()  # simulate periodic task firing
         self.schedule = Schedule.objects.get(pk=self.schedule.pk)  # refresh from DB
@@ -203,13 +203,13 @@ class TestScheduleValidation(LocalTestCase):
         self.assertEqual(SCHEDULE_PROBLEMS_EMAIL_SNOOZE_HOURS, [4, 12, 24])  # this test is hard-coded for 4/12/24
         message = """\
 The schedule <a href="{edit_schedule_url}">Principal</a> has some issues:
-
-There are gaps in the schedule (times are UTC):
-* 2018-08-17 19:00:00 to 2018-08-18 19:00:00 (1d)
-* 2018-08-19 19:00:00 to 2018-08-20 19:00:00 (1d)
-
-Click <a href="{edit_schedule_url}">here</a> to review the schedule\'s configuration.
-If you don\'t want to deal with this right now, you can silence these alerts for \
+<br/>
+<br/>There are gaps in the schedule (times are UTC):
+<br/>* 2018-08-17 19:00:00 to 2018-08-18 19:00:00 (1d)
+<br/>* 2018-08-19 19:00:00 to 2018-08-20 19:00:00 (1d)
+<br/>
+<br/>Click <a href="{edit_schedule_url}">here</a> to review the schedule\'s configuration.
+<br/>If you don\'t want to deal with this right now, you can silence these alerts for \
 <a href="{}">4 hours</a> | <a href="{}">12 hours</a> | <a href="{}">24 hours</a>.""" \
             .format(_snooze_url(self.schedule, 4), _snooze_url(self.schedule, 12), _snooze_url(self.schedule, 24),
                     edit_schedule_url=build_absolute_url(reverse('update-schedule', kwargs={'pk': self.schedule.pk})))
@@ -219,7 +219,7 @@ If you don\'t want to deal with this right now, you can silence these alerts for
         fake_send_mail.assert_called_once_with(subject="Cabot Schedule 'Principal' Has Problems",
                                                message=message,
                                                from_email='Cabot Updates<{}>'.format(address),
-                                               recipient_list=[u'teddy@affirm.com', u'dolores@affirm.com'])
+                                               recipient_list=[u'dolores@affirm.com', u'teddy@affirm.com'])
 
     @patch('cabot.cabotapp.models.requests.get', fake_calendar)
     @patch('cabot.cabotapp.models.timezone.now')
@@ -263,7 +263,7 @@ There are gaps in the schedule (times are UTC):
         self.assertFalse(self.schedule.has_problems())
 
     @patch('cabot.cabotapp.models.requests.get', fake_calendar)
-    @patch('cabot.cabotapp.tasks.send_mail')
+    @patch('cabot.cabotapp.tasks._send_mail_html')
     @patch('cabot.cabotapp.models.timezone.now')
     def test_validate_schedule_silence_emails_until(self, fake_now, fake_send_mail):
         """Verify that schedule warning emails don't get sent during the silence_warnings_until window"""
@@ -333,7 +333,7 @@ There are gaps in the schedule (times are UTC):
         self.assertContains(response, "label-warning", status_code=200)  # check color-coding (a bit fragile...)
 
     @patch('cabot.cabotapp.models.requests.get', fake_calendar)
-    @patch('cabot.cabotapp.tasks.send_mail')
+    @patch('cabot.cabotapp.tasks._send_mail_html')
     @patch('cabot.cabotapp.models.timezone.now')
     def test_validate_schedule_lots_of_gaps(self, fake_now, fake_send_mail):
         """Make sure a schedule with a ton of gaps doesn't make a super long message"""

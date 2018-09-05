@@ -5,7 +5,7 @@ import logging
 from celery import Celery
 from celery._state import set_default_app
 from celery.task import task
-from django.core.mail import send_mail
+from django.core.mail import EmailMessage
 from django.core.urlresolvers import reverse
 
 from cabot.cabotapp.schedule_validation import update_schedule_problems
@@ -157,6 +157,13 @@ def clean_db(days_to_retain=60):
                          countdown=3)
 
 
+# because django 1.6 doesn't have send_mail(html_message=...) :|
+def _send_mail_html(subject, message, from_email, recipient_list):
+    msg = EmailMessage(subject, message, from_email, recipient_list)
+    msg.content_subtype = 'html'  # main content type is html
+    msg.send()
+
+
 @task(ignore_result=True)
 def send_schedule_problems_email(schedule_id):
     """
@@ -168,10 +175,12 @@ def send_schedule_problems_email(schedule_id):
         problems = schedule.problems
     except models.Schedule.DoesNotExist, models.ScheduleProblems.DoesNotExist:
         # if the schedule or problems got deleted, nothing to do
+        logger.info("schedule or problems for pk {} no longer exist, not sending email".format(schedule_id))
         return
 
     # check if problems became silenced since the email got queued
     if problems.is_silenced():
+        logger.info("schedule problems became silenced, not sending email")
         return
 
     # build the message
@@ -188,16 +197,20 @@ def send_schedule_problems_email(schedule_id):
               'Click <a href="{}">here</a> to review the schedule\'s configuration.\n' \
               'If you don\'t want to deal with this right now, you can silence these alerts for {}.' \
         .format(cabot_schedule_url, schedule.name, problems.text, cabot_schedule_url, ' | '.join(snoozes))
+    message = message.replace('\n', '\n<br/>')  # html ignores newlines
 
     # figure out who to send it to (on-call + fallback)
     recipients = models.get_duty_officers(schedule) + models.get_fallback_officers(schedule)
-    recipients = [r.email for r in recipients if r.email]
-
-    if len(recipients) > 0:
-        send_mail(subject="Cabot Schedule '{}' Has Problems".format(schedule.name),
-                  message=message,
-                  from_email='Cabot Updates<{}>'.format(os.environ.get('CABOT_FROM_EMAIL')),
-                  recipient_list=recipients)
+    recipients = list(set([r.email for r in recipients if r.email]))  # get unique emails
 
     # for extra visibility, also log a warning
-    logging.warn("Sending schedule problems email to {}:\n\n{}".format(recipients, message))
+    logger.warn("Sending schedule problems email to {}:\n\n{}".format(recipients, message))
+
+    if len(recipients) > 0:
+        try:
+            _send_mail_html(subject="Cabot Schedule '{}' Has Problems".format(schedule.name),
+                            message=message,
+                            from_email='Cabot Updates<{}>'.format(os.environ.get('CABOT_FROM_EMAIL')),
+                            recipient_list=recipients)
+        except Exception as e:
+            logger.exception('Error sending schedule problems email: {}'.format(e))

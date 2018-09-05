@@ -77,6 +77,10 @@ CELERY_ROUTES = {
         'queue': 'maintenance',
         'routing_key': 'maintenance',
     },
+    'cabot.cabotapp.tasks.send_schedule_problems_email': {
+        'queue': 'batch',
+        'routing_key': 'batch'
+    },
     'cabot.metricsapp.tasks.sync_all_grafana_checks': {
         'queue': 'batch',
         'routing_key': 'batch',
@@ -88,7 +92,7 @@ CELERY_ROUTES = {
     'cabot.metricsapp.tasks.send_grafana_sync_email': {
         'queue': 'batch',
         'routing_key': 'batch'
-    }
+    },
 }
 
 CELERY_TIMEZONE = 'UTC'
