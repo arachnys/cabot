@@ -8,7 +8,10 @@ from polymorphic import PolymorphicModel
 
 from .jenkins import get_job_status
 from .alert import (send_alert, AlertPluginUserData)
-from cabot.cabotapp.models_plugins import HipchatInstance  # noqa
+from cabot.cabotapp.models_plugins import (  # noqa (unused, imported for side effects)
+    HipchatInstance,
+    MatterMostInstance,
+)
 from cabot.cabotapp import defs
 from cabot.cabotapp.fields import PositiveIntegerMaxField
 
@@ -156,6 +159,18 @@ class CheckGroupMixin(models.Model):
         null=True,
         blank=True,
         help_text='Id of the Hipchat room to be alerted for this service (can be none).'
+    )
+    mattermost_instance = models.ForeignKey(
+        'MatterMostInstance',
+        null=True,
+        blank=True,
+        help_text='Mattermost instance to send alerts to (can be blank if Mattermost alerts are disabled).'
+    )
+    mattermost_channel_id = models.CharField(
+        null=True,
+        blank=True,
+        max_length=32,
+        help_text='ID of the Mattermost room to be alerted for this service (leave blank for default).'
     )
 
     def __unicode__(self):

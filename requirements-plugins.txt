@@ -2,3 +2,4 @@ git+https://github.com/Affirm/cabot-alert-email@2.0.1
 git+https://github.com/Affirm/cabot-alert-hipchat@2.2.1
 git+https://github.com/Affirm/cabot-alert-twilio.git@1.1.8
 git+https://github.com/Affirm/cabot-alert-pagerduty.git@1.0.3
+git+https://github.com/Affirm/cabot-alert-mattermost.git@1.0.1

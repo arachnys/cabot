@@ -8,18 +8,37 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding model 'ScheduleProblems'
-        db.create_table(u'cabotapp_scheduleproblems', (
-            ('schedule', self.gf('django.db.models.fields.related.OneToOneField')(related_name='problems', unique=True, primary_key=True, to=orm['cabotapp.Schedule'])),
-            ('silence_warnings_until', self.gf('django.db.models.fields.DateTimeField')(null=True)),
-            ('text', self.gf('django.db.models.fields.TextField')()),
+        # Adding model 'MatterMostInstance'
+        db.create_table(u'cabotapp_mattermostinstance', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('name', self.gf('django.db.models.fields.CharField')(unique=True, max_length=20)),
+            ('server_url', self.gf('django.db.models.fields.CharField')(max_length=100)),
+            ('api_token', self.gf('django.db.models.fields.CharField')(max_length=100)),
+            ('webhook_url', self.gf('django.db.models.fields.CharField')(max_length=256)),
+            ('default_channel_id', self.gf('django.db.models.fields.CharField')(max_length=32, null=True, blank=True)),
         ))
-        db.send_create_signal(u'cabotapp', ['ScheduleProblems'])
+        db.send_create_signal(u'cabotapp', ['MatterMostInstance'])
+
+        # Adding field 'Service.mattermost_instance'
+        db.add_column(u'cabotapp_service', 'mattermost_instance',
+                      self.gf('django.db.models.fields.related.ForeignKey')(to=orm['cabotapp.MatterMostInstance'], null=True, blank=True),
+                      keep_default=False)
+
+        # Adding field 'Service.mattermost_channel_id'
+        db.add_column(u'cabotapp_service', 'mattermost_channel_id',
+                      self.gf('django.db.models.fields.CharField')(max_length=32, null=True, blank=True),
+                      keep_default=False)
 
 
     def backwards(self, orm):
-        # Deleting model 'ScheduleProblems'
-        db.delete_table(u'cabotapp_scheduleproblems')
+        # Deleting model 'MatterMostInstance'
+        db.delete_table(u'cabotapp_mattermostinstance')
+
+        # Deleting field 'Service.mattermost_instance'
+        db.delete_column(u'cabotapp_service', 'mattermost_instance_id')
+
+        # Deleting field 'Service.mattermost_channel_id'
+        db.delete_column(u'cabotapp_service', 'mattermost_channel_id')
 
 
     models = {
@@ -97,8 +116,18 @@ class Migration(SchemaMigration):
         },
         u'cabotapp.jenkinsstatuscheck': {
             'Meta': {'ordering': "['name']", 'object_name': 'JenkinsStatusCheck', '_ormbases': [u'cabotapp.StatusCheck']},
+            'max_build_failures': ('django.db.models.fields.PositiveIntegerField', [], {'default': '0'}),
             'max_queued_build_time': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True', 'blank': 'True'}),
             u'statuscheck_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['cabotapp.StatusCheck']", 'unique': 'True', 'primary_key': 'True'})
+        },
+        u'cabotapp.mattermostinstance': {
+            'Meta': {'object_name': 'MatterMostInstance'},
+            'api_token': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
+            'default_channel_id': ('django.db.models.fields.CharField', [], {'max_length': '32', 'null': 'True', 'blank': 'True'}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '20'}),
+            'server_url': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
+            'webhook_url': ('django.db.models.fields.CharField', [], {'max_length': '256'})
         },
         u'cabotapp.schedule': {
             'Meta': {'object_name': 'Schedule'},
@@ -124,6 +153,8 @@ class Migration(SchemaMigration):
             'hipchat_room_id': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'last_alert_sent': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
+            'mattermost_channel_id': ('django.db.models.fields.CharField', [], {'max_length': '32', 'null': 'True', 'blank': 'True'}),
+            'mattermost_instance': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['cabotapp.MatterMostInstance']", 'null': 'True', 'blank': 'True'}),
             'name': ('django.db.models.fields.TextField', [], {}),
             'old_overall_status': ('django.db.models.fields.TextField', [], {'default': "'PASSING'"}),
             'overall_status': ('django.db.models.fields.TextField', [], {'default': "'PASSING'"}),

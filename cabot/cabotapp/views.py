@@ -240,6 +240,8 @@ class ServiceForm(forms.ModelForm):
             'alerts_enabled',
             'hipchat_instance',
             'hipchat_room_id',
+            'mattermost_instance',
+            'mattermost_channel_id',
             'hackpad_id',
         )
         widgets = {
@@ -256,6 +258,10 @@ class ServiceForm(forms.ModelForm):
             'users_to_notify': forms.CheckboxSelectMultiple(),
             'schedules': forms.CheckboxSelectMultiple(),
             'hipchat_instances': forms.SelectMultiple(attrs={
+                'data-rel': 'chosen',
+                'style': 'width: 70%',
+            }),
+            'mattermost_instances': forms.SelectMultiple(attrs={
                 'data-rel': 'chosen',
                 'style': 'width: 70%',
             }),
