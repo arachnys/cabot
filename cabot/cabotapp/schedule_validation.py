@@ -16,7 +16,7 @@ def _find_gaps(schedule, starting_from=None):
     gaps = []
 
     current = starting_from if starting_from else timezone.now()
-    for shift in models.Shift.objects.filter(schedule=schedule).order_by('start', 'end'):
+    for shift in models.Shift.objects.filter(schedule=schedule, deleted=False).order_by('start', 'end'):
         if shift.start > current:
             gaps.append((current, shift.start))
         if shift.end > current:
@@ -67,7 +67,7 @@ def _find_problems(schedule, current_time=None):
     elif not schedule.fallback_officer.email:
         problems.append("The fallback officer does not have an email set.")
 
-    any_shifts = (models.Shift.objects.filter(schedule=schedule).count() > 0)
+    any_shifts = (models.Shift.objects.filter(schedule=schedule, deleted=False).count() > 0)
     if not any_shifts:
         problems.append("The schedule is empty, so no one is on call.")
 
