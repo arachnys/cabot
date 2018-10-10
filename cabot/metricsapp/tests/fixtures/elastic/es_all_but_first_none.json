@@ -1,0 +1,67 @@
+[{
+    "hits": {
+        "hits": [
+          {
+            "_score": 9.112747,
+            "_type": "metrics-event",
+            "_id": "1",
+            "_index": "mr-metric"
+          }
+        ],
+        "total": 1200,
+        "max_score": 9.112747
+    },
+    "_shards": {
+        "successful": 120,
+        "failed": 0,
+        "total": 120
+    },
+    "took": 487,
+    "aggregations": {
+        "agg": {
+            "buckets": [
+                {
+                    "avg": {
+                      "value": 1.0
+                    },
+                    "doc_count": 3,
+                    "key": 1536214200000,
+                    "key_as_string": "2018-09-05T23:10:00.000Z"
+                },
+                {
+                    "avg": {
+                      "value": "None"
+                    },
+                    "doc_count": 0,
+                    "key": 1536214800000,
+                    "key_as_string": "2018-09-05T23:20:00.000Z"
+                },
+                {
+                    "avg": {
+                      "value": "None"
+                    },
+                    "doc_count": 0,
+                    "key": 1536215400000,
+                    "key_as_string": "2018-09-05T23:30:00.000Z"
+                },
+                {
+                    "avg": {
+                      "value": "None"
+                    },
+                    "doc_count": 0,
+                    "key": 1536216000000,
+                    "key_as_string": "2018-09-05T23:40:00.000Z"
+                },
+                {
+                    "avg": {
+                      "value": "None"
+                    },
+                    "doc_count": 0,
+                    "key": 1536216600000,
+                    "key_as_string": "2018-09-05T23:50:00.000Z"
+                }
+            ]
+        }
+    },
+    "timed_out": false
+}]

@@ -95,6 +95,10 @@ def fake_es_one_datapoint(*args):
     return [Response(Search(), response) for response in get_json_file('es_one_datapoint.json')]
 
 
+def fake_es_all_but_first_none(*args):
+    return [Response(Search(), response) for response in get_json_file('es_all_but_first_none.json')]
+
+
 def mock_time():
     return 1491577200.0
 
@@ -406,6 +410,22 @@ class TestElasticsearchStatusCheck(TestCase):
         result = self.es_check._run()
         self.assertFalse(result.succeeded)
         self.assertEqual(result.error, 'CRITICAL no_data_fill_0: 0.0 not >= 3.0')
+
+    @patch('cabot.metricsapp.models.elastic.MultiSearch.execute', fake_es_all_but_first_none)
+    @patch('time.time', mock_time)
+    def test_ignore_final_datapoint_all_but_first_none(self):
+        self.assertTrue(self.es_check.ignore_final_data_point)
+        self.es_check.save()
+        # Test output series
+        series = self.es_check.get_series()
+        self.assertFalse(series['error'])
+        self.assertEqual(series['raw'], get_json_file('es_all_but_first_none.json'))
+        data = series['data']
+        self.assertEqual(len(data), 1)
+
+        data = data[0]
+        self.assertEqual(str(data['series']), 'avg')
+        self.assertEqual(data['datapoints'], [[1536214200, 1.0]])
 
 
 class TestQueryValidation(TestCase):

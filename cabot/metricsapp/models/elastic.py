@@ -196,7 +196,8 @@ class ElasticsearchStatusCheck(MetricsStatusCheckBase):
     def _parse_es_response(self, series):
         """
         Parse the Elasticsearch json response and create an output list containing only
-        points within the time range for this check.
+        points within the time range for this check. The last datapoint is removed if
+        self.ignore_final_data_point is True and any None values are filtered out.
         :param series: 'aggregations' part of the response from Elasticsearch
         :return: list in the format [{series: [timestamp, value]}]
         """
@@ -214,6 +215,9 @@ class ElasticsearchStatusCheck(MetricsStatusCheckBase):
             if self.ignore_final_data_point:
                 datapoints = datapoints[:-1]
 
+            # filter out invalid datapoints
+            datapoints = filter(lambda x: x[1] is not None, datapoints)
+
             if datapoints == []:
                 continue
 
@@ -226,7 +230,7 @@ class ElasticsearchStatusCheck(MetricsStatusCheckBase):
         Parse the Elasticsearch json response and generate data for each datapoint
         :param series: the 'aggregations' part of the response from Elasticsearch
         :param series_name: the name for the series ('key1.key2. ... .metric')
-        :return: (series, (timestamp, datapoint)) pairs
+        :return: (series, (timestamp, datapoint)) pairs, some datapoints may be None
         """
 
         original_series_name = series_name
@@ -259,10 +263,12 @@ class ElasticsearchStatusCheck(MetricsStatusCheckBase):
     def _get_metric_data(self, subseries, series_name):
         """
         Given the part of the ES response grouped by timestamp, generate
-        (series, (timestamp, value)) pairs for each metric
+        (series, (timestamp, value)) pairs for each metric. Invalid values ('None' or 'NaN')
+        are converted to None.
         :param subseries: subset of the Elasticsearch response dealing with metric info
         :param series_name: "agg1.agg2..."
         :return: (series, (timestamp, value)) pairs for each metric in the response
+                 some values may be None
         """
         timestamp = subseries['key'] / 1000
 
@@ -273,16 +279,19 @@ class ElasticsearchStatusCheck(MetricsStatusCheckBase):
 
             if 'value' in value_dict:
                 value = value_dict['value']
-                if self._valid_point(value):
-                    # Series_name might be none if there are no aggs
-                    metric_name = '.'.join(filter(None, [series_name, metric]))
-                    yield (metric_name, (timestamp, value_dict['value']))
+                if not self._valid_point(value):
+                    value = None
+
+                # Series_name might be none if there are no aggs
+                metric_name = '.'.join(filter(None, [series_name, metric]))
+                yield (metric_name, (timestamp, value))
 
             elif 'values' in value_dict:
                 for submetric_name, value in value_dict['values'].iteritems():
-                    if self._valid_point(value):
-                        metric_name = '.'.join(filter(None, [series_name, submetric_name]))
-                        yield (metric_name, (timestamp, value))
+                    if not self._valid_point(value):
+                        value = None
+                    metric_name = '.'.join(filter(None, [series_name, submetric_name]))
+                    yield (metric_name, (timestamp, value))
 
             else:
                 raise NotImplementedError('Unsupported metric: {}.'.format(metric))
