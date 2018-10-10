@@ -1,3 +1,4 @@
+import requests
 from django.utils import timezone
 from django.utils.timezone import make_naive
 
@@ -55,6 +56,7 @@ def _find_problems(schedule, current_time=None):
     * Is there a fallback officer? Do they have an email set?
     * Is the schedule empty?
     * Are there any gaps between the events in the schedule (where no one is on call)?
+    * Is the schedule iCal url valid (returns an HTTP 200 and can be parsed)?
     :param schedule: schedule to check (should already be updated from update_shifts())
     :param current_time: time to start checking the schedule from (to see if anyone is currently on call),
                          None for now
@@ -62,11 +64,25 @@ def _find_problems(schedule, current_time=None):
     """
     problems = []
 
+    # check for a valid fallback officer
     if not schedule.fallback_officer:
         problems.append("The schedule has no fallback officer.")
     elif not schedule.fallback_officer.email:
         problems.append("The fallback officer does not have an email set.")
 
+    # test the iCal url
+    if schedule.ical_url:
+        try:
+            schedule.get_calendar_data()
+        except requests.RequestException as e:
+            problems.append("The schedule's iCal URL returns an HTTP error ({}).".format(e))
+        except Exception as e:
+            # assume anything else was a parsing error
+            problems.append("The schedule's iCal URL returns an invalid iCal file ({}).".format(e))
+    else:
+        problems.append("The schedule's iCal URL is empty.")
+
+    # make sure someone's on call
     any_shifts = (models.Shift.objects.filter(schedule=schedule, deleted=False).count() > 0)
     if not any_shifts:
         problems.append("The schedule is empty, so no one is on call.")

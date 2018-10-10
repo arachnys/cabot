@@ -12,9 +12,10 @@ from cabot.cabotapp.models import (
     get_duty_officers,
     get_all_duty_officers,
     update_shifts, Schedule)
+from cabot.cabotapp.schedule_validation import update_schedule_problems
 from cabot.cabotapp.utils import build_absolute_url
 from cabot.metricsapp.defs import SCHEDULE_PROBLEMS_EMAIL_SNOOZE_HOURS
-from .utils import LocalTestCase, fake_calendar
+from .utils import LocalTestCase, fake_calendar, fake_http_404_response, fake_http_200_response
 
 
 def _create_fake_users(usernames):
@@ -170,6 +171,12 @@ class TestScheduleValidation(LocalTestCase):
             'shortname@affirm.com',
         ])
 
+        # need the patch here so the 'ical url works' check triggered in schedule.save() passes
+        with patch('cabot.cabotapp.models.requests.get', fake_calendar):
+            self.schedule.ical_url = 'calendar_response.ics'
+            self.schedule.fallback_officer = User.objects.get(email='dolores@affirm.com')
+            self.schedule.save()
+
         self.secondary_schedule.delete()
         self.secondary_schedule = None
 
@@ -296,6 +303,8 @@ There are gaps in the schedule (times are UTC):
     def test_validate_schedule_ui_shows_problems(self, fake_now):
         fake_now.return_value = datetime(2018, 8, 15, 0, 3, 54, 598552, tzinfo=timezone.utc)
 
+        self.assertFalse(self.schedule.has_problems())
+
         # check that the UI doesn't show any problems
         response = self.client.get(reverse('shifts'))
         self.assertNotContains(response, "Problems", status_code=200)
@@ -313,6 +322,8 @@ There are gaps in the schedule (times are UTC):
     @patch('cabot.cabotapp.models.timezone.now')
     def test_validate_schedule_ui_shows_problems_while_silenced(self, fake_now):
         fake_now.return_value = datetime(2018, 8, 15, 0, 3, 54, 598552, tzinfo=timezone.utc)
+
+        self.assertFalse(self.schedule.has_problems())
 
         # check that the UI doesn't show any problems
         response = self.client.get(reverse('shifts'))
@@ -357,3 +368,25 @@ There are gaps in the schedule (times are UTC):
 
         self.assertTrue(fake_send_mail.called)
         self.assertEqual(self.schedule.problems.text, problems)
+
+    @patch('cabot.cabotapp.models.requests.get', fake_calendar)
+    def test_validate_schedule_no_url(self):
+        self.schedule.ical_url = ''  # no calendar
+        self.schedule.save()
+        self.assertTrue(self.schedule.has_problems())
+        self.assertEquals(self.schedule.problems.text, "The schedule's iCal URL is empty.")
+
+    @patch('cabot.cabotapp.models.requests.get', fake_http_404_response)
+    def test_validate_schedule_ical_404(self):
+        update_schedule_problems(self.schedule)
+        self.assertTrue(self.schedule.has_problems())
+        self.assertEquals(self.schedule.problems.text, "The schedule's iCal URL returns an HTTP error "
+                                                       "(404 Client Error: Not Found for url: http_response.html).")
+
+    @patch('cabot.cabotapp.models.requests.get', fake_http_200_response)
+    def test_validate_schedule_bad_ical_data(self):
+        update_schedule_problems(self.schedule)
+        self.assertTrue(self.schedule.has_problems())
+        self.assertEquals(self.schedule.problems.text, "The schedule's iCal URL returns an invalid iCal file "
+                                                       "(Content line could not be parsed into parts: "
+                                                       "'<!DOCTYPE html>': <!DOCTYPE html>).")

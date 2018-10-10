@@ -8,6 +8,7 @@ from celery.task import task
 from django.core.mail import EmailMessage
 from django.core.urlresolvers import reverse
 
+from cabot.cabotapp.models import Schedule
 from cabot.cabotapp.schedule_validation import update_schedule_problems
 from cabot.cabotapp.utils import build_absolute_url
 from cabot.celery.celery_queue_config import STATUS_CHECK_TO_QUEUE
@@ -116,10 +117,19 @@ def reset_shifts_and_problems(schedule_id):
     """
     try:
         schedule = models.Schedule.objects.get(id=schedule_id)
+    except Schedule.DoesNotExist:
+        # this can happen if the schedule got deleted after this task was scheduled but before it started to run
+        return
+
+    try:
         models.update_shifts(schedule)
+    except Exception:
+        logger.exception('Error when resetting shifts for schedule %s.', schedule.name)
+
+    try:
         update_schedule_problems(schedule)
-    except Exception as e:
-        logger.exception('Error when resetting shifts: {}'.format(e))
+    except Exception:
+        logger.exception('Error updating schedule problems list for schedule %s.', schedule.name)
 
 
 @task(ignore_result=True)

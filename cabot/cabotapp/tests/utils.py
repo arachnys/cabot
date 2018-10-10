@@ -168,6 +168,11 @@ def fake_http_404_response(*args, **kwargs):
     resp = Mock()
     resp.content = get_content('http_response.html')
     resp.status_code = 404
+
+    # mock response.raise_for_status (matches requests 2.19.1 format)
+    err_msg = '404 Client Error: Not Found for url: http_response.html'
+    resp.raise_for_status = Mock(side_effect=requests.HTTPError(err_msg, response=resp))
+
     return resp
 
 

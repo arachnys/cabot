@@ -297,6 +297,7 @@ class Schedule(models.Model):
         :return: String containing the calendar data
         """
         resp = requests.get(self.ical_url)
+        resp.raise_for_status()
         return Calendar.from_ical(resp.content)
 
     def __unicode__(self):
