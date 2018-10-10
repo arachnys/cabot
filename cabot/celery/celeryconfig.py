@@ -77,6 +77,10 @@ CELERY_ROUTES = {
         'queue': 'maintenance',
         'routing_key': 'maintenance',
     },
+    'celery.backend_cleanup': {
+        'queue': 'maintenance',
+        'routing_key': 'maintenance',
+    },
     'cabot.cabotapp.tasks.send_schedule_problems_email': {
         'queue': 'batch',
         'routing_key': 'batch'
