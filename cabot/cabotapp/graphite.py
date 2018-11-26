@@ -76,6 +76,9 @@ def parse_metric(metric, mins_to_check=5, utcnow=None):
         ret['raw'] = ret['error']
         logging.error('Error getting data from Graphite: %s' % e)
         return ret
+    print '*' * 100
+    print data
+    print '*' * 100
     all_values = []
     for target in data:
         series = {'values': [

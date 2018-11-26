@@ -189,6 +189,10 @@ def append_plugin_urls():
 
 append_plugin_urls()
 
+urlpatterns += [
+    url(r'^plugins/%s/' % "prometheus", include('%s.urls' % "cabot_check_prometheus"))
+]
+
 if settings.AUTH_SOCIAL:
     urlpatterns += [
         url('', include('social_django.urls', namespace='social'))
