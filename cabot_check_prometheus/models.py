@@ -103,10 +103,6 @@ class PrometheusStatusCheck(StatusCheck):
             r = requests.get(url.geturl(), params=payload)
             data = r.json()['data']
 
-            print "*" * 100
-            print data
-            print "*" * 100
-
             type = data['resultType']
 
             if type == 'matrix':
@@ -155,9 +151,6 @@ class PrometheusStatusCheck(StatusCheck):
         #     time_to_check = self.frequency
 
         output = self.parse_metric()
-        print "prometheus_output: ", output
-        print "result", result
-
         result.raw_data = output["raw"]
 
         # Check if the metric condition
