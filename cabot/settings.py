@@ -147,7 +147,8 @@ INSTALLED_APPS = (
     'dal',
     'dal_select2',
     'django.contrib.admin',
-    'bootstrapform'
+    'bootstrapform',
+    'cabot_check_prometheus',
 )
 
 AUTH_USER_MODEL = 'auth.User'
