@@ -2,7 +2,7 @@ version: '2'
 services:
   base:
     build: .
-    image: cabot:web
+    image: tsocial/cabot
     command: "false"
     volumes:
      - .:/code
