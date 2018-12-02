@@ -23,3 +23,6 @@ build/
 .idea
 Pipfile.lock
 .tox/
+
+celerybeat-schedule.dir
+celerybeat-schedule.pag
