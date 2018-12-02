@@ -19,18 +19,28 @@ class PrometheusStatusCheckForm(StatusCheckForm):
             'name',
             'host',
             'query',
+            'check_type',
+            'value',
             'timeout',
             'frequency',
             'active',
             'importance',
+            'expected_num_hosts',
+            'allowed_num_failures',
             'debounce',
         )
-
         widgets = dict(**base_widgets)
         widgets.update({
             'host': forms.TextInput(attrs={
                 'style': 'width: 100%',
-                'placeholder': 'prometheus.arachnys.com',
+                'placeholder': 'http://prometheus-host.com/',
+            }),
+            'value': forms.TextInput(attrs={
+                'style': 'width: 100px',
+                'placeholder': 'threshold value',
+            }),
+            'check_type': forms.Select(attrs={
+                'data-rel': 'chosen',
             })
         })
 
