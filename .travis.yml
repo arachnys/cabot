@@ -25,6 +25,6 @@ after_success:
 
 deploy:
   - provider: script
-    script: make docker_upload
+    script: cp conf/development.env.example conf/development.env && make docker_upload 
     on:
       branch: master
