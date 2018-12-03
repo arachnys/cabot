@@ -5,7 +5,7 @@ services:
       file: docker-compose-base.yml
       service: base
     env_file:
-      - conf/default.env
+      - conf/development.env
     command: python manage.py runserver 0.0.0.0:5001
     ports:
       - "5001:5001"
@@ -18,7 +18,7 @@ services:
       file: docker-compose-base.yml
       service: base
     env_file:
-      - conf/default.env
+      - conf/development.env
     command: celery worker -A cabot --loglevel=DEBUG --concurrency=16 -Ofair
     environment:
       - SKIP_INIT=1
@@ -32,7 +32,7 @@ services:
       file: docker-compose-base.yml
       service: base
     env_file:
-      - conf/default.env
+      - conf/development.env
     command: celery beat -A cabot --loglevel=DEBUG
     environment:
       - SKIP_INIT=1
