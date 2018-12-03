@@ -25,7 +25,7 @@ def process_vector(data, ret):
 
     all_values = []
     for target in data['result']:
-        series = {'values': [ float(target['value'][1]) ]}
+        series = {'values': [float(target['value'][1])]}
         series['target'] = target['metric']['__name__']
         all_values.extend(series['values'])
         if series['values']:
