@@ -25,6 +25,6 @@ after_success:
 
 deploy:
   - provider: script
-    script: make upload_images
+    script: make docker_upload
     on:
       branch: master
