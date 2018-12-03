@@ -10,9 +10,9 @@ docker_login:
 docker_build:
 	docker-compose build
 
-docker_upload: docker_login
+docker_upload: docker_login docker_build
 	docker-compose push
-	# docker tag $(REPO):latest $(REPO):$(TRAVIS_BRANCH)-$(TRAVIS_BUILD_NUMBER)
-	# docker push $(REPO):$(TRAVIS_BRANCH)-$(TRAVIS_BUILD_NUMBER)
-	docker tag $(REPO):latest $(REPO):master-latest
-	docker push $(REPO):master-latest
+	docker tag $(REPO):latest $(REPO):$(TRAVIS_BRANCH)-$(TRAVIS_BUILD_NUMBER)
+	docker push $(REPO):$(TRAVIS_BRANCH)-$(TRAVIS_BUILD_NUMBER)
+	docker tag $(REPO):latest $(REPO):$(TRAVIS_BRANCH)-latest
+	docker push $(REPO):$(TRAVIS_BRANCH)-latest

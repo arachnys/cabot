@@ -22,3 +22,9 @@ after_success:
   - sudo pip install codecov
   - sudo pip install django_coverage_plugin==1.4.2
   - codecov
+
+deploy:
+  - provider: script
+    script: make upload_images
+    on:
+      branch: master
