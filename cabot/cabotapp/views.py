@@ -264,7 +264,7 @@ class HttpStatusCheckForm(StatusCheckForm):
             }),
             'text_match': forms.TextInput(attrs={
                 'style': 'width: 100%',
-                'placeholder': '[Aa]rachnys\s+[Rr]ules',
+                'placeholder': '[Aa]rachnys\\s+[Rr]ules',
             }),
             'status_code': forms.TextInput(attrs={
                 'style': 'width: 20%',

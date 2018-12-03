@@ -164,8 +164,7 @@ INSTALLED_APPS += tuple(CABOT_PLUGINS_ENABLED_PARSED)
 
 COMPRESS_PRECOMPILERS = (
     ('text/coffeescript', 'coffee --compile --stdio'),
-    ('text/eco',
-     'eco -i TEMPLATES {infile} && cat "$(echo "{infile}" | sed -e "s/\.eco$/.js/g")"'),
+    ('text/eco', 'eco -i TEMPLATES {infile} && cat "$(echo "{infile}" | sed -e "s/\\.eco$/.js/g")"'),
     ('text/less', 'lessc {infile} > {outfile}'),
 )
 
