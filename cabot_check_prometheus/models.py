@@ -102,7 +102,6 @@ class PrometheusStatusCheck(StatusCheck):
 
             r = requests.get(url.geturl(), params=payload)
             data = r.json()['data']
-
             type = data['resultType']
 
             if type == 'matrix':
@@ -133,7 +132,7 @@ class PrometheusStatusCheck(StatusCheck):
         #                         for target, value in failures]
         #     return ", ".join(failures_by_host)
         # else:
-        value = failures[0]
+        value = failures[0] if failures else ''
         return "%s %s %0.1f" % (value, self.check_type, float(self.value))
 
     def _run(self):
@@ -155,8 +154,13 @@ class PrometheusStatusCheck(StatusCheck):
 
         # Check if the metric condition
         if output["error"]:
-            result.succeeded = False
             result.error = output["error"]
+            result.succeeded = False
+            return result
+
+        if not output["num_series_with_data"]:
+            result.error = "Empty result for given metric"
+            result.succeeded = False
             return result
 
         failures = []
