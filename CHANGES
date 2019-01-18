@@ -1,3 +1,8 @@
+master
+------
+
+* Add support for celery SQS backend
+
 Version 0.11.13
 ---------------
 
