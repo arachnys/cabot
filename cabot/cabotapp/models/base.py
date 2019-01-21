@@ -488,6 +488,10 @@ class StatusCheck(PolymorphicModel):
         null=True,
         help_text='Regex to match against source of page.',
     )
+    text_match_expected_result = models.BooleanField(
+        default=True,
+        help_text='Text match expected result positive or negative. (default True)',
+    )
     status_code = models.TextField(
         default=200,
         null=True,
@@ -783,8 +787,12 @@ class HttpStatusCheck(StatusCheck):
                 result.succeeded = False
                 result.raw_data = resp.text
             elif self.text_match:
-                if not self._check_content_pattern(self.text_match, resp.text):
-                    result.error = u'Failed to find match regex /%s/ in response body' % self.text_match
+                matched = self._check_content_pattern(self.text_match, resp.text)
+                if self.text_match_expected_result != bool(matched):
+                    if self.text_match_expected_result:
+                        result.error = u'Failed to find match regex /%s/ in response body' % self.text_match
+                    else:
+                        result.error = u'Found unwanted regex /%s/ in response body' % self.text_match
                     result.raw_data = resp.text
                     result.succeeded = False
                 else:

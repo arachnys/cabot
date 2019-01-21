@@ -240,6 +240,7 @@ class HttpStatusCheckForm(StatusCheckForm):
             'username',
             'password',
             'text_match',
+            'text_match_expected_result',
             'status_code',
             'timeout',
             'verify_ssl_certificate',
@@ -266,6 +267,9 @@ class HttpStatusCheckForm(StatusCheckForm):
                 'style': 'width: 100%',
                 'placeholder': '[Aa]rachnys\s+[Rr]ules',
             }),
+            'text_match_expected_result': forms.RadioSelect(choices=(
+                (True, 'Positive',),
+                (False, 'Negative',))),
             'status_code': forms.TextInput(attrs={
                 'style': 'width: 20%',
                 'placeholder': '200',
