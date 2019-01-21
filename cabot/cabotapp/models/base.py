@@ -851,7 +851,7 @@ class StatusCheckResult(models.Model):
 
     def save(self, *args, **kwargs):
         if isinstance(self.raw_data, basestring):
-            self.raw_data = self.raw_data[:RAW_DATA_LIMIT]
+            self.raw_data = self.raw_data[:RAW_DATA_LIMIT].replace('\x00', '\\x00')
         return super(StatusCheckResult, self).save(*args, **kwargs)
 
 class AlertAcknowledgement(models.Model):
