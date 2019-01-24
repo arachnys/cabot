@@ -11,6 +11,8 @@ RUN apk add --no-cache \
         py-pip \
         postgresql-dev \
         gcc \
+        curl \
+        curl-dev \
         musl-dev \
         libffi-dev \
         openldap-dev \
