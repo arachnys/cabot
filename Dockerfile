@@ -13,6 +13,7 @@ RUN apk add --no-cache \
         gcc \
         curl \
         curl-dev \
+        libcurl \
         musl-dev \
         libffi-dev \
         openldap-dev \
