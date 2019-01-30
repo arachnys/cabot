@@ -1,3 +1,8 @@
+master
+------
+
+* Upgrade celery and kombu
+
 Version 0.11.15
 ---------------
 
