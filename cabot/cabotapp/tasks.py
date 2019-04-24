@@ -99,11 +99,7 @@ def clean_db(days_to_retain=7, batch_size=10000):
     InstanceStatusSnapshot.objects.filter(id__in=instance_snapshot_ids).delete()
 
     # If we reached the batch size on either we need to re-queue to continue cleaning up.
-    if (
-            result_count == batch_size or
-            service_snapshot_count == batch_size or
-            instance_snapshot_count == batch_size
-    ):
+    if result_count == batch_size or service_snapshot_count == batch_size or instance_snapshot_count == batch_size:
         clean_db.apply_async(kwargs={
             'days_to_retain': days_to_retain,
             'batch_size': batch_size},
