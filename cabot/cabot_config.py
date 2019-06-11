@@ -19,6 +19,7 @@ WWW_HTTP_HOST = os.environ.get('WWW_HTTP_HOST')
 WWW_SCHEME = os.environ.get('WWW_SCHEME', "https")
 
 HTTP_USER_AGENT = os.environ.get('HTTP_USER_AGENT', 'Cabot')
+CABOT_HTTP_CHECK_CA_BUNDLE = os.environ.get('CABOT_HTTP_CHECK_CA_BUNDLE')
 
 # How often should alerts be sent for important failures?
 ALERT_INTERVAL = int(os.environ.get('ALERT_INTERVAL', 10))

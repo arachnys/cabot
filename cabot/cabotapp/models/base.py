@@ -1,5 +1,6 @@
 import itertools
 import json
+import os
 import re
 import subprocess
 import time
@@ -763,11 +764,20 @@ class HttpStatusCheck(StatusCheck):
             auth = (self.username if self.username is not None else '',
                     self.password if self.password is not None else '')
 
+        ssl_verify = self.verify_ssl_certificate
+        if self.verify_ssl_certificate and settings.CABOT_HTTP_CHECK_CA_BUNDLE:
+            if os.path.isfile(settings.CABOT_HTTP_CHECK_CA_BUNDLE):
+                ssl_verify = settings.CABOT_HTTP_CHECK_CA_BUNDLE
+            else:
+                logger.error('Cannot find CA bundle file %r. Check the value of CABOT_HTTP_CHECK_CA_BUNDLE' %
+                             settings.CABOT_HTTP_CHECK_CA_BUNDLE)
+                ssl_verify = True  # Fallback on default CA bundle provided by the Certifi python module
+
         try:
             resp = requests.get(
                 self.endpoint,
                 timeout=self.timeout,
-                verify=self.verify_ssl_certificate,
+                verify=ssl_verify,
                 auth=auth,
                 headers={
                     "User-Agent": settings.HTTP_USER_AGENT,
