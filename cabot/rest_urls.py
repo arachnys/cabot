@@ -103,8 +103,9 @@ router.register(r'http_checks', create_viewset(
         'password',
         'text_match',
         'status_code',
+        'follow_redirects',
         'timeout',
-        'verify_ssl_certificate',
+        'verify_ssl_certificate'
     ),
 ))
 

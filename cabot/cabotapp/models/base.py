@@ -502,6 +502,10 @@ class StatusCheck(PolymorphicModel):
         default=True,
         help_text='Set to false to allow not try to verify ssl certificates (default True)',
     )
+    follow_redirects = models.BooleanField(
+        default=True,
+        help_text='Uncheck to prevent Cabot from following HTTP redirections (default True)',
+    )
 
     # Jenkins checks
     max_queued_build_time = models.IntegerField(
@@ -769,6 +773,7 @@ class HttpStatusCheck(StatusCheck):
                 timeout=self.timeout,
                 verify=self.verify_ssl_certificate,
                 auth=auth,
+                allow_redirects=self.follow_redirects,
                 headers={
                     "User-Agent": settings.HTTP_USER_AGENT,
                 },

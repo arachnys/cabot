@@ -241,6 +241,7 @@ class HttpStatusCheckForm(StatusCheckForm):
             'password',
             'text_match',
             'status_code',
+            'follow_redirects',
             'timeout',
             'verify_ssl_certificate',
             'frequency',
@@ -264,7 +265,7 @@ class HttpStatusCheckForm(StatusCheckForm):
             }),
             'text_match': forms.TextInput(attrs={
                 'style': 'width: 100%',
-                'placeholder': '[Aa]rachnys\s+[Rr]ules',
+                'placeholder': r'[Aa]rachnys\s+[Rr]ules',
             }),
             'status_code': forms.TextInput(attrs={
                 'style': 'width: 20%',
