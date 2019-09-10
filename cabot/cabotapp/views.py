@@ -288,6 +288,7 @@ class JenkinsStatusCheckForm(StatusCheckForm):
             'debounce',
             'max_queued_build_time',
             'jenkins_config',
+            'active',
         )
         widgets = dict(**base_widgets)
 
