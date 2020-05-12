@@ -100,9 +100,7 @@ def clean_db(days_to_retain=7, batch_size=10000):
 
     # If we reached the batch size on either we need to re-queue to continue cleaning up.
     if (
-            result_count == batch_size or
-            service_snapshot_count == batch_size or
-            instance_snapshot_count == batch_size
+            result_count == batch_size or service_snapshot_count == batch_size or instance_snapshot_count == batch_size
     ):
         clean_db.apply_async(kwargs={
             'days_to_retain': days_to_retain,
