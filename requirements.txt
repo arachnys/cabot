@@ -30,6 +30,7 @@ itypes==1.1.0
 Jinja2==2.9.6
 jmespath==0.9.3
 kombu==4.2.2.post1
+lesscpy
 Markdown==2.6.8
 MarkupSafe==1.0
 multi-key-dict==2.0.3

@@ -22,8 +22,7 @@ RUN apk add --no-cache \
 
 RUN npm install -g \
         --registry http://registry.npmjs.org/ \
-        coffee-script \
-        less@1.3
+        coffee-script
 
 RUN pip install --upgrade pip
 

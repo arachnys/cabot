@@ -165,7 +165,7 @@ COMPRESS_PRECOMPILERS = (
     ('text/coffeescript', 'coffee --compile --stdio'),
     ('text/eco',
      'eco -i TEMPLATES {infile} && cat "$(echo "{infile}" | sed -e "s/\.eco$/.js/g")"'),
-    ('text/less', 'lessc {infile} > {outfile}'),
+    ('text/less', 'lesscpy {infile} {outfile}'),
 )
 
 # For the email settings we both accept old and new names
