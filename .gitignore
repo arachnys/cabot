@@ -1,3 +1,4 @@
+.python-version
 .dotcloud/*
 dev.db
 venv/*
