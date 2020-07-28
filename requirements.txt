@@ -45,6 +45,8 @@ PyJWT==1.7.1
 pyparsing==2.2.0
 PySocks==1.6.7
 python-dateutil==2.6.0
+python-decouple==3.3
+python-dotenv==0.14.0
 python-jenkins==0.4.15
 python-ldap==3.1.0
 python-openid==2.2.5
