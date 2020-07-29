@@ -20,6 +20,7 @@ RUN apk add --no-cache \
         ca-certificates \
         bash
 
+RUN npm config set unsafe-perm true
 RUN npm install -g \
         --registry http://registry.npmjs.org/ \
         coffee-script \
