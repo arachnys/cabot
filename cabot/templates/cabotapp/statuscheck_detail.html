@@ -78,7 +78,7 @@
           </td>
           <td>{{ result.time_complete }}</td>
           <td>{{ result.took }}</td>
-          <td>{% autoescape off %}{{ result.error|default:"" }}{% endautoescape %}</td>
+          <td>{{ result.error|default:"" }}</td>
         </tr>
       {% endfor %}
       </tbody>

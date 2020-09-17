@@ -9,6 +9,7 @@ import requests
 
 from celery.exceptions import SoftTimeLimitExceeded
 from celery.utils.log import get_task_logger
+from django.core.validators import URLValidator
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
@@ -472,6 +473,7 @@ class StatusCheck(PolymorphicModel):
     endpoint = models.TextField(
         null=True,
         help_text='HTTP(S) endpoint to poll.',
+        validators = [URLValidator()],
     )
     username = models.TextField(
         blank=True,
