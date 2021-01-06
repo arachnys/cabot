@@ -53,6 +53,7 @@ router.register(r'services', create_viewset(
         'url',
         'instances',
         'overall_status',
+        'is_public',
     ),
 ))
 
