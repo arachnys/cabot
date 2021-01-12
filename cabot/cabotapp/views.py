@@ -1072,7 +1072,7 @@ class OnCallView(APIView):
 
         return Response(users_json)
 
-
+      
 # Misc JSON api and other stuff
 
 

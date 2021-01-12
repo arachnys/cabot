@@ -78,6 +78,7 @@ class JenkinsStatusCheck(StatusCheck):
         return last_result.consecutive_failures <= debounce
 
 
+
 class JenkinsConfig(models.Model):
     name = models.CharField(max_length=30, blank=False)
     jenkins_api = models.CharField(max_length=2000, blank=False)

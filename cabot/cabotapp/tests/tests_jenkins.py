@@ -82,6 +82,7 @@ class TestGetStatus(unittest.TestCase):
         self.assertEqual(result.consecutive_failures, 1)
         self.assertFalse(result.succeeded)
 
+
     @freeze_time('2017-03-02 10:30')
     @patch("cabot.cabotapp.jenkins._get_jenkins_client")
     def test_job_queued_last_succeeded(self, mock_jenkins):
