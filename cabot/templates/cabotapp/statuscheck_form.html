@@ -37,12 +37,12 @@ GRAPHITE_ENDPOINT = '/graphite/'
 
 $(document).ready ->
   updateGraphiteData()
-  $('#id_metric').on('keyup', complete)
-  $('#id_frequency').on('keyup', complete)
-
   complete = () ->
       clearTimeout(timer)
       timer = setTimeout(updateGraphiteData, 1000)
+
+  $('#id_metric').on('keyup', complete)
+  $('#id_frequency').on('keyup', complete)
 
   $('#id_metric').autocomplete
     source: (request, response) ->
