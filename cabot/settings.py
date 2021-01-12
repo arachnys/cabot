@@ -1,12 +1,16 @@
 import os
-import dj_database_url
+from dj_database_url import parse as dburl
 import re
 from django.conf import settings
+from decouple import config, Csv
 from django.core.urlresolvers import reverse_lazy
 from cabot.settings_utils import environ_get_list, force_bool
 from cabot.cabot_config import *
+from dotenv import load_dotenv
+load_dotenv()
 
 settings_dir = os.path.dirname(__file__)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROJECT_ROOT = os.path.abspath(settings_dir)
 
 DEBUG = force_bool(os.environ.get('DEBUG', False))
@@ -20,7 +24,11 @@ MANAGERS = ADMINS
 if os.environ.get('CABOT_FROM_EMAIL'):
     DEFAULT_FROM_EMAIL = os.environ['CABOT_FROM_EMAIL']
 
-DATABASES = {'default': dj_database_url.config()}
+default_dburl = 'sqlite:///' + os.path.join(BASE_DIR, 'db.sqlite3')
+
+DATABASES = {
+    'default': config('DATABASE_URL', default=default_dburl, cast=dburl)
+}
 
 TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
