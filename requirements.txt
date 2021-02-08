@@ -24,7 +24,7 @@ futures==3.2.0
 gevent==1.2.1
 greenlet==0.4.12
 gunicorn==19.7.1
-httplib2==0.10.3
+httplib2==0.19.0
 icalendar==3.11.3
 itypes==1.1.0
 Jinja2==2.9.6
