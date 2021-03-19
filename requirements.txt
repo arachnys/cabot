@@ -27,7 +27,7 @@ gunicorn==19.7.1
 httplib2==0.10.3
 icalendar==3.11.3
 itypes==1.1.0
-Jinja2==2.9.6
+Jinja2==2.11.3
 jmespath==0.9.3
 kombu==4.2.2.post1
 Markdown==2.6.8
