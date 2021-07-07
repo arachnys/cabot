@@ -2,14 +2,14 @@ import os
 import dj_database_url
 import re
 from django.conf import settings
-from django.core.urlresolvers import reverse_lazy
+from django.urls import reverse_lazy
 from cabot.settings_utils import environ_get_list, force_bool
 from cabot.cabot_config import *
 
 settings_dir = os.path.dirname(__file__)
 PROJECT_ROOT = os.path.abspath(settings_dir)
 
-DEBUG = force_bool(os.environ.get('DEBUG', False))
+DEBUG = force_bool(os.environ.get('DEBUG', True))
 
 ADMINS = (
     ('Admin', os.environ.get('ADMIN_EMAIL', 'name@example.com')),
@@ -20,7 +20,18 @@ MANAGERS = ADMINS
 if os.environ.get('CABOT_FROM_EMAIL'):
     DEFAULT_FROM_EMAIL = os.environ['CABOT_FROM_EMAIL']
 
-DATABASES = {'default': dj_database_url.config()}
+#DATABASES = {'default': dj_database_url.config()}
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'cabot',
+        'USER': 'root',
+        'PASSWORD': 'root',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
+}
 
 TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
@@ -118,14 +129,16 @@ TEMPLATES = [{
     },
 }]
 
-MIDDLEWARE_CLASSES = (
-    'whitenoise.middleware.WhiteNoiseMiddleware',
-    'django.middleware.common.CommonMiddleware',
+MIDDLEWARE = (
+
+
+    'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
 ROOT_URLCONF = 'cabot.urls'
@@ -162,10 +175,10 @@ for plugin in CABOT_PLUGINS_ENABLED.split(","):
 INSTALLED_APPS += tuple(CABOT_PLUGINS_ENABLED_PARSED)
 
 COMPRESS_PRECOMPILERS = (
-    ('text/coffeescript', 'coffee --compile --stdio'),
+    ('text/coffeescript', 'coffeecompressorcompiler.filter.CoffeeScriptCompiler'),
     ('text/eco',
      'eco -i TEMPLATES {infile} && cat "$(echo "{infile}" | sed -e "s/\.eco$/.js/g")"'),
-    ('text/less', 'lessc {infile} > {outfile}'),
+    ('text/less', '/usr/bin/less {infile} > {outfile}'),
 )
 
 # For the email settings we both accept old and new names

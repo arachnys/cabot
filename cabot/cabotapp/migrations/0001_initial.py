@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('time', models.DateTimeField()),
                 ('cancelled_time', models.DateTimeField(null=True, blank=True)),
-                ('cancelled_user', models.ForeignKey(related_name='cancelleduser_set', blank=True, to=settings.AUTH_USER_MODEL, null=True)),
+                ('cancelled_user', models.ForeignKey(related_name='cancelleduser_set', blank=True, to=settings.AUTH_USER_MODEL, null=True, on_delete=models.CASCADE)),
             ],
             options={
             },
@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('title', models.CharField(unique=True, max_length=30, editable=False)),
                 ('enabled', models.BooleanField(default=True)),
-                ('polymorphic_ctype', models.ForeignKey(related_name='polymorphic_cabotapp.alertplugin_set', editable=False, to='contenttypes.ContentType', null=True)),
+                ('polymorphic_ctype', models.ForeignKey(related_name='polymorphic_cabotapp.alertplugin_set', editable=False, to='contenttypes.ContentType', null=True, on_delete=models.CASCADE)),
             ],
             options={
                 'abstract': False,
@@ -43,7 +43,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('title', models.CharField(max_length=30, editable=False)),
-                ('polymorphic_ctype', models.ForeignKey(related_name='polymorphic_cabotapp.alertpluginuserdata_set', editable=False, to='contenttypes.ContentType', null=True)),
+                ('polymorphic_ctype', models.ForeignKey(related_name='polymorphic_cabotapp.alertpluginuserdata_set', editable=False, to='contenttypes.ContentType', null=True, on_delete=models.CASCADE)),
             ],
             options={
             },
@@ -82,7 +82,7 @@ class Migration(migrations.Migration):
                 ('num_checks_failing', models.IntegerField(default=0)),
                 ('overall_status', models.TextField(default=b'PASSING')),
                 ('did_send_alert', models.IntegerField(default=False)),
-                ('instance', models.ForeignKey(related_name='snapshots', to='cabotapp.Instance')),
+                ('instance', models.ForeignKey(related_name='snapshots', to='cabotapp.Instance', on_delete=models.CASCADE)),
             ],
             options={
                 'abstract': False,
@@ -123,7 +123,7 @@ class Migration(migrations.Migration):
                 ('num_checks_failing', models.IntegerField(default=0)),
                 ('overall_status', models.TextField(default=b'PASSING')),
                 ('did_send_alert', models.IntegerField(default=False)),
-                ('service', models.ForeignKey(related_name='snapshots', to='cabotapp.Service')),
+                ('service', models.ForeignKey(related_name='snapshots', to='cabotapp.Service', on_delete=models.CASCADE)),
             ],
             options={
                 'abstract': False,
@@ -139,7 +139,7 @@ class Migration(migrations.Migration):
                 ('uid', models.TextField()),
                 ('last_modified', models.DateTimeField()),
                 ('deleted', models.BooleanField(default=False)),
-                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
+                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)),
             ],
             options={
             },
@@ -170,8 +170,8 @@ class Migration(migrations.Migration):
                 ('timeout', models.IntegerField(default=30, help_text=b'Time out after this many seconds.', null=True)),
                 ('verify_ssl_certificate', models.BooleanField(default=True, help_text=b'Set to false to allow not try to verify ssl certificates (default True)')),
                 ('max_queued_build_time', models.IntegerField(help_text=b'Alert if build queued for more than this many minutes.', null=True, blank=True)),
-                ('created_by', models.ForeignKey(to=settings.AUTH_USER_MODEL, null=True)),
-                ('polymorphic_ctype', models.ForeignKey(related_name='polymorphic_cabotapp.statuscheck_set', editable=False, to='contenttypes.ContentType', null=True)),
+                ('created_by', models.ForeignKey(to=settings.AUTH_USER_MODEL, null=True, on_delete=models.CASCADE)),
+                ('polymorphic_ctype', models.ForeignKey(related_name='polymorphic_cabotapp.statuscheck_set', editable=False, to='contenttypes.ContentType', null=True, on_delete=models.CASCADE)),
             ],
             options={
                 'ordering': ['name'],
@@ -189,7 +189,7 @@ class Migration(migrations.Migration):
                 ('succeeded', models.BooleanField(default=False)),
                 ('error', models.TextField(null=True)),
                 ('job_number', models.PositiveIntegerField(null=True)),
-                ('check', models.ForeignKey(to='cabotapp.StatusCheck')),
+                ('check', models.ForeignKey(to='cabotapp.StatusCheck', on_delete=models.CASCADE)),
             ],
             options={
                 'ordering': ['-time_complete'],
@@ -203,7 +203,7 @@ class Migration(migrations.Migration):
                 ('mobile_number', models.CharField(default=b'', max_length=20, blank=True)),
                 ('hipchat_alias', models.CharField(default=b'', max_length=50, blank=True)),
                 ('fallback_alert_user', models.BooleanField(default=False)),
-                ('user', models.OneToOneField(related_name='profile', to=settings.AUTH_USER_MODEL)),
+                ('user', models.OneToOneField(related_name='profile', to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)),
             ],
             options={
             },
@@ -240,7 +240,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='alertpluginuserdata',
             name='user',
-            field=models.ForeignKey(editable=False, to='cabotapp.UserProfile'),
+            field=models.ForeignKey(editable=False, to='cabotapp.UserProfile', on_delete=models.CASCADE),
             preserve_default=True,
         ),
         migrations.AlterUniqueTogether(
@@ -250,13 +250,13 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='alertacknowledgement',
             name='service',
-            field=models.ForeignKey(to='cabotapp.Service'),
+            field=models.ForeignKey(to='cabotapp.Service', on_delete=models.CASCADE),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='alertacknowledgement',
             name='user',
-            field=models.ForeignKey(to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE),
             preserve_default=True,
         ),
         migrations.CreateModel(

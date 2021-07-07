@@ -40,7 +40,7 @@ class AlertPlugin(PolymorphicModel):
 
 class AlertPluginUserData(PolymorphicModel):
     title = models.CharField(max_length=30, editable=False)
-    user = models.ForeignKey('UserProfile', editable=False)
+    user = models.ForeignKey('UserProfile', editable=False , on_delete=models.CASCADE)
 
     class Meta:
         unique_together = ('title', 'user',)

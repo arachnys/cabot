@@ -388,14 +388,14 @@ class Snapshot(models.Model):
 
 
 class ServiceStatusSnapshot(Snapshot):
-    service = models.ForeignKey(Service, related_name='snapshots')
+    service = models.ForeignKey(Service, related_name='snapshots', on_delete=models.CASCADE)
 
     def __unicode__(self):
         return u"%s: %s" % (self.service.name, self.overall_status)
 
 
 class InstanceStatusSnapshot(Snapshot):
-    instance = models.ForeignKey(Instance, related_name='snapshots')
+    instance = models.ForeignKey(Instance, related_name='snapshots', on_delete=models.CASCADE)
 
     def __unicode__(self):
         return u"%s: %s" % (self.instance.name, self.overall_status)
@@ -436,7 +436,7 @@ class StatusCheck(PolymorphicModel):
         help_text='Number of successive failures permitted before check will be marked as failed. Default is 0, '
                   'i.e. fail on first failure.'
     )
-    created_by = models.ForeignKey(User, null=True)
+    created_by = models.ForeignKey(User, null=True, on_delete=models.CASCADE)
     calculated_status = models.CharField(
         max_length=50, choices=Service.STATUSES, default=Service.CALCULATED_PASSING_STATUS, blank=True)
     last_run = models.DateTimeField(null=True)
@@ -804,7 +804,7 @@ class StatusCheckResult(models.Model):
     Checks don't have to use all the fields, so most should be
     nullable
     """
-    status_check = models.ForeignKey(StatusCheck)
+    status_check = models.ForeignKey(StatusCheck, on_delete=models.CASCADE)
     time = models.DateTimeField(null=False, db_index=True)
     time_complete = models.DateTimeField(null=True, db_index=True)
     raw_data = models.TextField(null=True)
@@ -858,14 +858,15 @@ class StatusCheckResult(models.Model):
 
 class AlertAcknowledgement(models.Model):
     time = models.DateTimeField()
-    user = models.ForeignKey(settings.AUTH_USER_MODEL)
-    service = models.ForeignKey(Service)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    service = models.ForeignKey(Service, on_delete=models.CASCADE)
     cancelled_time = models.DateTimeField(null=True, blank=True)
     cancelled_user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,
         blank=True,
-        related_name='cancelleduser_set'
+        related_name='cancelleduser_set',
+        on_delete=models.CASCADE,
     )
 
     def unexpired(self):
@@ -876,7 +877,7 @@ class AlertAcknowledgement(models.Model):
 
 
 class UserProfile(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='profile')
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='profile', on_delete=models.CASCADE)
 
     def user_data(self):
         for user_data_subclass in AlertPluginUserData.__subclasses__():
@@ -911,7 +912,7 @@ post_save.connect(create_user_profile, sender=settings.AUTH_USER_MODEL)
 class Shift(models.Model):
     start = models.DateTimeField()
     end = models.DateTimeField()
-    user = models.ForeignKey(settings.AUTH_USER_MODEL)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     uid = models.TextField()
     last_modified = models.DateTimeField()
     deleted = models.BooleanField(default=False)

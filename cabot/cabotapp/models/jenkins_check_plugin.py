@@ -7,7 +7,7 @@ from .base import StatusCheck, StatusCheckResult
 
 
 class JenkinsStatusCheck(StatusCheck):
-    jenkins_config = models.ForeignKey('JenkinsConfig')
+    jenkins_config = models.ForeignKey('JenkinsConfig', on_delete=models.CASCADE)
 
     @property
     def check_category(self):

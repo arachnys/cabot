@@ -1,10 +1,10 @@
 import json
 import re
 from datetime import date, datetime, timedelta
-from itertools import dropwhile, groupby, izip_longest
+from itertools import dropwhile, groupby, zip_longest
 
 import requests
-from alert import AlertPlugin, AlertPluginUserData
+from .alert import AlertPlugin, AlertPluginUserData
 from cabot.cabotapp import alert
 from cabot.cabotapp.utils import cabot_needs_setup
 from dateutil.relativedelta import relativedelta
@@ -16,7 +16,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.core.urlresolvers import reverse, reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.core.validators import URLValidator
 from django.db import transaction
 from django.db.models.functions import Lower
@@ -28,13 +28,13 @@ from django.utils.decorators import method_decorator
 from django.utils.timezone import utc
 from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
                                   TemplateView, UpdateView, View)
-from models import (GraphiteStatusCheck, HttpStatusCheck, ICMPStatusCheck,
+from .models import (GraphiteStatusCheck, HttpStatusCheck, ICMPStatusCheck,
                     Instance, JenkinsStatusCheck, Service, Shift, StatusCheck,
                     StatusCheckResult, UserProfile, get_custom_check_plugins,
                     get_duty_officers)
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from tasks import run_status_check as _run_status_check
+from .tasks import run_status_check as _run_status_check
 
 from .graphite import get_data, get_matching_metrics
 
@@ -438,7 +438,7 @@ class StatusCheckReportForm(forms.Form):
             ).order_by('time')
             groups = dropwhile(lambda item: item[0], groupby(results, key=lambda r: r.succeeded))
             times = [next(group).time for succeeded, group in groups]
-            pairs = izip_longest(*([iter(times)] * 2))
+            pairs = zip_longest(*([iter(times)] * 2))
             check.problems = [(start, end, (end or now) - start) for start, end in pairs]
             if results:
                 check.success_rate = results.filter(succeeded=True).count() / float(len(results)) * 100
@@ -1110,12 +1110,12 @@ def graphite_api_data(request):
     matching_metrics = None
     try:
         data = get_data(metric, mins_to_check)
-    except requests.exceptions.RequestException, e:
+    except requests.exceptions.RequestException as e:
         pass
     if not data:
         try:
             matching_metrics = get_matching_metrics(metric)
-        except requests.exceptions.RequestException, e:
+        except requests.exceptions.RequestException as e:
             return jsonify({'status': 'error', 'message': str(e)})
         matching_metrics = {'metrics': matching_metrics}
     return jsonify({'status': 'ok', 'data': data, 'matchingMetrics': matching_metrics})

@@ -14,16 +14,16 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='alertplugin',
             name='polymorphic_ctype',
-            field=models.ForeignKey(related_name='polymorphic_cabotapp.alertplugin_set+', editable=False, to='contenttypes.ContentType', null=True),
+            field=models.ForeignKey(related_name='polymorphic_cabotapp.alertplugin_set+', editable=False, to='contenttypes.ContentType', null=True, on_delete=models.CASCADE),
         ),
         migrations.AlterField(
             model_name='alertpluginuserdata',
             name='polymorphic_ctype',
-            field=models.ForeignKey(related_name='polymorphic_cabotapp.alertpluginuserdata_set+', editable=False, to='contenttypes.ContentType', null=True),
+            field=models.ForeignKey(related_name='polymorphic_cabotapp.alertpluginuserdata_set+', editable=False, to='contenttypes.ContentType', null=True, on_delete=models.CASCADE),
         ),
         migrations.AlterField(
             model_name='statuscheck',
             name='polymorphic_ctype',
-            field=models.ForeignKey(related_name='polymorphic_cabotapp.statuscheck_set+', editable=False, to='contenttypes.ContentType', null=True),
+            field=models.ForeignKey(related_name='polymorphic_cabotapp.statuscheck_set+', editable=False, to='contenttypes.ContentType', null=True, on_delete=models.CASCADE),
         ),
     ]

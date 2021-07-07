@@ -1,6 +1,6 @@
 import sys
 
-from django.core.urlresolvers import reverse, clear_url_caches
+from django.urls import reverse, clear_url_caches
 from django.conf import settings
 from django.test.utils import override_settings
 from importlib import import_module

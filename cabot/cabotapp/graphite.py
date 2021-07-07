@@ -30,7 +30,7 @@ def get_data(target_pattern, mins_to_check=None):
 
 
 def get_matching_metrics(pattern):
-    print 'Getting metrics matching %s' % pattern
+    print('Getting metrics matching %s' % pattern)
     resp = requests.get(
         graphite_api + 'metrics/find/', auth=auth,
         params={
@@ -71,7 +71,7 @@ def parse_metric(metric, mins_to_check=5, utcnow=None):
     }
     try:
         data = get_data(metric, mins_to_check)
-    except requests.exceptions.RequestException, e:
+    except requests.exceptions.RequestException as e:
         ret['error'] = 'Error getting data from Graphite: %s' % e
         ret['raw'] = ret['error']
         logging.error('Error getting data from Graphite: %s' % e)

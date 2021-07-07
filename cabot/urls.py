@@ -27,7 +27,7 @@ from django.contrib import admin
 from django.views.generic.base import RedirectView
 from django.views.static import serve
 from django.shortcuts import redirect
-from django.contrib.auth.views import login, logout, password_reset, password_reset_done, password_reset_confirm
+from django.contrib.auth.views import LoginView, LogoutView, PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView
 admin.autodiscover()
 
 from importlib import import_module
@@ -64,15 +64,15 @@ urlpatterns = [
         name='dashboard'),
      url(r'^subscriptions/', view=subscriptions,
         name='subscriptions'),
-     url(r'^accounts/login/', view=first_time_setup_wrapper(login), name='login'),
-     url(r'^accounts/logout/', view=logout, name='logout'),
+     url(r'^accounts/login/', view=first_time_setup_wrapper(LoginView), name='login'),
+     url(r'^accounts/logout/', view=LogoutView, name='logout'),
      url(r'^setup/', view=SetupView.as_view(), name='first_time_setup'),
      url(r'^accounts/password-reset/',
-        view=password_reset, name='password-reset'),
+        view=PasswordResetView, name='password-reset'),
      url(r'^accounts/password-reset-done/',
-        view=password_reset_done, name='password-reset-done'),
+        view=PasswordResetDoneView, name='password-reset-done'),
      url(r'^accounts/password-reset-confirm/',
-        view=password_reset_confirm, name='password-reset-confirm'),
+        view=PasswordResetConfirmView, name='password-reset-confirm'),
      url(r'^status/', view=checks_run_recently,
         name='system-status'),
      url(r'^about/', view=about,
@@ -163,7 +163,8 @@ urlpatterns = [
         view=PluginSettingsView.as_view(), name='plugin-settings'),
      url(r'^user/(?P<pk>\d+)/profile/(?P<alerttype>.+)/',
         view=UserProfileUpdateAlert.as_view(), name='update-alert-user-data'),
-     url(r'^admin/', include(admin.site.urls)),
+     #url(r'^admin/', include(admin.site.urls)),
+     url(r'^admin/', admin.site.urls),
      # Comment below line to disable browsable rest api
      url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
      url(r'^api/', include(rest_urls.router.urls)),
