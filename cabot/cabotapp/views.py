@@ -901,10 +901,12 @@ class ServiceDetailView(LoginRequiredMixin, CommonDetailView):
         return context
 
 
+
 class InstanceCreateView(LoginRequiredMixin, CommonCreateView):
     model = Instance
     form_class = InstanceForm
 
+    
     def form_valid(self, form):
         ret = super(InstanceCreateView, self).form_valid(form)
         if self.object.status_checks.filter(polymorphic_ctype__model='icmpstatuscheck').count() == 0:
@@ -940,7 +942,7 @@ class InstanceCreateView(LoginRequiredMixin, CommonCreateView):
                 pass
 
         return initial
-
+    
 
 @login_required
 def acknowledge_alert(request, pk):

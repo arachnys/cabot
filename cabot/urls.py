@@ -1,5 +1,7 @@
 from django.conf.urls import include, url
+from django.urls import path
 from django.conf import settings
+from requests.api import request
 from cabot.cabotapp.views import (
     about, run_status_check, graphite_api_data, checks_run_recently,
     duplicate_icmp_check, duplicate_graphite_check, duplicate_http_check, duplicate_jenkins_check,
@@ -37,12 +39,12 @@ import os
 logger = logging.getLogger(__name__)
 
 def first_time_setup_wrapper(func):
-    def wrapper(*args, **kwargs):
-        if cabot_needs_setup():
+      def wrapper(request, *args, **kwargs):
+         if cabot_needs_setup():
             return redirect('first_time_setup')
-        else:
-            return func(*args, **kwargs)
-    return wrapper
+         else:
+            return func.as_view(request, *args, **kwargs)
+      return wrapper
 
 
 def home_authentication_switcher(request, *args, **kwargs):
@@ -64,8 +66,8 @@ urlpatterns = [
         name='dashboard'),
      url(r'^subscriptions/', view=subscriptions,
         name='subscriptions'),
-     url(r'^accounts/login/', view=first_time_setup_wrapper(LoginView), name='login'),
-     url(r'^accounts/logout/', view=LogoutView, name='logout'),
+     url(r'^accounts/login/', view=LoginView.as_view(), name='login'),
+     url(r'^accounts/logout/', LogoutView.as_view(), name='logout'),
      url(r'^setup/', view=SetupView.as_view(), name='first_time_setup'),
      url(r'^accounts/password-reset/',
         view=PasswordResetView, name='password-reset'),
@@ -97,7 +99,7 @@ urlpatterns = [
 
      url(r'^instances/', view=InstanceListView.as_view(),
         name='instances'),
-     url(r'^instance/create/', view=InstanceCreateView.as_view(),
+     url(r'^instance/create/', InstanceCreateView.as_view(),
         name='create-instance'),
      url(r'^instance/update/(?P<pk>\d+)/',
         view=InstanceUpdateView.as_view(), name='update-instance'),
