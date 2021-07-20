@@ -22,10 +22,6 @@ class Migration(migrations.Migration):
             options={'base_manager_name': 'objects'},
         ),
         migrations.AlterModelOptions(
-            name='httpstatuscheck',
-            options={'base_manager_name': 'objects'},
-        ),
-        migrations.AlterModelOptions(
             name='icmpstatuscheck',
             options={'base_manager_name': 'objects'},
         ),

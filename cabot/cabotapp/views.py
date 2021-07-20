@@ -2,7 +2,7 @@ import json
 import re
 from datetime import date, datetime, timedelta
 from itertools import dropwhile, groupby, zip_longest
-
+import os
 import requests
 from .alert import AlertPlugin, AlertPluginUserData
 from cabot.cabotapp import alert
@@ -28,15 +28,15 @@ from django.utils.decorators import method_decorator
 from django.utils.timezone import utc
 from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
                                   TemplateView, UpdateView, View)
-from .models import (GraphiteStatusCheck, HttpStatusCheck, ICMPStatusCheck,
-                    Instance, JenkinsStatusCheck, Service, Shift, StatusCheck,
-                    StatusCheckResult, UserProfile, get_custom_check_plugins,
+from .models import (Instance, Service, Shift, StatusCheck, StatusCheckResult, UserProfile, get_custom_check_plugins,
                     get_duty_officers)
+
+
+from django.apps import apps   
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .tasks import run_status_check as _run_status_check
 
-from .graphite import get_data, get_matching_metrics
 
 
 class LoginRequiredMixin(object):
@@ -66,34 +66,11 @@ def run_status_check(request, pk):
     return HttpResponseRedirect(reverse('check', kwargs={'pk': pk}))
 
 
-def duplicate_icmp_check(request, pk):
-    pc = StatusCheck.objects.get(pk=pk)
-    npk = pc.duplicate()
-    return HttpResponseRedirect(reverse('update-icmp-check', kwargs={'pk': npk}))
-
-
 def duplicate_instance(request, pk):
     instance = Instance.objects.get(pk=pk)
     new_instance = instance.duplicate()
     return HttpResponseRedirect(reverse('update-instance', kwargs={'pk': new_instance}))
 
-
-def duplicate_http_check(request, pk):
-    pc = StatusCheck.objects.get(pk=pk)
-    npk = pc.duplicate()
-    return HttpResponseRedirect(reverse('update-http-check', kwargs={'pk': npk}))
-
-
-def duplicate_graphite_check(request, pk):
-    pc = StatusCheck.objects.get(pk=pk)
-    npk = pc.duplicate()
-    return HttpResponseRedirect(reverse('update-graphite-check', kwargs={'pk': npk}))
-
-
-def duplicate_jenkins_check(request, pk):
-    pc = StatusCheck.objects.get(pk=pk)
-    npk = pc.duplicate()
-    return HttpResponseRedirect(reverse('update-jenkins-check', kwargs={'pk': npk}))
 
 
 class BaseCommonView(object):
@@ -146,7 +123,17 @@ class SymmetricalForm(forms.ModelForm):
             instance.save()
         if instance.pk:
             for field in self.symmetrical_fields:
-                setattr(instance, field, self.cleaned_data[field])
+                try:
+                    if field == "service_set":
+                        n_field = Service.objects.get(name=self.cleaned_data[field].first().name) 
+                        instance.service_set.add(n_field)
+                    if field == "instance_set":
+                        n_field = Instance.objects.get(id=self.cleaned_data[field].first().id)
+                        instance.instance_set.add(n_field)
+                except:
+                    pass
+                #setattr(instance, (field+".add"), n_field)
+                #instance,field,add(n_field)
             self.save_m2m()
         return instance
 
@@ -186,110 +173,6 @@ class StatusCheckForm(SymmetricalForm):
         )
     )
 
-
-class GraphiteStatusCheckForm(StatusCheckForm):
-    class Meta:
-        model = GraphiteStatusCheck
-        fields = (
-            'name',
-            'metric',
-            'check_type',
-            'value',
-            'frequency',
-            'active',
-            'importance',
-            'expected_num_hosts',
-            'allowed_num_failures',
-            'debounce',
-        )
-        widgets = dict(**base_widgets)
-        widgets.update({
-            'value': forms.TextInput(attrs={
-                'style': 'width: 100px',
-                'placeholder': 'threshold value',
-            }),
-            'metric': forms.TextInput(attrs={
-                'style': 'width: 100%',
-                'placeholder': 'graphite metric key'
-            }),
-            'check_type': forms.Select(attrs={
-                'data-rel': 'chosen',
-            })
-        })
-
-
-class ICMPStatusCheckForm(StatusCheckForm):
-    class Meta:
-        model = ICMPStatusCheck
-        fields = (
-            'name',
-            'frequency',
-            'importance',
-            'active',
-            'debounce',
-        )
-        widgets = dict(**base_widgets)
-
-
-class HttpStatusCheckForm(StatusCheckForm):
-    class Meta:
-        model = HttpStatusCheck
-        fields = (
-            'name',
-            'endpoint',
-            'username',
-            'password',
-            'text_match',
-            'status_code',
-            'timeout',
-            'verify_ssl_certificate',
-            'frequency',
-            'importance',
-            'active',
-            'debounce',
-        )
-        widgets = dict(**base_widgets)
-        widgets.update({
-            'endpoint': forms.TextInput(attrs={
-                'style': 'width: 100%',
-                'placeholder': 'https://www.example.org/',
-            }),
-            'username': forms.TextInput(attrs={
-                'style': 'width: 30%',
-            }),
-            'password': forms.PasswordInput(attrs={
-                'style': 'width: 30%',
-                # Prevent auto-fill with saved Cabot log-in credentials:
-                'autocomplete': 'new-password',
-            }),
-            'text_match': forms.TextInput(attrs={
-                'style': 'width: 100%',
-                'placeholder': '[Aa]rachnys\s+[Rr]ules',
-            }),
-            'status_code': forms.TextInput(attrs={
-                'style': 'width: 20%',
-                'placeholder': '200',
-            }),
-        })
-
-    def clean_password(self):
-        new_password_value = self.cleaned_data['password']
-        if new_password_value == '':
-            new_password_value = self.initial.get('password')
-        return new_password_value
-
-
-class JenkinsStatusCheckForm(StatusCheckForm):
-    class Meta:
-        model = JenkinsStatusCheck
-        fields = (
-            'name',
-            'importance',
-            'debounce',
-            'max_queued_build_time',
-            'jenkins_config',
-        )
-        widgets = dict(**base_widgets)
 
 
 class InstanceForm(SymmetricalForm):
@@ -494,52 +377,8 @@ class CheckUpdateView(LoginRequiredMixin, CommonUpdateView):
         return reverse('check', kwargs={'pk': self.object.id})
 
 
-class ICMPCheckCreateView(CheckCreateView):
-    model = ICMPStatusCheck
-    form_class = ICMPStatusCheckForm
 
 
-class ICMPCheckUpdateView(CheckUpdateView):
-    model = ICMPStatusCheck
-    form_class = ICMPStatusCheckForm
-
-
-class GraphiteCheckUpdateView(CheckUpdateView):
-    model = GraphiteStatusCheck
-    form_class = GraphiteStatusCheckForm
-
-
-class GraphiteCheckCreateView(CheckCreateView):
-    model = GraphiteStatusCheck
-    form_class = GraphiteStatusCheckForm
-
-
-class HttpCheckCreateView(CheckCreateView):
-    model = HttpStatusCheck
-    form_class = HttpStatusCheckForm
-
-
-class HttpCheckUpdateView(CheckUpdateView):
-    model = HttpStatusCheck
-    form_class = HttpStatusCheckForm
-
-
-class JenkinsCheckCreateView(CheckCreateView):
-    model = JenkinsStatusCheck
-    form_class = JenkinsStatusCheckForm
-
-    def form_valid(self, form):
-        form.instance.frequency = 1
-        return super(JenkinsCheckCreateView, self).form_valid(form)
-
-
-class JenkinsCheckUpdateView(CheckUpdateView):
-    model = JenkinsStatusCheck
-    form_class = JenkinsStatusCheckForm
-
-    def form_valid(self, form):
-        form.instance.frequency = 1
-        return super(JenkinsCheckUpdateView, self).form_valid(form)
 
 
 class StatusCheckListView(LoginRequiredMixin, CommonListView):
@@ -846,7 +685,7 @@ class InstanceListView(LoginRequiredMixin, CommonListView):
 
     def get_queryset(self):
         return Instance.objects.all().order_by('name').prefetch_related('status_checks')
-
+        
 
 class ServiceListView(LoginRequiredMixin, CommonListView):
     model = Service
@@ -909,11 +748,20 @@ class InstanceCreateView(LoginRequiredMixin, CommonCreateView):
     
     def form_valid(self, form):
         ret = super(InstanceCreateView, self).form_valid(form)
-        if self.object.status_checks.filter(polymorphic_ctype__model='icmpstatuscheck').count() == 0:
-            self.generate_default_ping_check(self.object)
+
+        try:
+            icmp = apps.get_model('icmp','ICMPStatusCheck')
+        except:
+            icmp = None
+        
+        if icmp:
+            
+            if self.object.status_checks.filter(polymorphic_ctype__model='icmpstatuscheck').count() == 0:
+                self.generate_default_ping_check(self.object)
         return ret
 
     def generate_default_ping_check(self, obj):
+        
         pc = ICMPStatusCheck(
             name="Default Ping Check for %s" % obj.name,
             frequency=5,
@@ -942,7 +790,7 @@ class InstanceCreateView(LoginRequiredMixin, CommonCreateView):
                 pass
 
         return initial
-    
+
 
 @login_required
 def acknowledge_alert(request, pk):

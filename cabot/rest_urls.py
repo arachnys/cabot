@@ -78,14 +78,16 @@ router.register(r'status_checks', create_viewset(
     arg_fields=status_check_fields,
     readonly=True,
 ))
+'''
 
 router.register(r'icmp_checks', create_viewset(
-    arg_model=models.ICMPStatusCheck,
+    arg_model=plugins.ICMPStatusCheck,
     arg_fields=status_check_fields,
 ))
 
+
 router.register(r'graphite_checks', create_viewset(
-    arg_model=models.GraphiteStatusCheck,
+    arg_model=plugins.GraphiteStatusCheck,
     arg_fields=status_check_fields + (
         'metric',
         'check_type',
@@ -94,9 +96,8 @@ router.register(r'graphite_checks', create_viewset(
         'allowed_num_failures',
     ),
 ))
-
 router.register(r'http_checks', create_viewset(
-    arg_model=models.HttpStatusCheck,
+    arg_model=plugins.HttpStatusCheck,
     arg_fields=status_check_fields + (
         'endpoint',
         'username',
@@ -107,15 +108,15 @@ router.register(r'http_checks', create_viewset(
         'verify_ssl_certificate',
     ),
 ))
-
 router.register(r'jenkins_checks', create_viewset(
-    arg_model=models.JenkinsStatusCheck,
+    arg_model=plugins.JenkinsStatusCheck,
     arg_fields=status_check_fields + (
         'max_queued_build_time',
         'jenkins_config',
     ),
 ))
 
+'''
 # User API is off by default, could expose/allow modifying dangerous fields
 if settings.EXPOSE_USER_API:
     router.register(r'users', create_viewset(

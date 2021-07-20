@@ -1,0 +1,272 @@
+Version 0.11.16
+---------------
+
+* Upgrade celery and kombu
+
+Version 0.11.15
+---------------
+
+* Fix dockerfile
+* Add support for changing default celery queue name (using CELERY_DEFAULT_QUEUE env variable)
+
+Version 0.11.14
+---------------
+
+* Add support for celery SQS backend
+
+Version 0.11.13
+---------------
+
+* Fix bug where jenkins checks were always passing
+* Reduce Arachnys branding a bit
+* Fix 404 page for logged out users
+* Style forms with django-bootstrap-form
+* [[#605](https://github.com/arachnys/cabot/issues/605)] Fix http check forms auto-filling username/password
+* [[#607](https://github.com/arachnys/cabot/issues/607)] Fix checks for websites service non utf-8 content
+
+Version 0.11.12
+---------------
+
+* Upgrade django to 1.11.11
+* Debounce JenkinsCheck on the number of job failures
+  - Previously it would fail after cabot checked the jenkins api N times, even if the jenkins job had only failed once
+
+Version 0.11.11
+---------------
+
+* Fix /api/oncall endpoint not working with basic auth
+
+Version 0.11.10
+---------------
+
+* Add /api/oncall endpoint
+
+Version 0.11.9
+--------------
+
+* Fix issue where Jenkins environment variables were required on first launch
+
+Version 0.11.8
+--------------
+
+* Bump cabot-alert-slack to 0.8.2
+* Update LDAP dependencies
+* Add ENABLE_SUBSCRIPTION and ENABLE_DUTY_ROTA options
+* [[#556](https://github.com/arachnys/cabot/issues/556)] Fix issue with HttpStatusCheck with unicode content
+
+Version 0.11.7
+--------------
+
+* Fix check plugins not displaying checks correctly on service details page
+
+Version 0.11.6
+--------------
+
+* Add cloudwatch check plugin to dockerfile by default
+  - Can be enabled by adding "cabot_check_cloudwatch" to CABOT_PLUGINS_ENABLED
+
+Version 0.11.5
+--------------
+
+* Fix multiple jenkins configs not working properly
+  - Due to caching on the client, the first config to be checked would always be used
+
+Version 0.11.4
+--------------
+
+* Switch from jenkinsapi to python-jenkins
+  - Fixes performance regression introduced in 0.11
+
+Version 0.11.3
+--------------
+
+* [[#551](https://github.com/arachnys/cabot/issues/551)] Fix in-progress jenkins jobs being marked as failing
+
+Version 0.11.2
+--------------
+
+* Fix pypi source distribution missing requirements for setup.py
+
+Version 0.11.1
+--------------
+
+* Fix migration disassociating checks from services/instances
+* Fix migration requiring jenkins environment variables are set
+* Reduce time to store old check results to 7 days
+  - Currently stores for 2 months, but there's no actual way to view the old data.
+
+Version 0.11.0
+--------------
+
+*** BROKEN RELEASE - MIGRATIONS DON'T WORK CORRECTLY ***
+
+* Jenkins support:
+  - Fail Jenkins checks when job is unknown
+  - Use [jenkinsapi](https://pypi.python.org/pypi/jenkinsapi) to talk to Jenkins
+  - Add option to specify multiple Jenkins backends
+  > NOTE: This update will delete any recent status check results for jenkins checks
+* Add view for public services
+* Add support for Google OAuth login
+* Add ability to add custom check plugins
+  - See https://gitlab.com/as-public/cabot-check-skeleton for an example
+* Remove deprecated Fabfile and Shell scripts
+
+Version 0.10.8
+--------------
+
+* Update slack alert to 0.8.1
+  - fixes names not linking
+  - only shows the acknowledge button if "SLACK_INTERACTIVE_MESSAGES" is set
+    - (The feature only works if set up correctly on the slack end)
+* Update to django 1.11 (with working django-polymorphic this time)
+
+Version 0.10.7
+--------------
+
+* Update slack alert plugin
+  - Now shows an "acknowledge" button within slack
+* Fix alert tests not triggering if:
+  - A user had acknowledged working on the service
+  - A legitimate alert had been sent recently
+* Add support for GitHub OAuth logins
+  - See http://cabotapp.com/use/users.html
+
+Version 0.10.6
+--------------
+
+* Fix plugin urls being overridden by plugin settings urls
+  - This fixes e.g. the twilio callback url not working
+* Fix profile settings sidebar links not working
+
+Version 0.10.5
+--------------
+
+* Fix bug which caused status graphs to sometimes not render
+* Fix issue with complex recurring calendar - `'vDDDLists' object is not iterable`
+* Fix css regression in logo/title
+
+Version 0.10.4
+--------------
+
+* Fix basic auth passwords getting reset when editing checks
+* Fix plugin alert tests alerting the current duty officer
+  - They should now always alert only the user that runs the test
+
+Version 0.10.3
+--------------
+
+* Add plugin settings views with the ability to test alerts.
+* Allow user filter for LDAP to be configured
+  - Set the AUTH_LDAP_USER_FILTER setting to change it (defaults to "(uid=%(user)s)")
+* Update cabot-alert-hipchat plugin to 2.0.2
+  - Fixes bug when both HIPCHAT_URL and HIPCHAT_DOMAIN were set
+
+Version 0.10.2
+--------------
+
+* Update cabot-alert-hipchat plugin to 2.0.1
+  - Supports Hipchat API v2
+  - If HIPCHAT_URL is set, it will use the old v1 api
+  - Use HIPCHAT_DOMAIN for custom hipchat v2 deployments
+* Add interactive api docs (using djangorestframework 3.6) at /docs
+
+Version 0.10.1
+--------------
+
+* [BUGFIX] Update cabot_alert_twilio to 1.3.1
+  - 1.3.0 was still broken on django 1.10
+
+Version 0.10.0
+--------------
+
+* Add feedback notifications when updated profile
+* Automatically reload plugins after migrating
+* Add cabot_alert_slack as default plugin
+* Upgrade to Django 1.10
+* Upgrade to Celery 4
+
+Version 0.9.2
+-------------
+
+* Add /about endpoint
+* Fix rota bug when ical had no timezone
+* Add User Profile settings link to user dropdown
+
+Version 0.9.1
+-------------
+
+* Update cabot-alert-twilio to 1.3.0 to work on django 1.10
+* Fix Alert preferences form breaking on django 1.8
+* Add `cabot` executable instead of using python manage.py (for e.g. migrating)
+
+Version 0.9.0
+-------------
+
+* Upgrade to Django 1.9
+
+Version 0.8.7
+-------------
+
+* Fix Alert preferences form breaking on django 1.8
+
+Version 0.8.6
+-------------
+
+* Add first time setup page
+* Remove create_cabot_superuser management command (redundant with first time setup)
+
+Version 0.8.5
+-------------
+
+* More severe alerts should trigger even if a less severe alert was recently sent
+* Update production.env.example email settings
+* Convert environment vars to boolean nicely
+
+> Note: You may have to update your settings if they contain invalid boolean values
+
+Version 0.8.4
+-------------
+
+* Fix setup.py packaging
+* Use whitenoise to serve static files
+
+> Note: You may have to update your webserver settings for static files to work properly
+
+Version 0.8.3
+-------------
+
+* BUG: Add missing context processor
+
+Version 0.8.2
+-------------
+
+* Remove django-smtp-ssl dependency
+* Build docker image from alpine
+* Refactor docker-compose files
+* Fix db_clean task failing on large results tables
+* Wait for docker containers to start in docker-entrypoint.sh
+* Update CABOT_PLUGINS_ENABLED to compatible plugin versions
+* Automatically initialise database, assets and superuser on docker container start
+
+Version 0.8.1
+-------------
+
+* Fix all workers running celery beat
+* Update django-compressor to run on django 1.8
+* Fix typo in url testcase
+* Update wsgi.py to work with django 1.8
+
+Version 0.8.0
+-------------
+
+* Upgraded to Django 1.8
+
+Version 0.7.0
+-------------
+
+* Upgraded to Django 1.7
+
+Version 0.6.0
+-------------
+
+* Versioning Introduced.

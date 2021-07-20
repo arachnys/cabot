@@ -19,8 +19,8 @@ from polymorphic.models import PolymorphicModel
 
 from ..alert import AlertPluginUserData, send_alert, send_alert_update
 from ..calendar import get_events
-from ..graphite import parse_metric
 from ..tasks import update_instance, update_service
+
 
 RAW_DATA_LIMIT = 5000
 
@@ -73,7 +73,6 @@ def get_custom_check_plugins():
     # Checks that aren't using the plugin system
     legacy_checks = [
         "JenkinsStatusCheck",
-        "HttpStatusCheck",
         "ICMPStatusCheck",
         "GraphiteStatusCheck",
     ]
@@ -255,17 +254,20 @@ class CheckGroupMixin(models.Model):
     def graphite_status_checks(self):
         return self.status_checks.filter(polymorphic_ctype__model='graphitestatuscheck')
 
+    '''
     def http_status_checks(self):
         return self.status_checks.filter(polymorphic_ctype__model='httpstatuscheck')
 
+    def active_http_status_checks(self):
+        return self.http_status_checks().filter(active=True)
+    '''
     def jenkins_status_checks(self):
         return self.status_checks.filter(polymorphic_ctype__model='jenkinsstatuscheck')
 
     def active_graphite_status_checks(self):
         return self.graphite_status_checks().filter(active=True)
 
-    def active_http_status_checks(self):
-        return self.http_status_checks().filter(active=True)
+
 
     def active_jenkins_status_checks(self):
         return self.jenkins_status_checks().filter(active=True)
@@ -281,6 +283,10 @@ class CheckGroupMixin(models.Model):
 
     def all_failing_checks(self):
         return self.active_status_checks().exclude(calculated_status=self.CALCULATED_PASSING_STATUS)
+
+
+    def __str__(self):
+        return self.name
 
 
 class Service(CheckGroupMixin):
@@ -323,6 +329,8 @@ class Service(CheckGroupMixin):
     class Meta:
         ordering = ['name']
 
+    def __str__(self):
+        return self.name
 
 class Instance(CheckGroupMixin):
     def duplicate(self):
@@ -375,6 +383,9 @@ class Instance(CheckGroupMixin):
         return super(Instance, self).delete(*args, **kwargs)
 
 
+    def __str__(self):
+        return self.name
+
 class Snapshot(models.Model):
     class Meta:
         abstract = True
@@ -399,6 +410,151 @@ class InstanceStatusSnapshot(Snapshot):
 
     def __unicode__(self):
         return u"%s: %s" % (self.instance.name, self.overall_status)
+
+
+
+
+def minimize_targets(targets):
+    split = [target.split(".") for target in targets]
+
+    prefix_nodes_in_common = 0
+    for i, nodes in enumerate(itertools.izip(*split)):
+        if any(node != nodes[0] for node in nodes):
+            prefix_nodes_in_common = i
+            break
+    split = [nodes[prefix_nodes_in_common:] for nodes in split]
+
+    suffix_nodes_in_common = 0
+    for i, nodes in enumerate(reversed(zip(*split))):
+        if any(node != nodes[0] for node in nodes):
+            suffix_nodes_in_common = i
+            break
+    if suffix_nodes_in_common:
+        split = [nodes[:-suffix_nodes_in_common] for nodes in split]
+
+    return [".".join(nodes) for nodes in split]
+
+
+
+
+class AlertAcknowledgement(models.Model):
+    time = models.DateTimeField()
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    service = models.ForeignKey(Service, on_delete=models.CASCADE)
+    cancelled_time = models.DateTimeField(null=True, blank=True)
+    cancelled_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        related_name='cancelleduser_set',
+        on_delete=models.CASCADE,
+    )
+
+    def unexpired(self):
+        return self.expires() > timezone.now()
+
+    def expires(self):
+        return self.time + timedelta(minutes=settings.ACKNOWLEDGEMENT_EXPIRY)
+
+    def __str__(self):
+        return self.name
+    
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='profile', on_delete=models.CASCADE)
+
+    def user_data(self):
+        for user_data_subclass in AlertPluginUserData.__subclasses__():
+            user_data = user_data_subclass.objects.get_or_create(user=self, title=user_data_subclass.name)
+        return AlertPluginUserData.objects.filter(user=self)
+
+    def __unicode__(self):
+        return 'User profile: %s' % self.user.username
+
+    def save(self, *args, **kwargs):
+        # Enforce uniqueness
+        if self.fallback_alert_user:
+            profiles = UserProfile.objects.exclude(id=self.id)
+            profiles.update(fallback_alert_user=False)
+        return super(UserProfile, self).save(*args, **kwargs)
+
+    @property
+    def prefixed_mobile_number(self):
+        return '+%s' % self.mobile_number
+
+    mobile_number = models.CharField(max_length=20, blank=True, default='')
+    hipchat_alias = models.CharField(max_length=50, blank=True, default='')
+    fallback_alert_user = models.BooleanField(default=False)
+
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile.objects.create(user=instance)
+
+post_save.connect(create_user_profile, sender=settings.AUTH_USER_MODEL)
+
+
+class Shift(models.Model):
+    start = models.DateTimeField()
+    end = models.DateTimeField()
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    uid = models.TextField()
+    last_modified = models.DateTimeField()
+    deleted = models.BooleanField(default=False)
+
+    def __unicode__(self):
+        deleted = ''
+        if self.deleted:
+            deleted = ' (deleted)'
+        return "%s: %s to %s%s" % (self.user.username, self.start, self.end, deleted)
+
+    def __str__(self):
+        return self.name
+
+
+def get_duty_officers(at_time=None):
+    """Returns a list of duty officers for a given time or now if none given"""
+    duty_officers = []
+    if not at_time:
+        at_time = timezone.now()
+    current_shifts = Shift.objects.filter(
+        deleted=False,
+        start__lt=at_time,
+        end__gt=at_time,
+    )
+    if current_shifts:
+        duty_officers = [shift.user for shift in current_shifts]
+        return duty_officers
+    else:
+        try:
+            u = UserProfile.objects.get(fallback_alert_user=True)
+            return [u.user]
+        except UserProfile.DoesNotExist:
+            return []
+
+
+def update_shifts():
+    events = get_events()
+    users = User.objects.filter(is_active=True)
+    user_lookup = {}
+    for u in users:
+        user_lookup[u.username.lower()] = u
+    future_shifts = Shift.objects.filter(start__gt=timezone.now())
+    future_shifts.update(deleted=True)
+
+    for event in events:
+        e = event['summary'].lower().strip()
+        if e in user_lookup:
+            user = user_lookup[e]
+            # Delete any events that have been updated in ical
+            Shift.objects.filter(uid=event['uid'],
+                last_modified__lt=event['last_modified']).delete()
+            Shift.objects.get_or_create(
+                uid=event['uid'],
+                start=event['start'],
+                end=event['end'],
+                last_modified=event['last_modified'],
+                user=user,
+                deleted=False)
 
 
 class StatusCheck(PolymorphicModel):
@@ -539,8 +695,8 @@ class StatusCheck(PolymorphicModel):
             result.succeeded = False
         except Exception as e:
             result = StatusCheckResult(status_check=self)
-            logger.error(u"Error performing check: %s" % (e.message,))
-            result.error = u'Error in performing check: %s' % (e.message,)
+            logger.error(u"Error performing check: %s" % (e))
+            result.error = u'Error in performing check: %s' % (e)
             result.succeeded = False
         finish = timezone.now()
         result.time = start
@@ -548,6 +704,7 @@ class StatusCheck(PolymorphicModel):
         result.save()
         self.last_run = finish
         self.save()
+        
 
     def _run(self):
         """
@@ -592,208 +749,18 @@ class StatusCheck(PolymorphicModel):
     def update_related_services(self):
         services = self.service_set.all()
         for service in services:
-            update_service.delay(service.id)
+            update_service(service.id)
+        
 
     def update_related_instances(self):
         instances = self.instance_set.all()
         for instance in instances:
-            update_instance.delay(instance.id)
+            update_instance(instance.id)
 
 
-class ICMPStatusCheck(StatusCheck):
-    class Meta(StatusCheck.Meta):
-        proxy = True
+    def __str__(self):
+        return self.name
 
-    @property
-    def check_category(self):
-        return "ICMP/Ping Check"
-
-    def _run(self):
-        result = StatusCheckResult(status_check=self)
-        instances = self.instance_set.all()
-        target = self.instance_set.get().address
-
-        args = ['ping', '-c', '1', target]
-        try:
-            # We redirect stderr to STDOUT because ping can write to both, depending on the kind of error.
-            subprocess.check_output(args, stderr=subprocess.STDOUT, shell=False)
-            result.succeeded = True
-        except subprocess.CalledProcessError as e:
-            result.succeeded = False
-            result.error = e.output
-
-        return result
-
-
-def minimize_targets(targets):
-    split = [target.split(".") for target in targets]
-
-    prefix_nodes_in_common = 0
-    for i, nodes in enumerate(itertools.izip(*split)):
-        if any(node != nodes[0] for node in nodes):
-            prefix_nodes_in_common = i
-            break
-    split = [nodes[prefix_nodes_in_common:] for nodes in split]
-
-    suffix_nodes_in_common = 0
-    for i, nodes in enumerate(reversed(zip(*split))):
-        if any(node != nodes[0] for node in nodes):
-            suffix_nodes_in_common = i
-            break
-    if suffix_nodes_in_common:
-        split = [nodes[:-suffix_nodes_in_common] for nodes in split]
-
-    return [".".join(nodes) for nodes in split]
-
-
-class GraphiteStatusCheck(StatusCheck):
-
-    class Meta(StatusCheck.Meta):
-        proxy = True
-
-    @property
-    def check_category(self):
-        return "Metric check"
-
-    def format_error_message(self, failures, actual_hosts, hosts_by_target):
-        if actual_hosts < self.expected_num_hosts:
-            return "Hosts missing | %d/%d hosts" % (
-                actual_hosts, self.expected_num_hosts)
-        elif actual_hosts > 1:
-            threshold = float(self.value)
-            failures_by_host = ["%s: %s %s %0.1f" % (
-                hosts_by_target[target], value, self.check_type, threshold)
-                                for target, value in failures]
-            return ", ".join(failures_by_host)
-        else:
-            target, value = failures[0]
-            return "%s %s %0.1f" % (value, self.check_type, float(self.value))
-
-    def _run(self):
-        if not hasattr(self, 'utcnow'):
-            self.utcnow = None
-        result = StatusCheckResult(status_check=self)
-
-        failures = []
-
-        last_result = self.last_result()
-        if last_result:
-            last_result_started = last_result.time
-            time_to_check = max(self.frequency, ((timezone.now() - last_result_started).total_seconds() / 60) + 1)
-        else:
-            time_to_check = self.frequency
-
-        graphite_output = parse_metric(self.metric, mins_to_check=time_to_check, utcnow=self.utcnow)
-
-        try:
-            result.raw_data = json.dumps(graphite_output['raw'])
-        except:
-            result.raw_data = graphite_output['raw']
-
-        if graphite_output["error"]:
-            result.succeeded = False
-            result.error = graphite_output["error"]
-            return result
-
-        if graphite_output['num_series_with_data'] > 0:
-            result.average_value = graphite_output['average_value']
-            for s in graphite_output['series']:
-                if not s["values"]:
-                    continue
-                failure_value = None
-                if self.check_type == '<':
-                    if float(s['min']) < float(self.value):
-                        failure_value = s['min']
-                elif self.check_type == '<=':
-                    if float(s['min']) <= float(self.value):
-                        failure_value = s['min']
-                elif self.check_type == '>':
-                    if float(s['max']) > float(self.value):
-                        failure_value = s['max']
-                elif self.check_type == '>=':
-                    if float(s['max']) >= float(self.value):
-                        failure_value = s['max']
-                elif self.check_type == '==':
-                    if float(self.value) in s['values']:
-                        failure_value = float(self.value)
-                else:
-                    raise Exception(u'Check type %s not supported' %
-                                    self.check_type)
-
-                if not failure_value is None:
-                    failures.append((s["target"], failure_value))
-
-        if len(failures) > self.allowed_num_failures:
-            result.succeeded = False
-        elif graphite_output['num_series_with_data'] < self.expected_num_hosts:
-            result.succeeded = False
-        else:
-            result.succeeded = True
-
-        if not result.succeeded:
-            targets = [s["target"] for s in graphite_output["series"]]
-            hosts = minimize_targets(targets)
-            hosts_by_target = dict(zip(targets, hosts))
-
-            result.error = self.format_error_message(
-                failures,
-                graphite_output['num_series_with_data'],
-                hosts_by_target,
-            )
-
-        return result
-
-
-class HttpStatusCheck(StatusCheck):
-    class Meta(StatusCheck.Meta):
-        proxy = True
-
-    @property
-    def check_category(self):
-        return "HTTP check"
-
-    @classmethod
-    def _check_content_pattern(self, text_match, content):
-        content = content if isinstance(content, unicode) else unicode(content, "UTF-8")
-        return re.search(text_match, content)
-
-    def _run(self):
-        result = StatusCheckResult(status_check=self)
-
-        auth = None
-        if self.username or self.password:
-            auth = (self.username if self.username is not None else '',
-                    self.password if self.password is not None else '')
-
-        try:
-            resp = requests.get(
-                self.endpoint,
-                timeout=self.timeout,
-                verify=self.verify_ssl_certificate,
-                auth=auth,
-                headers={
-                    "User-Agent": settings.HTTP_USER_AGENT,
-                },
-            )
-        except requests.RequestException as e:
-            result.error = u'Request error occurred: %s' % (e.message,)
-            result.succeeded = False
-        else:
-            if self.status_code and resp.status_code != int(self.status_code):
-                result.error = u'Wrong code: got %s (expected %s)' % (
-                    resp.status_code, int(self.status_code))
-                result.succeeded = False
-                result.raw_data = resp.text
-            elif self.text_match:
-                if not self._check_content_pattern(self.text_match, resp.text):
-                    result.error = u'Failed to find match regex /%s/ in response body' % self.text_match
-                    result.raw_data = resp.text
-                    result.succeeded = False
-                else:
-                    result.succeeded = True
-            else:
-                result.succeeded = True
-        return result
 
 
 class StatusCheckResult(models.Model):
@@ -852,119 +819,8 @@ class StatusCheckResult(models.Model):
             return self.error
 
     def save(self, *args, **kwargs):
-        if isinstance(self.raw_data, basestring):
+        if isinstance(self.raw_data, str):
             self.raw_data = self.raw_data[:RAW_DATA_LIMIT]
         return super(StatusCheckResult, self).save(*args, **kwargs)
+    
 
-class AlertAcknowledgement(models.Model):
-    time = models.DateTimeField()
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    service = models.ForeignKey(Service, on_delete=models.CASCADE)
-    cancelled_time = models.DateTimeField(null=True, blank=True)
-    cancelled_user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        null=True,
-        blank=True,
-        related_name='cancelleduser_set',
-        on_delete=models.CASCADE,
-    )
-
-    def unexpired(self):
-        return self.expires() > timezone.now()
-
-    def expires(self):
-        return self.time + timedelta(minutes=settings.ACKNOWLEDGEMENT_EXPIRY)
-
-
-class UserProfile(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='profile', on_delete=models.CASCADE)
-
-    def user_data(self):
-        for user_data_subclass in AlertPluginUserData.__subclasses__():
-            user_data = user_data_subclass.objects.get_or_create(user=self, title=user_data_subclass.name)
-        return AlertPluginUserData.objects.filter(user=self)
-
-    def __unicode__(self):
-        return 'User profile: %s' % self.user.username
-
-    def save(self, *args, **kwargs):
-        # Enforce uniqueness
-        if self.fallback_alert_user:
-            profiles = UserProfile.objects.exclude(id=self.id)
-            profiles.update(fallback_alert_user=False)
-        return super(UserProfile, self).save(*args, **kwargs)
-
-    @property
-    def prefixed_mobile_number(self):
-        return '+%s' % self.mobile_number
-
-    mobile_number = models.CharField(max_length=20, blank=True, default='')
-    hipchat_alias = models.CharField(max_length=50, blank=True, default='')
-    fallback_alert_user = models.BooleanField(default=False)
-
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        UserProfile.objects.create(user=instance)
-
-post_save.connect(create_user_profile, sender=settings.AUTH_USER_MODEL)
-
-
-class Shift(models.Model):
-    start = models.DateTimeField()
-    end = models.DateTimeField()
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    uid = models.TextField()
-    last_modified = models.DateTimeField()
-    deleted = models.BooleanField(default=False)
-
-    def __unicode__(self):
-        deleted = ''
-        if self.deleted:
-            deleted = ' (deleted)'
-        return "%s: %s to %s%s" % (self.user.username, self.start, self.end, deleted)
-
-
-def get_duty_officers(at_time=None):
-    """Returns a list of duty officers for a given time or now if none given"""
-    duty_officers = []
-    if not at_time:
-        at_time = timezone.now()
-    current_shifts = Shift.objects.filter(
-        deleted=False,
-        start__lt=at_time,
-        end__gt=at_time,
-    )
-    if current_shifts:
-        duty_officers = [shift.user for shift in current_shifts]
-        return duty_officers
-    else:
-        try:
-            u = UserProfile.objects.get(fallback_alert_user=True)
-            return [u.user]
-        except UserProfile.DoesNotExist:
-            return []
-
-
-def update_shifts():
-    events = get_events()
-    users = User.objects.filter(is_active=True)
-    user_lookup = {}
-    for u in users:
-        user_lookup[u.username.lower()] = u
-    future_shifts = Shift.objects.filter(start__gt=timezone.now())
-    future_shifts.update(deleted=True)
-
-    for event in events:
-        e = event['summary'].lower().strip()
-        if e in user_lookup:
-            user = user_lookup[e]
-            # Delete any events that have been updated in ical
-            Shift.objects.filter(uid=event['uid'],
-                last_modified__lt=event['last_modified']).delete()
-            Shift.objects.get_or_create(
-                uid=event['uid'],
-                start=event['start'],
-                end=event['end'],
-                last_modified=event['last_modified'],
-                user=user,
-                deleted=False)

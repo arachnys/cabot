@@ -91,17 +91,8 @@
 {% include 'cabotapp/_instance_list.html' with instances=service.instances.all %}
   </div>
 </div>
-<hr>
 
-{% include 'cabotapp/_statuscheck_list.html' with checks=service.graphite_status_checks.all service=service checks_type="Graphite" %}
 
-<hr>
-
-{% include 'cabotapp/_statuscheck_list.html' with checks=service.http_status_checks.all service=service checks_type="Http" %}
-
-<hr>
-
-{% include 'cabotapp/_statuscheck_list.html' with checks=service.jenkins_status_checks.all service=service checks_type="Jenkins" %}
 
 {% for custom_check in custom_check_types %}
 <hr>
@@ -188,62 +179,96 @@
 <script type="text/javascript" src="{% static 'arachnys/js/d3.js' %}"></script>
 {% compress js %}
 <script type="text/javascript" src="{% static 'arachnys/js/rickshaw.js' %}"></script>
-<script type="text/coffeescript">
+<script type="text/javascript">
 
-$(document).ready ->
-  data = window.SERVICE_HISTORY
-  labels = {
-    num_checks_active: 'blue'
-    num_checks_failing: '#f00'
-  }
-  processedData = formatDataForRickshaw data, labels
-  drawRickshaw processedData.series, labels, processedData.events
-
-formatDataForRickshaw = (data, labels) ->
-  series = {}
-  events = []
-  for label, color of labels
-    series[label] = {
-      color: color
-      name: label
-      data: []
-    }
-  for slice in data
-    if slice.did_send_alert
-      events.push {time: slice.time, message: 'Sent alert'}
-    for label, color of labels
-      series[label].data.push
-        x: slice.time
-        y: slice[label]
-  ret = []
-  for line, val of series
-    ret.push val
-  return {
-    series: ret
-    events: events
-  }
-
-drawRickshaw = (data, labels, events = []) ->
-  rickshawLine = new Rickshaw.Graph
-    renderer: 'line'
-    element: document.querySelector('#graph')
-    series: data
-    height: 140
-  rickshawLine.render()
-
-  hoverDetail = new Rickshaw.Graph.HoverDetail({graph: rickshawLine})
-  xAxis = new Rickshaw.Graph.Axis.Time({graph: rickshawLine})
-  xAxis.render()
-  yAxis = new Rickshaw.Graph.Axis.Y({graph: rickshawLine})
-  yAxis.render()
-
-  window.annotator = annotator = new Rickshaw.Graph.Annotate({
-    graph: rickshawLine
-    element: document.getElementById('timeline')
-  })
-  for evt in events
-    annotator.add evt.time, evt.message
-  annotator.update()
+  (function() {
+    var drawRickshaw, formatDataForRickshaw;
+  
+    $(document).ready(function() {
+      var data, labels, processedData;
+      data = window.SERVICE_HISTORY;
+      labels = {
+        num_checks_active: 'blue',
+        num_checks_failing: '#f00'
+      };
+      processedData = formatDataForRickshaw(data, labels);
+      return drawRickshaw(processedData.series, labels, processedData.events);
+    });
+  
+    formatDataForRickshaw = function(data, labels) {
+      var color, events, label, line, ret, series, slice, val, _i, _len;
+      series = {};
+      events = [];
+      for (label in labels) {
+        color = labels[label];
+        series[label] = {
+          color: color,
+          name: label,
+          data: []
+        };
+      }
+      for (_i = 0, _len = data.length; _i < _len; _i++) {
+        slice = data[_i];
+        if (slice.did_send_alert) {
+          events.push({
+            time: slice.time,
+            message: 'Sent alert'
+          });
+        }
+        for (label in labels) {
+          color = labels[label];
+          series[label].data.push({
+            x: slice.time,
+            y: slice[label]
+          });
+        }
+      }
+      ret = [];
+      for (line in series) {
+        val = series[line];
+        ret.push(val);
+      }
+      return {
+        series: ret,
+        events: events
+      };
+    };
+  
+    drawRickshaw = function(data, labels, events) {
+      var annotator, evt, hoverDetail, rickshawLine, xAxis, yAxis, _i, _len;
+      if (events == null) {
+        events = [];
+      }
+      rickshawLine = new Rickshaw.Graph({
+        renderer: 'line',
+        element: document.querySelector('#graph'),
+        series: data,
+        height: 140
+      });
+      rickshawLine.render();
+      hoverDetail = new Rickshaw.Graph.HoverDetail({
+        graph: rickshawLine
+      });
+      xAxis = new Rickshaw.Graph.Axis.Time({
+        graph: rickshawLine
+      });
+      xAxis.render();
+      yAxis = new Rickshaw.Graph.Axis.Y({
+        graph: rickshawLine
+      });
+      yAxis.render();
+      window.annotator = annotator = new Rickshaw.Graph.Annotate({
+        graph: rickshawLine,
+        element: document.getElementById('timeline')
+      });
+      for (_i = 0, _len = events.length; _i < _len; _i++) {
+        evt = events[_i];
+        annotator.add(evt.time, evt.message);
+      }
+      return annotator.update();
+    };
+  
+  }).call(this);
 
 </script>
 <script type="text/javascript">

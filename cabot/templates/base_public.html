@@ -15,7 +15,7 @@
   <link id="datatables-css" href="{% static 'theme/css/bootstrap-datatables.min.css' %}" rel="stylesheet">
   <link href="{% static 'bootstrap/css/dashboard.css' %}" rel="stylesheet">
   <link href="{% static 'theme/css/jquery-ui-1.8.21.custom.css' %}" type="text/css" rel="stylesheet">
-  <link href="{% static 'arachnys/css/base.less' %}" type="text/less" rel="stylesheet">
+  <link href="{% static 'arachnys/css/base.css' %}" type="text/css" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'arachnys/css/morris.css' %}" type="text/css">
   <link rel="stylesheet" href="{% static 'arachnys/css/graph.css' %}" type="text/css">
   <link rel="stylesheet" href="{% static 'autocomplete_light/vendor/select2/dist/css/select2.css' %}" type="text/css">
@@ -25,11 +25,15 @@
   <link href="//netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.css" rel="stylesheet">
   <link rel="icon" href="{% static 'arachnys/img/icon_48x48.png'%}" type="image/png">
   {% compress js %}
-  <script type="text/coffeescript">
-  if window.location.host.indexOf('localhost') != -1
-    window.ENVIRONMENT = 'DEVELOPMENT'
-  else
-    window.ENVIRONMENT = 'PRODUCTION'
+  <script type="text/javascript">
+    (function() {
+      if (window.location.host.indexOf('localhost') !== -1) {
+        window.ENVIRONMENT = 'DEVELOPMENT';
+      } else {
+        window.ENVIRONMENT = 'PRODUCTION';
+      }
+    
+    }).call(this);
   </script>
   {% endcompress %}
 </head>
@@ -105,22 +109,23 @@
     <script src="{% static 'arachnys/js/raphael.js' %}"></script>
     <script src="{% static 'arachnys/js/morris.js' %}"></script>
     <!-- end: JavaScript-->
-    <script type="text/coffeescript">
-    $ () ->
-      $('.sparktristate').sparkline('html', {type: 'tristate'})
-
-      $('ul.nav li a').each () ->
-        if $($(this))[0].href == String(window.location)
-          $(this).parent().addClass('active')
-
-      $('[data-rel="chosen"],[rel="chosen"]').chosen({ width: '100%' })
-
-      #$('.datatable').dataTable
-      #  sDom: "<'row-fluid'<'span6'l><'span6'f>r>t<'row-fluid'<'span12'i><'span12 center'p>>",
-      #  sPaginationType: "bootstrap",
-      #  iDisplayLength: 100,
-      #  oLanguage:
-      #    sLengthMenu: "_MENU_ records per page"
+    <script type="text/javascript">
+      (function() {
+        $(function() {
+          $('.sparktristate').sparkline('html', {
+            type: 'tristate'
+          });
+          $('ul.nav li a').each(function() {
+            if ($($(this))[0].href === String(window.location)) {
+              return $(this).parent().addClass('active');
+            }
+          });
+          return $('[data-rel="chosen"],[rel="chosen"]').chosen({
+            width: '100%'
+          });
+        });
+      
+      }).call(this);
     </script>
   {% endcompress %}
   {% endblock js %}

@@ -38,6 +38,10 @@ class AlertPlugin(PolymorphicModel):
         return True
 
 
+    def __str__(self):
+        return self.name
+
+
 class AlertPluginUserData(PolymorphicModel):
     title = models.CharField(max_length=30, editable=False)
     user = models.ForeignKey('UserProfile', editable=False , on_delete=models.CASCADE)
@@ -50,6 +54,9 @@ class AlertPluginUserData(PolymorphicModel):
 
     def serialize(self):
         return {}
+
+    def __str__(self):
+        return self.name
 
 
 def send_alert(service, duty_officers=None):

@@ -1,15 +1,16 @@
 import logging
 import random
 
-from celery.task import task
+
 from django.conf import settings
 from django.utils import timezone
 from datetime import timedelta
+from ..celery import app
 
 logger = logging.getLogger(__name__)
 
 
-@task(ignore_result=True)
+@app.task(ignote_result=True)
 def run_status_check(check_or_id):
     from .models import StatusCheck
     if not isinstance(check_or_id, StatusCheck):
@@ -20,28 +21,30 @@ def run_status_check(check_or_id):
     check.run()
 
 
-@task(ignore_result=True)
+@app.task(ignote_result=True)
 def run_all_checks():
     from .models import StatusCheck
     from datetime import timedelta
     checks = StatusCheck.objects.all()
-    seconds = range(60)
-    for check in checks:
+    for check in checks:       
         if check.last_run:
             next_schedule = check.last_run + timedelta(minutes=check.frequency)
+
         if (not check.last_run) or timezone.now() > next_schedule:
-            delay = random.choice(seconds)
-            logger.debug('Scheduling task for %s seconds from now' % delay)
-            run_status_check.apply_async((check.id,), countdown=delay)
+            #delay = random.choice(seconds)
+            #logger.debug('Scheduling task for %s seconds from now' % delay)
+            #run_status_check.apply_async((check.id,), countdown=delay)
+            run_status_check(check.id)
+
+        
 
 
-@task(ignore_result=True)
+@app.task(ignote_result=True)
 def update_services(ignore_result=True):
     # Avoid importerrors and the like from legacy scheduling
     return
 
 
-@task(ignore_result=True)
 def update_service(service_or_id):
     from .models import Service
     if not isinstance(service_or_id, Service):
@@ -51,7 +54,8 @@ def update_service(service_or_id):
     service.update_status()
 
 
-@task(ignore_result=True)
+
+@app.task(ignote_result=True)
 def update_instance(instance_or_id):
     from .models import Instance
     if not isinstance(instance_or_id, Instance):
@@ -61,13 +65,13 @@ def update_instance(instance_or_id):
     instance.update_status()
 
 
-@task(ignore_result=True)
+@app.task(ignote_result=True)
 def update_shifts():
     from .models import update_shifts as _update_shifts
     _update_shifts()
 
 
-@task(ignore_result=True)
+@app.task(ignote_result=True)
 def clean_db(days_to_retain=7, batch_size=10000):
     """
     Clean up database otherwise it gets overwhelmed with StatusCheckResults.
@@ -106,3 +110,5 @@ def clean_db(days_to_retain=7, batch_size=10000):
             'days_to_retain': days_to_retain,
             'batch_size': batch_size},
             countdown=3)
+
+

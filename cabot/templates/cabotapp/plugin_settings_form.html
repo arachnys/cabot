@@ -61,22 +61,31 @@
 {% block js %}
 {{ block.super }}
 {% compress js %}
-<script type="text/coffeescript">
-  $("#alert-test-submit").click ->
-    $form = $(this).closest("form")
-
-    $(this).button("loading")
-
-    $.ajax
-      url: $form[0].action
-      type: "POST"
-      data: $form.serialize()
-      success: =>
-        $(this).button("success")
-      error: =>
-        $(this).button("error")
-
-    return false
+<script type="text/javascript">
+  (function() {
+    $("#alert-test-submit").click(function() {
+      var $form;
+      $form = $(this).closest("form");
+      $(this).button("loading");
+      $.ajax({
+        url: $form[0].action,
+        type: "POST",
+        data: $form.serialize(),
+        success: (function(_this) {
+          return function() {
+            return $(_this).button("success");
+          };
+        })(this),
+        error: (function(_this) {
+          return function() {
+            return $(_this).button("error");
+          };
+        })(this)
+      });
+      return false;
+    });
+  
+  }).call(this);
 
 </script>
 {% endcompress %}

@@ -21,7 +21,7 @@ WWW_SCHEME = os.environ.get('WWW_SCHEME', "https")
 HTTP_USER_AGENT = os.environ.get('HTTP_USER_AGENT', 'Cabot')
 
 # How often should alerts be sent for important failures?
-ALERT_INTERVAL = int(os.environ.get('ALERT_INTERVAL', 10))
+ALERT_INTERVAL = int(os.environ.get('ALERT_INTERVAL', 1))
 
 # How often should notifications be sent for less important issues?
 NOTIFICATION_INTERVAL = int(os.environ.get('NOTIFICATION_INTERVAL', 120))
@@ -31,4 +31,4 @@ ACKNOWLEDGEMENT_EXPIRY = int(os.environ.get('ACKNOWLEDGEMENT_EXPIRY', 20))
 
 # Default plugins are used if the user has not specified.
 #CABOT_PLUGINS_ENABLED = os.environ.get('CABOT_PLUGINS_ENABLED', 'cabot_alert_hipchat,cabot_alert_twilio,cabot_alert_email')
-CABOT_PLUGINS_ENABLED = os.environ.get('CABOT_PLUGINS_ENABLED', 'cabot_alert_email')
+CABOT_PLUGINS_ENABLED = os.environ.get('CABOT_PLUGINS_ENABLED')

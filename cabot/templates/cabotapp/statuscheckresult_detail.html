@@ -45,25 +45,47 @@ try {
 </script>
 {% compress js %}
 <script type="text/javascript" src="{% static 'arachnys/js/raphael.js' %}"></script>
-<script type="text/coffeescript">
-kvs = []
-labels = []
-for series in window.DATA
-  label = series.target
-  labels.push label
-  for point in series.datapoints
-    tmp = {}
-    tmp['time'] = point[1]*1000
-    tmp[label] = point[0]
-    kvs.push tmp
-
-Morris.Line
-  element: 'graph'
-  data: kvs
-  xkey: 'time'
-  ykeys: labels
-  labels: (label[0..20] for label in labels)
-  hideHover: true
+<script type="text/javascript">
+  (function() {
+    var kvs, label, labels, point, series, tmp, _i, _j, _len, _len1, _ref, _ref1;
+  
+    kvs = [];
+  
+    labels = [];
+  
+    _ref = window.DATA;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      series = _ref[_i];
+      label = series.target;
+      labels.push(label);
+      _ref1 = series.datapoints;
+      for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+        point = _ref1[_j];
+        tmp = {};
+        tmp['time'] = point[1] * 1000;
+        tmp[label] = point[0];
+        kvs.push(tmp);
+      }
+    }
+  
+    Morris.Line({
+      element: 'graph',
+      data: kvs,
+      xkey: 'time',
+      ykeys: labels,
+      labels: (function() {
+        var _k, _len2, _results;
+        _results = [];
+        for (_k = 0, _len2 = labels.length; _k < _len2; _k++) {
+          label = labels[_k];
+          _results.push(label.slice(0, 21));
+        }
+        return _results;
+      })(),
+      hideHover: true
+    });
+  
+  }).call(this);
 </script>
 {% endcompress %}
 {% endblock js %}

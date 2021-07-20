@@ -3,10 +3,13 @@ from polymorphic.admin import (PolymorphicChildModelAdmin,
                                PolymorphicParentModelAdmin)
 
 from .alert import AlertPlugin, AlertPluginUserData
-from .models import (AlertAcknowledgement, Instance, JenkinsConfig, Service,
-                     ServiceStatusSnapshot, Shift, StatusCheck,
-                     StatusCheckResult, UserProfile)
+from .models.base import (AlertAcknowledgement, Instance, Service,
+                        ServiceStatusSnapshot, Shift,UserProfile,
+                        StatusCheckResult,StatusCheck
+                        )
 
+                    
+#from .plugins.jenkins_check_plugin import (JenkinsConfig)
 
 class StatusCheckAdmin(PolymorphicParentModelAdmin):
     base_model = StatusCheck
@@ -30,4 +33,3 @@ admin.site.register(Instance)
 admin.site.register(AlertPlugin)
 admin.site.register(AlertPluginUserData)
 admin.site.register(AlertAcknowledgement)
-admin.site.register(JenkinsConfig)

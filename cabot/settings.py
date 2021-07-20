@@ -5,11 +5,12 @@ from django.conf import settings
 from django.urls import reverse_lazy
 from cabot.settings_utils import environ_get_list, force_bool
 from cabot.cabot_config import *
-
 settings_dir = os.path.dirname(__file__)
 PROJECT_ROOT = os.path.abspath(settings_dir)
 
-DEBUG = force_bool(os.environ.get('DEBUG', True))
+import redis
+
+DEBUG = os.environ.get('DEBUG')
 
 ADMINS = (
     ('Admin', os.environ.get('ADMIN_EMAIL', 'name@example.com')),
@@ -20,16 +21,14 @@ MANAGERS = ADMINS
 if os.environ.get('CABOT_FROM_EMAIL'):
     DEFAULT_FROM_EMAIL = os.environ['CABOT_FROM_EMAIL']
 
-#DATABASES = {'default': dj_database_url.config()}
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'cabot',
-        'USER': 'root',
-        'PASSWORD': 'root',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': os.environ.get('DATABASE_NAME'),
+        'USER': os.environ.get('DATABASE_USER'),
+        'PASSWORD': os.environ.get('DATABASE_PASSWORD'),
+        'HOST': os.environ.get('DATABASE_HOST'),
+        'PORT': os.environ.get('DATABASE_PORT'),
     }
 }
 
@@ -51,8 +50,7 @@ ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 # timezone as the operating system.
 # If running in a Windows environment this must be set to the same as your
 # system time zone.
-TIME_ZONE = os.environ.get('TIME_ZONE', 'Etc/UTC')
-
+TIME_ZONE = os.environ.get('TIME_ZONE')
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
 LANGUAGE_CODE = 'en-us'
@@ -161,25 +159,33 @@ INSTALLED_APPS = (
     'dal_select2',
     'django.contrib.admin',
     'bootstrapform',
+    'django_celery_beat', 
 )
 
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL')
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND')
+CELERY_BEAT_SCHEDULER = os.environ.get('CELERY_BEAT_SCHEDULER')
+
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
+timezone = os.environ.get('TIME_ZONE')
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 AUTH_USER_MODEL = 'auth.User'
 
 # Load additional apps from configuration file
 CABOT_PLUGINS_ENABLED_PARSED = []
+#CABOT_PLUGINS_ENABLED = os.environ.get('CABOT_PLUGINS_ENABLED')
+
 for plugin in CABOT_PLUGINS_ENABLED.split(","):
     # Hack to clean up if versions of plugins specified
     exploded = re.split(r'[<>=]+', plugin)
     CABOT_PLUGINS_ENABLED_PARSED.append(exploded[0])
 
+
+
 INSTALLED_APPS += tuple(CABOT_PLUGINS_ENABLED_PARSED)
 
-COMPRESS_PRECOMPILERS = (
-    ('text/coffeescript', 'coffeecompressorcompiler.filter.CoffeeScriptCompiler'),
-    ('text/eco',
-     'eco -i TEMPLATES {infile} && cat "$(echo "{infile}" | sed -e "s/\.eco$/.js/g")"'),
-    ('text/less', '/usr/bin/less {infile} > {outfile}'),
-)
 
 # For the email settings we both accept old and new names
 EMAIL_HOST = environ_get_list(['EMAIL_HOST', 'SES_HOST'], 'localhost')
@@ -247,7 +253,7 @@ LOGGING = {
             'propagate': True,
         },
         'django.request': {
-            'handlers': ['console', 'log_file', 'mail_admins'],
+            'handlers': ['console', 'log_file'],
             'level': 'ERROR',
             'propagate': False,
         },
@@ -325,3 +331,5 @@ if AUTH_GOOGLE_OAUTH2:
 EXPOSE_USER_API = force_bool(os.environ.get('EXPOSE_USER_API', False))
 ENABLE_SUBSCRIPTION = force_bool(os.environ.get('ENABLE_SUBSCRIPTION', True))
 ENABLE_DUTY_ROTA = force_bool(os.environ.get('ENABLE_DUTY_ROTA', True))
+
+

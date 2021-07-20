@@ -269,16 +269,7 @@ class Migration(migrations.Migration):
             },
             bases=('cabotapp.statuscheck',),
         ),
-        migrations.CreateModel(
-            name='HttpStatusCheck',
-            fields=[
-            ],
-            options={
-                'abstract': False,
-                'proxy': True,
-            },
-            bases=('cabotapp.statuscheck',),
-        ),
+
         migrations.CreateModel(
             name='ICMPStatusCheck',
             fields=[

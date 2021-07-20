@@ -4,12 +4,7 @@ from django.conf import settings
 from requests.api import request
 from cabot.cabotapp.views import (
     about, run_status_check, graphite_api_data, checks_run_recently,
-    duplicate_icmp_check, duplicate_graphite_check, duplicate_http_check, duplicate_jenkins_check,
     duplicate_instance, acknowledge_alert, remove_acknowledgement,
-    GraphiteCheckCreateView, GraphiteCheckUpdateView,
-    HttpCheckCreateView, HttpCheckUpdateView,
-    ICMPCheckCreateView, ICMPCheckUpdateView,
-    JenkinsCheckCreateView, JenkinsCheckUpdateView,
     StatusCheckDeleteView, StatusCheckListView, StatusCheckDetailView,
     StatusCheckResultDetailView, StatusCheckReportView, UserProfileUpdateAlert,
     PluginSettingsView, AlertTestView, AlertTestPluginView, SetupView, OnCallView)
@@ -50,7 +45,7 @@ def first_time_setup_wrapper(func):
 def home_authentication_switcher(request, *args, **kwargs):
     if cabot_needs_setup():
         return redirect('first_time_setup')
-    if not request.user.is_authenticated():
+    if not request.user.is_authenticated:
         return ServicePublicListView.as_view()(request, *args, **kwargs)
     else:
         return ServiceListView.as_view()(request, *args, **kwargs)
@@ -67,12 +62,12 @@ urlpatterns = [
      url(r'^subscriptions/', view=subscriptions,
         name='subscriptions'),
      url(r'^accounts/login/', view=LoginView.as_view(), name='login'),
-     url(r'^accounts/logout/', LogoutView.as_view(), name='logout'),
+     url(r'^accounts/logout/', view=LogoutView.as_view(), name='logout'),
      url(r'^setup/', view=SetupView.as_view(), name='first_time_setup'),
      url(r'^accounts/password-reset/',
-        view=PasswordResetView, name='password-reset'),
+        view=PasswordResetView.as_view(), name='password-reset'),
      url(r'^accounts/password-reset-done/',
-        view=PasswordResetDoneView, name='password-reset-done'),
+        view=PasswordResetDoneView.as_view(), name='password-reset-done'),
      url(r'^accounts/password-reset-confirm/',
         view=PasswordResetConfirmView, name='password-reset-confirm'),
      url(r'^status/', view=checks_run_recently,
@@ -109,7 +104,6 @@ urlpatterns = [
         view=InstanceDeleteView.as_view(), name='delete-instance'),
      url(r'^instance/(?P<pk>\d+)/',
         view=InstanceDetailView.as_view(), name='instance'),
-
      url(r'^checks/$', view=StatusCheckListView.as_view(),
         name='checks'),
      url(r'^check/run/(?P<pk>\d+)/',
@@ -120,33 +114,6 @@ urlpatterns = [
         view=StatusCheckDetailView.as_view(), name='check'),
      url(r'^checks/report/$',
         view=StatusCheckReportView.as_view(), name='checks-report'),
-
-     url(r'^icmpcheck/create/', view=ICMPCheckCreateView.as_view(),
-        name='create-icmp-check'),
-     url(r'^icmpcheck/update/(?P<pk>\d+)/',
-        view=ICMPCheckUpdateView.as_view(), name='update-icmp-check'),
-     url(r'^icmpcheck/duplicate/(?P<pk>\d+)/',
-        view=duplicate_icmp_check, name='duplicate-icmp-check'),
-     url(r'^graphitecheck/create/',
-        view=GraphiteCheckCreateView.as_view(), name='create-graphite-check'),
-     url(r'^graphitecheck/update/(?P<pk>\d+)/',
-        view=GraphiteCheckUpdateView.as_view(), name='update-graphite-check'),
-     url(r'^graphitecheck/duplicate/(?P<pk>\d+)/',
-        view=duplicate_graphite_check, name='duplicate-graphite-check'),
-     url(r'^httpcheck/create/', view=HttpCheckCreateView.as_view(),
-        name='create-http-check'),
-     url(r'^httpcheck/update/(?P<pk>\d+)/',
-        view=HttpCheckUpdateView.as_view(), name='update-http-check'),
-     url(r'^httpcheck/duplicate/(?P<pk>\d+)/',
-        view=duplicate_http_check, name='duplicate-http-check'),
-     url(r'^jenkins_check/create/', view=JenkinsCheckCreateView.as_view(),
-        name='create-jenkins-check'),
-     url(r'^jenkins_check/update/(?P<pk>\d+)/',
-        view=JenkinsCheckUpdateView.as_view(), name='update-jenkins-check'),
-     url(r'^jenkins_check/duplicate/(?P<pk>\d+)/',
-        view=duplicate_jenkins_check,
-        name='duplicate-jenkins-check'),
-
      url(r'^result/(?P<pk>\d+)/',
         view=StatusCheckResultDetailView.as_view(), name='result'),
      url(r'^shifts/', view=ShiftListView.as_view(),
@@ -186,9 +153,8 @@ def append_plugin_urls():
             pass
         else:
             urlpatterns += [
-                url(r'^plugins/%s/' % plugin, include('%s.urls' % plugin))
+               url(r'^plugins/%s/' % plugin, include('%s.urls' % plugin))
             ]
-
 
 append_plugin_urls()
 
@@ -201,3 +167,6 @@ if settings.URL_PREFIX.strip('/'):
     urlpatterns = [
         url(r'^%s/' % settings.URL_PREFIX.strip('/'), include(urlpatterns))
     ]
+
+
+

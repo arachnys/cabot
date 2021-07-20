@@ -6,10 +6,16 @@ from datetime import timedelta
 from django.conf import settings
 from celery import Celery
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'cabot.settings')
+from .config import config_charge
+
+config_charge()
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE',
+                      'cabot.settings')
 
 app = Celery('cabot')
-app.config_from_object('cabot.celeryconfig')
+
+app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks()
 
 app.conf.beat_schedule = {
@@ -23,6 +29,6 @@ app.conf.beat_schedule = {
     },
     'clean-db': {
         'task': 'cabot.cabotapp.tasks.clean_db',
-        'schedule': timedelta(seconds=60 * 60 * 24),
+        'schedule': timedelta(seconds=120),
     },
 }

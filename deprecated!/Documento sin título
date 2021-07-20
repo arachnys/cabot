@@ -1,0 +1,35 @@
+  web:
+    build: .
+    extends:
+      file: docker-compose-base.yml
+      service: base
+    env_file:
+      - conf/development.env
+    command: python manage.py runserver 0.0.0.0:8000
+    ports:
+      - "8000:8000"
+    links:
+      - redis
+      - db
+
+  worker-beat:
+    extends:
+      file: docker-compose-base.yml
+      service: base
+    env_file:
+      - conf/development.env
+    command: celery -A cabot worker --beat --scheduler django --loglevel=info
+    environment:
+      - SKIP_INIT=1
+      - WAIT_FOR_MIGRATIONS=1
+    links:
+      - redis
+      - db
+   
+
+
+
+
+ENTRYPOINT ["./docker-entrypoint.sh"]
+
+

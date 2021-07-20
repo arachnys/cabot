@@ -3,7 +3,7 @@ import os
 from django.db import models
 
 from ..jenkins import get_job_status
-from .base import StatusCheck, StatusCheckResult
+from ..models import StatusCheck, StatusCheckResult
 
 
 class JenkinsStatusCheck(StatusCheck):
@@ -75,6 +75,9 @@ class JenkinsStatusCheck(StatusCheck):
           False if failing
         """
         last_result = recent_results[0]
+        if last_result.consecutive_failures == None:
+            return True
+               
         return last_result.consecutive_failures <= debounce
 
 
@@ -97,3 +100,40 @@ def create_default_jenkins_config():
                 jenkins_user=os.environ.get("JENKINS_USER", ""),
                 jenkins_pass=os.environ.get("JENKINS_PASS", ""),
             )
+
+
+
+
+
+class JenkinsStatusCheckForm(StatusCheckForm):
+    class Meta:
+        model = JenkinsStatusCheck
+        fields = (
+            'name',
+            'importance',
+            'debounce',
+            'max_queued_build_time',
+            'jenkins_config',
+        )
+        widgets = dict(**base_widgets)
+
+
+
+#views
+
+class JenkinsCheckCreateView(CheckCreateView):
+    model = JenkinsStatusCheck
+    form_class = JenkinsStatusCheckForm
+
+    def form_valid(self, form):
+        form.instance.frequency = 1
+        return super(JenkinsCheckCreateView, self).form_valid(form)
+
+
+class JenkinsCheckUpdateView(CheckUpdateView):
+    model = JenkinsStatusCheck
+    form_class = JenkinsStatusCheckForm
+
+    def form_valid(self, form):
+        form.instance.frequency = 1
+        return super(JenkinsCheckUpdateView, self).form_valid(form)
