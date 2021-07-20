@@ -1,10 +1,10 @@
-version: '2'
+version: '3'
 services:
   base:
     build: .
-    image: cabot:web
+    image: t_dk
     command: "false"
     volumes:
      - .:/code
     env_file:
-      - conf/default.env
+      - conf/development.env
