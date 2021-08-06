@@ -31,6 +31,9 @@ Jinja2==3.0.1
 kombu==5.1.0
 MarkupSafe==2.0.1
 prompt-toolkit==3.0.19
+mysqlclient
+postgres
+psycopg2
 psycopg2-binary==2.9.1
 python-crontab==2.5.1
 python-dateutil==2.8.2

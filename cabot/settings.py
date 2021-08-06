@@ -32,7 +32,7 @@ DATABASES = {
         'NAME': os.environ.get('DATABASE_NAME', 'cabot'),
         'USER': os.environ.get('DATABASE_USER', 'root'),
         'PASSWORD': os.environ.get('DATABASE_PASSWORD', 'root'),
-        'HOST': os.environ.get('DATABASE_HOST', '127.0.0.1'),
+        'HOST': os.environ.get('DATABASE_HOST', '172.26.0.2'),
         'PORT': os.environ.get('DATABASE_PORT', '5432'),
     }
 }
@@ -339,5 +339,3 @@ if AUTH_GOOGLE_OAUTH2:
 EXPOSE_USER_API = force_bool(os.environ.get('EXPOSE_USER_API', False))
 ENABLE_SUBSCRIPTION = force_bool(os.environ.get('ENABLE_SUBSCRIPTION', True))
 ENABLE_DUTY_ROTA = force_bool(os.environ.get('ENABLE_DUTY_ROTA', True))
-
-

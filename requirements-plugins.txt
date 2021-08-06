@@ -1,1 +1,4 @@
-/home/tomas/Escritorio/code/cabot/Plugins-Cabot/core
+git+https://github.com/senzil/cabot-alert-email.git
+git+https://github.com/senzil/cabot-check-http.git
+git+https://github.com/senzil/cabot-alert-slack.git
+git+https://github.com/senzil/cabot-check-network.git

@@ -41,6 +41,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 ########################################################
 FROM python:3.6-alpine AS runner-image
 
+RUN apk add --no-cache libpq
+
 RUN adduser -S cabot
 COPY --from=builder-image /home/cabot/venv /home/cabot/venv
 
@@ -48,8 +50,8 @@ USER cabot
 RUN mkdir /home/cabot/code
 WORKDIR /home/cabot/code
 
-COPY cabot .
-COPY manage.py ./cabot
+COPY ./cabot ./cabot
+COPY manage.py ./manage.py
 
 EXPOSE 8000
 
@@ -62,7 +64,8 @@ ENV PATH="/home/cabot/venv/bin:$PATH"
 
 # /dev/shm is mapped to shared memory and should be used for gunicorn heartbeat
 # this will improve performance and avoid random freezes
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+
+#CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 
 
-#ENTRYPOINT ["./docker-entrypoint.sh"]
+ENTRYPOINT ["docker-entrypoint.sh"]
