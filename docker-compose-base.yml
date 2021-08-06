@@ -2,9 +2,9 @@ version: '3'
 services:
   base:
     build: .
-    image: t_dk
+    image: cabot-image
     command: "false"
     volumes:
      - .:/code
     env_file:
-      - conf/development.env
+      - .env

@@ -6,12 +6,8 @@ from datetime import timedelta
 from django.conf import settings
 from celery import Celery
 
-from .config import config_charge
 
-config_charge()
-
-os.environ.setdefault('DJANGO_SETTINGS_MODULE',
-                      'cabot.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'cabot.settings')
 
 app = Celery('cabot')
 

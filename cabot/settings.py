@@ -1,16 +1,21 @@
 import os
-import dj_database_url
 import re
 from django.conf import settings
 from django.urls import reverse_lazy
 from cabot.settings_utils import environ_get_list, force_bool
 from cabot.cabot_config import *
+
+
 settings_dir = os.path.dirname(__file__)
 PROJECT_ROOT = os.path.abspath(settings_dir)
 
-import redis
+DEBUG = True
+if os.environ.get('DEBUG', True)=='True':
+    DEBUG=True
 
-DEBUG = os.environ.get('DEBUG')
+PROD = False
+if os.environ.get('PROD', True)=='True':
+    PROD=True
 
 ADMINS = (
     ('Admin', os.environ.get('ADMIN_EMAIL', 'name@example.com')),
@@ -19,16 +24,16 @@ ADMINS = (
 MANAGERS = ADMINS
 
 if os.environ.get('CABOT_FROM_EMAIL'):
-    DEFAULT_FROM_EMAIL = os.environ['CABOT_FROM_EMAIL']
+    DEFAULT_FROM_EMAIL = os.environ.get('CABOT_FROM_EMAIL', 'admin@example.com')
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ.get('DATABASE_NAME'),
-        'USER': os.environ.get('DATABASE_USER'),
-        'PASSWORD': os.environ.get('DATABASE_PASSWORD'),
-        'HOST': os.environ.get('DATABASE_HOST'),
-        'PORT': os.environ.get('DATABASE_PORT'),
+        'NAME': os.environ.get('DATABASE_NAME', 'cabot'),
+        'USER': os.environ.get('DATABASE_USER', 'root'),
+        'PASSWORD': os.environ.get('DATABASE_PASSWORD', 'root'),
+        'HOST': os.environ.get('DATABASE_HOST', '127.0.0.1'),
+        'PORT': os.environ.get('DATABASE_PORT', '5432'),
     }
 }
 
@@ -50,10 +55,10 @@ ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 # timezone as the operating system.
 # If running in a Windows environment this must be set to the same as your
 # system time zone.
-TIME_ZONE = os.environ.get('TIME_ZONE')
+TIME_ZONE = os.environ.get('TIME_ZONE','America/Argentina/Buenos_Aires')
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'es'
 
 SITE_ID = 1
 
@@ -101,7 +106,7 @@ STATICFILES_FINDERS = (
     'compressor.finders.CompressorFinder',
 )
 
-if os.environ.get('WWW_SCHEME') == 'https':
+if os.environ.get('WWW_SCHEME', 'http') == 'https':
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Make this unique, and don't share it with anybody.
@@ -162,25 +167,28 @@ INSTALLED_APPS = (
     'django_celery_beat', 
 )
 
-CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL')
-CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND')
-CELERY_BEAT_SCHEDULER = os.environ.get('CELERY_BEAT_SCHEDULER')
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://redis:6379')
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://redis:6379')
+CELERY_BEAT_SCHEDULER = os.environ.get('CELERY_BEAT_SCHEDULER', 'django_celery_beat.schedulers:DatabaseScheduler')
 
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
-timezone = os.environ.get('TIME_ZONE')
+timezone = os.environ.get('TIME_ZONE', 'America/Argentina/Buenos_Aires')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 AUTH_USER_MODEL = 'auth.User'
 
 # Load additional apps from configuration file
 CABOT_PLUGINS_ENABLED_PARSED = []
-#CABOT_PLUGINS_ENABLED = os.environ.get('CABOT_PLUGINS_ENABLED')
 
-for plugin in CABOT_PLUGINS_ENABLED.split(","):
-    # Hack to clean up if versions of plugins specified
-    exploded = re.split(r'[<>=]+', plugin)
-    CABOT_PLUGINS_ENABLED_PARSED.append(exploded[0])
+#You can add plugins in 'CABOT_PLUGINS' replace None by list with plugin names
+CABOT_PLUGINS = os.environ.get('CABOT_PLUGINS', None) 
+
+if CABOT_PLUGINS != None:
+    for plugin in CABOT_PLUGINS.split(","):
+        # Hack to clean up if versions of plugins specified
+        exploded = re.split(r'[<>=]+', plugin)
+        CABOT_PLUGINS_ENABLED_PARSED.append(exploded[0])
 
 
 

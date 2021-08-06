@@ -43,7 +43,7 @@ services:
       file: docker-compose-base.yml
       service: base
     env_file:
-      - conf/development.env
+      - .env
     command: python manage.py migrate
     command: python manage.py runserver 0.0.0.0:8000
     ports:
@@ -57,7 +57,7 @@ services:
       file: docker-compose-base.yml
       service: base
     env_file:
-      - conf/development.env
+      - .env
     command: celery -A cabot worker --beat --scheduler django --loglevel=info
     environment:
       - SKIP_INIT=1

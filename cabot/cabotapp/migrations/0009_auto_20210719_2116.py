@@ -7,7 +7,6 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('cabot_check_http', '0002_auto_20210719_2116'),
         ('cabotapp', '0008_auto_20210707_1645'),
     ]
 

@@ -1,6 +1,0 @@
-recursive-include cabot/.collectstatic *
-recursive-include cabot/templates *
-include requirements.txt
-include requirements-plugins.txt
-include requirements-dev.txt
-include README.md

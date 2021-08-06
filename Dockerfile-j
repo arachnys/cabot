@@ -1,25 +1,27 @@
-FROM python:3.6-alpine AS builder-image
+FROM python:3.6.5-slim-jessie AS builder-image
 
-RUN  apk update && apk add --no-cache \
-        postgresql-dev \
-        mariadb-dev \
-        py-pip \
-        postgresql-dev \
-        mariadb-dev \
-        gcc \
-        curl \
-        curl-dev \
-        libcurl \
-        musl-dev \
-        libffi-dev \
-        openldap-dev \
-        ca-certificates \
-        cargo \
-        build-base \
-        python3-dev \
-        musl-dev \
-        libevent-dev \
-        bash
+RUN apt-get update
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y \
+                    libmysqlclient-dev \
+                    build-essential \
+                    python3-dev \
+                    python2.7-dev \
+                    libldap2-dev \
+                    libsasl2-dev \
+                    slapd \
+                    ldap-utils \
+                    python-tox \
+                    lcov \
+                    valgrind\
+                    curl\
+                    python-dev \
+                    gcc \
+                    musl-dev \
+                    libffi-dev \
+                    ca-certificates \
+                    git\
+                    bash
+
 
 # create and activate virtual environment
 # using final folder name to avoid path issues with packages
@@ -39,17 +41,18 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 ########################################################
-FROM python:3.6-alpine AS runner-image
+FROM python:3.6.5-slim-jessie AS runner-image
 
-RUN adduser -S cabot
+RUN apt-get update && apt-get install  --no-install-recommends -y python3-venv && \
+apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN useradd --create-home cabot
 COPY --from=builder-image /home/cabot/venv /home/cabot/venv
 
 USER cabot
 RUN mkdir /home/cabot/code
 WORKDIR /home/cabot/code
-
-COPY cabot .
-COPY manage.py ./cabot
+COPY . .
 
 EXPOSE 8000
 
