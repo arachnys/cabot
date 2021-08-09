@@ -1,17 +1,14 @@
 version: '3'
 services:
   db:
-    container_name: cabot_pg
-    image: postgres:alpine
-    restart: always
-    environment:
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: root
-      POSTGRES_DB: test_db
+    image: mysql
     ports:
-      - "5432:5432"
-    volumes:
-      - datavolume:/var/lib/postgresql/data
+      - '3306:3306'
+    environment:
+      MYSQL_DATABASE: 'cabot'
+      MYSQL_ROOT_PASSWORD: 'root'
+      MYSQL_USER: 'cabot'
+      MYSQL_PASSWORD: 'cabot'
 
   redis:
     container_name: cabot_redis
@@ -21,14 +18,10 @@ services:
       - 6379:6379
 
   web:
-    build: .
     extends:
       file: docker-compose-base.yml
       service: base
-    env_file:
-      - .env
-
-    command: "python manage.py runserver 0.0.0.0:8000"
+    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
     ports:
       - "8000:8000"
     links:
@@ -39,8 +32,6 @@ services:
     extends:
       file: docker-compose-base.yml
       service: base
-    env_file:
-      - .env
     command: celery -A cabot worker --beat --scheduler django --loglevel=info
     environment:
       - SKIP_INIT=1

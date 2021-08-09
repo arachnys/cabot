@@ -6,6 +6,7 @@ RUN  apk update && apk add --no-cache \
         py-pip \
         postgresql-dev \
         mariadb-dev \
+        mysql-client \
         gcc \
         curl \
         curl-dev \
@@ -19,7 +20,8 @@ RUN  apk update && apk add --no-cache \
         python3-dev \
         musl-dev \
         libevent-dev \
-        bash
+        bash \
+        git
 
 # create and activate virtual environment
 # using final folder name to avoid path issues with packages
@@ -38,10 +40,14 @@ WORKDIR /code
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
+COPY requirements-plugins.txt ./
+RUN pip install --no-cache-dir  -force-reinstall -r requirements-plugins.txt
+
 ########################################################
 FROM python:3.6-alpine AS runner-image
 
-RUN apk add --no-cache libpq
+RUN apk add --no-cache libpq \
+        mariadb-connector-c-dev 
 
 RUN adduser -S cabot
 COPY --from=builder-image /home/cabot/venv /home/cabot/venv
@@ -52,6 +58,7 @@ WORKDIR /home/cabot/code
 
 COPY ./cabot ./cabot
 COPY manage.py ./manage.py
+COPY docker-entrypoint.sh ./docker-entrypoint.sh
 
 EXPOSE 8000
 
@@ -68,4 +75,4 @@ ENV PATH="/home/cabot/venv/bin:$PATH"
 #CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 
 
-ENTRYPOINT ["docker-entrypoint.sh"]
+ENTRYPOINT ["sh","docker-entrypoint.sh"]

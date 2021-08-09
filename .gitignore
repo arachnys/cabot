@@ -2,12 +2,10 @@
 dev.db
 venv/*
 backups/*
-static/
 cabot/.collectstatic/
 node_modules/*
 .python-eggs/*
 cabot.egg-info
-cabot/static/
 .env
 .DS_Store
 celerybeat-schedule
@@ -20,6 +18,7 @@ dist/
 local_config.yml
 build/
 .dockerignore
+docker.env
 .idea
 Pipfile.lock
 .tox/
@@ -127,6 +126,7 @@ __pypackages__/
 # Celery stuff
 celerybeat-schedule
 celerybeat.pid
+.vscode
 
 # SageMath parsed files
 *.sage.py
@@ -166,8 +166,4 @@ cython_debug/
 
 # End of https://www.toptal.com/developers/gitignore/api/python
 
-Dockerfile
-requirements-plugins.txt
-requirements-dev.txt
-setup.py
-Dockerfile copy
+
