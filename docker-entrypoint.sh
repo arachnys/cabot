@@ -34,10 +34,6 @@ function wait_for_migrations {
 wait_for_broker
 wait_for_database
 
-if [ -z "$SKIP_INIT" ]; then
-  /code/bin/build-app
-fi
-
 if [ -n "$WAIT_FOR_MIGRATIONS" ]; then
   wait_for_migrations
 fi
