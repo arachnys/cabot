@@ -4,18 +4,18 @@ from django.conf import settings
 from django.urls import reverse_lazy
 from cabot.settings_utils import environ_get_list, force_bool
 from cabot.cabot_config import *
+import environ
 
+# reading .env file
+environ.Env.read_env()
 
 settings_dir = os.path.dirname(__file__)
 PROJECT_ROOT = os.path.abspath(settings_dir)
+ 
+DEBUG=os.environ.get('DEBUG', False)
 
-DEBUG = True
-if os.environ.get('DEBUG', True)=='True':
-    DEBUG=True
+PROD=os.environ.get('PROD', False)
 
-PROD = False
-if os.environ.get('PROD', True)=='True':
-    PROD=True
 
 ADMINS = (
     ('Admin', os.environ.get('ADMIN_EMAIL', 'name@example.com')),
@@ -28,12 +28,12 @@ if os.environ.get('CABOT_FROM_EMAIL'):
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'ENGINE': 'django.db.backends.mysql',
         'NAME': os.environ.get('DATABASE_NAME', 'cabot'),
         'USER': os.environ.get('DATABASE_USER', 'root'),
         'PASSWORD': os.environ.get('DATABASE_PASSWORD', 'root'),
-        'HOST': os.environ.get('DATABASE_HOST', '172.26.0.2'),
-        'PORT': os.environ.get('DATABASE_PORT', '5432'),
+        'HOST': os.environ.get('DATABASE_HOST', '127.0.0.1'),
+        'PORT': os.environ.get('DATABASE_PORT', '3306'),
     }
 }
 

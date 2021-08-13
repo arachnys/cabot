@@ -1,6 +1,0 @@
-coverage==5.5
-django-coverage-plugin==2.0.0
-freezegun==1.1.0
-mock==4.0.3
-ipdb==0.13.9
-isort==5.9.1
