@@ -2,7 +2,7 @@ import subprocess
 
 from mock import patch
 
-from cabot.cabotapp.models import (
+from cabot3.cabotapp.models import (
     ICMPStatusCheck,
     Instance,
     Service,
@@ -26,7 +26,7 @@ class TestICMPCheckRun(LocalTestCase):
         self.instance.status_checks.add(
             self.icmp_check)
 
-        self.patch = patch('cabot.cabotapp.models.subprocess.check_output', autospec=True)
+        self.patch = patch('cabot3.cabotapp.models.subprocess.check_output', autospec=True)
         self.mock_check_output = self.patch.start()
 
     def tearDown(self):

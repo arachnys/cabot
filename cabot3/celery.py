@@ -7,7 +7,7 @@ from django.conf import settings
 from celery import Celery
 
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'cabot.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'cabot3.settings')
 
 app = Celery('cabot')
 
@@ -16,15 +16,15 @@ app.autodiscover_tasks()
 
 app.conf.beat_schedule = {
     'run-all-checks': {
-        'task': 'cabot.cabotapp.tasks.run_all_checks',
+        'task': 'cabot3.cabotapp.tasks.run_all_checks',
         'schedule': timedelta(seconds=60),
     },
     'update-shifts': {
-        'task': 'cabot.cabotapp.tasks.update_shifts',
+        'task': 'cabot3.cabotapp.tasks.update_shifts',
         'schedule': timedelta(seconds=1800),
     },
     'clean-db': {
-        'task': 'cabot.cabotapp.tasks.clean_db',
+        'task': 'cabot3.cabotapp.tasks.clean_db',
         'schedule': timedelta(seconds=120),
     },
 }

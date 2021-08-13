@@ -2,8 +2,8 @@ import os
 import re
 from django.conf import settings
 from django.urls import reverse_lazy
-from cabot.settings_utils import environ_get_list, force_bool
-from cabot.cabot_config import *
+from cabot3.settings_utils import environ_get_list, force_bool
+from cabot3.cabot_config import *
 import environ
 
 # reading .env file
@@ -126,7 +126,7 @@ TEMPLATES = [{
             'django.template.context_processors.request',
             'django.contrib.auth.context_processors.auth',
             'django.contrib.messages.context_processors.messages',
-            'cabot.context_processors.global_settings',
+            'cabot3.context_processors.global_settings',
         ],
         'debug': force_bool(os.environ.get('TEMPLATE_DEBUG', False))
     },
@@ -144,7 +144,7 @@ MIDDLEWARE = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
-ROOT_URLCONF = 'cabot.urls'
+ROOT_URLCONF = 'cabot3.urls'
 INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -158,7 +158,7 @@ INSTALLED_APPS = (
     'compressor',
     'polymorphic',
     'jsonify',
-    'cabot.cabotapp',
+    'cabot3.cabotapp',
     'rest_framework',
     'dal',
     'dal_select2',

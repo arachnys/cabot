@@ -5,8 +5,8 @@ from django.test import TestCase
 
 from mock import patch
 
-from cabot.cabotapp.alert import AlertPlugin
-from cabot.cabotapp.models import Service
+from cabot3.cabotapp.alert import AlertPlugin
+from cabot3.cabotapp.models import Service
 
 
 class PluginSettingsTest(TestCase):
@@ -35,7 +35,7 @@ class PluginSettingsTest(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertIn('Updated Successfully', resp.content)
 
-    @patch('cabot.cabotapp.alert.AlertPlugin._send_alert')
+    @patch('cabot3.cabotapp.alert.AlertPlugin._send_alert')
     def test_plugin_alert_test(self, fake_send_alert):
         plugin = AlertPlugin.objects.first()
 
@@ -44,7 +44,7 @@ class PluginSettingsTest(TestCase):
         self.assertIn('ok', resp.content)
         fake_send_alert.assert_called()
 
-    @patch('cabot.cabotapp.alert.AlertPlugin._send_alert')
+    @patch('cabot3.cabotapp.alert.AlertPlugin._send_alert')
     def test_global_alert_test(self, fake_send_alert):
         service = Service.objects.create(
             name='Service',

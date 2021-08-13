@@ -25,8 +25,8 @@ RUN  apk update && apk add --no-cache \
 
 # create and activate virtual environment
 # using final folder name to avoid path issues with packages
-RUN python3 -m venv /home/cabot/venv
-ENV PATH="/home/cabot/venv/bin:$PATH"
+RUN python3 -m venv /home/cabot3/venv
+ENV PATH="/home/cabot3/venv/bin:$PATH"
 
 
 ENV PYTHONUNBUFFERED 1
@@ -50,13 +50,13 @@ RUN apk add --no-cache libpq \
         mariadb-connector-c-dev 
 
 RUN adduser -S cabot
-COPY --from=builder-image /home/cabot/venv /home/cabot/venv
+COPY --from=builder-image /home/cabot3/venv /home/cabot3/venv
 
 USER cabot
-RUN mkdir /home/cabot/code
-WORKDIR /home/cabot/code
+RUN mkdir /home/cabot3/code
+WORKDIR /home/cabot3/code
 
-COPY ./cabot ./cabot
+COPY ./cabot3 ./cabot3
 COPY manage.py ./manage.py
 COPY docker-entrypoint.sh ./docker-entrypoint.sh
 
@@ -66,8 +66,8 @@ EXPOSE 8000
 ENV PYTHONUNBUFFERED=1
 
 # activate virtual environment
-ENV VIRTUAL_ENV=/home/cabot/venv
-ENV PATH="/home/cabot/venv/bin:$PATH"
+ENV VIRTUAL_ENV=/home/cabot3/venv
+ENV PATH="/home/cabot3/venv/bin:$PATH"
 
 # /dev/shm is mapped to shared memory and should be used for gunicorn heartbeat
 # this will improve performance and avoid random freezes

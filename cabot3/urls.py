@@ -2,22 +2,22 @@ from django.conf.urls import include, url
 from django.urls import path
 from django.conf import settings
 from requests.api import request
-from cabot.cabotapp.views import (
+from cabot3.cabotapp.views import (
     about, run_status_check, graphite_api_data, checks_run_recently,
     duplicate_instance, acknowledge_alert, remove_acknowledgement,
     StatusCheckDeleteView, StatusCheckListView, StatusCheckDetailView,
     StatusCheckResultDetailView, StatusCheckReportView, UserProfileUpdateAlert,
     PluginSettingsView, AlertTestView, AlertTestPluginView, SetupView, OnCallView)
 
-from cabot.cabotapp.views import (InstanceListView, InstanceDetailView,
+from cabot3.cabotapp.views import (InstanceListView, InstanceDetailView,
     InstanceUpdateView, InstanceCreateView, InstanceDeleteView,
     ServiceListView, ServicePublicListView, ServiceDetailView,
     ServiceUpdateView, ServiceCreateView, ServiceDeleteView,
     UserProfileUpdateView, ShiftListView, subscriptions)
 
-from cabot.cabotapp.utils import cabot_needs_setup
+from cabot3.cabotapp.utils import cabot_needs_setup
 
-from cabot import rest_urls
+from cabot3 import rest_urls
 from rest_framework.documentation import include_docs_urls
 
 from django.contrib import admin

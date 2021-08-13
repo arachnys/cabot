@@ -7,16 +7,16 @@ from datetime import timedelta, date
 
 import os
 import requests
-from cabot.cabotapp.graphite import parse_metric
-from cabot.cabotapp.alert import update_alert_plugins, AlertPlugin
-from cabot.cabotapp.models import (
+from cabot3.cabotapp.graphite import parse_metric
+from cabot3.cabotapp.alert import update_alert_plugins, AlertPlugin
+from cabot3.cabotapp.models import (
     GraphiteStatusCheck, JenkinsStatusCheck, JenkinsConfig,
     HttpStatusCheck, ICMPStatusCheck, Service, Instance,
     StatusCheckResult, minimize_targets, ServiceStatusSnapshot,
     get_custom_check_plugins, create_default_jenkins_config)
-from cabot.cabotapp.calendar import get_events
-from cabot.cabotapp.views import StatusCheckReportForm
-from cabot.cabotapp import tasks
+from cabot3.cabotapp.calendar import get_events
+from cabot3.cabotapp.views import StatusCheckReportForm
+from cabot3.cabotapp import tasks
 from django.conf import settings
 from django.contrib.auth.models import Permission
 from django.contrib.auth.models import User
@@ -269,8 +269,8 @@ class TestCheckRun(LocalTestCase):
         self.service.update_status()
         self.assertEqual(self.service.overall_status, Service.PASSING_STATUS)
 
-    @patch('cabot.cabotapp.alert.AlertPlugin._send_alert')
-    @patch('cabot.cabotapp.alert.AlertPlugin._send_alert_update')
+    @patch('cabot3.cabotapp.alert.AlertPlugin._send_alert')
+    @patch('cabot3.cabotapp.alert.AlertPlugin._send_alert_update')
     @freeze_time('2017-03-02 10:30:43.714759')
     def test_alert_acknowledgement(self, fake_send_alert_update, fake_send_alert):
         self.assertEqual(self.service.overall_status, Service.PASSING_STATUS)
@@ -305,7 +305,7 @@ class TestCheckRun(LocalTestCase):
             self.assertEqual(self.service.unexpired_acknowledgement().user, self.user)
             fake_send_alert_update.assert_called()
 
-    @patch('cabot.cabotapp.graphite.requests.get', fake_graphite_response)
+    @patch('cabot3.cabotapp.graphite.requests.get', fake_graphite_response)
     def test_graphite_run(self):
         checkresults = self.graphite_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 2)
@@ -357,7 +357,7 @@ class TestCheckRun(LocalTestCase):
         result = checkresults.order_by('-time')[0]
         self.assertEqual(result.error, u'PROD: 9.16092 > 9.0')
 
-    @patch('cabot.cabotapp.graphite.requests.get')
+    @patch('cabot3.cabotapp.graphite.requests.get')
     def test_graphite_series_run_exception(self, fake_graphite_series_response):
         fake_graphite_series_response.side_effect = requests.exceptions.RequestException("some error")
         jsn = parse_metric('fake.pattern', utcnow=1387818601)
@@ -370,14 +370,14 @@ class TestCheckRun(LocalTestCase):
         }
         self.assertEqual(jsn, expected)
 
-    @patch('cabot.cabotapp.graphite.requests.get', fake_graphite_series_response)
+    @patch('cabot3.cabotapp.graphite.requests.get', fake_graphite_series_response)
     def test_graphite_series_run(self):
         jsn = parse_metric('fake.pattern', utcnow=1387818601)
         self.assertLess(abs(jsn['average_value']-53.26), 0.1)
         self.assertEqual(jsn['series'][0]['max'], 151.0)
         self.assertEqual(jsn['series'][0]['min'], 0.1)
 
-    @patch('cabot.cabotapp.graphite.requests.get', fake_empty_graphite_response)
+    @patch('cabot3.cabotapp.graphite.requests.get', fake_empty_graphite_response)
     def test_graphite_empty_run(self):
         checkresults = self.graphite_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 2)
@@ -396,7 +396,7 @@ class TestCheckRun(LocalTestCase):
         self.assertEqual(self.graphite_check.calculated_status,
                          Service.CALCULATED_FAILING_STATUS)
 
-    @patch('cabot.cabotapp.graphite.requests.get', fake_slow_graphite_response)
+    @patch('cabot3.cabotapp.graphite.requests.get', fake_slow_graphite_response)
     def test_graphite_timing(self):
         checkresults = self.graphite_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 2)
@@ -406,7 +406,7 @@ class TestCheckRun(LocalTestCase):
         self.assertTrue(self.graphite_check.last_result().succeeded)
         self.assertGreater(list(checkresults)[-1].took, 0.0)
 
-    @patch('cabot.cabotapp.models.jenkins_check_plugin.get_job_status')
+    @patch('cabot3.cabotapp.models.jenkins_check_plugin.get_job_status')
     def test_jenkins_run(self, mock_get_job_status):
         mock_get_job_status.return_value = fake_jenkins_response()
         checkresults = self.jenkins_check.statuscheckresult_set.all()
@@ -416,7 +416,7 @@ class TestCheckRun(LocalTestCase):
         self.assertEqual(len(checkresults), 1)
         self.assertFalse(self.jenkins_check.last_result().succeeded)
 
-    @patch('cabot.cabotapp.models.jenkins_check_plugin.get_job_status')
+    @patch('cabot3.cabotapp.models.jenkins_check_plugin.get_job_status')
     def test_jenkins_blocked_build(self, mock_get_job_status):
         mock_get_job_status.return_value = jenkins_blocked_response()
         checkresults = self.jenkins_check.statuscheckresult_set.all()
@@ -426,7 +426,7 @@ class TestCheckRun(LocalTestCase):
         self.assertEqual(len(checkresults), 1)
         self.assertFalse(self.jenkins_check.last_result().succeeded)
 
-    @patch('cabot.cabotapp.models.jenkins_check_plugin.get_job_status', throws_timeout)
+    @patch('cabot3.cabotapp.models.jenkins_check_plugin.get_job_status', throws_timeout)
     def test_timeout_handling_in_jenkins(self):
         """This works because we are effectively patching requests.get globally, including in jenkinsapi."""
         checkresults = self.jenkins_check.statuscheckresult_set.all()
@@ -438,7 +438,7 @@ class TestCheckRun(LocalTestCase):
         self.assertIn(u'Error fetching from Jenkins - фиктивная ошибка',
                       self.jenkins_check.last_result().error)
 
-    @patch('cabot.cabotapp.models.requests.get', fake_http_200_response)
+    @patch('cabot3.cabotapp.models.requests.get', fake_http_200_response)
     def test_http_run(self):
         checkresults = self.http_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 0)
@@ -464,7 +464,7 @@ class TestCheckRun(LocalTestCase):
         self.assertIn(u'Failed to find match regex',
             self.http_check.last_result().error)
 
-    @patch('cabot.cabotapp.models.requests.get', throws_timeout)
+    @patch('cabot3.cabotapp.models.requests.get', throws_timeout)
     def test_timeout_handling_in_http(self):
         checkresults = self.http_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 0)
@@ -475,7 +475,7 @@ class TestCheckRun(LocalTestCase):
         self.assertIn(u'Request error occurred: фиктивная ошибка innit',
                       self.http_check.last_result().error)
 
-    @patch('cabot.cabotapp.models.requests.get', fake_http_404_response)
+    @patch('cabot3.cabotapp.models.requests.get', fake_http_404_response)
     def test_http_run_bad_resp(self):
         checkresults = self.http_check.statuscheckresult_set.all()
         self.assertEqual(len(checkresults), 0)
@@ -513,12 +513,12 @@ class TestInstances(LocalTestCase):
 
 class TestDutyRota(LocalTestCase):
 
-    @patch('cabot.cabotapp.models.requests.get', fake_gcal_response)
+    @patch('cabot3.cabotapp.models.requests.get', fake_gcal_response)
     def test_duty_rota(self):
         events = get_events()
         self.assertEqual(events[0]['summary'], 'troels')
 
-    @patch('cabot.cabotapp.models.requests.get', fake_recurring_response)
+    @patch('cabot3.cabotapp.models.requests.get', fake_recurring_response)
     def test_duty_rota_recurring(self):
         events = get_events()
         events.sort(key=lambda ev: ev['start'])
@@ -531,7 +531,7 @@ class TestDutyRota(LocalTestCase):
             else:
                 curr_summ = 'foo'
 
-    @patch('cabot.cabotapp.models.requests.get', fake_recurring_response_notz)
+    @patch('cabot3.cabotapp.models.requests.get', fake_recurring_response_notz)
     def test_duty_rota_recurring_notz(self):
         events = get_events()
         events.sort(key=lambda ev: ev['start'])
@@ -544,7 +544,7 @@ class TestDutyRota(LocalTestCase):
             else:
                 curr_summ = 'foo'
 
-    @patch('cabot.cabotapp.models.requests.get',
+    @patch('cabot3.cabotapp.models.requests.get',
            fake_recurring_response_complex)
     def test_duty_rota_recurring_complex(self):
         events = get_events()
@@ -1098,7 +1098,7 @@ class TestAlerts(LocalTestCase):
         self.assertEqual(self.service.users_to_notify.all().count(), 1)
         self.assertEqual(self.service.users_to_notify.get().username, self.user.username)
 
-    @patch('cabot.cabotapp.alert.AlertPlugin._send_alert')
+    @patch('cabot3.cabotapp.alert.AlertPlugin._send_alert')
     def test_alert(self, fake_send_alert):
         self.service.alert()
         self.assertEqual(fake_send_alert.call_count, 1)
@@ -1115,7 +1115,7 @@ class TestAlerts(LocalTestCase):
         check.last_run = timezone.now()
         check.save()
 
-    @patch('cabot.cabotapp.alert.AlertPlugin._send_alert')
+    @patch('cabot3.cabotapp.alert.AlertPlugin._send_alert')
     def test_alert_increasing_severity(self, fake_send_alert):
         self.trigger_failing_check(self.warning_http_check)
         self.assertEqual(fake_send_alert.call_count, 1)
@@ -1126,7 +1126,7 @@ class TestAlerts(LocalTestCase):
         self.trigger_failing_check(self.critical_http_check)
         self.assertEqual(fake_send_alert.call_count, 3)
 
-    @patch('cabot.cabotapp.alert.AlertPlugin._send_alert')
+    @patch('cabot3.cabotapp.alert.AlertPlugin._send_alert')
     def test_alert_decreasing_severity(self, fake_send_alert):
         self.trigger_failing_check(self.critical_http_check)
         self.assertEqual(fake_send_alert.call_count, 1)
@@ -1137,7 +1137,7 @@ class TestAlerts(LocalTestCase):
         self.trigger_failing_check(self.warning_http_check)
         self.assertEqual(fake_send_alert.call_count, 1)
 
-    @patch('cabot.cabotapp.alert.AlertPlugin._send_alert')
+    @patch('cabot3.cabotapp.alert.AlertPlugin._send_alert')
     def test_alert_alternating_severity(self, fake_send_alert):
         self.trigger_failing_check(self.error_http_check)
         self.assertEqual(fake_send_alert.call_count, 1)
@@ -1217,7 +1217,7 @@ class TestCleanUpTask(LocalTestCase):
         self.assertEqual(StatusCheckResult.objects.all().count(), initial_results)
 
     def test_cleanup_single_batch(self):
-        with patch('cabot.cabotapp.tasks.clean_db.apply_async'):
+        with patch('cabot3.cabotapp.tasks.clean_db.apply_async'):
             initial_results = StatusCheckResult.objects.all().count()
 
             for i in range(2):
@@ -1232,7 +1232,7 @@ class TestCleanUpTask(LocalTestCase):
             tasks.clean_db(batch_size=1)
             self.assertEqual(StatusCheckResult.objects.all().count(), initial_results + 1)
 
-    @patch('cabot.cabotapp.tasks.clean_db.apply_async')
+    @patch('cabot3.cabotapp.tasks.clean_db.apply_async')
     def test_infinite_cleanup_loop(self, mocked_apply_async):
         """
         There is a potential for the cleanup task to constantly call itself

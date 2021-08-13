@@ -49,8 +49,6 @@ Sections:
 *   [Configuration](http://cabotapp.com/use/configuration.html)
 *   [Deployment](http://cabotapp.com/use/deployment.html)
 *   [Services](http://cabotapp.com/use/services.html)
-*   [Graphite checks](http://cabotapp.com/use/graphite-checks.html)
-*   [Jenkins checks](http://cabotapp.com/use/jenkins-checks.html)
 *   [HTTP checks](http://cabotapp.com/use/http-checks.html)
 *   [Alerting](http://cabotapp.com/use/alerting.html)
 *   [Users](http://cabotapp.com/use/users.html)
@@ -71,14 +69,7 @@ My dog is called Cabot and he loves monitoring things. Mainly the presence of fo
 
 It's just a lucky coincidence that his name sounds like he could be an automation tool.
 
-## API
 
-The API has automatically generated documentation available by browsing https://cabot.yourcompany.com/api.  The browsable documentation displays example GET requests and lists other allowed HTTP methods.  
-
-To view individual items, append the item `id` to the url.  For example, to view `graphite_check` 1, browse:
-```
-/api/graphite_checks/1/
-```
 
 ### Authentication
 
@@ -96,24 +87,6 @@ cabotapp | status check | Can add jenkins status check
 
 Access the Django admin page at https://cabot.yourcompany.com/admin to add/remove users, change user permissions, add/remove groups for group-based permission control, and change group permissions.
 
-### Sorting and Filtering
-
-Sorting and filtering can be used by both REST clients and on the browsable API.  All fields visible in the browsable API can be used for filtering and sorting.
-
-Get all `jenkins_checks` with debounce enabled and CRITICAL importance:
-```
-https://cabot.yourcompany.com/api/jenkins_checks/?debounce=1&importance=CRITICAL
-```
-
-Sort `graphite_checks` by `name` field, ascending:
-```
-https://cabot.yourcompany.com/api/graphite_checks/?ordering=name
-```
-
-Sort by `name` field, descending:
-```
-https://cabot.yourcompany.com/api/graphite_checks/?ordering=-name
-```
 
 Other (non-Cabot specific) examples are available in the [Django REST Framework](http://www.django-rest-framework.org/api-guide/filtering#djangofilterbackend) documentation.
 

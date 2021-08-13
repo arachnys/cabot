@@ -5,8 +5,8 @@ from itertools import dropwhile, groupby, zip_longest
 import os
 import requests
 from .alert import AlertPlugin, AlertPluginUserData
-from cabot.cabotapp import alert
-from cabot.cabotapp.utils import cabot_needs_setup
+from cabot3.cabotapp import alert
+from cabot3.cabotapp.utils import cabot_needs_setup
 from dateutil.relativedelta import relativedelta
 from django import forms
 from django.conf import settings
@@ -939,7 +939,7 @@ def checks_run_recently(request):
 
 def about(request):
     """ Very simple about page """
-    from cabot import version
+    from cabot3 import version
 
     return render(request, 'cabotapp/about.html', {
         'cabot_version': version,

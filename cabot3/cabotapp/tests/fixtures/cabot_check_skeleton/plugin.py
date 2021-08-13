@@ -1,9 +1,9 @@
-from cabot.cabotapp.models import StatusCheck
-from cabot.cabotapp.views import CheckCreateView
-from cabot.cabotapp.views import CheckUpdateView
-from cabot.cabotapp.views import StatusCheckForm
+from cabot3.cabotapp.models import StatusCheck
+from cabot3.cabotapp.views import CheckCreateView
+from cabot3.cabotapp.views import CheckUpdateView
+from cabot3.cabotapp.views import StatusCheckForm
 from django.http import HttpResponseRedirect
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 class SkeletonStatusCheck(StatusCheck):
     edit_url_name = 'update-skeleton-check'

@@ -4,9 +4,9 @@ import unittest
 from datetime import timedelta
 
 import jenkins
-from cabot.cabotapp import jenkins as cabot_jenkins
-from cabot.cabotapp.models import JenkinsConfig
-from cabot.cabotapp.models.jenkins_check_plugin import JenkinsStatusCheck
+from cabot3.cabotapp import jenkins as cabot_jenkins
+from cabot3.cabotapp.models import JenkinsConfig
+from cabot3.cabotapp.models.jenkins_check_plugin import JenkinsStatusCheck
 from django.utils import timezone
 from freezegun import freeze_time
 from mock import create_autospec, patch
@@ -42,7 +42,7 @@ class TestGetStatus(unittest.TestCase):
 
         self.mock_config = create_autospec(JenkinsConfig)
 
-    @patch("cabot.cabotapp.jenkins._get_jenkins_client")
+    @patch("cabot3.cabotapp.jenkins._get_jenkins_client")
     def test_job_passing(self, mock_jenkins):
         mock_jenkins.return_value = self.mock_client
 
@@ -58,7 +58,7 @@ class TestGetStatus(unittest.TestCase):
         }
         self.assertEqual(status, expected)
 
-    @patch("cabot.cabotapp.jenkins._get_jenkins_client")
+    @patch("cabot3.cabotapp.jenkins._get_jenkins_client")
     def test_job_failing(self, mock_jenkins):
         mock_jenkins.return_value = self.mock_client
 
@@ -83,7 +83,7 @@ class TestGetStatus(unittest.TestCase):
         self.assertFalse(result.succeeded)
 
     @freeze_time('2017-03-02 10:30')
-    @patch("cabot.cabotapp.jenkins._get_jenkins_client")
+    @patch("cabot3.cabotapp.jenkins._get_jenkins_client")
     def test_job_queued_last_succeeded(self, mock_jenkins):
         mock_jenkins.return_value = self.mock_client
         self.job[u'lastBuild'] = {u'number': 13}
@@ -108,7 +108,7 @@ class TestGetStatus(unittest.TestCase):
         self.assertEqual(status, expected)
 
     @freeze_time('2017-03-02 10:30')
-    @patch("cabot.cabotapp.jenkins._get_jenkins_client")
+    @patch("cabot3.cabotapp.jenkins._get_jenkins_client")
     def test_job_queued_last_failed(self, mock_jenkins):
         mock_jenkins.return_value = self.mock_client
         self.job[u'lastBuild'] = {u'number': 13}
@@ -132,7 +132,7 @@ class TestGetStatus(unittest.TestCase):
         }
         self.assertEqual(status, expected)
 
-    @patch("cabot.cabotapp.jenkins._get_jenkins_client")
+    @patch("cabot3.cabotapp.jenkins._get_jenkins_client")
     def test_job_unknown(self, mock_jenkins):
         self.mock_client.get_job_info.side_effect = jenkins.NotFoundException()
         mock_jenkins.return_value = self.mock_client
@@ -148,7 +148,7 @@ class TestGetStatus(unittest.TestCase):
         }
         self.assertEqual(status, expected)
 
-    @patch("cabot.cabotapp.jenkins._get_jenkins_client")
+    @patch("cabot3.cabotapp.jenkins._get_jenkins_client")
     def test_job_no_build(self, mock_jenkins):
         unbuilt_job = {
             u'inQueue': False,
@@ -163,7 +163,7 @@ class TestGetStatus(unittest.TestCase):
         with self.assertRaises(Exception):
             cabot_jenkins.get_job_status(self.mock_config, 'job-unbuilt')
 
-    @patch("cabot.cabotapp.jenkins._get_jenkins_client")
+    @patch("cabot3.cabotapp.jenkins._get_jenkins_client")
     def test_job_no_good_build(self, mock_jenkins):
         self.mock_client.get_job_info.return_value = {
             u'inQueue': False,
