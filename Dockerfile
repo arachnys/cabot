@@ -49,10 +49,10 @@ FROM python:3.6-alpine AS runner-image
 RUN apk add --no-cache libpq \
         mariadb-connector-c-dev 
 
-RUN adduser -S cabot
+
+USER root
 COPY --from=builder-image /home/cabot3/venv /home/cabot3/venv
 
-USER cabot
 RUN mkdir /home/cabot3/code
 WORKDIR /home/cabot3/code
 
@@ -72,7 +72,7 @@ ENV PATH="/home/cabot3/venv/bin:$PATH"
 # /dev/shm is mapped to shared memory and should be used for gunicorn heartbeat
 # this will improve performance and avoid random freezes
 
-#CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 
 
-ENTRYPOINT ["sh","docker-entrypoint.sh"]
+#ENTRYPOINT ["sh","docker-entrypoint.sh"]

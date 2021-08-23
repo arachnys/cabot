@@ -6,7 +6,7 @@ function wait_for_broker {
   for try in {1..60} ;  do
     python -c "from kombu import Connection; x=Connection('$CELERY_BROKER_URL', timeout=1); x.connect()" && break
     echo "Waiting for celery broker to respond..."
-    sleep 1
+    sleep 60
   done
 }
 
@@ -15,7 +15,7 @@ function wait_for_database {
   for try in {1..60} ; do
     python -c "from django.db import connection; connection.connect()" && break
     echo "Waiting for database to respond..."
-    sleep 1
+    sleep 60
   done
 }
 
@@ -26,7 +26,7 @@ function wait_for_migrations {
     # showmigrations -p returns a checkbox list of migrations, empty checkboxes mean they haven't been run
     python manage.py showmigrations -p | grep "\[ \]" &> /dev/null || break
     echo "Waiting for database migrations to be run..."
-    sleep 1
+    sleep 30
   done
 }
 

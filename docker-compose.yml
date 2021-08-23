@@ -3,7 +3,7 @@ services:
   db:
     image: mysql
     ports:
-      - '3306:3306'
+      - '3307:3307'
     environment:
       MYSQL_DATABASE: 'cabot'
       MYSQL_ROOT_PASSWORD: 'root'
@@ -21,22 +21,21 @@ services:
     extends:
       file: docker-compose-base.yml
       service: base
-    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    command: sh -c "sleep 30 && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
     ports:
       - "8000:8000"
-    links:
-      - redis
+    depends_on:
       - db
-
+  
   worker-beat:
     extends:
       file: docker-compose-base.yml
       service: base
-    command: celery -A cabot worker --beat --scheduler django --loglevel=info
+    command: sh -c "sleep 60 && celery -A cabot3 worker --beat --scheduler django --loglevel=info"
     environment:
       - SKIP_INIT=1
       - WAIT_FOR_MIGRATIONS=1
-    links:
+    depends_on:
       - redis
       - db
    
