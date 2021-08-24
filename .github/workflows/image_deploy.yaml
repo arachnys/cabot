@@ -1,0 +1,7 @@
+name: image-deploy
+on: [push]
+jobs:
+  build-and-push-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
