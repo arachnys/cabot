@@ -40,9 +40,6 @@ WORKDIR /code
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY requirements-plugins.txt ./
-RUN pip install --no-cache-dir  -force-reinstall -r requirements-plugins.txt
-
 ########################################################
 FROM python:3.6-alpine AS runner-image
 

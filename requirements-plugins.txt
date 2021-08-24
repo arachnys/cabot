@@ -1,4 +1,0 @@
-git+https://github.com/senzil/cabot-alert-email.git
-git+https://github.com/senzil/cabot-check-http.git
-git+https://github.com/senzil/cabot-alert-slack.git
-git+https://github.com/senzil/cabot-check-network.git

@@ -37,6 +37,7 @@ EMAIL_PASSWORD=example
 SLACK_ALERT_CHANNEL=cabot
 SLACK_WEBHOOK_URL=https://discord.com/api/webhooks
 SLACK_ICON_URL=http://lorempixel.com/40/40/
+SLACK_INTERACTIVE_MESSAGE=True
 
 # Typical SMTP port 587 or 25 configuration (with no SSL/TLS)
 EMAIL_PORT=587
