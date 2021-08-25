@@ -45,8 +45,8 @@ FROM python:3.6-alpine AS runner-image
 
 RUN apk add --no-cache libpq \
         mariadb-connector-c-dev \
-        git
-
+        git \
+        && pip install --no-cache-dir gunicorn
 
 USER root
 COPY --from=builder-image /home/cabot3/venv /home/cabot3/venv
@@ -66,6 +66,7 @@ ENV PYTHONUNBUFFERED=1
 # activate virtual environment
 ENV VIRTUAL_ENV=/home/cabot3/venv
 ENV PATH="/home/cabot3/venv/bin:$PATH"
+
 
 # /dev/shm is mapped to shared memory and should be used for gunicorn heartbeat
 # this will improve performance and avoid random freezes
