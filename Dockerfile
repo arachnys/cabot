@@ -38,15 +38,15 @@ RUN mkdir /code
 WORKDIR /code
 
 COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt \
+        && pip install --no-cache-dir gunicorn
 
 ########################################################
 FROM python:3.6-alpine AS runner-image
 
 RUN apk add --no-cache libpq \
         mariadb-connector-c-dev \
-        git \
-        && pip install --no-cache-dir gunicorn
+        git 
 
 USER root
 COPY --from=builder-image /home/cabot3/venv /home/cabot3/venv
