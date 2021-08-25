@@ -44,7 +44,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 FROM python:3.6-alpine AS runner-image
 
 RUN apk add --no-cache libpq \
-        mariadb-connector-c-dev 
+        mariadb-connector-c-dev \
+        git
 
 
 USER root
