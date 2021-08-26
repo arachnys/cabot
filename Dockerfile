@@ -39,7 +39,7 @@ WORKDIR /code
 
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt \
-        && pip install --no-cache-dir gunicorn
+        && pip install --no-cache-dir gunicorn  
 
 ########################################################
 FROM python:3.6-alpine AS runner-image
