@@ -14,7 +14,7 @@ DATABASE_PORT=3306
 CABOT_PLUGINS=cabot_alert_slack,cabot_check_http,cabot_check_network,cabot_alert_email
 
 ####################  GENERAL CONFIG
-DJANGO_SETTINGS_MODULE=cabot.settings
+DJANGO_SETTINGS_MODULE=cabot3.settings
 LOG_FILE=/dev/null
 PORT=8000
 TIME_ZONE=America/Argentina/Buenos_Aires
