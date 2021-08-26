@@ -71,7 +71,7 @@ ENV PATH="/home/cabot3/venv/bin:$PATH"
 # /dev/shm is mapped to shared memory and should be used for gunicorn heartbeat
 # this will improve performance and avoid random freezes
 
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+#CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 
 
-#ENTRYPOINT ["sh","docker-entrypoint.sh"]
+ENTRYPOINT ["sh","docker-entrypoint.sh"]

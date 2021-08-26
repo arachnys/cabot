@@ -1,7 +1,7 @@
 version: '3'
 services:
   db:
-    image: mysql
+    image: mysql:5
     ports:
       - '3307:3307'
     environment:
@@ -21,7 +21,7 @@ services:
     extends:
       file: docker-compose-base.yml
       service: base
-    command: sh -c "sleep 30 && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
     ports:
       - "8000:8000"
     depends_on:
@@ -31,7 +31,7 @@ services:
     extends:
       file: docker-compose-base.yml
       service: base
-    command: sh -c "sleep 60 && celery -A cabot3 worker --beat --scheduler django --loglevel=info"
+    command: sh -c "celery -A cabot3 worker --beat --scheduler django --loglevel=info"
     environment:
       - SKIP_INIT=1
       - WAIT_FOR_MIGRATIONS=1

@@ -3,10 +3,7 @@ from distutils.util import strtobool
 
 
 def force_bool(val):
-    if val == True or val  == False:
-        return strtobool(str(val))
-    else:
-        return False
+    return strtobool(str(val))
 
 def environ_get_list(names, default=None):
 
