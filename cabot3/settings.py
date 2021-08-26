@@ -11,10 +11,10 @@ environ.Env.read_env()
 
 settings_dir = os.path.dirname(__file__)
 PROJECT_ROOT = os.path.abspath(settings_dir)
- 
-DEBUG=os.environ.get('DEBUG', False)
 
-PROD=os.environ.get('PROD', False)
+DEBUG=force_bool(os.environ.get('DEBUG', False))
+
+PROD=force_bool(os.environ.get('PROD', True))
 
 
 ADMINS = (
@@ -83,7 +83,7 @@ MEDIA_URL = '%s/media/' % URL_PREFIX
 # Don't put anything in this directory yourself; store your static files
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
 # Example: "/home/media/media.lawrence.com/static/"
-STATIC_ROOT = os.path.join(PROJECT_ROOT, '.collectstatic/')
+STATIC_ROOT = os.path.join(PROJECT_ROOT, 'staticfiles')
 
 COMPRESS_ROOT = STATIC_ROOT
 
@@ -132,16 +132,14 @@ TEMPLATES = [{
 }]
 
 MIDDLEWARE = (
-
-
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
 )
 
 ROOT_URLCONF = 'cabot3.urls'
@@ -151,6 +149,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.messages',
+    'whitenoise.runserver_nostatic',
     'django.contrib.staticfiles',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
