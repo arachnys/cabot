@@ -1,53 +1,45 @@
-version: '2'
+version: '3'
 services:
+  db:
+    image: mysql:5
+    ports:
+      - '3307:3307'
+    environment:
+      MYSQL_DATABASE: 'cabot'
+      MYSQL_ROOT_PASSWORD: 'root'
+      MYSQL_USER: 'cabot'
+      MYSQL_PASSWORD: 'cabot'
+
+  redis:
+    container_name: cabot_redis
+    image: redislabs/redismod
+    restart: always
+    ports:
+      - 6379:6379
+
   web:
     extends:
       file: docker-compose-base.yml
       service: base
-    env_file:
-      - conf/development.env
-    command: python manage.py runserver 0.0.0.0:5001
+    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
     ports:
-      - "5001:5001"
-    links:
-      - redis
+      - "8000:8000"
+    depends_on:
       - db
-
-  worker:
+  
+  worker-beat:
     extends:
       file: docker-compose-base.yml
       service: base
-    env_file:
-      - conf/development.env
-    command: celery worker -A cabot --loglevel=DEBUG --concurrency=16 -Ofair
+    command: sh -c "celery -A cabot3 worker --beat --scheduler django --loglevel=info"
     environment:
       - SKIP_INIT=1
       - WAIT_FOR_MIGRATIONS=1
-    links:
+    depends_on:
       - redis
       - db
-
-  beat:
-    extends:
-      file: docker-compose-base.yml
-      service: base
-    env_file:
-      - conf/development.env
-    command: celery beat -A cabot --loglevel=DEBUG
-    environment:
-      - SKIP_INIT=1
-      - WAIT_FOR_MIGRATIONS=1
-    links:
-      - redis
-      - db
-
-  redis:
-    image: redis:alpine
-
-  db:
-    image: postgres:alpine
-    volumes:
-      - datavolume:/var/lib/postgresql/data
+   
 
 volumes:
   datavolume:
+

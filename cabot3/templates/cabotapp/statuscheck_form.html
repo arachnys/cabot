@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="row">
+  <div class="col-xs-12">
+    <div class="col-xs-10 col-xs-offset-2">
+      <h2>{% if form.instance.id %}Edit check{% else %}New check{% endif %}</h2>
+    </div>
+  </div>
+</div>
+<form class="form-horizontal" action="" method="post" role="form">
+  {% include "cabotapp/_base_form.html" %}
+  <div class="col-xs-12">
+    <div class="form-group">
+      <div class="col-xs-6 col-xs-offset-2">
+        <button type="submit" class="btn btn-primary">Submit</button>
+        <a href="{% url "dashboard" %}" class="btn">Back to dashboard</a>
+      </div>
+      {% if form.instance.id %}
+      <div class="col-xs-4">
+        <a class="btn btn-danger" href="{% url "delete-check" form.instance.id %}">Delete check</a>
+      </div>
+      {% endif %}
+      </div>
+    </div>
+  </div>
+</form>
+{% endblock %}
+
+{% load compress %}
+{% block js %}
+{{ block.super }}
+{% compress js %}
+<script type="text/javascript">
+(function() {
+  var GRAPHITE_ENDPOINT, drawMorris, previousTerm, removeMorris, updateGraphiteData;
+
+  GRAPHITE_ENDPOINT = '/graphite/';
+
+  $(document).ready(function() {
+    var complete;
+    updateGraphiteData();
+    $('#id_metric').on('keyup', complete);
+    $('#id_frequency').on('keyup', complete);
+    complete = function() {
+      var timer;
+      clearTimeout(timer);
+      return timer = setTimeout(updateGraphiteData, 1000);
+    };
+    return $('#id_metric').autocomplete({
+      source: function(request, response) {
+        return $.ajax({
+          url: GRAPHITE_ENDPOINT,
+          data: {
+            metric: request.term
+          }
+        }).done(function(data) {
+          var m, metricList, metrics, _ref, _ref1;
+          metricList = (_ref = data.matchingMetrics) != null ? (_ref1 = _ref.metrics) != null ? _ref1.metrics : void 0 : void 0;
+          if (metricList) {
+            metrics = (function() {
+              var _i, _len, _results;
+              _results = [];
+              for (_i = 0, _len = metricList.length; _i < _len; _i++) {
+                m = metricList[_i];
+                _results.push(m.path);
+              }
+              return _results;
+            })();
+            return response(metrics);
+          }
+        });
+      },
+      minLength: 0,
+      close: function(evt, ui) {
+        if ($('#id_metric').is(':focus')) {
+          return $('#id_metric').autocomplete("search", $('#id_metric').val());
+        }
+      }
+    });
+  });
+
+  previousTerm = void 0;
+
+  updateGraphiteData = function() {
+    var f, m;
+    m = $('#id_metric').val();
+    f = $('#id_frequency').val();
+    if (!m || previousTerm === m) {
+      return;
+    }
+    previousTerm = m;
+    $('#graphite_data_container').text('Getting data');
+    return $.ajax({
+      url: GRAPHITE_ENDPOINT,
+      data: {
+        metric: m,
+        frequency: f
+      }
+    }).done(function(data) {
+      if ((data.data != null) && (data.data.length != null) !== 0) {
+        $('#graphite_data_container').text(JSON.stringify(data.data, void 0, 2));
+        return drawMorris(data.data);
+      } else {
+        $('#graphite_data_container').text('Select a valid metric');
+        return removeMorris();
+      }
+    });
+  };
+
+  drawMorris = function(data) {
+    var all, k, k2, kvs, label, labels, point, series, t, tmp, v, v2, _i, _j, _len, _len1, _ref;
+    kvs = [];
+    labels = [];
+    $('#graph').show();
+    all = {};
+    for (_i = 0, _len = data.length; _i < _len; _i++) {
+      series = data[_i];
+      label = series.target;
+      labels.push(label);
+      _ref = series.datapoints;
+      for (_j = 0, _len1 = _ref.length; _j < _len1; _j++) {
+        point = _ref[_j];
+        t = point[1] * 1000;
+        if (all[t] == null) {
+          all[t] = {};
+        }
+        all[t][label] = point[0];
+      }
+    }
+    for (k in all) {
+      v = all[k];
+      tmp = {
+        time: parseInt(k)
+      };
+      for (k2 in v) {
+        v2 = v[k2];
+        tmp[k2] = v2;
+      }
+      kvs.push(tmp);
+    }
+    $('#graph').empty();
+    if (!kvs) {
+      return;
+    }
+    return window.morrisLine = Morris.Line({
+      element: 'graph',
+      data: kvs,
+      xkey: 'time',
+      ykeys: labels,
+      labels: (function() {
+        var _k, _len2, _results;
+        _results = [];
+        for (_k = 0, _len2 = labels.length; _k < _len2; _k++) {
+          label = labels[_k];
+          _results.push(label.slice(0, 11) + '...' + label.slice(-10));
+        }
+        return _results;
+      })(),
+      hideHover: 'auto'
+    });
+  };
+
+  removeMorris = function() {
+    return $('#graph').hide();
+  };
+
+}).call(this);
+
+</script>
+{% endcompress %}
+{{ form.media }}
+{% endblock %}

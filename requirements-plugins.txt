@@ -1,5 +1,0 @@
-cabot_alert_email==1.4.3
-cabot_alert_hipchat==2.0.3
-cabot_alert_twilio==1.3.3
-cabot_alert_slack==0.8.3
-cabot_check_cloudwatch==0.1.2

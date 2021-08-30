@@ -1,3 +1,0 @@
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-export PATH=$PATH:$DIR/../bin:$DIR/../app
-export PYTHONPATH=$PYTHONPATH:$DIR/../app

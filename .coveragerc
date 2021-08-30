@@ -1,6 +1,0 @@
-[run]
-branch = True
-plugins =
-    django_coverage_plugin
-
-omit = *migrations*

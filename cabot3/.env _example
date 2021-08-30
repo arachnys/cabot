@@ -1,0 +1,67 @@
+DEBUG=False
+PROD=False
+
+#################### DATABASE CONFIG
+#Check diferent options: https://github.com/kennethreitz/dj-database-url
+
+DATABASE_NAME=cabot
+DATABASE_USER=root
+DATABASE_PASSWORD=root
+DATABASE_HOST=db
+DATABASE_PORT=3306
+
+#################### PLUGINS - DON'T LEAVE SPACE BETWEEN THEM, ONLY COMMACABOT_PLUGINS=cabot_alert_slack,cabot_check_http,cabot_check_network,cabot_alert_email
+CABOT_PLUGINS=cabot_alert_slack,cabot_check_http,cabot_check_network,cabot_alert_email
+
+####################  GENERAL CONFIG
+DJANGO_SETTINGS_MODULE=cabot3.settings
+LOG_FILE=/dev/null
+PORT=8000
+TIME_ZONE=America/Argentina/Buenos_Aires
+
+#################### CELERY CONFIG
+CELERY_BROKER_URL=redis://127.0.0.1:6379/1
+CELERY_RESULT_BACKEND=redis://127.0.0.1:6379/1
+CELERY_BEAT_SCHEDULER=django_celery_beat.schedulers:DatabaseScheduler
+
+#################### DJANGO MAIL CONFIG
+ADMIN_EMAIL=example@example.com
+CABOT_FROM_EMAIL=example@example.com
+
+#################### EMAIL ALERT CONFIG
+EMAIL_HOST=in-v3.example.com
+EMAIL_USER=example
+EMAIL_PASSWORD=example
+
+#################### SLACK CONFIG
+SLACK_ALERT_CHANNEL=cabot
+SLACK_WEBHOOK_URL=https://discord.com/api/webhooks
+SLACK_ICON_URL=http://lorempixel.com/40/40/
+SLACK_INTERACTIVE_MESSAGE=True
+
+# Typical SMTP port 587 or 25 configuration (with no SSL/TLS)
+EMAIL_PORT=587
+EMAIL_USE_TLS=0
+EMAIL_USE_SSL=0
+
+# URL of calendar to synchronise rota with
+CALENDAR_ICAL_URL=http://www.google.com/calendar/ical/example.ics
+
+# Django settings
+DJANGO_SECRET_KEY=example
+
+# User-Agent string used for HTTP checks
+HTTP_USER_AGENT=Cabot
+
+# Used for pointing links back in alerts etc.
+WWW_HTTP_HOST=localhost
+WWW_SCHEME=http
+
+# Twilio integration for SMS and telephone alerts
+#TWILIO_ACCOUNT_SID=your_account_sid
+#TWILIO_AUTH_TOKEN=your_auth_token
+#TWILIO_OUTGOING_NUMBER=+14155551234
+
+# Hipchat integration
+#HIPCHAT_ALERT_ROOM=room_name_or_id
+#HIPCHAT_API_KEY=your_hipchat_api_key
