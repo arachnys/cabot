@@ -56,8 +56,8 @@ requests-oauthlib==1.2.0
 rjsmin==1.0.12
 s3transfer==0.1.13
 six==1.10.0
-social-auth-app-django==1.1.0
-social-auth-core==3.0.0
+social-auth-app-django==4.0.0
+social-auth-core==3.4.0
 twilio==5.7.0
 uritemplate==3.0.0
 urllib3==1.24.1
