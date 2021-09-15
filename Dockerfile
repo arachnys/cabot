@@ -26,7 +26,7 @@ RUN npm install -g \
         coffee-script \
         less@1.3
 
-RUN pip install --upgrade pip
+RUN pip install --upgrade pip==20.3.4
 
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
