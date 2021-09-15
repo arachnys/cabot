@@ -1,4 +1,4 @@
-FROM node:4-alpine
+FROM node:12-alpine
 
 ENV PYTHONUNBUFFERED 1
 
@@ -22,11 +22,11 @@ RUN apk add --no-cache \
 
 RUN npm config set unsafe-perm true
 RUN npm install -g \
-        --registry http://registry.npmjs.org/ \
-        coffee-script \
+        --registry https://registry.npmjs.org/ \
+        coffeescript \
         less@1.3
 
-RUN pip install --upgrade pip
+RUN pip install --upgrade pip==20.3.4
 
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
