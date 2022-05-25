@@ -41,7 +41,7 @@ pyasn1==0.4.5
 pyasn1-modules==0.2.3
 pycurl==7.43.0.1
 Pygments==2.2.0
-PyJWT==1.7.1
+PyJWT==2.4.0
 pyparsing==2.2.0
 PySocks==1.6.7
 python-dateutil==2.6.0
