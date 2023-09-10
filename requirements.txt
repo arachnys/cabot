@@ -51,7 +51,7 @@ python-openid==2.2.5
 pytz==2017.2
 rcssmin==1.0.6
 redis==2.10.5
-requests==2.13.0
+requests==2.20
 requests-oauthlib==1.2.0
 rjsmin==1.0.12
 s3transfer==0.1.13
